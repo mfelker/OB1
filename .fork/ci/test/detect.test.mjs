@@ -74,3 +74,25 @@ test('US3: fork-only paths plus one folder → exactly that folder', () => {
   assert.deepEqual(d.matrix.include.map(e => e.path), ['recipes/a']);
   assert.equal(d.skipped.forkOnly, 1);
 });
+
+// ---- SQL (T048) ----
+
+test('SQL: a folder with tests/verify.sql is routed to sql_matrix with needsPostgres', () => {
+  const { repo, base } = baseRepo();
+  writeFiles(repo, { ...fixtureFiles('sql-verify', 'schemas/v'), ...fixtureFiles('sql-only', 'schemas/o'), ...fixtureFiles('node-plain', 'recipes/a') });
+  const after = commit(repo, 'sql folders');
+  const d = detect(repo, ['--event', 'push', '--before', base, '--after', after]);
+  assert.equal(d.has_sql, true);
+  assert.deepEqual(d.sql_matrix.include, [{ path: 'schemas/v', mode: 'strict', origin: 'fork', needsPostgres: true }]);
+  assert.deepEqual(d.matrix.include.map(e => e.path), ['recipes/a', 'schemas/o']);
+  assert.equal(d.has_folders, true);
+});
+
+test('SQL: only a verify-script folder changed → has_folders false, has_sql true', () => {
+  const { repo, base } = baseRepo();
+  writeFiles(repo, fixtureFiles('sql-verify', 'schemas/v'));
+  const after = commit(repo, 'sql only');
+  const d = detect(repo, ['--event', 'push', '--before', base, '--after', after]);
+  assert.equal(d.has_folders, false);
+  assert.equal(d.has_sql, true);
+});
