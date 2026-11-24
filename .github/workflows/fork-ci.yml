@@ -1,0 +1,158 @@
+# Fork CI — fork-only workflow (mfelker/OB1). Never sent upstream.
+# Enforces constitution Principle IV: changed contribution folders must have passing tests.
+# Design: specs/001-fork-ci/ (plan.md, research.md, contracts/check.md).
+#
+# Security (research R5): pull_request only (never pull_request_target), read-only token,
+# no secrets, checkouts without persisted credentials. Untrusted values (folder paths from
+# staged PRs) reach scripts only through env vars, never through ${{ }} inside `run:`.
+name: Fork CI
+
+on:
+  pull_request:
+    # TEMPORARY: spike/fork-ci-* is removed in T055.
+    branches: [main, 'spike/fork-ci-*']
+  push:
+    branches: [main, 'spike/fork-ci-*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fork-ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  UPSTREAM_URL: https://github.com/NateBJones-Projects/OB1.git
+  UPSTREAM_REF: refs/remotes/upstream/main
+
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      has_folders: ${{ steps.detect.outputs.has_folders }}
+      matrix: ${{ steps.detect.outputs.matrix }}
+      has_sql: ${{ steps.detect.outputs.has_sql }}
+      sql_matrix: ${{ steps.detect.outputs.sql_matrix }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '26'
+      - name: Fetch upstream (public, no credentials)
+        run: git fetch --no-tags "$UPSTREAM_URL" "main:$UPSTREAM_REF"
+      - name: Detect changed folders
+        id: detect
+        env:
+          EVENT: ${{ github.event_name }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+          PUSH_BEFORE: ${{ github.event.before }}
+          PUSH_AFTER: ${{ github.sha }}
+        run: |
+          if [ "$EVENT" = "pull_request" ]; then
+            set -- --event pull_request --base "$PR_BASE" --head "$PR_HEAD"
+          else
+            set -- --event push --before "${PUSH_BEFORE:-0000000000000000000000000000000000000000}" --after "$PUSH_AFTER"
+          fi
+          node .fork/ci/bin/detect.mjs "$@" --upstream-ref "$UPSTREAM_REF" > detect.json
+          cat detect.json
+          node -e '
+            const d = JSON.parse(require("fs").readFileSync("detect.json", "utf8"));
+            const out = [
+              `has_folders=${d.has_folders}`,
+              `matrix=${JSON.stringify(d.matrix)}`,
+              `has_sql=${d.has_sql}`,
+              `sql_matrix=${JSON.stringify(d.sql_matrix)}`,
+            ];
+            require("fs").appendFileSync(process.env.GITHUB_OUTPUT, out.join("\n") + "\n");
+          '
+      - uses: actions/upload-artifact@v4
+        with:
+          name: detect
+          path: detect.json
+          retention-days: 7
+
+  test:
+    needs: detect
+    if: needs.detect.outputs.has_folders == 'true'
+    name: test (${{ matrix.path }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.detect.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '26'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.9.x
+      - name: Run folder tests
+        env:
+          FOLDER: ${{ matrix.path }}
+          MODE: ${{ matrix.mode }}
+          ORIGIN: ${{ matrix.origin }}
+        run: |
+          # Sanitised: only [A-Za-z0-9._-] may reach GITHUB_ENV (blocks newline injection).
+          slug=$(printf '%s' "$FOLDER" | tr -c 'A-Za-z0-9._-' '-')
+          echo "SLUG=$slug" >> "$GITHUB_ENV"
+          node .fork/ci/bin/run-folder.mjs --path "$FOLDER" --mode "$MODE" --origin "$ORIGIN" --out "result-$slug.json"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: result-${{ env.SLUG }}
+          path: result-${{ env.SLUG }}.json
+          if-no-files-found: ignore
+          retention-days: 7
+
+  fork-ci-verdict:
+    needs: [detect, test]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '26'
+      - uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: detect
+          path: ci-detect
+      - uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          pattern: result-*
+          path: ci-results
+          merge-multiple: true
+      - name: Verdict
+        env:
+          DETECT_RESULT: ${{ needs.detect.result }}
+          TEST_RESULT: ${{ needs.test.result }}
+        run: |
+          mkdir -p ci-results
+          node .fork/ci/bin/verdict.mjs \
+            --detect ci-detect/detect.json \
+            --results ci-results \
+            --detect-result "$DETECT_RESULT" \
+            --test-result "$TEST_RESULT" \
+            --test-sql-result skipped \
+            --self-test-result skipped \
+            --summary "$GITHUB_STEP_SUMMARY"

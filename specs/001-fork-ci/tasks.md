@@ -50,7 +50,7 @@ description: "Task list for Fork CI (per-folder test enforcement)"
 - [X] T007 Implement `.fork/ci/lib/paths.mjs` until T004 passes
 - [X] T008 Implement `.fork/ci/lib/changes.mjs` (git via `child_process.execFileSync`, git error → exit `3`) until T005 passes
 - [X] T009 Implement `.fork/ci/lib/args.mjs` and stub CLIs `.fork/ci/bin/detect.mjs`, `.fork/ci/bin/run-folder.mjs`, `.fork/ci/bin/verdict.mjs` (stubs honor the arg contract; `run-folder` writes a minimal result and exits non-zero when a `SPIKE_FAIL` file exists in the folder, which is used only by the spike) until T006 passes
-- [ ] T010 Create the workflow skeleton `.github/workflows/fork-ci.yml` per `contracts/check.md`:
+- [X] T010 Create the workflow skeleton `.github/workflows/fork-ci.yml` per `contracts/check.md`:
   - triggers `pull_request` + `push` on `main` **and temporarily `spike/fork-ci-*`**, plus `workflow_dispatch`; no path filters
   - `permissions: contents: read`; concurrency
   - jobs `detect`, `test` (matrix, `fail-fast: false`, `timeout-minutes: 20`, `if: has_folders == 'true'`) and `fork-ci-verdict` (`if: always()`, reading `needs.*.result`)
