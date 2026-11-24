@@ -53,3 +53,24 @@ test('PR mode works against base and head shas', () => {
   const d = detect(repo, ['--event', 'pull_request', '--base', base, '--head', head]);
   assert.deepEqual(d.matrix.include.map(e => e.path), ['recipes/a']);
 });
+
+// ---- US3 (T032) ----
+
+test('US3: only fork-only paths → no folders, skipped counted', () => {
+  const { repo, base } = baseRepo();
+  writeFiles(repo, { 'specs/001/spec.md': 'x', '.fork/README.md': 'x', '.github/workflows/fork-ci.yml': 'x' });
+  const after = commit(repo, 'fork-only');
+  const d = detect(repo, ['--event', 'push', '--before', base, '--after', after]);
+  assert.equal(d.has_folders, false);
+  assert.deepEqual(d.matrix.include, []);
+  assert.equal(d.skipped.forkOnly, 3);
+});
+
+test('US3: fork-only paths plus one folder → exactly that folder', () => {
+  const { repo, base } = baseRepo();
+  writeFiles(repo, { 'specs/001/spec.md': 'x', ...fixtureFiles('node-plain', 'recipes/a') });
+  const after = commit(repo, 'mixed');
+  const d = detect(repo, ['--event', 'push', '--before', base, '--after', after]);
+  assert.deepEqual(d.matrix.include.map(e => e.path), ['recipes/a']);
+  assert.equal(d.skipped.forkOnly, 1);
+});

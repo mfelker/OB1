@@ -55,3 +55,27 @@ test('removed folders are carried through and never fail', () => {
   assert.deepEqual(v.removed, ['recipes/old']);
   assert.equal(v.conclusion, 'success');
 });
+
+// ---- US3 (T033) ----
+
+test('US3: no folders and test job skipped → success', () => {
+  const v = computeVerdict({ detect: detectFor(), results: [], jobs: { ...ok, test: 'skipped' } });
+  assert.equal(v.conclusion, 'success');
+});
+
+test('US3: folders expected but test job skipped (no results) → failure', () => {
+  const v = computeVerdict({ detect: detectFor('recipes/a'), results: [], jobs: { ...ok, test: 'skipped' } });
+  assert.equal(v.conclusion, 'failure');
+});
+
+test('US3: self-test failure or cancellation → failure; success/skipped are fine', () => {
+  for (const [selfTest, expected] of [['failure', 'failure'], ['cancelled', 'failure'], ['success', 'success'], ['skipped', 'success']]) {
+    const v = computeVerdict({ detect: detectFor(), results: [], jobs: { ...ok, test: 'skipped', selfTest } });
+    assert.equal(v.conclusion, expected, selfTest);
+  }
+});
+
+test('US3: a failed self-test is reported in the verdict', () => {
+  const v = computeVerdict({ detect: detectFor(), results: [], jobs: { ...ok, selfTest: 'failure' } });
+  assert.equal(v.selfTest, 'failure');
+});
