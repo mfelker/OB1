@@ -182,6 +182,12 @@ Cosmetic finding: a skipped matrix job is listed as `test (${{ matrix.path }})` 
 - Real-folder findings: `recipes/atomizer/test-atomize.mjs` is a live-API script that fails without `OPENROUTER_API_KEY` (correct under FR-008); `integrations/hermes-agent-memory` tests import the undeclared host package `agent` and fail outside a Hermes install; `server` → node-script pass + deno no-tests (R7).
 - Side effect of the temporary `spike/fork-ci-*` **push** trigger: PR branches matching it also get push runs, which duplicates the checks. This goes away when T055 restores `main`-only triggers.
 
+**US3 and US4 validation (T038, T044, 2026-11-24)**, PRs into `spike/fork-ci-base` from `val/*` branches (no push-trigger duplicates):
+
+- PR #5, fork-only edit (`specs/…/quickstart.md`): ✅ in **35 s**, self-test `needed=false`, "No contribution folders changed" (SC-004 ✅).
+- PR #6, `.fork/ci/lib/paths.mjs` touched: the self-test ran **85/85 tests, 0 skipped** on Linux with `CI=true` (Python venv and Deno exercised). The first run failed only on `actionlint` shellcheck SC2016 (JS template literals inside a single-quoted `node -e`); after fixing that in the workflow, it went ✅ in 40 s. The self-test caught a real issue in fork-ci's own workflow.
+- PR #7, simulated sync: spike base set behind upstream for `recipes/google-activity-import`; the PR restored upstream's version. Detect produced `advisory`/`upstream`, and the report showed `⚠️ no-tests … no tests for node code (from upstream)`. Verdict ✅ (SC-008 ✅).
+
 **Result**: every R4, R9 and R11 assumption that the API can observe holds; no research amendment is needed. `actor_id: 5` is confirmed for T061.
 
 ## Spec amendments (reported to the owner)

@@ -165,7 +165,7 @@ description: "Task list for Fork CI (per-folder test enforcement)"
   - set up the same toolchain as the `test` job (Node 26, Python 3.13 + `pytest`, Deno v2.9.x) so the Python and Deno integration tests really run, with `CI=true`
   - when needed, run `node --test .fork/ci/test/` and a pinned `actionlint` downloaded at runtime
   - feed its result into `fork-ci-verdict`
-- [ ] T038 [US3] Validate: scratch PR to `spike/fork-ci-base` editing only `specs/001-fork-ci/quickstart.md` → ✅ in under 1 minute, 0 folders (SC-004); a PR changing `.fork/ci/lib/paths.mjs` runs `self-test`
+- [X] T038 [US3] Validate: scratch PR to `spike/fork-ci-base` editing only `specs/001-fork-ci/quickstart.md` → ✅ in under 1 minute, 0 folders (SC-004); a PR changing `.fork/ci/lib/paths.mjs` runs `self-test`
 
 **Checkpoint**: No false failures; fork-ci's own TDD is enforced in CI.
 
@@ -193,7 +193,7 @@ description: "Task list for Fork CI (per-folder test enforcement)"
 - [X] T041 [US4] Implement `.fork/ci/lib/origin.mjs` (`git merge-base HEAD <upstream-ref>`, `git rev-parse <rev>:<folder>` comparison) until T039 passes
 - [X] T042 [US4] Wire origin into `.fork/ci/bin/detect.mjs` (`--upstream-ref`), and add an upstream fetch step to the `detect` job in `.github/workflows/fork-ci.yml`: `git fetch --no-tags https://github.com/NateBJones-Projects/OB1.git main:refs/remotes/upstream/main` (no credentials)
 - [X] T043 [US4] Extend `.fork/ci/lib/verdict.mjs` and `.fork/ci/lib/report.mjs` for advisory handling until T040 passes
-- [ ] T044 [US4] Validate: scratch `sync/upstream-test` PR to `spike/fork-ci-base` that merges an upstream commit touching an untested folder → ⚠️ advisory row, overall ✅
+- [X] T044 [US4] Validate: scratch `sync/upstream-test` PR to `spike/fork-ci-base` that merges an upstream commit touching an untested folder → ⚠️ advisory row, overall ✅
 
 **Checkpoint**: All four user stories work independently.
 
