@@ -110,7 +110,7 @@ description: "Task list for Fork CI (per-folder test enforcement)"
 - [X] T025 [US1] Complete the `test` and `fork-ci-verdict` jobs in `.github/workflows/fork-ci.yml`:
   - `test`: set up Node/Python/Deno, run `run-folder.mjs` per matrix entry, upload `result-<slug>` with `actions/upload-artifact@v4`
   - `fork-ci-verdict`: download all results with `actions/download-artifact@v4`, run `verdict.mjs` with `--detect-result ${{ needs.detect.result }} --test-result ${{ needs.test.result }} --test-sql-result skipped --self-test-result skipped` (the literal `skipped` values are replaced by real `needs.*.result` in T037 and T052, once those jobs exist), write `$GITHUB_STEP_SUMMARY`
-- [ ] T026 [US1] Validate with quickstart.md §1–§3 locally (`recipes/vercel-neon-telegram` → pass), then with scratch PRs to `spike/fork-ci-base`:
+- [X] T026 [US1] Validate with quickstart.md §1–§3 locally (`recipes/vercel-neon-telegram` → pass), then with scratch PRs to `spike/fork-ci-base`:
   - a PR touching 3 code folders: record the wall-clock time from PR open to `fork-ci-verdict` result in `research.md` Spike results; it must be under 10 minutes (SC-003)
   - break one Vitest assertion in `recipes/vercel-neon-telegram` → overall ❌ naming it
   - revert → ✅
