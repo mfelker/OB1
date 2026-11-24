@@ -246,3 +246,5 @@ Solution: Your `public.thoughts` table is missing one of the canonical columns (
 
 **Issue: `MCP search_thoughts finds test row` fails even though capture succeeded**
 Solution: Embedding generation is asynchronous in some setups and may not land before search runs. The check already retries once with a 1.5 s delay; if it still fails, check the Edge Function logs in the Supabase dashboard for OpenRouter errors (missing or rate-limited key).
+
+<!-- fork-ci spike (a): branch cut from upstream/main -->
