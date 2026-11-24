@@ -1057,3 +1057,5 @@ main().catch((err) => {
   process.stderr.write(`Fatal: ${err.stack ?? err}\n`);
   process.exit(1);
 });
+
+// e2e: simulated staged-PR change
