@@ -77,37 +77,37 @@ description: "Task list for Fork CI (per-folder test enforcement)"
 
 > **Write these tests FIRST and make sure they FAIL before implementation**
 
-- [ ] T012 [P] [US1] Write failing tests `.fork/ci/test/runtimes.test.mjs`. Using the fixtures from T003, check the detection of the `deno`, `node-script`, `node-plain` and `python` runtimes:
+- [X] T012 [P] [US1] Write failing tests `.fork/ci/test/runtimes.test.mjs`. Using the fixtures from T003, check the detection of the `deno`, `node-script`, `node-plain` and `python` runtimes:
   - `data-model.md` `Runtime.kind`, `Runtime.root` (nested `plugin/` root), `Runtime.codeFiles` (with `*.d.ts` and `*.config.*` excluded; `.svelte` counted), `Runtime.testFiles` (patterns per research R8, including `*.spec.*`), `Runtime.command`
   - the deno argv includes `--node-modules-dir=none --no-prompt --allow-env --allow-read` and **no** `--allow-net`
-- [ ] T013 [P] [US1] Write failing tests `.fork/ci/test/exec.test.mjs`: a command runner with a timeout that returns `{code, timedOut, durationMs, tail}`; `tail` is the last 60 lines; a timeout kills the process tree
-- [ ] T014 [P] [US1] Write failing tests `.fork/ci/test/run-folder.test.mjs` (integration):
+- [X] T013 [P] [US1] Write failing tests `.fork/ci/test/exec.test.mjs`: a command runner with a timeout that returns `{code, timedOut, durationMs, tail}`; `tail` is the last 60 lines; a timeout kills the process tree
+- [X] T014 [P] [US1] Write failing tests `.fork/ci/test/run-folder.test.mjs` (integration):
   - `node-plain` passes → `data-model.md` `Folder Result.outcome` `pass`; `node-plain-failing` → `fail`; `node-plain-slow` with `--timeout-sec 1` → `timeout`; a broken install → `setup`
   - `python-tested` and `deno-tested` run when `python3`/`pytest` and `deno` are available; skipped with a note locally, but when `CI=true` a missing toolchain is a **test failure**, not a skip
   - every result validates against `contracts/result.schema.json` (minimal required/enum validator in the test)
   - `Folder Result.runtimes` is populated
-- [ ] T015 [P] [US1] Write failing tests `.fork/ci/test/verdict.test.mjs`:
+- [X] T015 [P] [US1] Write failing tests `.fork/ci/test/verdict.test.mjs`:
   - outcome precedence `timeout > setup > fail > no-tests > sql-unverified > pass > exempt` (`data-model.md` `Folder Result.outcome`)
   - `data-model.md` `Check Verdict.conclusion` rules: detect not success → failure; strict fail → failure; a strict matrix folder with no result file → listed in `Check Verdict.missing` and failure; all pass → success
   - `Check Verdict.failing` and `Check Verdict.counts` are populated
-- [ ] T016 [P] [US1] Write failing tests `.fork/ci/test/report.test.mjs`: the job-summary Markdown matches the `contracts/check.md` Report section (header with conclusion, table columns Folder/Mode/Origin/Outcome/Runtimes/Reason, removed/skipped line); every non-pass row has a reason category (SC-007)
-- [ ] T017 [P] [US1] Write failing tests `.fork/ci/test/detect.test.mjs` (integration with `git-fixture.mjs`): stdout JSON shape per `contracts/cli.md` (`has_folders`, `matrix.include[]` entries `{path, mode, origin, needsPostgres}`, `removed`, `skipped`); two changed folders → two matrix entries
+- [X] T016 [P] [US1] Write failing tests `.fork/ci/test/report.test.mjs`: the job-summary Markdown matches the `contracts/check.md` Report section (header with conclusion, table columns Folder/Mode/Origin/Outcome/Runtimes/Reason, removed/skipped line); every non-pass row has a reason category (SC-007)
+- [X] T017 [P] [US1] Write failing tests `.fork/ci/test/detect.test.mjs` (integration with `git-fixture.mjs`): stdout JSON shape per `contracts/cli.md` (`has_folders`, `matrix.include[]` entries `{path, mode, origin, needsPostgres}`, `removed`, `skipped`); two changed folders → two matrix entries
 
 ### Implementation for User Story 1
 
-- [ ] T018 [P] [US1] Implement `.fork/ci/lib/runtimes.mjs` (folder scan excluding `node_modules/`; runtime and command selection per research R8) until T012 passes
-- [ ] T019 [P] [US1] Implement `.fork/ci/lib/exec.mjs` (`spawn` with `detached` process group, kill on timeout, tail capture) until T013 passes
-- [ ] T020 [US1] Implement `.fork/ci/bin/run-folder.mjs`, replacing the stub; remove the `SPIKE_FAIL` behavior:
+- [X] T018 [P] [US1] Implement `.fork/ci/lib/runtimes.mjs` (folder scan excluding `node_modules/`; runtime and command selection per research R8) until T012 passes
+- [X] T019 [P] [US1] Implement `.fork/ci/lib/exec.mjs` (`spawn` with `detached` process group, kill on timeout, tail capture) until T013 passes
+- [X] T020 [US1] Implement `.fork/ci/bin/run-folder.mjs`, replacing the stub; remove the `SPIKE_FAIL` behavior:
   - per runtime: install (`npm install --no-audit --no-fund` / `pip install -r requirements.txt` + `pytest`) then test, inside `Runtime.root`
   - map exit codes to outcomes per the `data-model.md` *Folder Result* runtime outcome rules
   - fill `data-model.md` `Folder Result.path` (plus mode and origin, copied from the matrix entry), `Folder Result.reason` and `Folder Result.durationMs`
   - always write `--out` and exit 0
   - run until T014 passes
-- [ ] T021 [P] [US1] Implement `.fork/ci/lib/verdict.mjs` until T015 passes
-- [ ] T022 [P] [US1] Implement `.fork/ci/lib/report.mjs` until T016 passes
-- [ ] T023 [US1] Implement `.fork/ci/bin/detect.mjs`, replacing the stub: `paths` + `changes` + `runtimes` → matrix; for now every folder is `origin: fork`, `mode: strict` (origin arrives in US4) and `needsPostgres: false` (SQL arrives in Phase 8); run until T017 passes
-- [ ] T024 [US1] Implement `.fork/ci/bin/verdict.mjs`, replacing the stub: read the detect JSON and `result-*.json`, carry `removed` into `data-model.md` `Check Verdict.removed`, compute the verdict, write `--summary`, exit 0/1
-- [ ] T025 [US1] Complete the `test` and `fork-ci-verdict` jobs in `.github/workflows/fork-ci.yml`:
+- [X] T021 [P] [US1] Implement `.fork/ci/lib/verdict.mjs` until T015 passes
+- [X] T022 [P] [US1] Implement `.fork/ci/lib/report.mjs` until T016 passes
+- [X] T023 [US1] Implement `.fork/ci/bin/detect.mjs`, replacing the stub: `paths` + `changes` + `runtimes` → matrix; for now every folder is `origin: fork`, `mode: strict` (origin arrives in US4) and `needsPostgres: false` (SQL arrives in Phase 8); run until T017 passes
+- [X] T024 [US1] Implement `.fork/ci/bin/verdict.mjs`, replacing the stub: read the detect JSON and `result-*.json`, carry `removed` into `data-model.md` `Check Verdict.removed`, compute the verdict, write `--summary`, exit 0/1
+- [X] T025 [US1] Complete the `test` and `fork-ci-verdict` jobs in `.github/workflows/fork-ci.yml`:
   - `test`: set up Node/Python/Deno, run `run-folder.mjs` per matrix entry, upload `result-<slug>` with `actions/upload-artifact@v4`
   - `fork-ci-verdict`: download all results with `actions/download-artifact@v4`, run `verdict.mjs` with `--detect-result ${{ needs.detect.result }} --test-result ${{ needs.test.result }} --test-sql-result skipped --self-test-result skipped` (the literal `skipped` values are replaced by real `needs.*.result` in T037 and T052, once those jobs exist), write `$GITHUB_STEP_SUMMARY`
 - [ ] T026 [US1] Validate with quickstart.md §1–§3 locally (`recipes/vercel-neon-telegram` → pass), then with scratch PRs to `spike/fork-ci-base`:
