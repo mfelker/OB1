@@ -165,7 +165,7 @@ description: "Task list for Fork CI (per-folder test enforcement)"
   - set up the same toolchain as the `test` job (Node 26, Python 3.13 + `pytest`, Deno v2.9.x) so the Python and Deno integration tests really run, with `CI=true`
   - when needed, run `node --test .fork/ci/test/` and a pinned `actionlint` downloaded at runtime
   - feed its result into `fork-ci-verdict`
-- [ ] T038 [US3] Validate: scratch PR to `spike/fork-ci-base` editing only `specs/001-fork-ci/quickstart.md` → ✅ in under 1 minute, 0 folders (SC-004); a PR changing `.fork/ci/lib/paths.mjs` runs `self-test`
+- [X] T038 [US3] Validate: scratch PR to `spike/fork-ci-base` editing only `specs/001-fork-ci/quickstart.md` → ✅ in under 1 minute, 0 folders (SC-004); a PR changing `.fork/ci/lib/paths.mjs` runs `self-test`
 
 **Checkpoint**: No false failures; fork-ci's own TDD is enforced in CI.
 
@@ -193,7 +193,7 @@ description: "Task list for Fork CI (per-folder test enforcement)"
 - [X] T041 [US4] Implement `.fork/ci/lib/origin.mjs` (`git merge-base HEAD <upstream-ref>`, `git rev-parse <rev>:<folder>` comparison) until T039 passes
 - [X] T042 [US4] Wire origin into `.fork/ci/bin/detect.mjs` (`--upstream-ref`), and add an upstream fetch step to the `detect` job in `.github/workflows/fork-ci.yml`: `git fetch --no-tags https://github.com/NateBJones-Projects/OB1.git main:refs/remotes/upstream/main` (no credentials)
 - [X] T043 [US4] Extend `.fork/ci/lib/verdict.mjs` and `.fork/ci/lib/report.mjs` for advisory handling until T040 passes
-- [ ] T044 [US4] Validate: scratch `sync/upstream-test` PR to `spike/fork-ci-base` that merges an upstream commit touching an untested folder → ⚠️ advisory row, overall ✅
+- [X] T044 [US4] Validate: scratch `sync/upstream-test` PR to `spike/fork-ci-base` that merges an upstream commit touching an untested folder → ⚠️ advisory row, overall ✅
 
 **Checkpoint**: All four user stories work independently.
 
@@ -203,12 +203,12 @@ description: "Task list for Fork CI (per-folder test enforcement)"
 
 **Purpose**: Make `stage/`/`contrib/` changes land through fork PRs, and flag local-merge bypasses
 
-- [ ] T045 [P] Write failing tests `.fork/ci/test/bypass.test.mjs` with `git-fixture.mjs` covering the research R11 rule. Results go into `data-model.md` `Check Verdict.bypasses`:
+- [X] T045 [P] Write failing tests `.fork/ci/test/bypass.test.mjs` with `git-fixture.mjs` covering the research R11 rule. Results go into `data-model.md` `Check Verdict.bypasses`:
   - **flagged**: a local merge of a branch cut from the upstream ref (or a PR head), with the default message *and* with a custom message such as `[fork] Stage upstream PR #12`
   - **not flagged**: a merge whose committer is `GitHub <noreply@github.com>` (a PR merge); a sync merge whose second parent is on the upstream ref; a local merge of a branch cut from fork `main` (`fork/` lane); a non-merge commit
   - `branch` is filled from a `Merge branch '…'` message when present, otherwise `unknown`
-- [ ] T046 Implement `.fork/ci/lib/bypass.mjs` (research R11 rule), add `--bypass-range` and `--upstream-ref` handling to `.fork/ci/bin/verdict.mjs` (bypasses → failure, report line per `contracts/check.md`), and on `push` events in `.github/workflows/fork-ci.yml` give the `fork-ci-verdict` job a full-history checkout plus the credential-free upstream fetch and pass `${{ github.event.before }}..${{ github.event.after }}`, until T045 passes
-- [ ] T047 Update `.fork/README.md`:
+- [X] T046 Implement `.fork/ci/lib/bypass.mjs` (research R11 rule), add `--bypass-range` and `--upstream-ref` handling to `.fork/ci/bin/verdict.mjs` (bypasses → failure, report line per `contracts/check.md`), and on `push` events in `.github/workflows/fork-ci.yml` give the `fork-ci-verdict` job a full-history checkout plus the credential-free upstream fetch and pass `${{ github.event.before }}..${{ github.event.after }}`, until T045 passes
+- [X] T047 Update `.fork/README.md`:
   - `stage/` and `contrib/` now land with `gh pr create -R mfelker/OB1 --base main` and merge after `fork-ci-verdict` passes, replacing the local `--no-ff` merge for those lanes
   - keep the local merge for `fork/` and syncs
   - document the optional `sync/upstream-<date>` PR, the fork-ci outcome meanings, and the ruleset
@@ -219,13 +219,13 @@ description: "Task list for Fork CI (per-folder test enforcement)"
 
 **Purpose**: Run `tests/verify.sql` against a throwaway Postgres + pgvector when a folder provides one; otherwise report `sql-unverified` as advisory
 
-- [ ] T048 [P] Add failing cases to `.fork/ci/test/runtimes.test.mjs` and `.fork/ci/test/detect.test.mjs`:
+- [X] T048 [P] Add failing cases to `.fork/ci/test/runtimes.test.mjs` and `.fork/ci/test/detect.test.mjs`:
   - `sql-only` → `sql` runtime with `sql-unverified` (advisory even in strict mode)
   - `sql-verify` → `data-model.md` `Changed Folder.needsPostgres` = true and a `Runtime.kind` `sql` command of `psql -v ON_ERROR_STOP=1 -f tests/verify.sql` run in the folder
-- [ ] T049 [P] Write failing tests `.fork/ci/test/bootstrap-drift.test.mjs`: the column list of `create table thoughts` parsed from `docs/01-getting-started.md` (read-only) equals the one in `.fork/ci/sql/bootstrap.sql`
-- [ ] T050 Write `.fork/ci/sql/bootstrap.sql`: roles `anon`/`authenticated`/`service_role` (guarded with `DO` blocks), the `auth` schema with an `auth.uid()` stub, `create extension if not exists vector`, and the core `thoughts` table + indexes + `match_thoughts` copied from `docs/01-getting-started.md` with a provenance comment; no DROP/TRUNCATE/DELETE. Run until T049 passes
-- [ ] T051 Implement the `sql` runtime in `.fork/ci/lib/runtimes.mjs` and `.fork/ci/bin/run-folder.mjs` (apply `bootstrap.sql`, then `tests/verify.sql`, with the `PG*` env from the job) until T048 passes
-- [ ] T052 Have `.fork/ci/bin/detect.mjs` emit `sql_matrix` and `has_sql` (per `contracts/cli.md`), and add the `test-sql` job (per `contracts/check.md`) with a `pgvector/pgvector:pg17` service (throwaway literal password, not a secret) to `.github/workflows/fork-ci.yml`; pass `--test-sql-result` to `verdict.mjs`
+- [X] T049 [P] Write failing tests `.fork/ci/test/bootstrap-drift.test.mjs`: the column list of `create table thoughts` parsed from `docs/01-getting-started.md` (read-only) equals the one in `.fork/ci/sql/bootstrap.sql`
+- [X] T050 Write `.fork/ci/sql/bootstrap.sql`: roles `anon`/`authenticated`/`service_role` (guarded with `DO` blocks), the `auth` schema with an `auth.uid()` stub, `create extension if not exists vector`, and the core `thoughts` table + indexes + `match_thoughts` copied from `docs/01-getting-started.md` with a provenance comment; no DROP/TRUNCATE/DELETE. Run until T049 passes
+- [X] T051 Implement the `sql` runtime in `.fork/ci/lib/runtimes.mjs` and `.fork/ci/bin/run-folder.mjs` (apply `bootstrap.sql`, then `tests/verify.sql`, with the `PG*` env from the job) until T048 passes
+- [X] T052 Have `.fork/ci/bin/detect.mjs` emit `sql_matrix` and `has_sql` (per `contracts/cli.md`), and add the `test-sql` job (per `contracts/check.md`) with a `pgvector/pgvector:pg17` service (throwaway literal password, not a secret) to `.github/workflows/fork-ci.yml`; pass `--test-sql-result` to `verdict.mjs`
 - [ ] T053 Validate: scratch PR adding `.fork/ci/test/fixtures/sql-verify`-style `tests/verify.sql` with a failing assertion to a copy folder under `schemas/` on `spike/fork-ci-base` → ❌ `fail`; fix → ✅; SQL-only change without a verify script → ⚠️ `sql-unverified`
 
 ---

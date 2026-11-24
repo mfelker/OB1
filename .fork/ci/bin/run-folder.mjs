@@ -2,13 +2,15 @@
 // Run every runtime of one contribution folder and always write a result (contracts/cli.md).
 import { writeFileSync, mkdtempSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, delimiter } from 'node:path';
+import { join, delimiter, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { cliArgs } from '../lib/args.mjs';
 import { scanRuntimes } from '../lib/runtimes.mjs';
 import { runCommand } from '../lib/exec.mjs';
 import { worstOutcome } from '../lib/verdict.mjs';
 
 const MAX_EXCERPT = 20_000;
+const BOOTSTRAP_SQL = join(dirname(fileURLToPath(import.meta.url)), '..', 'sql', 'bootstrap.sql');
 const RUNTIME_LABEL = { deno: 'deno', 'node-script': 'node', 'node-plain': 'node', python: 'python', sql: 'sql' };
 const args = cliArgs('run-folder');
 const repoRoot = process.cwd();
@@ -48,12 +50,22 @@ async function install(rt, rootAbs) {
     if (pip.code !== 0) return { failure: { outcome: 'setup', reason: 'pip install failed', r: pip } };
     return { env };
   }
+  if (rt.kind === 'sql') {
+    const r = await step(['psql', '-v', 'ON_ERROR_STOP=1', '-X', '-q', '-f', BOOTSTRAP_SQL], rootAbs, BASE_ENV);
+    if (r.notFound) return { failure: { outcome: 'setup', reason: 'psql not found', r } };
+    if (r.timedOut) return { failure: { outcome: 'timeout', reason: 'SQL bootstrap timed out', r } };
+    if (r.code !== 0) return { failure: { outcome: 'setup', reason: 'SQL bootstrap failed (is Postgres reachable via PG* env?)', r } };
+    return { env: BASE_ENV };
+  }
   return { env: BASE_ENV };
 }
 
 async function runRuntime(rt) {
   const rootAbs = join(repoRoot, rt.root);
   const base = { kind: rt.kind, root: rt.root };
+  if (rt.kind === 'sql' && rt.testFiles.length === 0) {
+    return { ...base, outcome: 'sql-unverified', reason: 'SQL unverified (no tests/verify.sql)', durationMs: 0 };
+  }
   if (rt.testFiles.length === 0) {
     return { ...base, outcome: 'no-tests', reason: `no tests for ${RUNTIME_LABEL[rt.kind]} code`, durationMs: 0 };
   }

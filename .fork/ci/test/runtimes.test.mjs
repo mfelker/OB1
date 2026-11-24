@@ -80,3 +80,23 @@ function setupWrite(dir, rel, content) {
   mkdirSync(dirname(join(dir, rel)), { recursive: true });
   writeFileSync(join(dir, rel), content);
 }
+
+// ---- SQL (T048) ----
+
+test('SQL: .sql without tests/verify.sql → sql runtime with no command', () => {
+  const f = setupFolder('sql-only');
+  const [rt] = scanRuntimes(f.abs, f.path);
+  assert.equal(rt.kind, 'sql');
+  assert.deepEqual(rt.codeFiles, ['schema.sql']);
+  assert.deepEqual(rt.testFiles, []);
+  assert.equal(rt.command, null);
+});
+
+test('SQL: tests/verify.sql → psql command run in the folder', () => {
+  const f = setupFolder('sql-verify');
+  const [rt] = scanRuntimes(f.abs, f.path);
+  assert.equal(rt.kind, 'sql');
+  assert.equal(rt.root, 'recipes/fx');
+  assert.deepEqual(rt.testFiles, ['tests/verify.sql']);
+  assert.deepEqual(rt.command, ['psql', '-v', 'ON_ERROR_STOP=1', '-X', '-q', '-f', 'tests/verify.sql']);
+});

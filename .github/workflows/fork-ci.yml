@@ -64,10 +64,10 @@ jobs:
           node -e '
             const d = JSON.parse(require("fs").readFileSync("detect.json", "utf8"));
             const out = [
-              `has_folders=${d.has_folders}`,
-              `matrix=${JSON.stringify(d.matrix)}`,
-              `has_sql=${d.has_sql}`,
-              `sql_matrix=${JSON.stringify(d.sql_matrix)}`,
+              "has_folders=" + d.has_folders,
+              "matrix=" + JSON.stringify(d.matrix),
+              "has_sql=" + d.has_sql,
+              "sql_matrix=" + JSON.stringify(d.sql_matrix),
             ];
             require("fs").appendFileSync(process.env.GITHUB_OUTPUT, out.join("\n") + "\n");
           '
@@ -101,6 +101,63 @@ jobs:
         with:
           deno-version: v2.9.x
       - name: Run folder tests
+        env:
+          FOLDER: ${{ matrix.path }}
+          MODE: ${{ matrix.mode }}
+          ORIGIN: ${{ matrix.origin }}
+        run: |
+          # Sanitised: only [A-Za-z0-9._-] may reach GITHUB_ENV (blocks newline injection).
+          slug=$(printf '%s' "$FOLDER" | tr -c 'A-Za-z0-9._-' '-')
+          echo "SLUG=$slug" >> "$GITHUB_ENV"
+          node .fork/ci/bin/run-folder.mjs --path "$FOLDER" --mode "$MODE" --origin "$ORIGIN" --out "result-$slug.json"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: result-${{ env.SLUG }}
+          path: result-${{ env.SLUG }}.json
+          if-no-files-found: ignore
+          retention-days: 7
+
+  test-sql:
+    # Folders with tests/verify.sql (research R10). Each matrix job gets its own throwaway
+    # Postgres + pgvector; the password is a literal for that disposable DB, not a secret.
+    needs: detect
+    if: needs.detect.outputs.has_sql == 'true'
+    name: test-sql (${{ matrix.path }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.detect.outputs.sql_matrix) }}
+    services:
+      postgres:
+        image: pgvector/pgvector:pg17
+        env:
+          POSTGRES_PASSWORD: fork-ci-throwaway
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      PGHOST: localhost
+      PGPORT: '5432'
+      PGUSER: postgres
+      PGPASSWORD: fork-ci-throwaway
+      PGDATABASE: postgres
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '26'
+      - name: Ensure psql
+        run: command -v psql || (sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-client)
+      - name: Run folder SQL verification
         env:
           FOLDER: ${{ matrix.path }}
           MODE: ${{ matrix.mode }}
@@ -175,18 +232,22 @@ jobs:
           ./actionlint -color .github/workflows/fork-ci.yml
 
   fork-ci-verdict:
-    needs: [detect, test, self-test]
+    needs: [detect, test, test-sql, self-test]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 1
+          # Full history on pushes for lane-bypass detection (research R11).
+          fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: '26'
+      - name: Fetch upstream for bypass detection (public, no credentials)
+        if: github.event_name == 'push'
+        run: git fetch --no-tags "$UPSTREAM_URL" "main:$UPSTREAM_REF"
       - uses: actions/download-artifact@v4
         continue-on-error: true
         with:
@@ -202,14 +263,22 @@ jobs:
         env:
           DETECT_RESULT: ${{ needs.detect.result }}
           TEST_RESULT: ${{ needs.test.result }}
+          TEST_SQL_RESULT: ${{ needs.test-sql.result }}
           SELF_TEST_RESULT: ${{ needs.self-test.result }}
+          EVENT: ${{ github.event_name }}
+          PUSH_BEFORE: ${{ github.event.before }}
+          PUSH_AFTER: ${{ github.sha }}
         run: |
           mkdir -p ci-results
-          node .fork/ci/bin/verdict.mjs \
+          set --
+          if [ "$EVENT" = "push" ]; then
+            set -- --bypass-range "${PUSH_BEFORE:-0000000000000000000000000000000000000000}..$PUSH_AFTER" --upstream-ref "$UPSTREAM_REF"
+          fi
+          node .fork/ci/bin/verdict.mjs "$@" \
             --detect ci-detect/detect.json \
             --results ci-results \
             --detect-result "$DETECT_RESULT" \
             --test-result "$TEST_RESULT" \
-            --test-sql-result skipped \
+            --test-sql-result "$TEST_SQL_RESULT" \
             --self-test-result "$SELF_TEST_RESULT" \
             --summary "$GITHUB_STEP_SUMMARY"

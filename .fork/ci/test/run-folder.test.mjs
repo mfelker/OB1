@@ -124,3 +124,12 @@ test('US2: test files with no applicable runner → setup with a clear reason', 
   assert.equal(r.outcome, 'setup');
   assert.equal(r.reason, 'tests found but no runner configured');
 });
+
+// ---- SQL (T048) ----
+
+test('SQL: SQL-only folder without verify script → sql-unverified even in strict mode', () => {
+  const r = runFolder('sql-only');
+  assert.equal(r.outcome, 'sql-unverified');
+  assert.equal(r.reason, 'SQL unverified (no tests/verify.sql)');
+  assert.equal(r.runtimes[0].kind, 'sql');
+});
