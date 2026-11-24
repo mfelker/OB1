@@ -34,7 +34,7 @@ node .fork/ci/bin/run-folder.mjs --path server --mode strict --origin fork --out
 
 **Expected**:
 
-- `vercel-neon-telegram` → `pass` (Vitest).
+- `vercel-neon-telegram` → `sql-unverified` with its `node-script` (Vitest) runtime `pass`. The folder ships `sql/*.sql` without `tests/verify.sql`, so its SQL is advisory and the verdict stays ✅.
 - `server` → `no-tests` with reason "no tests for deno code". Its `node-script` runtime passes (R7).
 
 ## 4. GitHub behavior spike (before the ruleset touches `main`)

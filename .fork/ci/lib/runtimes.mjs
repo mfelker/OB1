@@ -1,5 +1,5 @@
 // Folder scan → runtimes (research R7/R8; data-model Runtime.kind/root/codeFiles/testFiles/command).
-import { readdirSync, readFileSync, existsSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { join, posix } from 'node:path';
 
 const SKIP_DIRS = new Set(['node_modules', '.git', '__pycache__', '.venv', 'venv', '.deno']);
@@ -112,6 +112,3 @@ function commandFor(kind, testFiles) {
   }
 }
 
-export function hasRequirements(rootAbs) {
-  return existsSync(join(rootAbs, 'requirements.txt'));
-}

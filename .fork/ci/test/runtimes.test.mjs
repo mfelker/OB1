@@ -1,5 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import { scanRuntimes } from '../lib/runtimes.mjs';
 import { setupFolder } from './helpers/folder.mjs';
 
@@ -65,17 +67,12 @@ test('config files, .d.ts and node_modules are not code; .svelte is code; .spec 
     'vite.config.ts': 'x', 'eslint.config.mjs': 'x', 'types.d.ts': 'x',
     'node_modules/dep/index.js': 'x', 'App.svelte': '<p/>', 'lib/__tests__/y.spec.js': 'x',
   };
-  for (const [rel, c] of Object.entries(extra)) {
-    // eslint-disable-next-line no-await-in-loop
-    setupWrite(f.abs, rel, c);
-  }
+  for (const [rel, c] of Object.entries(extra)) setupWrite(f.abs, rel, c);
   const [rt] = scanRuntimes(f.abs, f.path);
   assert.deepEqual(rt.codeFiles, ['App.svelte', 'lib/x.js']);
   assert.deepEqual(rt.testFiles, ['lib/__tests__/x.test.mjs', 'lib/__tests__/y.spec.js']);
 });
 
-import { mkdirSync, writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
 function setupWrite(dir, rel, content) {
   mkdirSync(dirname(join(dir, rel)), { recursive: true });
   writeFileSync(join(dir, rel), content);
