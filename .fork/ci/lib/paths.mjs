@@ -51,3 +51,5 @@ export function mapPaths(paths) {
     .sort((a, b) => a.path.localeCompare(b.path));
   return { folders, skipped };
 }
+
+// val: self-test trigger
