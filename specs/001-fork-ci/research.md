@@ -188,6 +188,12 @@ Cosmetic finding: a skipped matrix job is listed as `test (${{ matrix.path }})` 
 - PR #6, `.fork/ci/lib/paths.mjs` touched: the self-test ran **85/85 tests, 0 skipped** on Linux with `CI=true` (Python venv and Deno exercised). The first run failed only on `actionlint` shellcheck SC2016 (JS template literals inside a single-quoted `node -e`); after fixing that in the workflow, it went ✅ in 40 s. The self-test caught a real issue in fork-ci's own workflow.
 - PR #7, simulated sync: spike base set behind upstream for `recipes/google-activity-import`; the PR restored upstream's version. Detect produced `advisory`/`upstream`, and the report showed `⚠️ no-tests … no tests for node code (from upstream)`. Verdict ✅ (SC-008 ✅).
 
+**SQL validation (T053, 2026-11-24)**, PR #8 into `spike/fork-ci-base` adding `schemas/fork-ci-val` (schema with an FK to the core `thoughts` table, plus `tests/verify.sql`) and `schemas/fork-ci-val-noverify` (SQL only):
+
+- Routing: `fork-ci-val` → `test-sql` job (pgvector service), `-noverify` → `test` job.
+- Red run `45510961508`: bootstrap applied (the FK to `thoughts` resolved); the verify script failed on the deliberate assertion (`ERROR: thought_labels.confidence missing`) → ❌ `fail (exit 3)`; `-noverify` → ⚠️ `sql-unverified` (advisory).
+- Green run `45511164090` after removing the assertion: ✅ with `sql ✅` and the ⚠️ advisory row, in 62 s.
+
 **Result**: every R4, R9 and R11 assumption that the API can observe holds; no research amendment is needed. `actor_id: 5` is confirmed for T061.
 
 ## Spec amendments (reported to the owner)

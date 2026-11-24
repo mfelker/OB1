@@ -226,7 +226,7 @@ description: "Task list for Fork CI (per-folder test enforcement)"
 - [X] T050 Write `.fork/ci/sql/bootstrap.sql`: roles `anon`/`authenticated`/`service_role` (guarded with `DO` blocks), the `auth` schema with an `auth.uid()` stub, `create extension if not exists vector`, and the core `thoughts` table + indexes + `match_thoughts` copied from `docs/01-getting-started.md` with a provenance comment; no DROP/TRUNCATE/DELETE. Run until T049 passes
 - [X] T051 Implement the `sql` runtime in `.fork/ci/lib/runtimes.mjs` and `.fork/ci/bin/run-folder.mjs` (apply `bootstrap.sql`, then `tests/verify.sql`, with the `PG*` env from the job) until T048 passes
 - [X] T052 Have `.fork/ci/bin/detect.mjs` emit `sql_matrix` and `has_sql` (per `contracts/cli.md`), and add the `test-sql` job (per `contracts/check.md`) with a `pgvector/pgvector:pg17` service (throwaway literal password, not a secret) to `.github/workflows/fork-ci.yml`; pass `--test-sql-result` to `verdict.mjs`
-- [ ] T053 Validate: scratch PR adding `.fork/ci/test/fixtures/sql-verify`-style `tests/verify.sql` with a failing assertion to a copy folder under `schemas/` on `spike/fork-ci-base` → ❌ `fail`; fix → ✅; SQL-only change without a verify script → ⚠️ `sql-unverified`
+- [X] T053 Validate: scratch PR adding `.fork/ci/test/fixtures/sql-verify`-style `tests/verify.sql` with a failing assertion to a copy folder under `schemas/` on `spike/fork-ci-base` → ❌ `fail`; fix → ✅; SQL-only change without a verify script → ⚠️ `sql-unverified`
 
 ---
 
