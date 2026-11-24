@@ -182,11 +182,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 1
+          # Full history on pushes for lane-bypass detection (research R11).
+          fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: '26'
+      - name: Fetch upstream for bypass detection (public, no credentials)
+        if: github.event_name == 'push'
+        run: git fetch --no-tags "$UPSTREAM_URL" "main:$UPSTREAM_REF"
       - uses: actions/download-artifact@v4
         continue-on-error: true
         with:
@@ -203,9 +207,16 @@ jobs:
           DETECT_RESULT: ${{ needs.detect.result }}
           TEST_RESULT: ${{ needs.test.result }}
           SELF_TEST_RESULT: ${{ needs.self-test.result }}
+          EVENT: ${{ github.event_name }}
+          PUSH_BEFORE: ${{ github.event.before }}
+          PUSH_AFTER: ${{ github.sha }}
         run: |
           mkdir -p ci-results
-          node .fork/ci/bin/verdict.mjs \
+          set --
+          if [ "$EVENT" = "push" ]; then
+            set -- --bypass-range "${PUSH_BEFORE:-0000000000000000000000000000000000000000}..$PUSH_AFTER" --upstream-ref "$UPSTREAM_REF"
+          fi
+          node .fork/ci/bin/verdict.mjs "$@" \
             --detect ci-detect/detect.json \
             --results ci-results \
             --detect-result "$DETECT_RESULT" \

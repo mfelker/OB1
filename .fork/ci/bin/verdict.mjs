@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { cliArgs } from '../lib/args.mjs';
 import { computeVerdict } from '../lib/verdict.mjs';
 import { renderReport } from '../lib/report.mjs';
+import { findBypasses } from '../lib/bypass.mjs';
 
 const args = cliArgs('verdict');
 
@@ -21,9 +22,14 @@ const results = existsSync(args.results)
   ? readdirSync(args.results).filter(f => f.endsWith('.json')).map(f => readJson(join(args.results, f))).filter(Boolean)
   : [];
 
+const bypasses = args['bypass-range']
+  ? findBypasses(process.cwd(), args['bypass-range'], args['upstream-ref'])
+  : [];
+
 const verdict = computeVerdict({
   detect,
   results,
+  bypasses,
   jobs: {
     detect: args['detect-result'],
     test: args['test-result'],

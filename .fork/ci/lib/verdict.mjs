@@ -11,7 +11,7 @@ export function worstOutcome(outcomes) {
 /**
  * @param {{detect: object|null, results: object[], jobs: {detect:string, test:string, testSql:string, selfTest:string}}} input
  */
-export function computeVerdict({ detect, results, jobs }) {
+export function computeVerdict({ detect, results, jobs, bypasses = [] }) {
   const expected = detect
     ? [...detect.matrix.include, ...(detect.sql_matrix?.include ?? [])].map(e => e.path)
     : [];
@@ -34,7 +34,7 @@ export function computeVerdict({ detect, results, jobs }) {
     ...missing.filter(isAdvisory),
   ].sort();
   const selfTestOk = !['failure', 'cancelled'].includes(jobs.selfTest);
-  const ok = jobs.detect === 'success' && detect !== null && failing.length === 0 && selfTestOk;
+  const ok = jobs.detect === 'success' && detect !== null && failing.length === 0 && selfTestOk && bypasses.length === 0;
 
   return {
     conclusion: ok ? 'success' : 'failure',
@@ -43,7 +43,7 @@ export function computeVerdict({ detect, results, jobs }) {
     advisories,
     missing,
     removed: detect?.removed ?? [],
-    bypasses: [],
+    bypasses,
     selfTest: jobs.selfTest,
   };
 }
