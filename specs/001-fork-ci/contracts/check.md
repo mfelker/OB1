@@ -25,10 +25,11 @@ Never `pull_request_target` (R5).
 |--------|-------|-----------|----------------|
 | `detect` | — | always | Run `detect.mjs`; outputs `has_folders`, `matrix`, `detect_json` |
 | `self-test` | — | `.fork/ci/**` or `fork-ci.yml` changed (computed inside the job, not by a path filter) | `node --test .fork/ci/test/` and `actionlint` |
-| `test` | `detect` | `has_folders == 'true'` | Matrix over `detect.matrix`, `fail-fast: false`, `timeout-minutes: 20`; Postgres service when `needsPostgres`; runs `run-folder.mjs`; uploads `result-*.json` |
-| `fork-ci-verdict` | `detect`, `test`, `self-test` | `if: always()` | Downloads results, runs `verdict.mjs`, writes the job summary; this is **the required check** |
+| `test` | `detect` | `has_folders == 'true'` | Matrix over `detect.matrix` (folders without `needsPostgres`), `fail-fast: false`, `timeout-minutes: 20`; runs `run-folder.mjs`; uploads `result-*.json` |
+| `test-sql` | `detect` | `has_sql == 'true'` | Matrix over `detect.sql_matrix` with a `pgvector/pgvector:pg17` service (throwaway literal password); same steps as `test` plus `PG*` env; uploads `result-*.json` |
+| `fork-ci-verdict` | `detect`, `test`, `test-sql`, `self-test` | `if: always()` | Downloads results, runs `verdict.mjs`, writes the job summary; on `push` also fetches upstream and runs bypass detection (R11); this is **the required check** |
 
-`fork-ci-verdict` also fails when `self-test` ran and did not succeed.
+`fork-ci-verdict` also fails when `self-test` ran and did not succeed. The `self-test` job sets up Node 26, Python 3.13 + `pytest` and Deno v2.9.x, and runs with `CI=true` so a missing toolchain fails instead of skipping.
 
 ## Required check
 

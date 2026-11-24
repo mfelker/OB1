@@ -33,7 +33,7 @@ description: "Task list for Fork CI (per-folder test enforcement)"
 **Purpose**: Directory layout, test helpers and fixtures used by every story
 
 - [ ] T001 Create the directory layout `.fork/ci/{lib,bin,sql,test/fixtures,test/helpers}` and a stub `.fork/ci/README.md` stating purpose, layout (per plan.md Project Structure), and the test command `node --test .fork/ci/test/`
-- [ ] T002 [P] Create the temp-git-repo helper `.fork/ci/test/helpers/git-fixture.mjs` exporting `makeRepo()`, `writeFiles(repo, map)`, `commit(repo, msg) → sha`, `branch()`, `merge(repo, ref, {noFf, message})`, `addRemoteRef(repo, name, sha)` using `node:child_process` + `fs.mkdtemp`, with its own smoke test in `.fork/ci/test/git-fixture.test.mjs`
+- [ ] T002 [P] Write the smoke test `.fork/ci/test/git-fixture.test.mjs` first (it must fail), then create the temp-git-repo helper `.fork/ci/test/helpers/git-fixture.mjs` exporting `makeRepo()`, `writeFiles(repo, map)`, `commit(repo, msg) → sha`, `branch()`, `merge(repo, ref, {noFf, message})`, `addRemoteRef(repo, name, sha)` using `node:child_process` + `fs.mkdtemp`, until the smoke test passes
 - [ ] T003 [P] Create the fixture folder trees under `.fork/ci/test/fixtures/` (used as file maps by tests): `deno-tested/` (`deno.json`, `index.ts`, `index_test.ts`), `deno-untested/`, `node-script/` (`package.json` with a `test` script + `src/__tests__/a.test.ts`), `node-plain/` (`lib/x.js`, `lib/__tests__/x.test.js` using `node:test`), `node-plain-failing/`, `node-plain-slow/` (test sleeps 5 s), `python-tested/` (`imp.py`, `tests/test_imp.py`), `mixed-server/` (`deno.json`, `package.json` test script, `index.ts`, `test-stateless.mjs`), `nested-plugin/` (`plugin/package.json` + test), `docs-only/` (`README.md`, `metadata.json`, `skill.md`), `tests-no-runner/` (`a.ts`, `a.test.ts`, no `deno.json` or `package.json`), `config-only/` (`vite.config.ts`, `README.md`), `sql-only/` (`schema.sql`), `sql-verify/` (`schema.sql`, `tests/verify.sql`)
 
 ---
@@ -61,7 +61,7 @@ description: "Task list for Fork CI (per-folder test enforcement)"
   - open PRs (a) cut from `upstream/main`, (b) containing a `SPIKE_FAIL` marker, (c) fork-only edits
   - direct-push to the base
   - record the observed behavior for R4 (the workflow and `.fork/ci` are present on the merge ref), R9 (a skipped or failing `test` job with the always-run verdict; an empty matrix) and R11 (the bypass message on push; merge button disabled; the bypass checkbox; `actor_id` of the admin role) in a new "Spike results" section of `specs/001-fork-ci/research.md`
-  - delete the spike ruleset and branches. **Stop and amend research if any assumption fails.**
+  - delete the spike ruleset and the scratch PR branches, but **keep `spike/fork-ci-base`**, because T026, T038, T044 and T053 validate against it (T055 removes it). **Stop and amend research if any assumption fails.**
 
 **Checkpoint**: Foundation ready and GitHub behavior confirmed. User story work can begin.
 
@@ -78,12 +78,12 @@ description: "Task list for Fork CI (per-folder test enforcement)"
 > **Write these tests FIRST and make sure they FAIL before implementation**
 
 - [ ] T012 [P] [US1] Write failing tests `.fork/ci/test/runtimes.test.mjs`. Using the fixtures from T003, check the detection of the `deno`, `node-script`, `node-plain` and `python` runtimes:
-  - `data-model.md` `Runtime.kind`, `Runtime.root` (nested `plugin/` root), `Runtime.codeFiles` (with `*.d.ts` and `*.config.*` excluded; `.svelte` counted), `Runtime.testFiles` (patterns per research R8), `Runtime.command`
+  - `data-model.md` `Runtime.kind`, `Runtime.root` (nested `plugin/` root), `Runtime.codeFiles` (with `*.d.ts` and `*.config.*` excluded; `.svelte` counted), `Runtime.testFiles` (patterns per research R8, including `*.spec.*`), `Runtime.command`
   - the deno argv includes `--node-modules-dir=none --no-prompt --allow-env --allow-read` and **no** `--allow-net`
 - [ ] T013 [P] [US1] Write failing tests `.fork/ci/test/exec.test.mjs`: a command runner with a timeout that returns `{code, timedOut, durationMs, tail}`; `tail` is the last 60 lines; a timeout kills the process tree
 - [ ] T014 [P] [US1] Write failing tests `.fork/ci/test/run-folder.test.mjs` (integration):
   - `node-plain` passes → `data-model.md` `Folder Result.outcome` `pass`; `node-plain-failing` → `fail`; `node-plain-slow` with `--timeout-sec 1` → `timeout`; a broken install → `setup`
-  - `python-tested` and `deno-tested` run when `python3`/`pytest` and `deno` are available (skipped with a note otherwise)
+  - `python-tested` and `deno-tested` run when `python3`/`pytest` and `deno` are available; skipped with a note locally, but when `CI=true` a missing toolchain is a **test failure**, not a skip
   - every result validates against `contracts/result.schema.json` (minimal required/enum validator in the test)
   - `Folder Result.runtimes` is populated
 - [ ] T015 [P] [US1] Write failing tests `.fork/ci/test/verdict.test.mjs`:
@@ -106,11 +106,12 @@ description: "Task list for Fork CI (per-folder test enforcement)"
 - [ ] T021 [P] [US1] Implement `.fork/ci/lib/verdict.mjs` until T015 passes
 - [ ] T022 [P] [US1] Implement `.fork/ci/lib/report.mjs` until T016 passes
 - [ ] T023 [US1] Implement `.fork/ci/bin/detect.mjs`, replacing the stub: `paths` + `changes` + `runtimes` → matrix; for now every folder is `origin: fork`, `mode: strict` (origin arrives in US4) and `needsPostgres: false` (SQL arrives in Phase 8); run until T017 passes
-- [ ] T024 [US1] Implement `.fork/ci/bin/verdict.mjs`, replacing the stub: read the detect JSON and `result-*.json`, compute the verdict, write `--summary`, exit 0/1
+- [ ] T024 [US1] Implement `.fork/ci/bin/verdict.mjs`, replacing the stub: read the detect JSON and `result-*.json`, carry `removed` into `data-model.md` `Check Verdict.removed`, compute the verdict, write `--summary`, exit 0/1
 - [ ] T025 [US1] Complete the `test` and `fork-ci-verdict` jobs in `.github/workflows/fork-ci.yml`:
   - `test`: set up Node/Python/Deno, run `run-folder.mjs` per matrix entry, upload `result-<slug>` with `actions/upload-artifact@v4`
-  - `fork-ci-verdict`: download all results with `actions/download-artifact@v4`, run `verdict.mjs` with `--detect-result ${{ needs.detect.result }} --test-result ${{ needs.test.result }}`, write `$GITHUB_STEP_SUMMARY`
-- [ ] T026 [US1] Validate with quickstart.md §1–§3 locally (`recipes/vercel-neon-telegram` → pass), then with a scratch PR to `spike/fork-ci-base`:
+  - `fork-ci-verdict`: download all results with `actions/download-artifact@v4`, run `verdict.mjs` with `--detect-result ${{ needs.detect.result }} --test-result ${{ needs.test.result }} --test-sql-result skipped --self-test-result skipped` (the literal `skipped` values are replaced by real `needs.*.result` in T037 and T052, once those jobs exist), write `$GITHUB_STEP_SUMMARY`
+- [ ] T026 [US1] Validate with quickstart.md §1–§3 locally (`recipes/vercel-neon-telegram` → pass), then with scratch PRs to `spike/fork-ci-base`:
+  - a PR touching 3 code folders: record the wall-clock time from PR open to `fork-ci-verdict` result in `research.md` Spike results; it must be under 10 minutes (SC-003)
   - break one Vitest assertion in `recipes/vercel-neon-telegram` → overall ❌ naming it
   - revert → ✅
 
@@ -157,10 +158,11 @@ description: "Task list for Fork CI (per-folder test enforcement)"
 
 ### Implementation for User Story 3
 
-- [ ] T035 [US3] Make `.fork/ci/bin/detect.mjs` and `.fork/ci/lib/verdict.mjs` pass T032–T033 (add `--self-test-result` to `verdict.mjs` and record it in `contracts/cli.md`)
+- [ ] T035 [US3] Make `.fork/ci/bin/detect.mjs` and `.fork/ci/lib/verdict.mjs` pass T032–T033 (`--self-test-result`, already specified in `contracts/cli.md`)
 - [ ] T036 [US3] Implement `.fork/ci/lib/self-test-needed.mjs` + `.fork/ci/bin/self-test-needed.mjs` until T034 passes
 - [ ] T037 [US3] Add the `self-test` job to `.github/workflows/fork-ci.yml`:
   - compute "needed" with `self-test-needed.mjs` (inside the job, not a path filter)
+  - set up the same toolchain as the `test` job (Node 26, Python 3.13 + `pytest`, Deno v2.9.x) so the Python and Deno integration tests really run, with `CI=true`
   - when needed, run `node --test .fork/ci/test/` and a pinned `actionlint` downloaded at runtime
   - feed its result into `fork-ci-verdict`
 - [ ] T038 [US3] Validate: scratch PR to `spike/fork-ci-base` editing only `specs/001-fork-ci/quickstart.md` → ✅ in under 1 minute, 0 folders (SC-004); a PR changing `.fork/ci/lib/paths.mjs` runs `self-test`
@@ -201,8 +203,11 @@ description: "Task list for Fork CI (per-folder test enforcement)"
 
 **Purpose**: Make `stage/`/`contrib/` changes land through fork PRs, and flag local-merge bypasses
 
-- [ ] T045 [P] Write failing tests `.fork/ci/test/bypass.test.mjs` with `git-fixture.mjs`: merge commits in the range whose message matches `^Merge branch '(stage|contrib)/` → listed in `data-model.md` `Check Verdict.bypasses` as `{sha, branch}`; `Merge pull request #N from mfelker/stage/...`, sync merges, and `fork/` merges → not flagged
-- [ ] T046 Implement `.fork/ci/lib/bypass.mjs`, add `--bypass-range` handling to `.fork/ci/bin/verdict.mjs` (bypasses → failure, report line per `contracts/check.md`), and pass `${{ github.event.before }}..${{ github.event.after }}` on `push` events in `.github/workflows/fork-ci.yml` until T045 passes
+- [ ] T045 [P] Write failing tests `.fork/ci/test/bypass.test.mjs` with `git-fixture.mjs` covering the research R11 rule. Results go into `data-model.md` `Check Verdict.bypasses`:
+  - **flagged**: a local merge of a branch cut from the upstream ref (or a PR head), with the default message *and* with a custom message such as `[fork] Stage upstream PR #12`
+  - **not flagged**: a merge whose committer is `GitHub <noreply@github.com>` (a PR merge); a sync merge whose second parent is on the upstream ref; a local merge of a branch cut from fork `main` (`fork/` lane); a non-merge commit
+  - `branch` is filled from a `Merge branch '…'` message when present, otherwise `unknown`
+- [ ] T046 Implement `.fork/ci/lib/bypass.mjs` (research R11 rule), add `--bypass-range` and `--upstream-ref` handling to `.fork/ci/bin/verdict.mjs` (bypasses → failure, report line per `contracts/check.md`), and on `push` events in `.github/workflows/fork-ci.yml` give the `fork-ci-verdict` job a full-history checkout plus the credential-free upstream fetch and pass `${{ github.event.before }}..${{ github.event.after }}`, until T045 passes
 - [ ] T047 Update `.fork/README.md`:
   - `stage/` and `contrib/` now land with `gh pr create -R mfelker/OB1 --base main` and merge after `fork-ci-verdict` passes, replacing the local `--no-ff` merge for those lanes
   - keep the local merge for `fork/` and syncs
@@ -220,7 +225,7 @@ description: "Task list for Fork CI (per-folder test enforcement)"
 - [ ] T049 [P] Write failing tests `.fork/ci/test/bootstrap-drift.test.mjs`: the column list of `create table thoughts` parsed from `docs/01-getting-started.md` (read-only) equals the one in `.fork/ci/sql/bootstrap.sql`
 - [ ] T050 Write `.fork/ci/sql/bootstrap.sql`: roles `anon`/`authenticated`/`service_role` (guarded with `DO` blocks), the `auth` schema with an `auth.uid()` stub, `create extension if not exists vector`, and the core `thoughts` table + indexes + `match_thoughts` copied from `docs/01-getting-started.md` with a provenance comment; no DROP/TRUNCATE/DELETE. Run until T049 passes
 - [ ] T051 Implement the `sql` runtime in `.fork/ci/lib/runtimes.mjs` and `.fork/ci/bin/run-folder.mjs` (apply `bootstrap.sql`, then `tests/verify.sql`, with the `PG*` env from the job) until T048 passes
-- [ ] T052 Have `.fork/ci/bin/detect.mjs` emit a separate `sql_matrix`, and add a `test-sql` job with a `pgvector/pgvector:pg17` service (throwaway literal password, not a secret) to `.github/workflows/fork-ci.yml`; update `contracts/cli.md` and `contracts/check.md` to match, and include `test-sql` in the `fork-ci-verdict` needs
+- [ ] T052 Have `.fork/ci/bin/detect.mjs` emit `sql_matrix` and `has_sql` (per `contracts/cli.md`), and add the `test-sql` job (per `contracts/check.md`) with a `pgvector/pgvector:pg17` service (throwaway literal password, not a secret) to `.github/workflows/fork-ci.yml`; pass `--test-sql-result` to `verdict.mjs`
 - [ ] T053 Validate: scratch PR adding `.fork/ci/test/fixtures/sql-verify`-style `tests/verify.sql` with a failing assertion to a copy folder under `schemas/` on `spike/fork-ci-base` → ❌ `fail`; fix → ✅; SQL-only change without a verify script → ⚠️ `sql-unverified`
 
 ---
@@ -235,7 +240,10 @@ description: "Task list for Fork CI (per-folder test enforcement)"
 - [ ] T057 [P] Security and scope check: `grep -n 'secrets\.' .github/workflows/fork-ci.yml` returns nothing (SC-005); `git diff --stat upstream/main...fork/fork-ci` lists only fork-only paths (SC-006); no `pull_request_target`
 - [ ] T058 [P] `markdownlint-cli2 --config .github/.markdownlint.jsonc ".fork/**/*.md" "specs/001-fork-ci/**/*.md"` and `actionlint .github/workflows/fork-ci.yml` pass
 - [ ] T059 Run the quickstart.md §1–§3 validation once more; all expected outcomes hold
-- [ ] T060 Land: open PR `fork/fork-ci` → `main` on the fork, so fork-ci verifies its own merge; merge when `fork-ci-verdict` is green
+- [ ] T060 Land: open PR `fork/fork-ci` → `main` on the fork, so fork-ci verifies its own merge.
+  - **Record test evidence in the PR description** (constitution Quality Gate 1): the `node --test .fork/ci/test/` pass/fail summary, the `actionlint` result, and the link to the green `fork-ci-verdict` run
+  - the upstream **OB1 PR Gate** will be red on this PR, because its allowed-path list excludes `.fork/` and `specs/`; that is expected and advisory on fork-only PRs (constitution, Fork CI policy). Only `fork-ci-verdict` decides whether to merge
+  - merge when `fork-ci-verdict` is green
 - [ ] T061 **Owner step**: apply the `main` ruleset requiring `fork-ci-verdict` with the admin bypass (quickstart.md §5, using the `actor_id` confirmed in T011)
 - [ ] T062 Run the quickstart.md §6 end-to-end table on `main` and record the results in `specs/001-fork-ci/checklists/requirements.md` notes
 
@@ -259,7 +267,7 @@ description: "Task list for Fork CI (per-folder test enforcement)"
 
 - **US1 (P1)**: after Foundational; no story dependencies
 - **US2 (P1)**: after US1, same files, so sequential
-- **US3 (P2)** and **US4 (P2)**: after US1, parallel with each other (different modules: `self-test-needed` vs `origin`)
+- **US3 (P2)** and **US4 (P2)**: after US1. Their new modules (`self-test-needed`, `origin`) can be written in parallel, but both edit `bin/detect.mjs` and `lib/verdict.mjs`, so their wiring tasks (T035, T042, T043) and Phase 7's T046 run **sequentially**
 
 ### Within Each User Story
 
@@ -271,7 +279,7 @@ description: "Task list for Fork CI (per-folder test enforcement)"
 
 - T002, T003 in parallel; T004–T006 in parallel
 - US1 tests T012–T017 all in parallel; then T018, T019, T021, T022 in parallel
-- After US1: US3 (T032–T038) and US4 (T039–T044) and Phase 7 (T045–T047) can proceed in parallel
+- After US1: the test tasks T032–T034, T039–T040, T045 and the new modules T036, T041 can proceed in parallel; the shared-file wiring T035 → T042 → T043 → T046 is sequential
 - Phase N: T056–T058 in parallel
 
 ---
@@ -315,7 +323,7 @@ Task: "Implement .fork/ci/lib/report.mjs"
 
 ### Parallel Team Strategy
 
-A single owner, possibly with parallel agents: after US1, one worktree per stream (US3, US4, Phase 7), each on its own `fork/fork-ci-<stream>` branch merged back into `fork/fork-ci`, following the CLAUDE.md worktree rules.
+A single owner, possibly with parallel agents: after US1, parallel worktrees only for the independent tests and new modules (see Parallel Opportunities); the `detect.mjs`/`verdict.mjs` wiring stays on `fork/fork-ci` in one worktree, following the CLAUDE.md worktree rules.
 
 ---
 

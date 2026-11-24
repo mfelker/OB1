@@ -19,6 +19,8 @@ Determines the changed folders and builds the test matrix.
 {
   "has_folders": true,
   "matrix": { "include": [ { "path": "recipes/x", "mode": "strict", "origin": "fork", "needsPostgres": false } ] },
+  "has_sql": true,
+  "sql_matrix": { "include": [ { "path": "schemas/y", "mode": "strict", "origin": "fork", "needsPostgres": true } ] },
   "removed": ["recipes/old"],
   "skipped": { "forkOnly": 3, "template": 0, "other": 1 }
 }
@@ -52,7 +54,10 @@ Aggregates results into the required check.
 | `--results <dir>` | yes | Directory of downloaded `result-*.json` |
 | `--detect-result success\|failure\|cancelled\|skipped` | yes | `needs.detect.result` |
 | `--test-result success\|failure\|cancelled\|skipped` | yes | `needs.test.result` |
-| `--bypass-range <before>..<after>` | push only | Range to scan for local `stage/`/`contrib/` merges (R11) |
+| `--test-sql-result success\|failure\|cancelled\|skipped` | yes | `needs.test-sql.result`; `skipped` is valid only when `has_sql` is false |
+| `--self-test-result success\|failure\|cancelled\|skipped` | yes | `needs.self-test.result`; `skipped` means self-test was not needed |
+| `--bypass-range <before>..<after>` | push only | Range to scan for local merges of upstream-based branches (R11) |
+| `--upstream-ref <ref>` | with `--bypass-range` | Fetched upstream ref used by the R11 rule |
 | `--summary <file>` | yes | Markdown report destination (`$GITHUB_STEP_SUMMARY`) |
 
 **Exit codes**: `0` when the verdict is `success`; `1` when the verdict is `failure`; `2` on a usage error.

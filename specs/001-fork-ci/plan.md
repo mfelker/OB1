@@ -130,4 +130,5 @@ specs/001-fork-ci/
 | Violation | Why Needed | Simpler Alternative Rejected Because |
 |-----------|------------|-------------------------------------|
 | `.fork/ci/sql/bootstrap.sql` duplicates core DDL from `docs/01-getting-started.md` | SQL verification needs the core `thoughts` table in a throwaway DB | Extracting the SQL from the Markdown at runtime breaks silently when the doc's formatting changes; a self-test that diffs column lists catches drift instead |
+| Scaffolding without a failing test first: stub CLIs (T009) and the workflow skeleton (T010) | GitHub Actions YAML cannot be unit-tested, and the stubs are throwaway scaffolding for the GitHub-behavior spike | YAML is validated by the spike (T011) and by `actionlint` in the self-test job (T037); stubs are replaced test-first in T020, T023 and T024, which is where Principle IV applies |
 | Repo ruleset with owner bypass instead of hard blocking | Syncs and `fork/` merges must push to `main` directly (Q3 C) | Hard blocking with no bypass rejects direct pushes and breaks the sync runbook (R11) |

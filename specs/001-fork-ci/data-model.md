@@ -54,7 +54,7 @@ Written by `bin/run-folder.mjs` as `result-<slug>.json` (schema: [contracts/resu
 **Runtime outcome rules**:
 
 - Install step non-zero → `setup`
-- Test command exit 124 (wrapped `timeout`) → `timeout`
+- Runner killed after `--timeout-sec` (`exec.mjs` reports `timedOut`) → `timeout`
 - Other non-zero exit → `fail`
 - Code but no tests → `no-tests`
 - Test files but `command = null` → `setup` ("tests found but no runner configured")
@@ -69,7 +69,8 @@ Computed by `bin/verdict.mjs` (`lib/verdict.mjs`).
 | `counts` | object | Number of folders per outcome × mode |
 | `failing` | string[] | Strict folders with outcome ∈ {fail, no-tests, setup, timeout} |
 | `advisories` | string[] | Advisory folders with non-pass outcomes, plus all `sql-unverified` |
-| `bypasses` | object[] | Push runs only: `{ sha, branch }` for local `stage/`/`contrib/` merges (R11) |
+| `bypasses` | object[] | Push runs only: `{ sha, branch }` for local merges of upstream-based branches, per the R11 detection rule; `branch` is `unknown` when the message carries no name |
+| `removed` | string[] | Folders deleted at head, from `detect`'s `removed` output; shown in the report and never affects `conclusion` |
 | `missing` | string[] | Matrix folders with no result artifact; they count as `timeout` |
 
 **State rules (R9)**:

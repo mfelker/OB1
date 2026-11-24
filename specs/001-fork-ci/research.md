@@ -84,9 +84,9 @@ Each changed folder is scanned (excluding `node_modules/`) into **runtimes**. A 
 
 | Runtime | Detected when | Test files | Command (run in the sub-project dir) |
 |---------|---------------|-----------|---------------------------------------|
-| `deno` | a dir with `deno.json`/`deno.jsonc` | `*_test.{ts,tsx,js,mjs}`, `*.test.{ts,tsx,js,mjs}` under it | `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read` (no `--allow-net`, so tests that call live services fail) |
-| `node-script` | a dir with `package.json` that has a `scripts.test` | anything the script runs, counted as present when the `test` script exists and any test-pattern file exists | `npm install --no-audit --no-fund` then `npm test` |
-| `node-plain` | `.js/.mjs/.cjs` test files not covered by a `node-script` or `deno` sub-project | `*.test.{js,mjs,cjs}`, `test-*.mjs` | `node --test <files>` |
+| `deno` | a dir with `deno.json`/`deno.jsonc` | `*_test.{ts,tsx,js,mjs}`, `*.test.{ts,tsx,js,mjs}`, `*.spec.{ts,tsx,js,mjs}` under it | `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read` (no `--allow-net`, so tests that call live services fail) |
+| `node-script` | a dir with `package.json` that has a `scripts.test` | counted as present when the `test` script exists **and** a file matching `*.test.*` or `*.spec.*` (`.ts .tsx .js .mjs .cjs`) exists under it | `npm install --no-audit --no-fund` then `npm test` |
+| `node-plain` | `.js/.mjs/.cjs` test files not covered by a `node-script` or `deno` sub-project | `*.test.{js,mjs,cjs}`, `*.spec.{js,mjs,cjs}`, `test-*.mjs` | `node --test <files>` |
 | `python` | any `.py` source | `test_*.py`, `*_test.py` | `pip install -r requirements.txt` (if present), `pip install pytest`, `pytest -q` |
 | `sql` | any `.sql` file | `tests/verify.sql` | see R10 |
 
@@ -99,7 +99,7 @@ Each changed folder is scanned (excluding `node_modules/`) into **runtimes**. A 
 
 - **Decision**: three jobs.
   - `detect` builds a JSON matrix of folders.
-  - `test` is a matrix over folders with `fail-fast: false`, `timeout-minutes: 20`. It runs each command under a `timeout 600` wrapper (exit 124 → `timeout`) and **always writes a result JSON artifact and exits 0**.
+  - `test` is a matrix over folders with `fail-fast: false`, `timeout-minutes: 20`. It runs each command through a Node runner (`lib/exec.mjs`) that kills the process group after `--timeout-sec` (default 600) and reports `timedOut` → `timeout`. This works the same on macOS and Linux, unlike a coreutils `timeout` wrapper. The job **always writes a result JSON artifact and exits 0**.
   - `fork-ci-verdict` has `if: always()`, downloads every result, writes the report to the job summary, and is the **only required check**.
 - **Verdict rules**:
   - `detect` not `success` → fail.
@@ -121,7 +121,17 @@ Each changed folder is scanned (excluding `node_modules/`) into **runtimes**. A 
 
 ### R11. Lane enforcement (FR-012): ruleset with owner bypass, plus bypass detection
 
-- **Decision**: A repository **ruleset** on `main` requiring the `fork-ci-verdict` status check, with **repository admin as bypass actor (`always`)**. On every push to `main`, fork-ci also scans the pushed range for merge commits whose message matches `^Merge branch '(stage|contrib)/` (a local merge, not a PR) and fails that push run's verdict with reason `lane-bypass`.
+- **Decision**: A repository **ruleset** on `main` requiring the `fork-ci-verdict` status check, with **repository admin as bypass actor (`always`)**. On every push to `main`, fork-ci also scans the pushed range for **local merges of upstream-based branches** and fails that push run's verdict with reason `lane-bypass`.
+- **Detection rule** (content-based, independent of commit messages, because git does not record branch names). For each merge commit `M` (parents `P1`, `P2`) in `before..after` on the first-parent chain:
+  1. Committer is `GitHub <noreply@github.com>` → merged through a PR → **not flagged**.
+  2. `P2` is an ancestor of `upstream/main` → upstream sync → **not flagged**.
+  3. `merge-base(P1, P2)` is an ancestor of `upstream/main` → the merged branch was cut from upstream or a PR head, so it is a `stage/` or `contrib/` lane → **flagged `lane-bypass`**.
+  4. Otherwise the branch was cut from fork `main` (a `fork/` lane) → **not flagged**.
+
+  The `branch` label comes from a default `Merge branch '…'` message when present, otherwise `unknown`. Custom messages such as `-m "[fork] Stage upstream PR #12"` are still caught by rule 3.
+- **Known limits**:
+  - A `stage/` or `contrib/` branch landed by rebase or fast-forward produces no merge commit and is not detected. The runbook forbids rebasing onto fork `main` (Principle VII).
+  - Rule 4 assumes fork `main` carries at least one fork-only commit. That is true since the spec-kit bootstrap commit `f702cb7`.
 - **Rationale**:
   - Required status checks also reject **direct pushes**, which would break upstream syncs and local `fork/` merges. So the owner must be a bypass actor, and then nothing technically prevents a local `stage/` merge either.
   - Enforcement therefore has three layers:
@@ -130,10 +140,10 @@ Each changed folder is scanned (excluding `node_modules/`) into **runtimes**. A 
     3. The post-push run turns a local `stage/`/`contrib/` merge red.
   - This is the strongest enforcement available for a single-owner repo without blocking syncs.
 - **Spec amendments**:
-  - SC-009 is reworded from "100% … only after a passing check" to "every `stage/`/`contrib/` change that reaches `main` without a passing PR check is flagged red".
+  - SC-009 is reworded from "100% … only after a passing check" to "every `stage/`/`contrib/` change that reaches `main` through a local merge is flagged red".
   - The edge case "branch protection flags the bypass" now reads "the post-push run flags the bypass (`lane-bypass`)".
 - **Permission**: creating the ruleset is a repo-settings change. It is a **user-run or user-approved step** (quickstart), never applied silently.
-- **Verify in T-spike**: create the ruleset against a throwaway pattern (`spike/fork-ci-*`) first. Confirm the direct-push bypass message, a PR with a red check (merge button disabled, bypass checkbox present), and a PR whose check never reported (pending blocks).
+- **Verify in T-spike**: create the ruleset against a throwaway pattern (`spike/fork-ci-*`) first. Confirm the direct-push bypass message, a PR with a red check (merge button disabled, bypass checkbox present), a PR whose check never reported (pending blocks), and that PR merge commits carry committer `GitHub <noreply@github.com>`.
 
 ### R12. Toolchain pinning
 
