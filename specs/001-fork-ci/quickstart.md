@@ -83,3 +83,5 @@ JSON
 | SQL with `tests/verify.sql` | add a failing assertion | ❌ `fail` (Postgres job) |
 
 <!-- spike (c) -->
+
+<!-- val forkonly -->
