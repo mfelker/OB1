@@ -64,10 +64,10 @@ jobs:
           node -e '
             const d = JSON.parse(require("fs").readFileSync("detect.json", "utf8"));
             const out = [
-              `has_folders=${d.has_folders}`,
-              `matrix=${JSON.stringify(d.matrix)}`,
-              `has_sql=${d.has_sql}`,
-              `sql_matrix=${JSON.stringify(d.sql_matrix)}`,
+              "has_folders=" + d.has_folders,
+              "matrix=" + JSON.stringify(d.matrix),
+              "has_sql=" + d.has_sql,
+              "sql_matrix=" + JSON.stringify(d.sql_matrix),
             ];
             require("fs").appendFileSync(process.env.GITHUB_OUTPUT, out.join("\n") + "\n");
           '
