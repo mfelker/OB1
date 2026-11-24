@@ -1,0 +1,4 @@
+// Fork-only: spec-kit vendored skills are third-party (overwritten on upgrade); exempt from lint.
+{
+  "config": { "default": false }
+}
