@@ -127,18 +127,18 @@ description: "Task list for Fork CI (per-folder test enforcement)"
 
 ### Tests for User Story 2 (MANDATORY) ⚠️
 
-- [ ] T027 [P] [US2] Add failing cases to `.fork/ci/test/runtimes.test.mjs` and `.fork/ci/test/run-folder.test.mjs`:
+- [X] T027 [P] [US2] Add failing cases to `.fork/ci/test/runtimes.test.mjs` and `.fork/ci/test/run-folder.test.mjs`:
   - `deno-untested` → `no-tests`, reason "no tests for deno code"
   - `mixed-server` → `node-script` runtime `pass`, `deno` runtime `no-tests`, folder `no-tests` (research R7, amended FR-006; `data-model.md` `Folder Result.runtimes`)
   - `docs-only` and `config-only` → `exempt` (`data-model.md` `Runtime.codeFiles` empty)
   - `tests-no-runner` → `setup`, reason "tests found but no runner configured"
-- [ ] T028 [P] [US2] Add failing cases to `.fork/ci/test/report.test.mjs`: `no-tests` rows show the runtime name; `exempt` rows show "docs-only"
+- [X] T028 [P] [US2] Add failing cases to `.fork/ci/test/report.test.mjs`: `no-tests` rows show the runtime name; `exempt` rows show "docs-only"
 
 ### Implementation for User Story 2
 
-- [ ] T029 [US2] Extend `.fork/ci/lib/runtimes.mjs` and `.fork/ci/bin/run-folder.mjs` with the per-runtime strict rule, exemption, and the no-runner `setup` outcome until T027 passes
-- [ ] T030 [US2] Extend `.fork/ci/lib/report.mjs` until T028 passes
-- [ ] T031 [US2] Validate: `node .fork/ci/bin/run-folder.mjs --path server --mode strict --origin fork --out /tmp/s.json` → `no-tests` with the deno reason (quickstart.md §3)
+- [X] T029 [US2] Extend `.fork/ci/lib/runtimes.mjs` and `.fork/ci/bin/run-folder.mjs` with the per-runtime strict rule, exemption, and the no-runner `setup` outcome until T027 passes
+- [X] T030 [US2] Extend `.fork/ci/lib/report.mjs` until T028 passes
+- [X] T031 [US2] Validate: `node .fork/ci/bin/run-folder.mjs --path server --mode strict --origin fork --out /tmp/s.json` → `no-tests` with the deno reason (quickstart.md §3)
 
 **Checkpoint**: US1 + US2 enforce strict TDD for owner changes.
 
