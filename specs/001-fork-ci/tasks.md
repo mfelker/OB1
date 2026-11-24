@@ -208,7 +208,7 @@ description: "Task list for Fork CI (per-folder test enforcement)"
   - **not flagged**: a merge whose committer is `GitHub <noreply@github.com>` (a PR merge); a sync merge whose second parent is on the upstream ref; a local merge of a branch cut from fork `main` (`fork/` lane); a non-merge commit
   - `branch` is filled from a `Merge branch '…'` message when present, otherwise `unknown`
 - [X] T046 Implement `.fork/ci/lib/bypass.mjs` (research R11 rule), add `--bypass-range` and `--upstream-ref` handling to `.fork/ci/bin/verdict.mjs` (bypasses → failure, report line per `contracts/check.md`), and on `push` events in `.github/workflows/fork-ci.yml` give the `fork-ci-verdict` job a full-history checkout plus the credential-free upstream fetch and pass `${{ github.event.before }}..${{ github.event.after }}`, until T045 passes
-- [ ] T047 Update `.fork/README.md`:
+- [X] T047 Update `.fork/README.md`:
   - `stage/` and `contrib/` now land with `gh pr create -R mfelker/OB1 --base main` and merge after `fork-ci-verdict` passes, replacing the local `--no-ff` merge for those lanes
   - keep the local merge for `fork/` and syncs
   - document the optional `sync/upstream-<date>` PR, the fork-ci outcome meanings, and the ruleset

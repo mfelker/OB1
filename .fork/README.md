@@ -15,8 +15,8 @@ Authoritative rules: `.specify/memory/constitution.md` (Principles IV, V, VII).
 | Lane | Branch | Cut from | Lands in | TDD rule |
 |------|--------|----------|----------|----------|
 | Fork feature | `fork/<desc>` | fork `main` | fork `main` | Red-green-refactor |
-| Upstream-bound feature | `contrib/mfelker/<desc>` | `upstream/main` | Upstream PR **and** fork `main` | Red-green-refactor; tests inside the contribution folder |
-| Staged upstream PR | `stage/pr-<N>-<desc>` | `upstream` `refs/pull/<N>/head` | Fork `main` (`--no-ff`) | Tests written and green before merge |
+| Upstream-bound feature | `contrib/mfelker/<desc>` | `upstream/main` | Upstream PR **and** fork `main` via a fork PR | Red-green-refactor; tests inside the contribution folder |
+| Staged upstream PR | `stage/pr-<N>-<desc>` | `upstream` `refs/pull/<N>/head` | Fork `main` **via a fork PR** | Tests written and green before merge |
 
 ## Where spec-kit runs
 
@@ -55,6 +55,36 @@ while read -r id path; do
 done
 ```
 
+## How changes land on fork `main`
+
+`stage/` and `contrib/` changes land **only through a pull request on the fork**, merged with a merge commit after `fork-ci-verdict` passes. `fork/` branches and upstream syncs may still be merged locally and pushed.
+
+| Lane | How it lands | What enforces it |
+|------|--------------|------------------|
+| `stage/`, `contrib/` | `gh pr create -R mfelker/OB1 --base main`, then `gh pr merge <N> -R mfelker/OB1 --merge` once green | The ruleset requires `fork-ci-verdict`; a red PR can only merge through the deliberate "bypass rules" checkbox |
+| `fork/` | Local `git merge --no-ff`, then push (or a fork PR) | fork-ci runs after the push and reports |
+| Upstream sync | Local merge and push, or an optional `sync/upstream-<date>` fork PR | Upstream-only folders are advisory, so syncs are not blocked |
+
+Use **Create a merge commit** (`--merge`), never squash or rebase. It keeps contributor commits intact for the ledger, and GitHub-committed merges are how fork-ci recognizes a PR merge.
+
+A local merge of a `stage/` or `contrib/` branch still pushes, because the owner bypasses the ruleset, but `git push` prints `Bypassed rule violations`, and the post-push fork-ci run fails with **`lane-bypass`**. It recognizes the branch by its history (cut from upstream), not by the merge message.
+
+### fork-ci outcomes
+
+| Outcome | Meaning | Blocks? |
+|---------|---------|---------|
+| ✅ `pass` | All runtimes' tests passed | — |
+| ❌ `fail` | Tests failed | Yes (strict) |
+| ❌ `no-tests` | A runtime with code has no tests (for example "no tests for deno code") | Yes (strict) |
+| ❌ `setup` | Install failed, or tests found but no runner configured | Yes (strict) |
+| ❌ `timeout` | Tests exceeded the limit, or a job lost its result | Yes (strict) |
+| ⚠️ any of the above, advisory | The folder's content is identical to upstream (`(from upstream)`) | No |
+| ⚠️ `sql-unverified` | SQL changed but the folder has no `tests/verify.sql` | No |
+| ➖ `exempt` | Docs-only folder | No |
+| ❌ `lane-bypass` | Push run only: a `stage/`/`contrib/` branch was merged locally | Yes |
+
+Design and details: `specs/001-fork-ci/` and `.fork/ci/README.md`.
+
 ## Sync upstream into the fork (weekly, and before any new `contrib/` branch)
 
 ```bash
@@ -76,10 +106,13 @@ git worktree add "../ob1-stage-$N" "stage/pr-$N-$DESC"
 cd "../ob1-stage-$N"
 # 1. Read the diff: git diff upstream/main...HEAD --stat
 # 2. Write tests inside the PR's contribution folder; commit separately: "[category] Tests for #N"
-# 3. Run tests until green
-cd -
-git switch main
-git merge --no-ff "stage/pr-$N-$DESC" -m "[fork] Stage upstream PR #$N ($DESC)"
+# 3. Run tests until green locally: node .fork/ci/bin/run-folder.mjs is not on this branch,
+#    so use the folder's own runner (deno test / npm test / pytest)
+git push -u origin "stage/pr-$N-$DESC"
+gh pr create -R mfelker/OB1 --base main --head "stage/pr-$N-$DESC" --title "[fork] Stage upstream PR #$N ($DESC)"
+# 4. When fork-ci-verdict is green:
+gh pr merge <fork-PR-number> -R mfelker/OB1 --merge
+cd - && git worktree remove "../ob1-stage-$N"
 ```
 
 Then add a row to `staged-prs.md`. If the tests are worth offering upstream, comment on the PR with a link to the fork's test commit.
@@ -101,7 +134,9 @@ git worktree add "../ob1-$DESC" -b "contrib/mfelker/$DESC" upstream/main
 git diff --stat upstream/main...HEAD   # must list only the one contribution folder
 git push -u origin "contrib/mfelker/$DESC"
 gh pr create -R NateBJones-Projects/OB1 --head "mfelker:contrib/mfelker/$DESC" --title "[category] Short description"
-git switch main && git merge --no-ff "contrib/mfelker/$DESC"
+# Also land it on fork main through a fork PR (fork-ci must pass):
+gh pr create -R mfelker/OB1 --base main --head "contrib/mfelker/$DESC" --title "[fork] Land contrib/mfelker/$DESC"
+gh pr merge <fork-PR-number> -R mfelker/OB1 --merge
 ```
 
 Record it in `staged-prs.md` with kind `own`. Upstream may squash or edit it before merging, and the reconcile rules above apply to it as well.
@@ -109,5 +144,5 @@ Record it in `staged-prs.md` with kind `own`. Upstream may squash or edit it bef
 ## Open items (future `/speckit-specify` features)
 
 - Automation scripts for sync and staging (wrapping the commands above, updating the ledger)
-- A fork-specific CI workflow (fork-only file name) that runs tests and gate checks on fork PRs
+- ~~A fork-specific CI workflow~~ → `fork-ci` (spec 001)
 - Triage of the upstream open-PR backlog (135 open PRs as of 2026-11-24)
