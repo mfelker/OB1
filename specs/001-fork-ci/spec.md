@@ -96,7 +96,7 @@ When the owner merges `upstream/main` into fork `main`, upstream's changes may t
 - A test tries to reach a live service using credentials: no credentials are available, so it fails, which signals that the test must be mocked (Principle IV).
 - A change touches many folders at once (for example, a large staged PR): every folder is still evaluated, independently and in parallel where possible.
 - A change touches only SQL files in a folder: its verification script runs if present; otherwise "SQL unverified" is reported as advisory (FR-011).
-- A `stage/` or `contrib/` change is merged locally, bypassing the PR: the after-the-fact run on fork `main` still reports it, and the branch-protection requirement (FR-012) flags the bypass.
+- A `stage/` or `contrib/` change is merged locally, bypassing the PR: the after-the-fact run on fork `main` flags it red with reason `lane-bypass` (FR-012; research R11).
 
 ## Requirements *(mandatory)*
 
@@ -107,7 +107,7 @@ When the owner merges `upstream/main` into fork `main`, upstream's changes may t
 - **FR-003**: Fork-only paths (`.specify/`, `specs/`, `.fork/`, `.claude/skills/speckit-*`) and `_template/` folders MUST be ignored for test purposes and MUST NOT cause failure.
 - **FR-004**: For each changed folder, the check MUST classify it as **code** (contains executable source: TypeScript, JavaScript, or Python) or **docs-only** (no executable source), and MUST exempt docs-only folders.
 - **FR-005**: For each code folder, the check MUST select the test runner from the folder's own contents, following the constitution's Testing Standards: Deno test runner for Deno Edge Functions, the folder's declared Node test script (Vitest or `node --test`) for Node projects, plain Node test scripts (`test-*.mjs`) where that is the folder's convention, and pytest for Python.
-- **FR-006**: A code folder with no test files MUST fail with the reason "no tests found".
+- **FR-006**: In a strict folder, **each runtime** that has executable code (for example Deno, Node, Python) MUST have tests for that runtime; otherwise the folder fails with the reason "no tests found" naming the runtime. *(Amended 2026-11-24, research R7: a folder-level rule falsely passed `server/`, whose only test does not exercise its Edge Function.)*
 - **FR-007**: The check MUST report, per folder: name, classification, runner(s) used, outcome (pass / fail / exempt / removed), and a failure reason category (test failure, no tests, setup error, timeout). It MUST also report one overall verdict.
 - **FR-008**: The check MUST run without any repository secrets or live service credentials. No step may read secrets.
 - **FR-009**: The check MUST be defined only in fork-only files (`fork-` prefixed workflow name and fork-only helper paths) and MUST NOT modify, wrap, or depend on edits to any upstream-tracked file.
@@ -141,7 +141,7 @@ When the owner merges `upstream/main` into fork `main`, upstream's changes may t
 - **SC-006**: 0 upstream-tracked files are modified by this feature, so upstream syncs produce no conflicts in it (`git diff --stat upstream/main...fork/fork-ci` lists only fork-only paths).
 - **SC-007**: The owner can identify why a folder failed (test failure vs no tests vs setup vs timeout) from the report alone, without opening logs, for every failure in the fixture suite.
 - **SC-008**: A routine upstream sync that touches only untested upstream folders is never blocked (0 overall failures caused solely by upstream-origin folders).
-- **SC-009**: 100% of `stage/` and `contrib/` changes reach fork `main` only after a passing check.
+- **SC-009**: Every `stage/` or `contrib/` change that reaches fork `main` without a passing PR check is flagged red, and PR merges with a failing check require a deliberate bypass. *(Amended 2026-11-24, research R11: the owner must remain a bypass actor so syncs and `fork/` merges can push directly.)*
 
 ## Assumptions
 
@@ -152,5 +152,5 @@ When the owner merges `upstream/main` into fork `main`, upstream's changes may t
 - "Executable code" means `.ts`, `.tsx`, `.js`, `.mjs`, `.cjs`, `.py` source files; configuration-only files (for example `*.config.*`, `deno.json`, `package.json`) alone do not make a folder a code folder.
 - Upstream's OB1 PR Gate and Markdown Lint keep running on fork PRs and remain the authority for upstream contribution rules; this check covers tests only.
 - Q3 decision (2026-11-24) changes the staging runbook: `stage/` and `contrib/` branches now merge into fork `main` through a fork pull request rather than a local `--no-ff` merge. Updating `.fork/README.md` and enabling branch protection on fork `main` are part of this feature.
-- Origin detection for FR-010 relies on the change being an upstream sync merge (a merge whose second parent is on `upstream/main`).
+- Origin detection for FR-010: a folder is upstream-origin when its content at the change's head is identical to its content at the merge-base of the head with a freshly fetched `upstream/main`. *(Amended 2026-11-24, research R6: replaces the second-parent rule, which missed PR-based syncs and `contrib/` branches cut from a newer upstream.)*
 - Coverage depth (whether tests cover the *specific* changed behavior) is out of scope for automation; the check enforces presence and passing of tests, and coverage judgment stays with the owner during staging.

@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "fork-ci/result.schema.json",
+  "title": "fork-ci folder result",
+  "type": "object",
+  "required": ["path", "mode", "origin", "outcome", "reason", "runtimes", "durationMs"],
+  "additionalProperties": false,
+  "properties": {
+    "path": { "type": "string", "pattern": "^(server|(recipes|schemas|integrations|dashboards|skills|extensions|primitives)/[^/]+)$" },
+    "mode": { "enum": ["strict", "advisory"] },
+    "origin": { "enum": ["fork", "upstream"] },
+    "outcome": { "enum": ["pass", "fail", "no-tests", "setup", "timeout", "exempt", "sql-unverified"] },
+    "reason": { "type": "string" },
+    "durationMs": { "type": "integer", "minimum": 0 },
+    "runtimes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["kind", "root", "outcome", "reason", "durationMs"],
+        "additionalProperties": false,
+        "properties": {
+          "kind": { "enum": ["deno", "node-script", "node-plain", "python", "sql"] },
+          "root": { "type": "string" },
+          "outcome": { "enum": ["pass", "fail", "no-tests", "setup", "timeout", "sql-unverified"] },
+          "reason": { "type": "string" },
+          "durationMs": { "type": "integer", "minimum": 0 },
+          "outputExcerpt": { "type": "string", "maxLength": 20000 }
+        }
+      }
+    }
+  }
+}
