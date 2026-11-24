@@ -1,5 +1,6 @@
 <!--
 Sync Impact Report
+- Version: 1.0.1 → 1.1.0 (MINOR: Fork CI policy, Option C, in Quality Gates)
 - Version: 1.0.0 → 1.0.1 (PATCH: spec-kit runs from fork main; worktree-rooted task paths;
   cross-folder import rule softened to match observed code; Deno test caveat; ledger covers
   own contrib branches)
@@ -200,8 +201,19 @@ A change is mergeable into fork `main` only when all applicable gates pass:
 5. For upstream-bound branches: `git diff --stat upstream/main...HEAD` shows only the one
    contribution folder.
 
-Upstream GitHub workflows stay **disabled on the fork** (they would fail fork-internal PRs on
-scope). A fork-specific CI workflow, if added, MUST live in a fork-only file name.
+**Fork CI policy (Option C, decided 2026-11-24)**: upstream workflow files are never edited or
+deleted; they are enabled or disabled through repo settings only.
+
+- **Enabled**: `OB1 PR Gate` (`ob1-gate-v2.yml`) and `Markdown Lint` (`markdown-lint.yml`).
+  They give upstream-identical checks before submitting. The gate is authoritative for
+  `contrib/` → `main` and `stage/` → `main` PRs; on fork-only PRs (touching `.specify/`,
+  `specs/`, `.fork/`) its failures on Folder structure and Scope are expected and advisory.
+- **Disabled**: every other upstream workflow (bots, triage, release, Discord, Pages,
+  README-contributions PR, follow-ups, Claude review).
+- **New upstream workflows** arrive active after a sync; each sync MUST re-check and disable
+  any not listed as enabled above.
+- Upstream CI runs no contribution tests, so Principle IV is enforced by a fork-only workflow
+  (`fork-ci`, fork-only file name), not by upstream CI.
 
 ## Governance
 
@@ -216,4 +228,4 @@ scope). A fork-specific CI workflow, if added, MUST live in a fork-only file nam
 - Re-run `/speckit-brownfield-validate` after upstream syncs that change `CONTRIBUTING.md`,
   `CLAUDE.md`, or `.github/metadata.schema.json`.
 
-**Version**: 1.0.1 | **Ratified**: 2026-11-24 | **Last Amended**: 2026-11-24
+**Version**: 1.1.0 | **Ratified**: 2026-11-24 | **Last Amended**: 2026-11-24

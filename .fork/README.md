@@ -30,11 +30,28 @@ git config rerere.autoupdate true
 git config merge.conflictstyle zdiff3
 ```
 
-Upstream GitHub workflows stay disabled on the fork. They would fail fork-internal PRs on the scope check, and `update-readme-contributions` would commit to fork `main` and cause sync conflicts. As of 2026-11-24 no workflows are registered on the fork (`gh api repos/mfelker/OB1/actions/workflows -q .total_count` → 0), so the loop below does nothing. Re-run it whenever that count becomes non-zero:
+## Fork CI policy (Option C)
+
+Upstream workflow files are never edited or deleted. They are switched on or off in repo settings only, so syncs never conflict on them.
+
+| Workflow | File | State |
+|----------|------|-------|
+| OB1 PR Gate | `ob1-gate-v2.yml` | **Enabled**: upstream-identical checks before submitting (advisory on fork-only PRs) |
+| Markdown Lint | `markdown-lint.yml` | **Enabled** |
+| All others (9 as of 2026-11-24) | — | Disabled |
+
+Upstream CI runs no contribution tests; `fork-ci` (fork-only workflow) covers that.
+
+**After every sync**, disable any newly arrived upstream workflow:
 
 ```bash
-for wf in $(gh workflow list -R mfelker/OB1 --all --json id -q '.[].id'); do
-  gh workflow disable "$wf" -R mfelker/OB1
+KEEP='^(ob1-gate-v2|markdown-lint)\.yml$'
+gh api repos/mfelker/OB1/actions/workflows --paginate \
+  -q '.workflows[] | select(.state=="active") | "\(.id) \(.path)"' |
+while read -r id path; do
+  base=$(basename "$path")
+  case "$base" in fork-*) continue ;; esac   # fork-owned workflows stay on
+  echo "$base" | grep -qE "$KEEP" || gh workflow disable "$id" -R mfelker/OB1
 done
 ```
 
