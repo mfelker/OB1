@@ -179,20 +179,20 @@ description: "Task list for Fork CI (per-folder test enforcement)"
 
 ### Tests for User Story 4 (MANDATORY) ⚠️
 
-- [ ] T039 [P] [US4] Write failing tests `.fork/ci/test/origin.test.mjs` with `git-fixture.mjs` repos holding an `upstream` ref. Each case checks `data-model.md` `Changed Folder.origin` and `Changed Folder.mode` (research R6 table):
+- [X] T039 [P] [US4] Write failing tests `.fork/ci/test/origin.test.mjs` with `git-fixture.mjs` repos holding an `upstream` ref. Each case checks `data-model.md` `Changed Folder.origin` and `Changed Folder.mode` (research R6 table):
   - (a) sync merged locally → upstream/advisory
   - (b) sync via PR merge ref → upstream/advisory
   - (c) `contrib/` cut from a newer upstream: the untouched upstream folder is upstream/advisory and the owner's folder is fork/strict
   - (d) staged PR folder → fork/strict
   - (e) sync touching a fork-modified folder → fork/strict
   - (f) removed folder → `removed`
-- [ ] T040 [P] [US4] Add failing cases to `.fork/ci/test/verdict.test.mjs` and `.fork/ci/test/report.test.mjs`: advisory `fail`/`no-tests`/`missing` never fail the verdict and land in `data-model.md` `Check Verdict.advisories`; report rows show "(from upstream)" (SC-008)
+- [X] T040 [P] [US4] Add failing cases to `.fork/ci/test/verdict.test.mjs` and `.fork/ci/test/report.test.mjs`: advisory `fail`/`no-tests`/`missing` never fail the verdict and land in `data-model.md` `Check Verdict.advisories`; report rows show "(from upstream)" (SC-008)
 
 ### Implementation for User Story 4
 
-- [ ] T041 [US4] Implement `.fork/ci/lib/origin.mjs` (`git merge-base HEAD <upstream-ref>`, `git rev-parse <rev>:<folder>` comparison) until T039 passes
-- [ ] T042 [US4] Wire origin into `.fork/ci/bin/detect.mjs` (`--upstream-ref`), and add an upstream fetch step to the `detect` job in `.github/workflows/fork-ci.yml`: `git fetch --no-tags https://github.com/NateBJones-Projects/OB1.git main:refs/remotes/upstream/main` (no credentials)
-- [ ] T043 [US4] Extend `.fork/ci/lib/verdict.mjs` and `.fork/ci/lib/report.mjs` for advisory handling until T040 passes
+- [X] T041 [US4] Implement `.fork/ci/lib/origin.mjs` (`git merge-base HEAD <upstream-ref>`, `git rev-parse <rev>:<folder>` comparison) until T039 passes
+- [X] T042 [US4] Wire origin into `.fork/ci/bin/detect.mjs` (`--upstream-ref`), and add an upstream fetch step to the `detect` job in `.github/workflows/fork-ci.yml`: `git fetch --no-tags https://github.com/NateBJones-Projects/OB1.git main:refs/remotes/upstream/main` (no credentials)
+- [X] T043 [US4] Extend `.fork/ci/lib/verdict.mjs` and `.fork/ci/lib/report.mjs` for advisory handling until T040 passes
 - [ ] T044 [US4] Validate: scratch `sync/upstream-test` PR to `spike/fork-ci-base` that merges an upstream commit touching an untested folder → ⚠️ advisory row, overall ✅
 
 **Checkpoint**: All four user stories work independently.
