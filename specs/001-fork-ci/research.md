@@ -159,6 +159,24 @@ Each changed folder is scanned (excluding `node_modules/`) into **runtimes**. A 
   - **`actionlint`** runs in the self-test job (downloaded binary) to lint the workflow file.
 - **Rationale**: This is Principle IV applied to the tool that enforces Principle IV.
 
+## Spike results (T011, 2026-11-24)
+
+Run on `mfelker/OB1` with stub CLIs (T009) and the workflow skeleton (T010), using a temporary ruleset (id `28028942`) on `refs/heads/spike/fork-ci-*` that requires `fork-ci-verdict`, with bypass actor `RepositoryRole` `actor_id: 5` (`always`). GitHub accepted `actor_id: 5` as the Repository admin role.
+
+| Assumption | Scenario | Observed | Holds? |
+|------------|----------|----------|--------|
+| R4: workflow + `.fork/ci/` available on PRs from upstream-based branches | PR #1: branch cut from `upstream/main` (no `fork-ci.yml` on it) touching `recipes/brain-smoke-test` | The push of that branch started **no** run (no workflow on it), yet its PR run executed from the merge ref and found `.fork/ci/`. `detect` (merge-base diff) listed only `recipes/brain-smoke-test`, so no fork-only commits leaked in | ✅ |
+| R9: a failing `test` job still gets an always-run verdict | PR #2: `SPIKE_FAIL` marker → `test` job failure | `fork-ci-verdict` ran and failed (`detect=success test=failure`); PR `mergeable_state=blocked` | ✅ |
+| R9: an empty matrix / skipped `test` is handled | PR #3: fork-only edit only | `test` skipped, `fork-ci-verdict` success; PR `clean`; run took **39 s** (SC-004 < 1 min) | ✅ |
+| R9: a pending required check blocks | All 3 PRs while running | `mergeable_state=blocked` until the verdict reported | ✅ |
+| R11: direct push is allowed for the owner but flagged | Direct push to `spike/fork-ci-base` | Push succeeded; `remote: Bypassed rule violations … Required status check "fork-ci-verdict" is expected.` | ✅ |
+| R11: PR merges are committed by GitHub | PR #3 merged via `gh pr merge --merge` | Merge commit `7912715` committer `GitHub <noreply@github.com>` | ✅ |
+| R11: red PR shows a deliberate bypass option | PR #2 | API shows `blocked`; the UI "bypass rules" checkbox for admins was not observed through the API (UI-only) | ⚠️ not verified via API |
+
+Cosmetic finding: a skipped matrix job is listed as `test (${{ matrix.path }})` because the name expression cannot resolve without a matrix. This is harmless; the verdict, not the job name, is the required check.
+
+**Result**: every R4, R9 and R11 assumption that the API can observe holds; no research amendment is needed. `actor_id: 5` is confirmed for T061.
+
 ## Spec amendments (reported to the owner)
 
 1. **FR-006**: "code folder with no tests" is refined to "**each runtime** with code in a strict folder must have tests" (R7).
