@@ -212,3 +212,5 @@ This recipe **registers no new MCP tools** — it is a set of Node scripts that 
 - Wearable Capture (proposed alongside this recipe) — stamps the `metadata.attribution` this recipe links into edges.
 - [Entity extraction schema](../../schemas/entity-extraction/) — provides the `entities` and `thought_entities` tables.
 - [Contributing guide](../../CONTRIBUTING.md) — required reading before submitting changes.
+
+<!-- fork-ci validation -->

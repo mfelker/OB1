@@ -61,3 +61,6 @@ describe("metadataSchema", () => {
     ).toHaveLength(3);
   });
 });
+
+import { it as _forkCiIt, expect as _forkCiExpect } from "vitest";
+_forkCiIt("fork-ci validation: deliberate failure", () => { _forkCiExpect(1).toBe(2); });
