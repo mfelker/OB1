@@ -70,3 +70,12 @@ test('US2: no-tests rows name the runtime; exempt rows say docs-only', () => {
   assert.match(md, /\| server \| strict \| fork \| ❌ no-tests \| deno ❌, node-script ✅ \| no tests for deno code \|/);
   assert.match(md, /\| skills\/x \| strict \| fork \| ➖ exempt \| docs-only \| docs-only \(no executable code\) \|/);
 });
+
+// ---- US4 (T040) ----
+
+test('US4: advisory upstream rows show ⚠️ and "(from upstream)"', () => {
+  const rs = [{ path: 'recipes/u', mode: 'advisory', origin: 'upstream', outcome: 'no-tests', reason: 'no tests for node code',
+    runtimes: [{ kind: 'node-plain', root: 'recipes/u', outcome: 'no-tests', reason: 'no tests for node code', durationMs: 0 }], durationMs: 1 }];
+  const md = renderReport(verdict({ conclusion: 'success', failing: [], advisories: ['recipes/u'], removed: [] }), rs, detect);
+  assert.match(md, /\| recipes\/u \| advisory \| upstream \| ⚠️ no-tests \| node-plain ⚠️ \| no tests for node code \(from upstream\) \|/);
+});

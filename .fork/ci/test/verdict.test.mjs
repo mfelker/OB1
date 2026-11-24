@@ -79,3 +79,43 @@ test('US3: a failed self-test is reported in the verdict', () => {
   const v = computeVerdict({ detect: detectFor(), results: [], jobs: { ...ok, selfTest: 'failure' } });
   assert.equal(v.selfTest, 'failure');
 });
+
+// ---- US4 (T040) ----
+
+const adv = (path, outcome) => ({ ...res(path, outcome), mode: 'advisory', origin: 'upstream' });
+const detectModes = entries => ({
+  ...detectFor(), has_folders: entries.length > 0,
+  matrix: { include: entries.map(([path, mode]) => ({ path, mode, origin: mode === 'advisory' ? 'upstream' : 'fork', needsPostgres: false })) },
+});
+
+test('US4: advisory failures and no-tests never fail the verdict; they are listed as advisories', () => {
+  const v = computeVerdict({
+    detect: detectModes([['recipes/u', 'advisory'], ['recipes/v', 'advisory']]),
+    results: [adv('recipes/u', 'fail'), adv('recipes/v', 'no-tests')],
+    jobs: ok,
+  });
+  assert.equal(v.conclusion, 'success');
+  assert.deepEqual(v.failing, []);
+  assert.deepEqual(v.advisories, ['recipes/u', 'recipes/v']);
+});
+
+test('US4: a missing advisory result does not fail; a missing strict one does', () => {
+  const d = detectModes([['recipes/u', 'advisory'], ['recipes/s', 'strict']]);
+  const v1 = computeVerdict({ detect: d, results: [res('recipes/s', 'pass')], jobs: ok });
+  assert.equal(v1.conclusion, 'success');
+  assert.deepEqual(v1.advisories, ['recipes/u']);
+  const v2 = computeVerdict({ detect: d, results: [adv('recipes/u', 'pass')], jobs: ok });
+  assert.equal(v2.conclusion, 'failure');
+  assert.deepEqual(v2.failing, ['recipes/s']);
+});
+
+test('US4: strict failures still fail alongside advisories', () => {
+  const v = computeVerdict({
+    detect: detectModes([['recipes/u', 'advisory'], ['recipes/s', 'strict']]),
+    results: [adv('recipes/u', 'fail'), res('recipes/s', 'fail')],
+    jobs: ok,
+  });
+  assert.equal(v.conclusion, 'failure');
+  assert.deepEqual(v.failing, ['recipes/s']);
+  assert.deepEqual(v.advisories, ['recipes/u']);
+});
