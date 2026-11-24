@@ -175,6 +175,13 @@ Run on `mfelker/OB1` with stub CLIs (T009) and the workflow skeleton (T010), usi
 
 Cosmetic finding: a skipped matrix job is listed as `test (${{ matrix.path }})` because the name expression cannot resolve without a matrix. This is harmless; the verdict, not the job name, is the required check.
 
+**US1 validation (T026, 2026-11-24)**, using real `run-folder` and `verdict` on PR #4 into `spike/fork-ci-base` that touches `recipes/vercel-neon-telegram` (one deliberately failing Vitest assertion), `integrations/chrome-capture-extension` and `recipes/authorship-edges`:
+
+- Red run `45501700932`: the 3 matrix jobs ran in parallel; the verdict was ❌ naming only `recipes/vercel-neon-telegram` (`node-script ❌ tests failed (exit 1)`). PR opened 22:31:14 → verdict 22:32:22 = **68 s** (SC-003 < 10 min ✅).
+- Green run `45501926020` after reverting the assertion: ✅ in 51 s.
+- Real-folder findings: `recipes/atomizer/test-atomize.mjs` is a live-API script that fails without `OPENROUTER_API_KEY` (correct under FR-008); `integrations/hermes-agent-memory` tests import the undeclared host package `agent` and fail outside a Hermes install; `server` → node-script pass + deno no-tests (R7).
+- Side effect of the temporary `spike/fork-ci-*` **push** trigger: PR branches matching it also get push runs, which duplicates the checks. This goes away when T055 restores `main`-only triggers.
+
 **Result**: every R4, R9 and R11 assumption that the API can observe holds; no research amendment is needed. `actor_id: 5` is confirmed for T061.
 
 ## Spec amendments (reported to the owner)

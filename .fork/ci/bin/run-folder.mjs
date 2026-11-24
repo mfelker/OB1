@@ -9,6 +9,7 @@ import { runCommand } from '../lib/exec.mjs';
 import { worstOutcome } from '../lib/verdict.mjs';
 
 const MAX_EXCERPT = 20_000;
+const RUNTIME_LABEL = { deno: 'deno', 'node-script': 'node', 'node-plain': 'node', python: 'python', sql: 'sql' };
 const args = cliArgs('run-folder');
 const repoRoot = process.cwd();
 const timeoutSec = Number(args['timeout-sec']);
@@ -54,10 +55,10 @@ async function runRuntime(rt) {
   const rootAbs = join(repoRoot, rt.root);
   const base = { kind: rt.kind, root: rt.root };
   if (rt.testFiles.length === 0) {
-    return { ...base, outcome: 'no-tests', reason: 'no tests', durationMs: 0 };
+    return { ...base, outcome: 'no-tests', reason: `no tests for ${RUNTIME_LABEL[rt.kind]} code`, durationMs: 0 };
   }
   if (!rt.command) {
-    return { ...base, outcome: 'setup', reason: 'no runner', durationMs: 0 };
+    return { ...base, outcome: 'setup', reason: 'tests found but no runner configured', durationMs: 0 };
   }
   const t0 = Date.now();
   const inst = await install(rt, rootAbs);
@@ -84,7 +85,7 @@ async function main() {
     for (const rt of runtimes) rtResults.push(await runRuntime(rt));
     outcome = rtResults.length ? worstOutcome(rtResults.map(r => r.outcome)) : 'exempt';
     reason = outcome === 'pass' ? 'all tests passed'
-      : outcome === 'exempt' ? 'no executable code'
+      : outcome === 'exempt' ? 'docs-only (no executable code)'
         : rtResults.find(r => r.outcome === outcome).reason;
   } catch (err) {
     outcome = 'setup';

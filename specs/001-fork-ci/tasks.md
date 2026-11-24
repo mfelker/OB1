@@ -110,7 +110,7 @@ description: "Task list for Fork CI (per-folder test enforcement)"
 - [X] T025 [US1] Complete the `test` and `fork-ci-verdict` jobs in `.github/workflows/fork-ci.yml`:
   - `test`: set up Node/Python/Deno, run `run-folder.mjs` per matrix entry, upload `result-<slug>` with `actions/upload-artifact@v4`
   - `fork-ci-verdict`: download all results with `actions/download-artifact@v4`, run `verdict.mjs` with `--detect-result ${{ needs.detect.result }} --test-result ${{ needs.test.result }} --test-sql-result skipped --self-test-result skipped` (the literal `skipped` values are replaced by real `needs.*.result` in T037 and T052, once those jobs exist), write `$GITHUB_STEP_SUMMARY`
-- [ ] T026 [US1] Validate with quickstart.md §1–§3 locally (`recipes/vercel-neon-telegram` → pass), then with scratch PRs to `spike/fork-ci-base`:
+- [X] T026 [US1] Validate with quickstart.md §1–§3 locally (`recipes/vercel-neon-telegram` → pass), then with scratch PRs to `spike/fork-ci-base`:
   - a PR touching 3 code folders: record the wall-clock time from PR open to `fork-ci-verdict` result in `research.md` Spike results; it must be under 10 minutes (SC-003)
   - break one Vitest assertion in `recipes/vercel-neon-telegram` → overall ❌ naming it
   - revert → ✅
@@ -127,18 +127,18 @@ description: "Task list for Fork CI (per-folder test enforcement)"
 
 ### Tests for User Story 2 (MANDATORY) ⚠️
 
-- [ ] T027 [P] [US2] Add failing cases to `.fork/ci/test/runtimes.test.mjs` and `.fork/ci/test/run-folder.test.mjs`:
+- [X] T027 [P] [US2] Add failing cases to `.fork/ci/test/runtimes.test.mjs` and `.fork/ci/test/run-folder.test.mjs`:
   - `deno-untested` → `no-tests`, reason "no tests for deno code"
   - `mixed-server` → `node-script` runtime `pass`, `deno` runtime `no-tests`, folder `no-tests` (research R7, amended FR-006; `data-model.md` `Folder Result.runtimes`)
   - `docs-only` and `config-only` → `exempt` (`data-model.md` `Runtime.codeFiles` empty)
   - `tests-no-runner` → `setup`, reason "tests found but no runner configured"
-- [ ] T028 [P] [US2] Add failing cases to `.fork/ci/test/report.test.mjs`: `no-tests` rows show the runtime name; `exempt` rows show "docs-only"
+- [X] T028 [P] [US2] Add failing cases to `.fork/ci/test/report.test.mjs`: `no-tests` rows show the runtime name; `exempt` rows show "docs-only"
 
 ### Implementation for User Story 2
 
-- [ ] T029 [US2] Extend `.fork/ci/lib/runtimes.mjs` and `.fork/ci/bin/run-folder.mjs` with the per-runtime strict rule, exemption, and the no-runner `setup` outcome until T027 passes
-- [ ] T030 [US2] Extend `.fork/ci/lib/report.mjs` until T028 passes
-- [ ] T031 [US2] Validate: `node .fork/ci/bin/run-folder.mjs --path server --mode strict --origin fork --out /tmp/s.json` → `no-tests` with the deno reason (quickstart.md §3)
+- [X] T029 [US2] Extend `.fork/ci/lib/runtimes.mjs` and `.fork/ci/bin/run-folder.mjs` with the per-runtime strict rule, exemption, and the no-runner `setup` outcome until T027 passes
+- [X] T030 [US2] Extend `.fork/ci/lib/report.mjs` until T028 passes
+- [X] T031 [US2] Validate: `node .fork/ci/bin/run-folder.mjs --path server --mode strict --origin fork --out /tmp/s.json` → `no-tests` with the deno reason (quickstart.md §3)
 
 **Checkpoint**: US1 + US2 enforce strict TDD for owner changes.
 
@@ -152,15 +152,15 @@ description: "Task list for Fork CI (per-folder test enforcement)"
 
 ### Tests for User Story 3 (MANDATORY) ⚠️
 
-- [ ] T032 [P] [US3] Add failing cases to `.fork/ci/test/detect.test.mjs`: only fork-only paths → `has_folders: false`, empty `matrix.include`, correct `skipped.forkOnly`; fork-only paths plus one folder → exactly that folder
-- [ ] T033 [P] [US3] Add failing cases to `.fork/ci/test/verdict.test.mjs`: detect `success` + test `skipped` + 0 folders → `success`; detect `success` + test `skipped` + ≥1 folder → `failure`; self-test `failure` → `failure`
-- [ ] T034 [P] [US3] Write failing tests `.fork/ci/test/self-test-needed.test.mjs`: returns true iff the changed paths include `.fork/ci/**` or `.github/workflows/fork-ci.yml`
+- [X] T032 [P] [US3] Add failing cases to `.fork/ci/test/detect.test.mjs`: only fork-only paths → `has_folders: false`, empty `matrix.include`, correct `skipped.forkOnly`; fork-only paths plus one folder → exactly that folder
+- [X] T033 [P] [US3] Add failing cases to `.fork/ci/test/verdict.test.mjs`: detect `success` + test `skipped` + 0 folders → `success`; detect `success` + test `skipped` + ≥1 folder → `failure`; self-test `failure` → `failure`
+- [X] T034 [P] [US3] Write failing tests `.fork/ci/test/self-test-needed.test.mjs`: returns true iff the changed paths include `.fork/ci/**` or `.github/workflows/fork-ci.yml`
 
 ### Implementation for User Story 3
 
-- [ ] T035 [US3] Make `.fork/ci/bin/detect.mjs` and `.fork/ci/lib/verdict.mjs` pass T032–T033 (`--self-test-result`, already specified in `contracts/cli.md`)
-- [ ] T036 [US3] Implement `.fork/ci/lib/self-test-needed.mjs` + `.fork/ci/bin/self-test-needed.mjs` until T034 passes
-- [ ] T037 [US3] Add the `self-test` job to `.github/workflows/fork-ci.yml`:
+- [X] T035 [US3] Make `.fork/ci/bin/detect.mjs` and `.fork/ci/lib/verdict.mjs` pass T032–T033 (`--self-test-result`, already specified in `contracts/cli.md`)
+- [X] T036 [US3] Implement `.fork/ci/lib/self-test-needed.mjs` + `.fork/ci/bin/self-test-needed.mjs` until T034 passes
+- [X] T037 [US3] Add the `self-test` job to `.github/workflows/fork-ci.yml`:
   - compute "needed" with `self-test-needed.mjs` (inside the job, not a path filter)
   - set up the same toolchain as the `test` job (Node 26, Python 3.13 + `pytest`, Deno v2.9.x) so the Python and Deno integration tests really run, with `CI=true`
   - when needed, run `node --test .fork/ci/test/` and a pinned `actionlint` downloaded at runtime
@@ -179,20 +179,20 @@ description: "Task list for Fork CI (per-folder test enforcement)"
 
 ### Tests for User Story 4 (MANDATORY) ⚠️
 
-- [ ] T039 [P] [US4] Write failing tests `.fork/ci/test/origin.test.mjs` with `git-fixture.mjs` repos holding an `upstream` ref. Each case checks `data-model.md` `Changed Folder.origin` and `Changed Folder.mode` (research R6 table):
+- [X] T039 [P] [US4] Write failing tests `.fork/ci/test/origin.test.mjs` with `git-fixture.mjs` repos holding an `upstream` ref. Each case checks `data-model.md` `Changed Folder.origin` and `Changed Folder.mode` (research R6 table):
   - (a) sync merged locally → upstream/advisory
   - (b) sync via PR merge ref → upstream/advisory
   - (c) `contrib/` cut from a newer upstream: the untouched upstream folder is upstream/advisory and the owner's folder is fork/strict
   - (d) staged PR folder → fork/strict
   - (e) sync touching a fork-modified folder → fork/strict
   - (f) removed folder → `removed`
-- [ ] T040 [P] [US4] Add failing cases to `.fork/ci/test/verdict.test.mjs` and `.fork/ci/test/report.test.mjs`: advisory `fail`/`no-tests`/`missing` never fail the verdict and land in `data-model.md` `Check Verdict.advisories`; report rows show "(from upstream)" (SC-008)
+- [X] T040 [P] [US4] Add failing cases to `.fork/ci/test/verdict.test.mjs` and `.fork/ci/test/report.test.mjs`: advisory `fail`/`no-tests`/`missing` never fail the verdict and land in `data-model.md` `Check Verdict.advisories`; report rows show "(from upstream)" (SC-008)
 
 ### Implementation for User Story 4
 
-- [ ] T041 [US4] Implement `.fork/ci/lib/origin.mjs` (`git merge-base HEAD <upstream-ref>`, `git rev-parse <rev>:<folder>` comparison) until T039 passes
-- [ ] T042 [US4] Wire origin into `.fork/ci/bin/detect.mjs` (`--upstream-ref`), and add an upstream fetch step to the `detect` job in `.github/workflows/fork-ci.yml`: `git fetch --no-tags https://github.com/NateBJones-Projects/OB1.git main:refs/remotes/upstream/main` (no credentials)
-- [ ] T043 [US4] Extend `.fork/ci/lib/verdict.mjs` and `.fork/ci/lib/report.mjs` for advisory handling until T040 passes
+- [X] T041 [US4] Implement `.fork/ci/lib/origin.mjs` (`git merge-base HEAD <upstream-ref>`, `git rev-parse <rev>:<folder>` comparison) until T039 passes
+- [X] T042 [US4] Wire origin into `.fork/ci/bin/detect.mjs` (`--upstream-ref`), and add an upstream fetch step to the `detect` job in `.github/workflows/fork-ci.yml`: `git fetch --no-tags https://github.com/NateBJones-Projects/OB1.git main:refs/remotes/upstream/main` (no credentials)
+- [X] T043 [US4] Extend `.fork/ci/lib/verdict.mjs` and `.fork/ci/lib/report.mjs` for advisory handling until T040 passes
 - [ ] T044 [US4] Validate: scratch `sync/upstream-test` PR to `spike/fork-ci-base` that merges an upstream commit touching an untested folder → ⚠️ advisory row, overall ✅
 
 **Checkpoint**: All four user stories work independently.

@@ -28,6 +28,19 @@ Determines the changed folders and builds the test matrix.
 
 **Exit codes**: `0` success (including zero folders); `2` usage error; `3` git error (for example an unknown sha).
 
+## `self-test-needed.mjs`
+
+Decides whether fork-ci's own tests must run (research R13).
+
+| Arg | Required | Meaning |
+|-----|----------|---------|
+| `--event pull_request\|push` | yes | Diff mode, as for `detect.mjs` |
+| `--base` / `--head` or `--before` / `--after` | yes | Same as `detect.mjs` |
+
+**stdout**: `true` when any changed path is under `.fork/ci/` or is `.github/workflows/fork-ci.yml`, otherwise `false`.
+
+**Exit codes**: `0` success; `2` usage error; `3` git error.
+
 ## `run-folder.mjs`
 
 Runs every runtime of one folder and always writes a result.
