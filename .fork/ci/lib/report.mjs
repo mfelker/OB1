@@ -47,6 +47,9 @@ export function renderReport(verdict, results, detect) {
   if (sk) footer.push(`Skipped paths: ${sk.forkOnly} fork-only, ${sk.template} template, ${sk.other} other`);
   if (footer.length) lines.push('', footer.join(' · '));
 
+  if (['failure', 'cancelled'].includes(verdict.selfTest)) {
+    lines.push('', `Self-test: ❌ ${verdict.selfTest} (fork-ci's own tests or actionlint; see the self-test job)`);
+  }
   for (const b of verdict.bypasses ?? []) {
     lines.push('', `Lane bypass: ${b.sha} merged ${esc(b.branch)} without a PR`);
   }

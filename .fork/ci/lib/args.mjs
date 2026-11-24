@@ -24,6 +24,16 @@ const SPECS = {
       'upstream-ref': { required: true },
     },
   },
+  'self-test-needed': {
+    usage: 'usage: self-test-needed.mjs --event pull_request|push (--base <sha> --head <sha> | --before <sha> --after <sha>)',
+    options: {
+      event: { enum: ['pull_request', 'push'], required: true },
+      base: { requiredIf: a => a.event === 'pull_request' },
+      head: { requiredIf: a => a.event === 'pull_request' },
+      before: { requiredIf: a => a.event === 'push' },
+      after: { requiredIf: a => a.event === 'push' },
+    },
+  },
   'run-folder': {
     usage: 'usage: run-folder.mjs --path <folder> --mode strict|advisory --origin fork|upstream --out <file> [--timeout-sec <n>]',
     options: {

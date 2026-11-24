@@ -152,15 +152,15 @@ description: "Task list for Fork CI (per-folder test enforcement)"
 
 ### Tests for User Story 3 (MANDATORY) ⚠️
 
-- [ ] T032 [P] [US3] Add failing cases to `.fork/ci/test/detect.test.mjs`: only fork-only paths → `has_folders: false`, empty `matrix.include`, correct `skipped.forkOnly`; fork-only paths plus one folder → exactly that folder
-- [ ] T033 [P] [US3] Add failing cases to `.fork/ci/test/verdict.test.mjs`: detect `success` + test `skipped` + 0 folders → `success`; detect `success` + test `skipped` + ≥1 folder → `failure`; self-test `failure` → `failure`
-- [ ] T034 [P] [US3] Write failing tests `.fork/ci/test/self-test-needed.test.mjs`: returns true iff the changed paths include `.fork/ci/**` or `.github/workflows/fork-ci.yml`
+- [X] T032 [P] [US3] Add failing cases to `.fork/ci/test/detect.test.mjs`: only fork-only paths → `has_folders: false`, empty `matrix.include`, correct `skipped.forkOnly`; fork-only paths plus one folder → exactly that folder
+- [X] T033 [P] [US3] Add failing cases to `.fork/ci/test/verdict.test.mjs`: detect `success` + test `skipped` + 0 folders → `success`; detect `success` + test `skipped` + ≥1 folder → `failure`; self-test `failure` → `failure`
+- [X] T034 [P] [US3] Write failing tests `.fork/ci/test/self-test-needed.test.mjs`: returns true iff the changed paths include `.fork/ci/**` or `.github/workflows/fork-ci.yml`
 
 ### Implementation for User Story 3
 
-- [ ] T035 [US3] Make `.fork/ci/bin/detect.mjs` and `.fork/ci/lib/verdict.mjs` pass T032–T033 (`--self-test-result`, already specified in `contracts/cli.md`)
-- [ ] T036 [US3] Implement `.fork/ci/lib/self-test-needed.mjs` + `.fork/ci/bin/self-test-needed.mjs` until T034 passes
-- [ ] T037 [US3] Add the `self-test` job to `.github/workflows/fork-ci.yml`:
+- [X] T035 [US3] Make `.fork/ci/bin/detect.mjs` and `.fork/ci/lib/verdict.mjs` pass T032–T033 (`--self-test-result`, already specified in `contracts/cli.md`)
+- [X] T036 [US3] Implement `.fork/ci/lib/self-test-needed.mjs` + `.fork/ci/bin/self-test-needed.mjs` until T034 passes
+- [X] T037 [US3] Add the `self-test` job to `.github/workflows/fork-ci.yml`:
   - compute "needed" with `self-test-needed.mjs` (inside the job, not a path filter)
   - set up the same toolchain as the `test` job (Node 26, Python 3.13 + `pytest`, Deno v2.9.x) so the Python and Deno integration tests really run, with `CI=true`
   - when needed, run `node --test .fork/ci/test/` and a pinned `actionlint` downloaded at runtime

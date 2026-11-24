@@ -70,6 +70,7 @@ Computed by `bin/verdict.mjs` (`lib/verdict.mjs`).
 | `failing` | string[] | Strict folders with outcome ∈ {fail, no-tests, setup, timeout} |
 | `advisories` | string[] | Advisory folders with non-pass outcomes, plus all `sql-unverified` |
 | `bypasses` | object[] | Push runs only: `{ sha, branch }` for local merges of upstream-based branches, per the R11 detection rule; `branch` is `unknown` when the message carries no name |
+| `selfTest` | enum | The `self-test` job result (`success` \| `failure` \| `cancelled` \| `skipped`); `failure` or `cancelled` fails the verdict and adds a report line |
 | `removed` | string[] | Folders deleted at head, from `detect`'s `removed` output; shown in the report and never affects `conclusion` |
 | `missing` | string[] | Matrix folders with no result artifact; they count as `timeout` |
 

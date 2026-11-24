@@ -23,7 +23,8 @@ export function computeVerdict({ detect, results, jobs }) {
   if (missing.length) counts.timeout = (counts.timeout ?? 0) + missing.length;
 
   const failing = [...results.filter(r => BAD.has(r.outcome)).map(r => r.path), ...missing].sort();
-  const ok = jobs.detect === 'success' && detect !== null && failing.length === 0;
+  const selfTestOk = !['failure', 'cancelled'].includes(jobs.selfTest);
+  const ok = jobs.detect === 'success' && detect !== null && failing.length === 0 && selfTestOk;
 
   return {
     conclusion: ok ? 'success' : 'failure',
@@ -33,5 +34,6 @@ export function computeVerdict({ detect, results, jobs }) {
     missing,
     removed: detect?.removed ?? [],
     bypasses: [],
+    selfTest: jobs.selfTest,
   };
 }
