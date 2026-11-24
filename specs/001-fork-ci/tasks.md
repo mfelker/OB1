@@ -219,13 +219,13 @@ description: "Task list for Fork CI (per-folder test enforcement)"
 
 **Purpose**: Run `tests/verify.sql` against a throwaway Postgres + pgvector when a folder provides one; otherwise report `sql-unverified` as advisory
 
-- [ ] T048 [P] Add failing cases to `.fork/ci/test/runtimes.test.mjs` and `.fork/ci/test/detect.test.mjs`:
+- [X] T048 [P] Add failing cases to `.fork/ci/test/runtimes.test.mjs` and `.fork/ci/test/detect.test.mjs`:
   - `sql-only` → `sql` runtime with `sql-unverified` (advisory even in strict mode)
   - `sql-verify` → `data-model.md` `Changed Folder.needsPostgres` = true and a `Runtime.kind` `sql` command of `psql -v ON_ERROR_STOP=1 -f tests/verify.sql` run in the folder
-- [ ] T049 [P] Write failing tests `.fork/ci/test/bootstrap-drift.test.mjs`: the column list of `create table thoughts` parsed from `docs/01-getting-started.md` (read-only) equals the one in `.fork/ci/sql/bootstrap.sql`
-- [ ] T050 Write `.fork/ci/sql/bootstrap.sql`: roles `anon`/`authenticated`/`service_role` (guarded with `DO` blocks), the `auth` schema with an `auth.uid()` stub, `create extension if not exists vector`, and the core `thoughts` table + indexes + `match_thoughts` copied from `docs/01-getting-started.md` with a provenance comment; no DROP/TRUNCATE/DELETE. Run until T049 passes
-- [ ] T051 Implement the `sql` runtime in `.fork/ci/lib/runtimes.mjs` and `.fork/ci/bin/run-folder.mjs` (apply `bootstrap.sql`, then `tests/verify.sql`, with the `PG*` env from the job) until T048 passes
-- [ ] T052 Have `.fork/ci/bin/detect.mjs` emit `sql_matrix` and `has_sql` (per `contracts/cli.md`), and add the `test-sql` job (per `contracts/check.md`) with a `pgvector/pgvector:pg17` service (throwaway literal password, not a secret) to `.github/workflows/fork-ci.yml`; pass `--test-sql-result` to `verdict.mjs`
+- [X] T049 [P] Write failing tests `.fork/ci/test/bootstrap-drift.test.mjs`: the column list of `create table thoughts` parsed from `docs/01-getting-started.md` (read-only) equals the one in `.fork/ci/sql/bootstrap.sql`
+- [X] T050 Write `.fork/ci/sql/bootstrap.sql`: roles `anon`/`authenticated`/`service_role` (guarded with `DO` blocks), the `auth` schema with an `auth.uid()` stub, `create extension if not exists vector`, and the core `thoughts` table + indexes + `match_thoughts` copied from `docs/01-getting-started.md` with a provenance comment; no DROP/TRUNCATE/DELETE. Run until T049 passes
+- [X] T051 Implement the `sql` runtime in `.fork/ci/lib/runtimes.mjs` and `.fork/ci/bin/run-folder.mjs` (apply `bootstrap.sql`, then `tests/verify.sql`, with the `PG*` env from the job) until T048 passes
+- [X] T052 Have `.fork/ci/bin/detect.mjs` emit `sql_matrix` and `has_sql` (per `contracts/cli.md`), and add the `test-sql` job (per `contracts/check.md`) with a `pgvector/pgvector:pg17` service (throwaway literal password, not a secret) to `.github/workflows/fork-ci.yml`; pass `--test-sql-result` to `verdict.mjs`
 - [ ] T053 Validate: scratch PR adding `.fork/ci/test/fixtures/sql-verify`-style `tests/verify.sql` with a failing assertion to a copy folder under `schemas/` on `spike/fork-ci-base` → ❌ `fail`; fix → ✅; SQL-only change without a verify script → ⚠️ `sql-unverified`
 
 ---

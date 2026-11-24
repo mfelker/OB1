@@ -12,6 +12,7 @@ const TEST_PATTERNS = {
   python: /(^test_[^/]*\.py$)|(_test\.py$)/,
 };
 const NODE_RUNNABLE = /\.(js|mjs|cjs)$/;
+export const SQL_VERIFY = 'tests/verify.sql';
 const NPM_DEFAULT_TEST = /no test specified/;
 
 const basename = p => p.slice(p.lastIndexOf('/') + 1);
@@ -62,6 +63,7 @@ export function scanRuntimes(folderAbs, folderRel) {
   };
 
   for (const f of files) {
+    if (f.endsWith('.sql')) { add('sql', '', f); continue; }
     if (!CODE_EXT.test(f)) continue;
     if (f.endsWith('.py')) { add('python', '', f); continue; }
     const rootDir = allRoots.find(r => contains(r, f));
@@ -75,7 +77,9 @@ export function scanRuntimes(folderAbs, folderRel) {
   const runtimes = [];
   for (const { kind, rootDir, files: owned } of buckets.values()) {
     const local = owned.map(f => (rootDir === '' ? f : f.slice(rootDir.length + 1)));
-    const testFiles = local.filter(f => TEST_PATTERNS[kind].test(basename(f))).sort();
+    const testFiles = (kind === 'sql'
+      ? local.filter(f => f === SQL_VERIFY)
+      : local.filter(f => TEST_PATTERNS[kind].test(basename(f)))).sort();
     const codeFiles = local.filter(f => !testFiles.includes(f) && !NOT_CODE.some(rx => rx.test(f))).sort();
     if (codeFiles.length === 0 && testFiles.length === 0) continue;
     runtimes.push({
@@ -101,6 +105,8 @@ function commandFor(kind, testFiles) {
     }
     case 'python':
       return ['python', '-m', 'pytest', '-q'];
+    case 'sql':
+      return testFiles.includes(SQL_VERIFY) ? ['psql', '-v', 'ON_ERROR_STOP=1', '-X', '-q', '-f', SQL_VERIFY] : null;
     default:
       return null;
   }
