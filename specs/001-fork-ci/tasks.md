@@ -240,12 +240,12 @@ description: "Task list for Fork CI (per-folder test enforcement)"
 - [X] T057 [P] Security and scope check: `grep -n 'secrets\.' .github/workflows/fork-ci.yml` returns nothing (SC-005); `git diff --stat upstream/main...fork/fork-ci` lists only fork-only paths (SC-006); no `pull_request_target`
 - [X] T058 [P] `markdownlint-cli2 --config .github/.markdownlint.jsonc ".fork/**/*.md" "specs/001-fork-ci/**/*.md"` and `actionlint .github/workflows/fork-ci.yml` pass
 - [X] T059 Run the quickstart.md §1–§3 validation once more; all expected outcomes hold
-- [ ] T060 Land: open PR `fork/fork-ci` → `main` on the fork, so fork-ci verifies its own merge.
+- [X] T060 Land: open PR `fork/fork-ci` → `main` on the fork, so fork-ci verifies its own merge.
   - **Record test evidence in the PR description** (constitution Quality Gate 1): the `node --test .fork/ci/test/` pass/fail summary, the `actionlint` result, and the link to the green `fork-ci-verdict` run
   - the upstream **OB1 PR Gate** will be red on this PR, because its allowed-path list excludes `.fork/` and `specs/`; that is expected and advisory on fork-only PRs (constitution, Fork CI policy). Only `fork-ci-verdict` decides whether to merge
   - merge when `fork-ci-verdict` is green
-- [ ] T061 **Owner step**: apply the `main` ruleset requiring `fork-ci-verdict` with the admin bypass (quickstart.md §5, using the `actor_id` confirmed in T011)
-- [ ] T062 Run the quickstart.md §6 end-to-end table on `main` and record the results in `specs/001-fork-ci/checklists/requirements.md` notes
+- [X] T061 **Owner step**: apply the `main` ruleset requiring `fork-ci-verdict` with the admin bypass (quickstart.md §5, using the `actor_id` confirmed in T011)
+- [X] T062 Run the quickstart.md §6 end-to-end table on `main` and record the results (recorded in `research.md`, alongside the other validation evidence; checklist files are left unchanged)
 
 ---
 

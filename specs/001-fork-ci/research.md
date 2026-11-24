@@ -194,6 +194,23 @@ Cosmetic finding: a skipped matrix job is listed as `test (${{ matrix.path }})` 
 - Red run `45510961508`: bootstrap applied (the FK to `thoughts` resolved); the verify script failed on the deliberate assertion (`ERROR: thought_labels.confidence missing`) → ❌ `fail (exit 3)`; `-noverify` → ⚠️ `sql-unverified` (advisory).
 - Green run `45511164090` after removing the assertion: ✅ with `sql ✅` and the ⚠️ advisory row, in 62 s.
 
+**Landing and end-to-end on `main` (T060–T062, 2026-11-24)**:
+
+- T060: PR #9 (`fork/fork-ci` → `main`) passed `fork-ci-verdict` (self-test 101/101, 0 skipped), Markdown Lint and the OB1 PR Gate, and was merged with a merge commit (`845d15e`, committer `noreply@github.com`). Fixing Markdown Lint required exempting the vendored `.claude/skills/speckit-*` files committed by the bootstrap (75 issues; every PR into `main` had been failing lint since `f702cb7`). The first push run on `main` was ✅, with no lane bypass.
+- T061: ruleset `28033062` "fork-ci required" on `refs/heads/main`, requiring `fork-ci-verdict`, with admin bypass (`actor_id: 5`).
+- T062, never-merged PRs against `main`:
+
+  | Scenario | PR | Result |
+  |----------|----|--------|
+  | Staged PR (cut from `upstream/main`) changing code, no tests | #10 | ❌ `no tests for node code`, `mergeable_state=blocked` |
+  | Same PR after adding a test in the folder | #10 | ✅ `pass`, no longer blocked (`unstable` only from the advisory OB1 Gate's title rule) |
+  | Fork-only edit | #11 | ✅ in 38 s, `clean` |
+  | SQL without verify + SQL with a failing `tests/verify.sql` | #12 | ❌ `fail` for the verify script, ⚠️ `sql-unverified` advisory, `blocked` |
+  | Upstream sync | — | Not exercisable: upstream has no new commits; validated on the spike in T044 |
+  | Local `stage/` merge pushed to `main` | — | Not run on `main` to keep it clean; covered by `bypass.test.mjs` and the real-history check |
+
+  Finding: the upstream OB1 PR Gate (advisory) fails rule 7 when a staged PR is titled `[fork] …`. The runbook now keeps the upstream PR's own `[category]` title for staged PRs.
+
 **Result**: every R4, R9 and R11 assumption that the API can observe holds; no research amendment is needed. `actor_id: 5` is confirmed for T061.
 
 ## Spec amendments (reported to the owner)

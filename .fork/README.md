@@ -109,7 +109,8 @@ cd "../ob1-stage-$N"
 # 3. Run tests until green locally: node .fork/ci/bin/run-folder.mjs is not on this branch,
 #    so use the folder's own runner (deno test / npm test / pytest)
 git push -u origin "stage/pr-$N-$DESC"
-gh pr create -R mfelker/OB1 --base main --head "stage/pr-$N-$DESC" --title "[fork] Stage upstream PR #$N ($DESC)"
+# Keep the upstream PR's own "[category] ..." title so the (advisory) OB1 PR Gate title rule passes:
+gh pr create -R mfelker/OB1 --base main --head "stage/pr-$N-$DESC" --title "$(gh pr view $N -R NateBJones-Projects/OB1 --json title -q .title) (staged #$N)"
 # 4. When fork-ci-verdict is green:
 gh pr merge <fork-PR-number> -R mfelker/OB1 --merge
 cd - && git worktree remove "../ob1-stage-$N"
