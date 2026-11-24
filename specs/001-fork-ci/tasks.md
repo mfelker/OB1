@@ -56,7 +56,7 @@ description: "Task list for Fork CI (per-folder test enforcement)"
   - jobs `detect`, `test` (matrix, `fail-fast: false`, `timeout-minutes: 20`, `if: has_folders == 'true'`) and `fork-ci-verdict` (`if: always()`, reading `needs.*.result`)
   - every checkout uses `fetch-depth: 0`, `persist-credentials: false`
   - toolchain pins per research R12 (Node 26, Python 3.13, Deno v2.9.x)
-- [ ] T011 **Owner-approved spike** (quickstart.md §4), using a throwaway ruleset on `refs/heads/spike/fork-ci-*` only:
+- [X] T011 **Owner-approved spike** (quickstart.md §4), using a throwaway ruleset on `refs/heads/spike/fork-ci-*` only:
   - push `spike/fork-ci-base`
   - open PRs (a) cut from `upstream/main`, (b) containing a `SPIKE_FAIL` marker, (c) fork-only edits
   - direct-push to the base
