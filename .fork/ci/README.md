@@ -23,3 +23,5 @@ node --test .fork/ci/test/
 ```
 
 Zero dependencies: Node 26 standard library only.
+
+<!-- spike direct push -->
