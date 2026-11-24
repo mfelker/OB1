@@ -91,3 +91,36 @@ test('deno-tested → pass', { skip: !denoOk && !IN_CI && 'deno not available' }
   const r = runFolder('deno-tested');
   assert.equal(r.outcome, 'pass', r.runtimes[0].outputExcerpt);
 });
+
+// ---- US2: untested code is caught (T027) ----
+
+test('US2: deno code without tests → no-tests naming the runtime', () => {
+  const r = runFolder('deno-untested');
+  assert.equal(r.outcome, 'no-tests');
+  assert.equal(r.reason, 'no tests for deno code');
+  assert.equal(r.runtimes[0].reason, 'no tests for deno code');
+});
+
+test('US2: mixed server-like folder → node passes, deno untested, folder no-tests', () => {
+  const r = runFolder('mixed-server', { path: 'server' });
+  const kind = k => r.runtimes.find(x => x.kind === k);
+  assert.equal(kind('node-script').outcome, 'pass');
+  assert.equal(kind('deno').outcome, 'no-tests');
+  assert.equal(r.outcome, 'no-tests');
+  assert.equal(r.reason, 'no tests for deno code');
+});
+
+test('US2: docs-only and config-only folders are exempt (docs-only)', () => {
+  for (const fx of ['docs-only', 'config-only']) {
+    const r = runFolder(fx);
+    assert.equal(r.outcome, 'exempt', fx);
+    assert.deepEqual(r.runtimes, [], fx);
+    assert.equal(r.reason, 'docs-only (no executable code)', fx);
+  }
+});
+
+test('US2: test files with no applicable runner → setup with a clear reason', () => {
+  const r = runFolder('tests-no-runner');
+  assert.equal(r.outcome, 'setup');
+  assert.equal(r.reason, 'tests found but no runner configured');
+});

@@ -54,3 +54,19 @@ test('pipes in reasons are escaped so the table stays intact', () => {
   const md = renderReport(verdict(), r, detect);
   assert.match(md, /a \\\| b/);
 });
+
+// ---- US2 (T028) ----
+
+test('US2: no-tests rows name the runtime; exempt rows say docs-only', () => {
+  const rs = [
+    { path: 'server', mode: 'strict', origin: 'fork', outcome: 'no-tests', reason: 'no tests for deno code',
+      runtimes: [
+        { kind: 'deno', root: 'server', outcome: 'no-tests', reason: 'no tests for deno code', durationMs: 0 },
+        { kind: 'node-script', root: 'server', outcome: 'pass', reason: 'tests passed', durationMs: 5 },
+      ], durationMs: 5 },
+    { path: 'skills/x', mode: 'strict', origin: 'fork', outcome: 'exempt', reason: 'docs-only (no executable code)', runtimes: [], durationMs: 1 },
+  ];
+  const md = renderReport(verdict({ failing: ['server'], removed: [] }), rs, detect);
+  assert.match(md, /\| server \| strict \| fork \| ❌ no-tests \| deno ❌, node-script ✅ \| no tests for deno code \|/);
+  assert.match(md, /\| skills\/x \| strict \| fork \| ➖ exempt \| docs-only \| docs-only \(no executable code\) \|/);
+});
