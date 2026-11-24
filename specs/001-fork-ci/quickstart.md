@@ -81,3 +81,5 @@ JSON
 | Local stage merge | `git merge --no-ff stage/...` + push | push run ❌ `lane-bypass` |
 | SQL without verify script | change `schemas/x/schema.sql` | ✅ with ⚠️ `sql-unverified` |
 | SQL with `tests/verify.sql` | add a failing assertion | ❌ `fail` (Postgres job) |
+
+<!-- spike (c) -->
