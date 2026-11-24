@@ -18,6 +18,10 @@ Authoritative rules: `.specify/memory/constitution.md` (Principles IV, V, VII).
 | Upstream-bound feature | `contrib/mfelker/<desc>` | `upstream/main` | Upstream PR **and** fork `main` | Red-green-refactor; tests inside the contribution folder |
 | Staged upstream PR | `stage/pr-<N>-<desc>` | `upstream` `refs/pull/<N>/head` | Fork `main` (`--no-ff`) | Tests written and green before merge |
 
+## Where spec-kit runs
+
+Run every `/speckit-*` command from the **fork-`main` checkout** (`~/Projects/ob1`). Worktrees cut from `upstream/main` or a PR head contain no `.specify/`, `specs/`, or speckit skills. The plan records the worktree's absolute path, and tasks write into it from there.
+
 ## One-time setup (per clone or worktree)
 
 ```bash
@@ -26,7 +30,7 @@ git config rerere.autoupdate true
 git config merge.conflictstyle zdiff3
 ```
 
-Upstream GitHub workflows stay disabled on the fork. They would fail fork-internal PRs on the scope check:
+Upstream GitHub workflows stay disabled on the fork. They would fail fork-internal PRs on the scope check, and `update-readme-contributions` would commit to fork `main` and cause sync conflicts. As of 2026-11-24 no workflows are registered on the fork (`gh api repos/mfelker/OB1/actions/workflows -q .total_count` → 0), so the loop below does nothing. Re-run it whenever that count becomes non-zero:
 
 ```bash
 for wf in $(gh workflow list -R mfelker/OB1 --all --json id -q '.[].id'); do
@@ -82,6 +86,8 @@ git push -u origin "contrib/mfelker/$DESC"
 gh pr create -R NateBJones-Projects/OB1 --head "mfelker:contrib/mfelker/$DESC" --title "[category] Short description"
 git switch main && git merge --no-ff "contrib/mfelker/$DESC"
 ```
+
+Record it in `staged-prs.md` with kind `own`. Upstream may squash or edit it before merging, and the reconcile rules above apply to it as well.
 
 ## Open items (future `/speckit-specify` features)
 

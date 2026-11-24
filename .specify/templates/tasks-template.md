@@ -21,7 +21,8 @@ description: "Task list template for feature implementation"
 
 ## Path Conventions
 
-- All paths are inside ONE contribution folder: `[category]/[kebab-name]/` (from plan.md Structure Decision)
+- `[folder]` = `<ROOT>/[category]/[kebab-name]` where `<ROOT>` is the plan's **Worktree** absolute path for upstream-bound and staged lanes, or the fork-`main` checkout for fork features. Write every task path with that absolute root so `/speckit-implement` never edits fork `main` by accident
+- All paths are inside ONE contribution folder (from plan.md Structure Decision)
 - Edge Function: `index.ts`, `deno.json`, `index_test.ts` / `tests/*_test.ts`, `schema.sql`
 - Schema: `schema.sql` or `migrations/*.sql`, `tests/verify.sql`
 - Node/TS recipe or dashboard: `src/…`, `src/**/__tests__/*.test.ts` (Vitest)

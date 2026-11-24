@@ -1,5 +1,8 @@
 <!--
 Sync Impact Report
+- Version: 1.0.0 → 1.0.1 (PATCH: spec-kit runs from fork main; worktree-rooted task paths;
+  cross-folder import rule softened to match observed code; Deno test caveat; ledger covers
+  own contrib branches)
 - Version: template → 1.0.0 (initial ratification via /speckit-brownfield-bootstrap)
 - Principles added: I–VII (all new)
 - Sections added: Code Boundaries, Lanes & Branching, Testing Standards, Quality Gates, Governance
@@ -118,7 +121,9 @@ rule 12 (scope check).
 - `git rerere` MUST be enabled in every clone/worktree used for syncing.
 - Staged upstream PRs MUST be fetched from `refs/pull/<N>/head`, keep the author's commits
   unrewritten, and be merged with `--no-ff`. Each one MUST be recorded in
-  `.fork/staged-prs.md` (PR number, head SHA, test commit(s), status).
+  `.fork/staged-prs.md` (PR number, head SHA, test commit(s), status). The fork's own
+  upstream-bound `contrib/` branches merged into fork `main` are recorded there too: once
+  upstream opens a PR for them, upstream may squash or modify it just the same.
 - When upstream lands a staged PR (merge or squash, possibly modified), the sync MUST resolve
   in favor of upstream's version, then re-apply the fork's tests on top, and update the ledger.
 - Sync procedure is documented in `.fork/README.md`; sync at least weekly and before
@@ -140,9 +145,11 @@ makes those conflicts predictable.
 | `.github/` | Gate, review, and automation workflows | Upstream; disabled on the fork |
 | `.specify/`, `specs/`, `.fork/`, `.claude/skills/speckit-*` | Spec-kit config, feature specs, fork runbooks | **Fork-only**; never upstream |
 
-Contributions MUST NOT import code from other contribution folders. Dependencies between
-contributions are expressed only through `metadata.json` (`requires_primitives`,
-`requires_skills`, `requires.open_brain`) and shared database objects.
+Contributions SHOULD NOT import code from other contribution folders; dependencies between
+contributions are expressed through `metadata.json` (`requires_primitives`,
+`requires_skills`, `requires.open_brain`) and shared database objects. (Observed exception:
+`integrations/open-brain-rest/smoke/` imports seed data from `docs/walkthroughs/` — importing
+shared fixtures from `docs/` is tolerated; importing another contribution's code is not.)
 
 ## Lanes & Branching
 
@@ -156,7 +163,13 @@ contributions are expressed only through `metadata.json` (`requires_primitives`,
 - Spec-kit spec directories (`specs/###-name/`) are independent of branch names; pass
   `GIT_BRANCH_NAME` with the lane prefix when a branch is created for a feature.
 - Specs for upstream-bound work are authored on fork `main`; implementation happens in a
-  separate git worktree on the `contrib/` branch (per upstream's one-worktree-per-task rule).
+  separate git worktree on the `contrib/` (or `stage/`) branch, per upstream's
+  one-worktree-per-task rule.
+- **Spec-kit commands (`/speckit-*`) MUST run from the fork-`main` checkout.** Worktrees cut
+  from `upstream/main` or a PR head have no `.specify/`, `specs/`, or speckit skills, and
+  `.specify/feature.json` is per-checkout. For those lanes, the plan MUST record the worktree's
+  absolute path and every task path MUST be rooted at it, so `/speckit-implement` writes into
+  the worktree, never onto fork `main`.
 - Naming: kebab-case for folders and branch suffixes; files follow category templates
   (`schema.sql`, `index.ts`, `deno.json`, `metadata.json`, `README.md`).
 - Commit and PR titles: `[category] Short description` (`[recipes]`, `[schemas]`, …);
@@ -166,7 +179,7 @@ contributions are expressed only through `metadata.json` (`requires_primitives`,
 
 | Code type | Runner | Location (inside the contribution folder) | Precedent |
 |-----------|--------|-------------------------------------------|-----------|
-| Deno Edge Functions | `deno test` | `*_test.ts` next to `index.ts` or in `tests/` | **New convention** (no upstream precedent) |
+| Deno Edge Functions | `deno test` | `*_test.ts` next to `index.ts` or in `tests/` | **New convention** (no upstream precedent; requires the Deno CLI). `index.ts` reads env and builds clients at module top level, so tests MUST either set env stubs before import or exercise extracted pure functions; `server/test-stateless.mjs` mirrors the pattern instead of importing it. |
 | Node/TypeScript apps (Next.js, Vite) | Vitest (`npm test` → `vitest run`) | `src/**/__tests__/*.test.ts` | `recipes/vercel-neon-telegram` |
 | Plain Node scripts / protocol checks | `node <file>.mjs` or `node --test` | `test-*.mjs` / `__tests__/*.test.js` | `server/test-stateless.mjs`, `integrations/chrome-capture-extension` |
 | Python importers | pytest | `tests/test_*.py` | `integrations/hermes-agent-memory` |
@@ -203,4 +216,4 @@ scope). A fork-specific CI workflow, if added, MUST live in a fork-only file nam
 - Re-run `/speckit-brownfield-validate` after upstream syncs that change `CONTRIBUTING.md`,
   `CLAUDE.md`, or `.github/metadata.schema.json`.
 
-**Version**: 1.0.0 | **Ratified**: 2026-11-24 | **Last Amended**: 2026-11-24
+**Version**: 1.0.1 | **Ratified**: 2026-11-24 | **Last Amended**: 2026-11-24

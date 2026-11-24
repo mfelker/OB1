@@ -15,7 +15,7 @@
 **Lane**: [fork feature / upstream-bound feature / staged upstream PR #N]
 **Branch / Base**: [`fork/<desc>` from fork `main` | `contrib/mfelker/<desc>` from `upstream/main` | `stage/pr-<N>-<desc>` from `refs/pull/<N>/head`]
 **Contribution folder**: `[category]/[kebab-case-name]/`
-**Worktree** *(upstream-bound / staged)*: `[/absolute/path/to/worktree]`
+**Worktree** *(upstream-bound / staged)*: `[/absolute/path/to/worktree]` — all source paths in this plan and in tasks.md are rooted here; spec-kit commands still run from the fork-`main` checkout
 
 ## Technical Context
 
@@ -24,7 +24,7 @@
   Known OB1 stack values are pre-filled.
 -->
 
-**Language/Version**: [Deno (Supabase Edge Functions, TypeScript) / Node 20+ TypeScript / Python 3.x / SQL (Postgres 15+)]
+**Language/Version**: [Deno (Supabase Edge Functions, TypeScript) / Node TypeScript / Python 3 / SQL (Supabase Postgres)]
 
 **Primary Dependencies**: [Edge Function: hono, @hono/mcp, @modelcontextprotocol/sdk, zod, @supabase/supabase-js via `deno.json` import map | Dashboard: Next.js 16 + React 19 + Tailwind 4, or SvelteKit + Vite | Importer: requirements.txt / package.json]
 
