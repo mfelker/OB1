@@ -44,12 +44,12 @@ description: "Task list for Fork CI (per-folder test enforcement)"
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete, and the spike (T011) must confirm R4, R9 and R11 before Phase 7 touches `main`
 
-- [ ] T004 [P] Write failing tests `.fork/ci/test/paths.test.mjs`: path → folder mapping for all 7 categories and `server` (`data-model.md` `Changed Folder.path`, `Changed Folder.category`); fork-only paths (`.specify/`, `specs/`, `.fork/`, `.claude/skills/speckit-*`), `_template/`, and other paths (`docs/`, `.github/`, root files) are dropped and counted (`contracts/cli.md` `skipped`)
-- [ ] T005 [P] Write failing tests `.fork/ci/test/changes.test.mjs` using `git-fixture.mjs`: PR mode diffs `base...head` from the merge-base (fork `main` ahead of the branch base does not leak in); push mode `before..after`; all-zero `before` falls back to `after~1..after`; changed paths are grouped per folder as `data-model.md` `Changed Folder.changedFiles`; a folder deleted at head yields `data-model.md` `Changed Folder.status` = `removed`
-- [ ] T006 [P] Write failing tests `.fork/ci/test/args.test.mjs`: argument parsing for `detect`, `run-folder`, `verdict` per `contracts/cli.md`; missing or invalid args → exit code `2` with a usage message
-- [ ] T007 Implement `.fork/ci/lib/paths.mjs` until T004 passes
-- [ ] T008 Implement `.fork/ci/lib/changes.mjs` (git via `child_process.execFileSync`, git error → exit `3`) until T005 passes
-- [ ] T009 Implement `.fork/ci/lib/args.mjs` and stub CLIs `.fork/ci/bin/detect.mjs`, `.fork/ci/bin/run-folder.mjs`, `.fork/ci/bin/verdict.mjs` (stubs honor the arg contract; `run-folder` writes a minimal result and exits non-zero when a `SPIKE_FAIL` file exists in the folder, which is used only by the spike) until T006 passes
+- [X] T004 [P] Write failing tests `.fork/ci/test/paths.test.mjs`: path → folder mapping for all 7 categories and `server` (`data-model.md` `Changed Folder.path`, `Changed Folder.category`); fork-only paths (`.specify/`, `specs/`, `.fork/`, `.claude/skills/speckit-*`), `_template/`, and other paths (`docs/`, `.github/`, root files) are dropped and counted (`contracts/cli.md` `skipped`)
+- [X] T005 [P] Write failing tests `.fork/ci/test/changes.test.mjs` using `git-fixture.mjs`: PR mode diffs `base...head` from the merge-base (fork `main` ahead of the branch base does not leak in); push mode `before..after`; all-zero `before` falls back to `after~1..after`; changed paths are grouped per folder as `data-model.md` `Changed Folder.changedFiles`; a folder deleted at head yields `data-model.md` `Changed Folder.status` = `removed`
+- [X] T006 [P] Write failing tests `.fork/ci/test/args.test.mjs`: argument parsing for `detect`, `run-folder`, `verdict` per `contracts/cli.md`; missing or invalid args → exit code `2` with a usage message
+- [X] T007 Implement `.fork/ci/lib/paths.mjs` until T004 passes
+- [X] T008 Implement `.fork/ci/lib/changes.mjs` (git via `child_process.execFileSync`, git error → exit `3`) until T005 passes
+- [X] T009 Implement `.fork/ci/lib/args.mjs` and stub CLIs `.fork/ci/bin/detect.mjs`, `.fork/ci/bin/run-folder.mjs`, `.fork/ci/bin/verdict.mjs` (stubs honor the arg contract; `run-folder` writes a minimal result and exits non-zero when a `SPIKE_FAIL` file exists in the folder, which is used only by the spike) until T006 passes
 - [ ] T010 Create the workflow skeleton `.github/workflows/fork-ci.yml` per `contracts/check.md`:
   - triggers `pull_request` + `push` on `main` **and temporarily `spike/fork-ci-*`**, plus `workflow_dispatch`; no path filters
   - `permissions: contents: read`; concurrency
