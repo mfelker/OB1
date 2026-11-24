@@ -9,10 +9,9 @@ name: Fork CI
 
 on:
   pull_request:
-    # TEMPORARY: spike/fork-ci-* is removed in T055.
-    branches: [main, 'spike/fork-ci-*']
+    branches: [main]
   push:
-    branches: [main, 'spike/fork-ci-*']
+    branches: [main]
   workflow_dispatch:
 
 permissions:
