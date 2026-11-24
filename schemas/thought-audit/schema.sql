@@ -112,3 +112,5 @@ GRANT SELECT, INSERT ON TABLE public.thought_audit TO service_role;
 -- DELETE, so nothing — not even a buggy Edge Function — can rewrite
 -- history. If you need to prune old rows, do it explicitly from a
 -- migration after a conscious decision.
+
+-- e2e: unverified SQL change
