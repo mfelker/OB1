@@ -136,3 +136,11 @@
 - green: `.fork/ci/bin/principle-v-guard.mjs` `stagedGuarded()` wraps `staged()` and prints `principle-v-guard failed: <message>` to stderr with exit code 1. Suite `node --test .fork/ci/test/` -> 193 passed, 0 failed, 0 todo
 - refactor: none needed
 - commit: (this commit)
+
+## Note: quickstart §2 by hand
+
+Run in a temp repo on `main` with `docs/domain_knowledge/CONTEXT.md` committed and `refs/remotes/upstream/main` at that commit, a copy of `.fork/ci/{bin,lib}`, and an uncommitted `.fork/README.md` (a first attempt that committed `.fork/README.md` as upstream content correctly denied it under D4, so the fixture was corrected). Each exited 0.
+
+1. `... docs/domain_knowledge/CONTEXT.md | node $G --hook` -> `{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":"docs/domain_knowledge/CONTEXT.md: constitution Principle V reserves this path for upstream (file exists in upstream/main). Write fork knowledge to .fork/domain-knowledge/ instead (the knowledge root for /speckit-grill-with-docs, see .fork/README.md)."}}`
+2. `... .fork/README.md (Edit) | node $G --hook` -> no output.
+3. `echo 'not json' | node $G --hook` -> `{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":"principle-v-guard failed: Unexpected token 'o', \"not json\n\" is not valid JSON. The write was refused; fix the guard or run it by hand: node .fork/ci/bin/principle-v-guard.mjs --hook"}}`
