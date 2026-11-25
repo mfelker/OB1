@@ -16,7 +16,12 @@ This fixture re-describes three behaviors of upstream PR #532 (staged as spec 00
 
 1. **Given** `atomizeText` with `provider: "openrouter"` and a key but no model, **When** it calls the API, **Then** the model is `anthropic/claude-sonnet-4.5` (contract C3).
 
+### User Story 3 - CLI skips without a key (Priority: P3)
+
+1. **Given** the `test-atomize.mjs` CLI with `--provider=anthropic` and no key, **When** it runs, **Then** it prints a skip line and exits 0 (contract K2).
+
 ## Requirements
 
 - **FR-001**: The Anthropic default model is `claude-sonnet-5-5` (C1, K4).
 - **FR-002**: The OpenRouter default model is unchanged (C3).
+- **FR-003**: The CLI without a key skips with exit 0 (K2).

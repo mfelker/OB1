@@ -35,3 +35,15 @@ Append only. Newest last. Staged lane: the code under test already exists at the
 - green: `node .fork/ci/bin/tdd.mjs single recipes/atomizer/atomize-text.test.mjs "C3 openrouter default model is unchanged"` -> `tests=1 pass=1 fail=0 → pass` at head.
 - refactor: not applicable
 - commit: none
+
+## Correction: Cycle 3 (U3, C3) is the S4 control, not an S2 control
+
+C3's code (the OpenRouter default at `recipes/atomizer/lib/atomize-text.mjs:254`) is unchanged between the base `238df6c` and the head, so C3 also passes at the base and can never carry a base-red. The T031 audit classed it S4 → `NOT_APPLICABLE`, which is correct. U3 is now recorded as `characterization` / `BASELINE`, and the S2 control is K2 below. The rubric override now states that S4 takes precedence over S2 (spec 003 U38).
+
+## Cycle 4: U4 K2 anthropic CLI without a key skips with exit 0
+
+- test: `recipes/atomizer/atomize-text.test.mjs::K2 anthropic CLI without a key skips with exit 0` (exists at head, `cfbfe76`)
+- red: **none recorded, deliberately.** This is the S2 calibration control: its code (`recipes/atomizer/test-atomize.mjs`, changed by `58b0567`) differs between the base and the head, and only a head green is recorded, so the override must class it `TEST_AFTER` (fail closed).
+- green: `SPECIFY_FEATURE_DIRECTORY=specs/003-tdd-extension/calibration/staged-fixture node .fork/ci/bin/tdd.mjs single recipes/atomizer/atomize-text.test.mjs "K2 anthropic CLI without a key skips with exit 0"` -> `tests=1 pass=1 fail=0 → pass` at head.
+- refactor: not applicable
+- commit: none

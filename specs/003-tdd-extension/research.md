@@ -75,7 +75,7 @@ Every command runs with **cwd = tree + the runtime's `root`** (data-model `Runti
 
 - **Reporter**: `--test-reporter=spec` is passed explicitly, so the `ℹ tests N` parser doesn't depend on whether stdout is a TTY.
 - **Node version**: the adapter refuses to run on Node < 26 (exit 2), because 26.13 is the only version this behavior was verified on. *(I12: earlier releases had only the experimental flag, and the default reporter differs.)*
-- **Python environment**: `single` and `file` use a cached venv at `<os tmp>/fork-tdd-venv-<sha1(tree+root)>`. It is created with `python3 -m venv`, then `pip install -q pytest [-r requirements.txt]`, and rebuilt only when the `requirements.txt` hash changes (a stamp file). It mirrors run-folder's per-run venv without reinstalling every cycle.
+- **Python environment**: `single` and `file` use a cached venv at `$XDG_CACHE_HOME/fork-tdd/venv-<sha1(tree+root)>` (else `~/.cache/fork-tdd/…`; moved out of the OS temp dir by U39, reused only when privately owned per U40). It is created with `python3 -m venv`, then `pip install -q pytest [-r requirements.txt]`, and rebuilt only when the `requirements.txt` hash changes (a stamp file). It mirrors run-folder's per-run venv without reinstalling every cycle.
 - **`buildCommand`**: the new function is called `buildCommand`, not `commandFor`. Deno flags come from `runtime.command`, which is `scanRuntimes`' own argv, not a copy. *(I23)*
 - **Output**: the child's stdout and stderr are **streamed live** to the adapter's own stdout and stderr and captured in full for count parsing. They aren't truncated to the last lines, so the red evidence stays complete. *(I11)*
 - **Evidence (2026-11-25, Node 26.13)**:

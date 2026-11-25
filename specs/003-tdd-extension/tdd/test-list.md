@@ -109,6 +109,9 @@ Written by hand, under the extension's format (research R11): the extension can'
 | --- | -------- | ------ | ---- | ----- | ---- |
 | U35 | The installed base hash equals `base_sha256`, and stripping the header and fork section reproduces the base | FR-010 | example | DONE | cycle-log.md `U35`, commit `c77f3e4` |
 | U37 | `suite`'s summary line reports `tests=`/`pass=`/`fail=` summed over the runtimes that ran (`?` when unparseable) | US2 AS1, FR-004 | example | DONE | cycle-log.md `U37` (T024 remediation H2) |
+| U38 | The rubric override's fork section states that S4 takes precedence over S2 | FR-010, US5 AS1 | example | DONE | cycle-log.md `U38` (T032 calibration fix) |
+| U39 | The python venv cache lives in the per-user cache, never the shared temp dir | FR-016, R5 | example | DONE | cycle-log.md `U39` (security review fix) |
+| U40 | A cached venv is reused only when it is a real dir owned by the user and not group/world-writable | FR-016, R5 | example | DONE | cycle-log.md `U40` (security review fix) |
 
 ## Invariants and edge cases still to place
 
