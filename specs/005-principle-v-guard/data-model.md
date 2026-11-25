@@ -4,7 +4,7 @@ No persisted data. Four in-memory shapes, all defined in [contracts/rule.md](con
 
 | Entity | Fields | Rules |
 |--------|--------|-------|
-| `PathTarget` | `root` (git top-level), `relPath` (POSIX, repo-relative, or `null`) | Same file → same `PathTarget` whether given relative, absolute, with `..`, or through a symlink (FR-010). A file not yet created is resolved through its nearest existing ancestor. |
+| `PathTarget` | `root` (git top-level), `relPath` (POSIX, repo-relative, or `null`) | Same file → same `PathTarget` whether given relative, absolute, with `..`, or through a symlink (FR-010). A file not yet created is resolved through its nearest existing ancestor. The on-disk case is used (`realpathSync.native`), so case variants on a case-insensitive filesystem are the same file (U31). Outside every checkout: `root` and `relPath` are both `null`. |
 | `CheckoutState` | `branch`, `mergeInProgress` | Read from the checkout that owns the path, not from the session's working directory, so a write into `.worktrees/<x>` sees that worktree's branch. |
 | `UpstreamPaths` | `files: Set`, `dirs: Set` | `dirs` = every proper ancestor of every file (`docs`, `docs/assets`, …). `null` when `upstream/main` is unreadable (FR-006). |
 | `Decision` | `allowed`, `rule` (D1–D9), `reason`, `suggestion` | Deny always carries both strings (FR-005). |

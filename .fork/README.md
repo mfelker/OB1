@@ -92,7 +92,7 @@ git config core.hooksPath .fork/githooks
 
 **What is refused**, only on a checkout of `main`: changing a file that exists in `upstream/main`, creating a new file inside a folder that exists upstream, and any path when `upstream/main` cannot be read (run `git fetch upstream`). The message names the reason and where to make the change instead: an upstream-bound worktree (`contrib/mfelker/<desc>` from `upstream/main`) or a staged PR. A refused write under `docs/domain_knowledge/` points to `.fork/domain-knowledge/`.
 
-**What is allowed**: everything on any other branch, in a linked worktree, or on a detached HEAD; fork-only paths (`.fork/`, `.specify/`, `specs/`, `.worktrees/`, `.claude/settings.json`, `.claude/skills/speckit-*`, `.github/workflows/fork-*`); new top-level paths upstream does not have; and paths outside the repository.
+**What is allowed**: everything on any other branch, in a linked worktree, or on a detached HEAD (so a detached HEAD or a rebase in the fork-main checkout is unguarded by design); fork-only paths (`.fork/`, `.specify/`, `specs/`, `.worktrees/`, `.claude/settings.json`, `.claude/skills/speckit-*`, `.github/workflows/fork-*`); new top-level paths upstream does not have; and paths outside the repository.
 
 **Merge exception**: while a merge is in progress (`MERGE_HEAD` exists), both guards allow everything, so syncing upstream and resolving conflicts works.
 

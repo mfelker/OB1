@@ -4,7 +4,7 @@ loop: outside-in # outside-in | inside-out
 profile: .specify/memory/tdd-profile.md # stack profile the commands must read
 spec_criteria: 11 # acceptance criteria found in spec.md
 planned_at: 92977db # short SHA the list was derived from
-updated_at: 14c447a # short SHA of the last change to this file
+updated_at: e69b9e7 # short SHA of the last change to this file
 suite_baseline: green # green | red | unknown, at planning time
 ---
 
@@ -86,6 +86,24 @@ The rubric grades a behavior `PROVEN` only when its red is recorded **and** its 
 | U28 | `.claude/settings.json` has exactly one `PreToolUse` entry, matcher `Write\|Edit\|MultiEdit\|NotebookEdit`, one `command` hook running `node "$CLAUDE_PROJECT_DIR/.fork/ci/bin/principle-v-guard.mjs" --hook` with `timeout: 30` | FR-007 | example | DONE | cycle-log.md `U28`, commit `c07b76e` |
 | U29 | `.fork/githooks/pre-commit` is executable, starts `#!/bin/sh`, and `exec`s the guard with `--staged` from the top-level | FR-009 | example | DONE | cycle-log.md `U29`, commit `c2ae20e` |
 | U30 | `selfTestNeeded` is true for `.fork/githooks/` paths and `.claude/settings.json`; existing triggers unchanged | FR-013 (CI coverage) | example | DONE | cycle-log.md `U30`, commit `a5b6cce` |
+
+### Analyze fixes (stream F, after T024)
+
+| id  | behavior | traces | kind | state | test |
+| --- | -------- | ------ | ---- | ----- | ---- |
+| U31 | `repoRelative` reports the on-disk case for case-variant paths (skipped on case-sensitive filesystems) | FR-010, analyze F1 | example | DONE | cycle-log.md `U31`, commit `685ce44` |
+| U32 | D4 and D8 match upstream paths case-insensitively; D5/D6 stay exact-case | FR-002, FR-010, analyze F1 | example | DONE | cycle-log.md `U32`, commit `9b234ca` |
+| U33 | `--hook` denies case variants (`claude.md`, `Docs/x.md`) end to end | SC-001, analyze F1 | example | DONE | cycle-log.md `U33`, commit `4e223b6` (first-run pass; both-layer mutant recorded) |
+| U34 | `--staged` reads the upstream set once per commit | analyze F3 | example | DONE | cycle-log.md `U34`, commit `2ef1b76` |
+| U35 | An unknown or missing mode prints usage and exits 1 without reading stdin | analyze F4 | example | DONE | cycle-log.md `U35`, commit `e6dafcf` |
+
+### Audit hardening (stream H, after T023)
+
+| id  | behavior | traces | kind | state | test |
+| --- | -------- | ------ | ---- | ----- | ---- |
+| U36 | A file under a fork-only root that exists upstream is denied as D4 (D4 before D5) | FR-003, audit HIGH 1 | example | PENDING | |
+| U37 | Zone look-alikes (`.claude/skills/other/…`, `.github/workflows/ci2.yml`) are denied as D8 | FR-003, audit HIGH 2 | example | PENDING | |
+| U38 | With nested upstream folders, the D8 reason names the outermost folder | FR-005, audit HIGH 3 | example | PENDING | |
 
 ## Invariants and edge cases still to place
 

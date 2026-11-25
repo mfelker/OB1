@@ -90,7 +90,13 @@ specs/005-principle-v-guard/
 
 ## Complexity Tracking
 
-No constitution violations.
+One owner-accepted Gate 1 exception (2026-11-25), plus trade-offs.
+
+| Exception | Why | Simpler alternative rejected because |
+|-----------|-----|--------------------------------------|
+| **U25 and U26 are `TEST_AFTER`** (`tdd/verification.md`): their behavior (the dynamic `import()` inside the top-level `try`, and `--no-renames`) landed in the A1 (`22a59fb`) and A6 (`34be6cf`) commits, before their tests (`1133ecd`, `4568300`). Both tests are mutant-verified. | Root cause: `contracts/guards.md` prescribed both implementation details, so the stream built them up front instead of as the smallest change for their own cycles. The owner accepted these two as `TEST_AFTER` for 005; every other behavior must be `PROVEN`, and Gate 1 is otherwise held. | Rewriting history to fake the order is dishonest; a fork-wide rubric class for "pre-existing, mutant-verified" was declined as a broader governance change. |
+
+Process fix: the plan template now warns that contracts must not prescribe behavior-bearing implementation details ahead of their tests.
 
 - **Settings file inside an upstream folder**: `.claude/settings.json` sits in `.claude/`, which upstream has (for `skills/review-pr.md`). The path itself does not exist upstream, so it is fork-only content under Principle V, and the rule's fork-only zones list (FR-003) makes that explicit.
 - **`core.hooksPath` is per clone**: git does not version hook enablement. The runbook gives the one command; the agent guard still applies when a clone has not run it (spec edge case).

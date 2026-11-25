@@ -76,7 +76,7 @@ specs/[###-feature]/
 ├── research.md          # Phase 0 output (/speckit-plan command)
 ├── data-model.md        # Phase 1 output (/speckit-plan command)
 ├── quickstart.md        # Phase 1 output (/speckit-plan command)
-├── contracts/           # Phase 1 output (/speckit-plan command) — MCP tool schemas, REST shapes
+├── contracts/           # Phase 1 output (/speckit-plan command) — MCP tool schemas, REST shapes. State observable behavior, not behavior-bearing implementation details (e.g. "load X with a dynamic import"): a detail prescribed here gets built before its own test and is graded TEST_AFTER (spec 005, U25/U26)
 └── tasks.md             # Phase 2 output (/speckit-tasks command - NOT created by /speckit-plan)
 ```
 

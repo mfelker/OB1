@@ -35,7 +35,7 @@ description: "Tasks for the Principle V guard (spec 005), structured for paralle
 | R (rule) | `WR` | wave 1 | `.fork/ci/lib/principle-v.mjs`, `.fork/ci/test/principle-v.test.mjs`, `tdd/cycle-log.d/rule.md` |
 | P (paths) | `WP` | wave 1 | `.fork/ci/lib/principle-v-paths.mjs`, `.fork/ci/test/principle-v-paths.test.mjs`, `tdd/cycle-log.d/paths.md` |
 | W (wiring, docs) | `WW` | wave 1 | `.fork/ci/lib/self-test-needed.mjs`, `.fork/ci/test/self-test-needed.test.mjs`, `.fork/ci/test/principle-v-docs.test.mjs`, `.claude/settings.json`, `.fork/githooks/pre-commit`, `.fork/README.md`, `.fork/ci/README.md`, `tdd/cycle-log.d/wiring.md` |
-| G (guard CLI) | `WG` | wave 2, after R and P are merged into `fork/principle-v-guard` | `.fork/ci/bin/principle-v-guard.mjs`, `.fork/ci/test/principle-v-guard.test.mjs`, `.fork/ci/test/principle-v-guard.acceptance.test.mjs` (only to flip `todo` → `test`), `tdd/cycle-log.d/guard.md` |
+| G (guard CLI) | `WG` | wave 2, after R, P and W are merged into `fork/principle-v-guard` | `.fork/ci/bin/principle-v-guard.mjs`, `.fork/ci/test/principle-v-guard.test.mjs`, `.fork/ci/test/principle-v-guard.acceptance.test.mjs` (only to flip `todo` → `test`), `tdd/cycle-log.d/guard.md` |
 
 Wave 1 runs three agents at once (R, P, W). G needs the merged `decide()` and helper interfaces, so it runs alone in wave 2.
 
@@ -131,6 +131,9 @@ Wave 1 runs three agents at once (R, P, W). G needs the merged `decide()` and he
 - [ ] T024 [P] `/speckit-analyze` on 005 from `M` in a fresh subagent; resolve any CRITICAL or HIGH finding.
 - [ ] T025 [P] Lane hygiene: `git -C W diff --stat main...HEAD` lists only fork-only paths (`.fork/`, `.claude/settings.json`, `specs/005-principle-v-guard/`); secret scan with gitleaks.
 - [ ] T026 Tick T001–T025 and T029, push `fork/principle-v-guard`, open the fork PR (`gh pr create -R mfelker/OB1 --base main --head fork/principle-v-guard --title "[fork] Principle V guard: agent and commit guards (spec 005)"`), wait for `fork-ci-verdict` and `self-test`. **Ask the owner before merging.**
+
+- [X] T030 [U31] [U32] [U33] [U34] [U35] Analyze remediation (T024 F1 HIGH case bypass, F3, F4): stream F (Sonnet) in `.worktrees/fork-pvg-fix`, test-first; merged into `fork/principle-v-guard`.
+- [ ] T031 [U36] [U37] [U38] Audit remediation (T023 HIGH 1–3, MED 5): stream H (Sonnet) in `.worktrees/fork-pvg-harden`, test strengthening with mutant reds; then merge and re-run T023. U25/U26 stay `TEST_AFTER` under the owner exception in plan.md Complexity Tracking.
 
 ## Phase 7: After merge (integrator, in `M`)
 

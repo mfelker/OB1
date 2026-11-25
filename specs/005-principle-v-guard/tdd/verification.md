@@ -123,7 +123,7 @@ Blocking, clear before PASS:
 
 Non-blocking:
 
-5. Finding 5: make A7 fail when fork roots are not allowed (give the fixture's `upstream/main` a file under `specs/` or `.fork/`, or add a staged `.claude/settings.json`), and assert in A7 to A9 that the hook ran (for example, a positive marker or pairing each allow with a deny in the same repo).
-6. Finding 7: add one CLI-level test for `upstream/main` missing (exit message tells the owner to fetch) and one detached-HEAD case.
-7. Findings 8-10: share one guard test helper; tighten A11 to the sentence-level facts; refresh `updated_at` in `test-list.md`.
-8. Re-run `/speckit-tdd-verify` on 005 after items 1-4; expected verdict `PASS_WITH_GAPS` at best (mutation unmeasured by a tool, coverage unavailable).
+1. Finding 5: make A7 fail when fork roots are not allowed (give the fixture's `upstream/main` a file under `specs/` or `.fork/`, or add a staged `.claude/settings.json`), and assert in A7 to A9 that the hook ran (for example, a positive marker or pairing each allow with a deny in the same repo).
+2. Finding 7: add one CLI-level test for `upstream/main` missing (exit message tells the owner to fetch) and one detached-HEAD case.
+3. Findings 8-10: share one guard test helper; tighten A11 to the sentence-level facts; refresh `updated_at` in `test-list.md`.
+4. Re-run `/speckit-tdd-verify` on 005 after items 1-4; expected verdict `PASS_WITH_GAPS` at best (mutation unmeasured by a tool, coverage unavailable).
