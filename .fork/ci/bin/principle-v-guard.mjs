@@ -47,5 +47,14 @@ async function staged() {
   process.exitCode = 1;
 }
 
-if (process.argv[2] === '--staged') await staged();
+async function stagedGuarded() {
+  try {
+    await staged();
+  } catch (e) {
+    console.error(`principle-v-guard failed: ${e.message}`);
+    process.exitCode = 1;
+  }
+}
+
+if (process.argv[2] === '--staged') await stagedGuarded();
 else await hook();

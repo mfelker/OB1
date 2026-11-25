@@ -127,3 +127,12 @@
 - green: no CLI change (behavior already present). Suite `node --test .fork/ci/test/` -> 192 passed, 0 failed, 0 todo
 - refactor: none needed
 - commit: (this commit)
+
+## Cycle: U27 --staged fails with exit 1 and principle-v-guard failed: on a guard failure
+
+- test: `.fork/ci/test/principle-v-guard.test.mjs::U27 --staged on a guard failure exits 1 with principle-v-guard failed:` (new; a temp copy whose `lib/principle-v.mjs` is broken, one staged file)
+- red: `node --test --test-name-pattern="^U27 " .fork/ci/test/principle-v-guard.test.mjs`
+  -> `AssertionError [ERR_ASSERTION]: The input did not match the regular expression /^principle-v-guard failed: /` with `actual: "file:///…/.fork/ci/lib/principle-v.mjs:1\nexport const decide = ;\n … SyntaxError: Unexpected token ';'…"` (1 failed)
+- green: `.fork/ci/bin/principle-v-guard.mjs` `stagedGuarded()` wraps `staged()` and prints `principle-v-guard failed: <message>` to stderr with exit code 1. Suite `node --test .fork/ci/test/` -> 193 passed, 0 failed, 0 todo
+- refactor: none needed
+- commit: (this commit)

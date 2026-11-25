@@ -83,3 +83,13 @@ test('U26 --staged lists staged deletions and both sides of a rename', () => {
   assert.match(r.stderr, /CLAUDE\.md: .*file exists in upstream\/main/);
   assert.match(r.stderr, /docs\/moved\.md: .*inside upstream folder docs\//);
 });
+
+test('U27 --staged on a guard failure exits 1 with principle-v-guard failed:', () => {
+  const repo = guardRepo();
+  writeFiles(repo, { 'x.md': 'x\n' });
+  git(repo, ['add', 'x.md']);
+  writeFileSync(join(repo.dir, '.fork/ci/lib/principle-v.mjs'), 'export const decide = ;\n');
+  const r = guard(repo, '--staged', '');
+  assert.equal(r.status, 1);
+  assert.match(r.stderr, /^principle-v-guard failed: /);
+});
