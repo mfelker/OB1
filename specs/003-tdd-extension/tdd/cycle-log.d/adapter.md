@@ -99,3 +99,13 @@
 - refactor: none needed
 - notes: design choice: `resolveTarget({repoRoot, env})` keeps its data-model signature (no `op`); the per-operation rule is the separate exported guard `requireFolder`, which `single`/`file` call and `suite` does not.
 - commit: (this commit)
+
+## Cycle: U12 file resolution: folder, then tree, then repo root; the inside-tree check runs after every resolution
+
+- test: `.fork/ci/test/tdd-commands.test.mjs::U12 file resolution: folder, then tree, then repo root; the inside-tree check runs after every resolution` (new file; cases: folder beats tree, tree beats repo root, a repo-root-only hit is rejected, an absolute path outside, a `../` escape, a symlink inside the folder pointing outside, a missing file)
+- red: `node --test --test-name-pattern="^U12 " .fork/ci/test/tdd-commands.test.mjs`
+  -> `AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:` / `actual: undefined,` (1 failed). `lib/tdd-commands.mjs` existed only as an empty `resolveFile` stub, so the import resolved.
+- green: `.fork/ci/lib/tdd-commands.mjs:9` `resolveFile(file, target)` tries an absolute path as is, a relative one against folder, tree, repo root (first that exists), then realpaths the hit and requires it inside the realpath of the tree, else `<file> is outside the target tree <tree>`. Suite `node --test .fork/ci/test/` -> 113 passed, 0 failed
+- refactor: none needed
+- notes: contract ambiguity resolved: A16 doesn't say what happens when no candidate exists; it is the TargetError `file not found: <file>` (exit 2).
+- commit: (this commit)
