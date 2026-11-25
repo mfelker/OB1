@@ -109,3 +109,13 @@
 - refactor: none needed
 - notes: contract ambiguity resolved: A16 doesn't say what happens when no candidate exists; it is the TargetError `file not found: <file>` (exit 2).
 - commit: (this commit)
+
+## Cycle: U13 a file no runtime owns is rejected, naming the patterns
+
+- test: `.fork/ci/test/tdd-commands.test.mjs::U13 a file no runtime owns is rejected, naming the patterns` (new; node-plain fixture plus a pytest file; a code file and a file outside the folder are rejected)
+- red: `node --test --test-name-pattern="^U13 " .fork/ci/test/tdd-commands.test.mjs`
+  -> `TypeError [Error]: Cannot read properties of undefined (reading 'kind')` (1 failed). `runtimeFor` existed only as an empty exported stub, so the import resolved and the owner lookup returned nothing.
+- green: `.fork/ci/lib/tdd-commands.mjs:24` `runtimeFor(fileAbs, target)` picks the `scanRuntimes(<tree>/<folder>, <folder>)` entry whose `root` contains the file and whose `testFiles` include it; otherwise throws `<file> is not a test file of any runtime in <folder> (patterns: <kind> <regex>; …; sql tests/verify.sql)` (adapter A6). `.fork/ci/lib/runtimes.mjs:8` now exports `TEST_PATTERNS` so the message reuses fork-ci's patterns instead of copying them. Suite `node --test .fork/ci/test/` -> 114 passed, 0 failed
+- refactor: none needed
+- notes: `<file>` in the A6 message is the tree-relative posix path.
+- commit: (this commit)

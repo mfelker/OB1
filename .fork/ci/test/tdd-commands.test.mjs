@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, mkdirSync, writeFileSync, realpathSync, symlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
-import { resolveFile } from '../lib/tdd-commands.mjs';
+import { resolveFile, runtimeFor } from '../lib/tdd-commands.mjs';
+import { fixtureFiles } from './fixtures.mjs';
 import { TargetError } from '../lib/tdd-target.mjs';
 
 /** A fresh real temp dir populated from an in-memory { relPath: content } map. */
@@ -45,4 +46,22 @@ test('U12 file resolution: folder, then tree, then repo root; the inside-tree ch
   throwsTarget(() => resolveFile(up, target), `${up} is outside the target tree ${tree}`);
   throwsTarget(() => resolveFile('link.test.mjs', target), `link.test.mjs is outside the target tree ${tree}`);
   throwsTarget(() => resolveFile('missing.test.mjs', target), 'file not found: missing.test.mjs');
+});
+
+test('U13 a file no runtime owns is rejected, naming the patterns', () => {
+  const tree = tempTree('fork-tdd-tree-', { ...fixtureFiles('node-plain', 'recipes/x'), 'recipes/x/tests/test_y.py': 'def test_y():\n    pass\n', 'README.md': '# r\n' });
+  const target = { repoRoot: tree, tree, folder: 'recipes/x' };
+  const owned = runtimeFor(join(tree, 'recipes/x/lib/__tests__/x.test.mjs'), target);
+  assert.equal(owned.kind, 'node-plain');
+  assert.equal(owned.root, 'recipes/x');
+  assert.equal(runtimeFor(join(tree, 'recipes/x/tests/test_y.py'), target).kind, 'python');
+  for (const rel of ['recipes/x/lib/x.js', 'README.md']) {
+    assert.throws(() => runtimeFor(join(tree, rel), target), err => {
+      assert.ok(err instanceof TargetError, `expected TargetError, got ${err?.name}: ${err?.message}`);
+      assert.ok(err.message.startsWith(`${rel} is not a test file of any runtime in recipes/x (patterns: `), err.message);
+      for (const needle of ['_test|\\.test|\\.spec', '^test_[^/]*\\.py$', 'tests/verify.sql']) assert.ok(err.message.includes(needle), `${needle} in ${err.message}`);
+      assert.ok(!err.message.includes('\n'));
+      return true;
+    });
+  }
 });
