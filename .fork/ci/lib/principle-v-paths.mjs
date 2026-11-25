@@ -30,7 +30,21 @@ export function repoRelative(path, cwd) {
   return { root, relPath: rel === '' ? null : rel };
 }
 
+export class GuardError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = 'GuardError';
+  }
+}
+
 export function checkoutState(root) {
+  let insideWorkTree = false;
+  try {
+    insideWorkTree = gitOut(root, ['rev-parse', '--is-inside-work-tree']) === 'true';
+  } catch {
+    // fall through to the error below
+  }
+  if (!insideWorkTree) throw new GuardError(`not a git work tree: ${root}`);
   let branch;
   try {
     branch = gitOut(root, ['symbolic-ref', '--short', '-q', 'HEAD']);

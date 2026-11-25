@@ -4,7 +4,7 @@ import { mkdtempSync, realpathSync, symlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { makeRepo, git, writeFiles, commit, branch, checkout } from './helpers/git-fixture.mjs';
-import { repoRelative, checkoutState } from '../lib/principle-v-paths.mjs';
+import { repoRelative, checkoutState, GuardError } from '../lib/principle-v-paths.mjs';
 
 function tempRepo(files = { 'docs/a.md': '1' }) {
   const repo = makeRepo();
@@ -80,4 +80,12 @@ test('U18 checkoutState: mergeInProgress is true while MERGE_HEAD exists', () =>
   assert.equal(checkoutState(repo.dir).mergeInProgress, true);
   commit(repo, 'merge done');
   assert.equal(checkoutState(repo.dir).mergeInProgress, false);
+});
+
+test('U19 checkoutState: throws GuardError for a directory that is not a git work tree', () => {
+  const plain = realpathSync(mkdtempSync(join(tmpdir(), 'fork-ci-plain-')));
+  assert.throws(() => checkoutState(plain), (err) => err instanceof GuardError && err.name === 'GuardError' && err.message.length > 0);
+  assert.throws(() => checkoutState(join(plain, 'missing')), GuardError);
+  const repo = tempRepo();
+  assert.throws(() => checkoutState(join(repo.dir, '.git')), GuardError);
 });

@@ -60,3 +60,12 @@
 - green: `.fork/ci/lib/principle-v-paths.mjs:49-54` `git rev-parse -q --verify MERGE_HEAD` succeeds only mid-merge. Suite `node --test .fork/ci/test/` -> 159 passed, 0 failed
 - refactor: none needed
 - commit: (this commit)
+
+## Cycle: U19 checkoutState: throws GuardError for a directory that is not a git work tree
+
+- test: `.fork/ci/test/principle-v-paths.test.mjs::U19 checkoutState: throws GuardError for a directory that is not a git work tree` (new)
+- red: `node --test --test-name-pattern="^U19 " .fork/ci/test/principle-v-paths.test.mjs`
+  -> `AssertionError [ERR_ASSERTION]: Missing expected exception.` (1 failed; `GuardError` was an exported stub class)
+- green: `.fork/ci/lib/principle-v-paths.mjs:36-47` `GuardError` sets its name; `checkoutState` first requires `git rev-parse --is-inside-work-tree` to print `true`, else throws `GuardError`. Suite `node --test .fork/ci/test/` -> 160 passed, 0 failed
+- refactor: none needed
+- commit: (this commit)
