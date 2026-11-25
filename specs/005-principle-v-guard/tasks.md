@@ -130,15 +130,15 @@ Wave 1 runs three agents at once (R, P, W). G needs the merged `decide()` and he
 - [X] T023 TDD audit (Quality Gate 1, no exemption): from `M`, a fresh Sonnet-class subagent runs `/speckit-tdd-verify` on 005 against `W`'s artifacts and writes `W/specs/005-principle-v-guard/tdd/verification.md`. Required: PASS or PASS_WITH_GAPS. Fix any finding under the same TDD rules and re-audit.
 - [X] T024 [P] `/speckit-analyze` on 005 from `M` in a fresh subagent; resolve any CRITICAL or HIGH finding.
 - [X] T025 [P] Lane hygiene: `git -C W diff --stat main...HEAD` lists only fork-only paths (`.fork/`, `.claude/settings.json`, `specs/005-principle-v-guard/`); secret scan with gitleaks.
-- [ ] T026 Tick T001–T025 and T029, push `fork/principle-v-guard`, open the fork PR (`gh pr create -R mfelker/OB1 --base main --head fork/principle-v-guard --title "[fork] Principle V guard: agent and commit guards (spec 005)"`), wait for `fork-ci-verdict` and `self-test`. **Ask the owner before merging.**
+- [X] T026 Tick T001–T025 and T029, push `fork/principle-v-guard`, open the fork PR (`gh pr create -R mfelker/OB1 --base main --head fork/principle-v-guard --title "[fork] Principle V guard: agent and commit guards (spec 005)"`), wait for `fork-ci-verdict` and `self-test`. **Ask the owner before merging.**
 
 - [X] T030 [U31] [U32] [U33] [U34] [U35] Analyze remediation (T024 F1 HIGH case bypass, F3, F4): stream F (Sonnet) in `.worktrees/fork-pvg-fix`, test-first; merged into `fork/principle-v-guard`.
 - [X] T031 [U36] [U37] [U38] Audit remediation (T023 HIGH 1–3, MED 5): stream H (Sonnet) in `.worktrees/fork-pvg-harden`, test strengthening with mutant reds; then merge and re-run T023. U25/U26 stay `TEST_AFTER` under the owner exception in plan.md Complexity Tracking.
 
 ## Phase 7: After merge (integrator, in `M`)
 
-- [ ] T027 In `M`: `git pull --ff-only origin main`; update plan.md's Worktree line to "none (fork-`main` checkout)"; run `git config core.hooksPath .fork/githooks`; remove `W`.
-- [ ] T028 Quickstart §3 (commit guard on real fork main) and §4 (live Claude Code check in a new session, including the one-time `MultiEdit`/`NotebookEdit` stdin field check from research R1). Record results in `specs/005-principle-v-guard/evidence/quickstart.md`, set spec Status to `Implemented`, commit.
+- [X] T027 In `M`: `git pull --ff-only origin main`; update plan.md's Worktree line to "none (fork-`main` checkout)"; run `git config core.hooksPath .fork/githooks`; remove `W`.
+- [X] T028 Quickstart §3 (commit guard on real fork main) and §4 (live Claude Code check in a new session, including the one-time `MultiEdit`/`NotebookEdit` stdin field check from research R1). Record results in `specs/005-principle-v-guard/evidence/quickstart.md`, set spec Status to `Implemented`, commit.
 
 ---
 

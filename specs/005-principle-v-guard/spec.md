@@ -2,7 +2,7 @@
 
 **Feature Branch**: `fork/principle-v-guard`
 **Created**: 2026-11-25
-**Status**: Draft
+**Status**: Implemented
 **Input**: User description: "Fork feature: enforce constitution Principle V on the fork-main checkout. Layer 1: a Claude Code PreToolUse hook (fork-only .claude/settings.json) on Write/Edit/MultiEdit/NotebookEdit that denies writes to upstream-tracked paths on fork main …, the deny reason names where to write instead, and for docs/domain_knowledge/ it points to .fork/domain-knowledge/, the knowledge root for /speckit-grill-with-docs, designated in .fork/README.md. Layer 3: a versioned git pre-commit hook in .fork/githooks/ (enabled with core.hooksPath) applying the same rule to staged changes on main. Decisions already settled: knowledge root .fork/domain-knowledge/; scope is all upstream-tracked paths."
 
 ## Lane & Contribution Target *(mandatory)*
