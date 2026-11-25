@@ -4,7 +4,7 @@ loop: outside-in # outside-in | inside-out
 profile: .specify/memory/tdd-profile.md # stack profile the commands must read
 spec_criteria: 11 # acceptance criteria found in spec.md
 planned_at: 92977db # short SHA the list was derived from
-updated_at: e69b9e7 # short SHA of the last change to this file
+updated_at: fb5a296 # short SHA of the last change to this file
 suite_baseline: green # green | red | unknown, at planning time
 ---
 
@@ -101,9 +101,9 @@ The rubric grades a behavior `PROVEN` only when its red is recorded **and** its 
 
 | id  | behavior | traces | kind | state | test |
 | --- | -------- | ------ | ---- | ----- | ---- |
-| U36 | A file under a fork-only root that exists upstream is denied as D4 (D4 before D5) | FR-003, audit HIGH 1 | example | PENDING | |
-| U37 | Zone look-alikes (`.claude/skills/other/…`, `.github/workflows/ci2.yml`) are denied as D8 | FR-003, audit HIGH 2 | example | PENDING | |
-| U38 | With nested upstream folders, the D8 reason names the outermost folder | FR-005, audit HIGH 3 | example | PENDING | |
+| U36 | A file under a fork-only root that exists upstream is denied as D4 (D4 before D5) | FR-003, audit HIGH 1 | example | DONE | cycle-log.md `U36`, commit `bc850e5` (test strengthening; red = audit mutant) |
+| U37 | Zone look-alikes (`.claude/skills/other/…`, `.github/workflows/ci2.yml`) are denied as D8 | FR-003, audit HIGH 2 | example | DONE | cycle-log.md `U37`, commit `8696a93` (test strengthening; red = audit mutant) |
+| U38 | With nested upstream folders, the D8 reason names the outermost folder | FR-005, audit HIGH 3 | example | DONE | cycle-log.md `U38`, commit `6ed2379` (test strengthening; red = audit mutant) |
 
 ## Invariants and edge cases still to place
 
