@@ -4,7 +4,7 @@ loop: outside-in # outside-in | inside-out
 profile: .specify/memory/tdd-profile.md # stack profile the commands must read
 spec_criteria: 11 # acceptance criteria found in spec.md
 planned_at: 92977db # short SHA the list was derived from
-updated_at: ca4c399 # short SHA of the last change to this file
+updated_at: 14c447a # short SHA of the last change to this file
 suite_baseline: green # green | red | unknown, at planning time
 ---
 
@@ -23,15 +23,15 @@ The rubric grades a behavior `PROVEN` only when its red is recorded **and** its 
 
 | id  | behavior | traces | kind | state | test |
 | --- | -------- | ------ | ---- | ----- | ---- |
-| A1  | On a `main` checkout, the agent guard (run exactly as `.claude/settings.json` invokes it) refuses a `Write` to a file that exists upstream, printing the `PreToolUse` deny JSON whose reason names Principle V and the upstream-bound/staged route | US1 AS1, FR-005, FR-007 | example | PENDING | |
-| A2  | The agent guard refuses a `Write` to `docs/domain_knowledge/CONTEXT.md` with a reason naming `.fork/domain-knowledge/` | US1 AS2, FR-005 | example | PENDING | |
-| A3  | The agent guard allows writes under each fork-only root and zone: exit 0, no output | US1 AS3, FR-003 | example | PENDING | |
-| A4  | The agent guard allows a write to an upstream path inside a linked worktree on another branch, even when the session `cwd` is the `main` checkout | US1 AS4, FR-004 | example | PENDING | |
-| A5  | The agent guard allows a write to an upstream file while a merge is in progress on `main` | US1 AS5, FR-004 | example | PENDING | |
-| A6  | On `main` with `core.hooksPath` at `.fork/githooks`, `git commit` with a staged upstream file fails; stderr has the header, one line per protected path with reason and suggestion, and the `--no-verify` note | US2 AS1, FR-008 | example | PENDING | |
-| A7  | On `main`, a commit that stages only fork-only paths succeeds | US2 AS2 | example | PENDING | |
-| A8  | On `main`, committing a conflicted merge that touches upstream files succeeds | US2 AS3, FR-004 | example | PENDING | |
-| A9  | In a linked worktree on another branch, a commit staging upstream files succeeds | US2 AS4, FR-004 | example | PENDING | |
+| A1  | On a `main` checkout, the agent guard (run exactly as `.claude/settings.json` invokes it) refuses a `Write` to a file that exists upstream, printing the `PreToolUse` deny JSON whose reason names Principle V and the upstream-bound/staged route | US1 AS1, FR-005, FR-007 | example | DONE | cycle-log.md `A1`, commit `22a59fb` |
+| A2  | The agent guard refuses a `Write` to `docs/domain_knowledge/CONTEXT.md` with a reason naming `.fork/domain-knowledge/` | US1 AS2, FR-005 | example | DONE | cycle-log.md `A2`, commit `3b847a7` |
+| A3  | The agent guard allows writes under each fork-only root and zone: exit 0, no output | US1 AS3, FR-003 | example | DONE | cycle-log.md `A3`, commit `3d24446` |
+| A4  | The agent guard allows a write to an upstream path inside a linked worktree on another branch, even when the session `cwd` is the `main` checkout | US1 AS4, FR-004 | example | DONE | cycle-log.md `A4`, commit `389bb7b` |
+| A5  | The agent guard allows a write to an upstream file while a merge is in progress on `main` | US1 AS5, FR-004 | example | DONE | cycle-log.md `A5`, commit `f54be77` |
+| A6  | On `main` with `core.hooksPath` at `.fork/githooks`, `git commit` with a staged upstream file fails; stderr has the header, one line per protected path with reason and suggestion, and the `--no-verify` note | US2 AS1, FR-008 | example | DONE | cycle-log.md `A6`, commit `34be6cf` |
+| A7  | On `main`, a commit that stages only fork-only paths succeeds | US2 AS2 | example | DONE | cycle-log.md `A7`, commit `ca85dfb` |
+| A8  | On `main`, committing a conflicted merge that touches upstream files succeeds | US2 AS3, FR-004 | example | DONE | cycle-log.md `A8`, commit `fc31859` |
+| A9  | In a linked worktree on another branch, a commit staging upstream files succeeds | US2 AS4, FR-004 | example | DONE | cycle-log.md `A9`, commit `3133a58` |
 | A10 | `.fork/README.md` names `.fork/domain-knowledge/` as the canonical knowledge root for `/speckit-grill-with-docs`, with its layout (`CONTEXT.md`, topic documents, `adr/`) | US3 AS1, FR-012 | example | DONE | cycle-log.md `A10`, commit `321583b` |
 | A11 | `.fork/README.md` has a Principle V guard section covering both guards, the merge exception, `--no-verify`, and the enable command `git config core.hooksPath .fork/githooks` | US3 AS2, FR-009, FR-012 | example | DONE | cycle-log.md `A11`, commit `e5780a8` |
 
@@ -72,12 +72,12 @@ The rubric grades a behavior `PROVEN` only when its red is recorded **and** its 
 
 | id  | behavior | traces | kind | state | test |
 | --- | -------- | ------ | ---- | ----- | ---- |
-| U22 | `--hook` reads `tool_input.notebook_path` when there is no `file_path`, and resolves a relative path against the input `cwd` | FR-007, research R1 | example | PENDING | |
-| U23 | `--hook` with unparseable stdin prints the deny JSON with reason starting `principle-v-guard failed:` and exits 0 | FR-011 | example | PENDING | |
-| U24 | `--hook` for a matched tool with no target path prints the `principle-v-guard failed:` deny and exits 0 | FR-011 | example | PENDING | |
-| U25 | `--hook` whose rule library fails to load prints the `principle-v-guard failed:` deny and exits 0 (never a non-zero exit, which would let the write through) | FR-011, research R1 | example | PENDING | |
-| U26 | `--staged` lists staged deletions and both sides of a rename | FR-008, research R6 | example | PENDING | |
-| U27 | `--staged` on a guard failure exits 1 with `principle-v-guard failed:` | FR-011 | example | PENDING | |
+| U22 | `--hook` reads `tool_input.notebook_path` when there is no `file_path`, and resolves a relative path against the input `cwd` | FR-007, research R1 | example | DONE | cycle-log.md `U22`, commit `659ed67` |
+| U23 | `--hook` with unparseable stdin prints the deny JSON with reason starting `principle-v-guard failed:` and exits 0 | FR-011 | example | DONE | cycle-log.md `U23`, commit `f3db841` |
+| U24 | `--hook` for a matched tool with no target path prints the `principle-v-guard failed:` deny and exits 0 | FR-011 | example | DONE | cycle-log.md `U24`, commit `6bdf930` |
+| U25 | `--hook` whose rule library fails to load prints the `principle-v-guard failed:` deny and exits 0 (never a non-zero exit, which would let the write through) | FR-011, research R1 | example | DONE | cycle-log.md `U25`, commit `1133ecd` (first-run pass; behavior landed in A1 `22a59fb`; mutant-verified) |
+| U26 | `--staged` lists staged deletions and both sides of a rename | FR-008, research R6 | example | DONE | cycle-log.md `U26`, commit `4568300` (first-run pass; behavior landed in A6 `34be6cf`; mutant-verified) |
+| U27 | `--staged` on a guard failure exits 1 with `principle-v-guard failed:` | FR-011 | example | DONE | cycle-log.md `U27`, commit `50f43cd` |
 
 ### Wiring (stream W)
 
