@@ -33,6 +33,23 @@
       },
       "registered_skills": [],
       "installed_at": "2026-11-24T22:28:01.249169+00:00"
+    },
+    "tdd": {
+      "version": "2.0.1",
+      "source": "local",
+      "manifest_hash": "sha256:f2d979f9e8560477b85d0d0e8f4cce3eded0d16f0eeec1b143eba97e4c43c4ae",
+      "enabled": true,
+      "priority": 10,
+      "registered_commands": {
+        "claude": [
+          "speckit.tdd.setup",
+          "speckit.tdd.plan",
+          "speckit.tdd.run",
+          "speckit.tdd.verify"
+        ]
+      },
+      "registered_skills": [],
+      "installed_at": "2026-11-25T05:52:03.213445+00:00"
     }
   }
 }

@@ -15,3 +15,6 @@ integrations/packages.json
 
 # Config backups written by `specify extension remove` (local only).
 extensions/.backup/
+
+# Catalog cache written by `specify extension search` (local only).
+extensions/.cache/
