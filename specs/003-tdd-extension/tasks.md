@@ -90,26 +90,26 @@ description: "Tasks for adopting the spec-kit-tdd extension (spec 003)"
 
 ## Phase 1: Setup (integrator)
 
-- [ ] T001 From `M`:
+- [X] T001 From `M`:
   - Run `git fetch -q upstream && git merge-base --is-ancestor upstream/main main`.
   - Run `git worktree add .worktrees/fork-tdd-extension -b fork/tdd-extension main`.
   - Verify the branch, `HEAD` = `main`, and a clean tree.
-- [ ] T002 [P] Add `extensions/.cache/` to `/Users/mfelker/Projects/ob1/.worktrees/fork-tdd-extension/.specify/.gitignore` (R13).
-- [ ] T003 [P] In `W`, confirm `.specify/feature.json` = `specs/003-tdd-extension`, and that `specs/003-tdd-extension/plan.md` Lane, Worktree (`W`, absolute) and Contribution folder (`.fork/ci`) parse under the R3 grammar. This is a read-only check; no `/speckit-*` command runs in `W`.
+- [X] T002 [P] Add `extensions/.cache/` to `/Users/mfelker/Projects/ob1/.worktrees/fork-tdd-extension/.specify/.gitignore` (R13).
+- [X] T003 [P] In `W`, confirm `.specify/feature.json` = `specs/003-tdd-extension`, and that `specs/003-tdd-extension/plan.md` Lane, Worktree (`W`, absolute) and Contribution folder (`.fork/ci`) parse under the R3 grammar. This is a read-only check; no `/speckit-*` command runs in `W`.
 
 ## Phase 2: Foundational (integrator, serial)
 
-- [ ] T004 Verified download (R1), into fresh empty folders under `SP`:
+- [X] T004 Verified download (R1), into fresh empty folders under `SP`:
   1. `gh release download v2.0.1 -R d0whc3r/spec-kit-tdd -p 'tdd-2.0.1.zip' -D SP/tdd-zip`, and record its SHA-256.
   2. Unzip into `SP/tdd-unzipped`.
   3. Compare every file's `git hash-object` with the blobs from `gh api 'repos/d0whc3r/spec-kit-tdd/git/trees/v2.0.1?recursive=1'`, and confirm the tag commit is `55221d4`.
   4. Confirm the allowed path set. **Stop on any difference.**
-- [ ] T005 [A1] Install from `W` with `specify extension add --dev SP/tdd-unzipped`. Then:
+- [X] T005 [A1] Install from `W` with `specify extension add --dev SP/tdd-unzipped`. Then:
   - Confirm `specify extension list` shows `tdd 2.0.1` and that `.specify/extensions.yml` has the 4 hooks (`before_implement` with `optional: false`).
   - Re-hash the installed `.specify/extensions/tdd/{commands,templates}` against the tag.
   - Write `/Users/mfelker/Projects/ob1/.worktrees/fork-tdd-extension/specs/003-tdd-extension/evidence/r1-verify.md` (the table, the zip SHA-256, the tag commit).
   - Commit `[fork] Install spec-kit-tdd 2.0.1 (verified against tag v2.0.1)`.
-- [ ] T006 Write `specs/003-tdd-extension/tdd/test-list.md` from the Behavior Map, using the extension's test-list template:
+- [X] T006 Write `specs/003-tdd-extension/tdd/test-list.md` from the Behavior Map, using the extension's test-list template:
   - Frontmatter, with `planned_at` from `git rev-parse --short HEAD`.
   - Per behavior: `traces`, `kind` (`example`, or `docs-check` for A13 and A14), state `PENDING`; A1 is `DONE`, citing `evidence/r1-verify.md`.
   - The Out of scope list: specs 001 and 002 aren't retrofitted.
