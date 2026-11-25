@@ -1,5 +1,5 @@
 // Per-runtime commands for the TDD adapter (data-model RuntimeCommand; research R4, R5).
-import { existsSync, realpathSync } from 'node:fs';
+import { existsSync, readFileSync, realpathSync } from 'node:fs';
 import { isAbsolute, join, relative, sep } from 'node:path';
 import { scanRuntimes, SQL_VERIFY, TEST_PATTERNS } from './runtimes.mjs';
 import { TargetError } from './tdd-target.mjs';
@@ -33,11 +33,18 @@ export function runtimeFor(fileAbs, target) {
 export function buildCommand({ op, runtime, tree, file, name }) {
   const cwd = join(tree, runtime.root);
   const rel = relative(cwd, file).split(sep).join('/');
+  const base = { op, cwd, unsupported: null };
+  if (!USES_NODE_TEST.test(readFileSync(file, 'utf8'))) {
+    const argv = [process.execPath, '--test', '--test-reporter=spec', rel];
+    return { ...base, kind: 'plain-script', argv, countParser: nodeCounts, unsupported: op === 'single' ? 'plain script, no named tests; use `file`' : null };
+  }
   const argv = [process.execPath, '--test', '--test-isolation=none', '--test-reporter=spec'];
   if (op === 'single') argv.push(`--test-name-pattern=^${escapeRegex(name)}$`);
   argv.push(rel);
-  return { op, kind: 'node-test', argv, cwd, countParser: nodeCounts, unsupported: null };
+  return { ...base, kind: 'node-test', argv, countParser: nodeCounts };
 }
+
+const USES_NODE_TEST = /(from\s*|require\(\s*|import\(\s*)['"]node:test['"]/;
 
 /** The last value of a `ℹ <label> N` summary line, or undefined. */
 const lastCount = (output, label) => {

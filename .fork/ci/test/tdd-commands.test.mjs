@@ -104,3 +104,17 @@ test('U15 node count parser: tests 0 is zero-match; unparseable output gives nul
   assert.equal(countParser('', 0), null);
   assert.equal(countParser('ℹ tests 1\n', 0), null);
 });
+
+test('U16 a test-*.mjs script without node:test is kind plain-script: single unsupported, file uses process isolation', () => {
+  const tree = tempTree('fork-tdd-tree-', { 'recipes/x/test-live.mjs': "console.log('live ok');\n", 'recipes/x/x.mjs': 'export const x = 1;\n' });
+  const file = join(tree, 'recipes/x/test-live.mjs');
+  const runtime = runtimeFor(file, { repoRoot: tree, tree, folder: 'recipes/x' });
+  const single = buildCommand({ op: 'single', runtime, tree, file, name: 'anything' });
+  assert.equal(single.kind, 'plain-script');
+  assert.equal(single.unsupported, 'plain script, no named tests; use `file`');
+  const whole = buildCommand({ op: 'file', runtime, tree, file });
+  assert.equal(whole.kind, 'plain-script');
+  assert.equal(whole.unsupported, null);
+  assert.equal(whole.cwd, join(tree, 'recipes/x'));
+  assert.deepEqual(whole.argv, [process.execPath, '--test', '--test-reporter=spec', 'test-live.mjs']);
+});

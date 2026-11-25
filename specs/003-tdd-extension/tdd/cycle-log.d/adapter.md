@@ -138,3 +138,12 @@
 - green: `.fork/ci/lib/tdd-commands.mjs:48` `nodeCounts()` reads the last `ℹ tests/pass/fail N` lines and returns null unless all three are present; `buildCommand` returns it as `countParser`. Suite `node --test .fork/ci/test/` -> 116 passed, 0 failed
 - refactor: `lastCount`'s line regex tightened from `^\S* ?<label>` to `^ℹ <label>`; suite re-run -> 116 passed, 0 failed
 - commit: (this commit)
+
+## Cycle: U16 a test-*.mjs script without node:test is kind plain-script
+
+- test: `.fork/ci/test/tdd-commands.test.mjs::U16 a test-*.mjs script without node:test is kind plain-script: single unsupported, file uses process isolation` (new)
+- red: `node --test --test-name-pattern="^U16 " .fork/ci/test/tdd-commands.test.mjs`
+  -> `AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:` / `actual: 'node-test',` (1 failed)
+- green: `.fork/ci/lib/tdd-commands.mjs:37` a node-plain file whose source has no `node:test` import/require (`:47` `USES_NODE_TEST`) is `plain-script`: `single` sets `unsupported` to "plain script, no named tests; use `file`", `file` runs `node --test --test-reporter=spec <f>` without `--test-isolation=none` (adapter A10, R5). Suite `node --test .fork/ci/test/` -> 117 passed, 0 failed
+- refactor: `buildCommand` reshaped around a shared `base` (`op`, `cwd`, `unsupported`) ahead of the other runtimes; suite re-run -> 117 passed
+- commit: (this commit)
