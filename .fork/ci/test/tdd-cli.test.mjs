@@ -1,6 +1,7 @@
 import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
+import { delimiter } from 'node:path';
 import { cpSync, mkdtempSync, mkdirSync, readFileSync, writeFileSync, realpathSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
@@ -216,5 +217,23 @@ describe('acceptance', () => {
     const r = tdd(repo, ['suite']);
     assert.equal(r.status, 0, r.stdout + r.stderr);
     assert.equal(r.lastLine, '[tdd] suite feature=specs/001-a folder=recipes/x → pass');
+  });
+
+  // contracts/tdd-profile.md `single`, verbatim, expanded the way the extension does and run by a shell from the repo root.
+  const PROFILE_SINGLE = 'node .fork/ci/bin/tdd.mjs single {file} "{name}"';
+  const profile = (repo, template, vars) => {
+    const { NODE_TEST_CONTEXT: _n, SPECIFY_FEATURE_DIRECTORY: _s, ...env } = process.env;
+    const command = template.replace('{file}', vars.file).replace('{name}', vars.name);
+    const r = spawnSync(command, { shell: true, cwd: repo, encoding: 'utf8', env: { ...env, PATH: `${dirname(process.execPath)}${delimiter}${env.PATH}` } });
+    return { ...r, lastLine: r.stdout.trimEnd().split('\n').at(-1) ?? '' };
+  };
+
+  test('A4 the profile single command run as written gives exit 3 for a name that matches nothing', () => {
+    const { repo } = stagedLayout(wt => ({ lane: 'staged upstream PR #1', worktree: `\`${wt}\`` }));
+    const zero = profile(repo, PROFILE_SINGLE, { file: 'recipes/x/a.test.mjs', name: 'a name (that) matches [nothing]' });
+    assert.equal(zero.status, 3, zero.stdout + zero.stderr);
+    assert.equal(zero.lastLine, '[tdd] single node-test feature=specs/001-a folder=recipes/x: tests=0 pass=0 fail=0 → no tests matched "a name (that) matches [nothing]"');
+    const hit = profile(repo, PROFILE_SINGLE, { file: 'recipes/x/a.test.mjs', name: 'adds' });
+    assert.equal(hit.status, 0, hit.stdout + hit.stderr);
   });
 });

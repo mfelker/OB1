@@ -266,3 +266,13 @@
 - refactor: none needed
 - notes: deviation: no red before implementation is possible for an acceptance behavior written after its units in an inside-out loop; the mutant red is the evidence the test can fail for the right reason (US2 AS1, FR-004).
 - commit: (this commit)
+
+## Cycle: A4 the profile single command run as written gives exit 3 for a name that matches nothing
+
+- test: `.fork/ci/test/tdd-cli.test.mjs::acceptance A4 the profile single command run as written gives exit 3 for a name that matches nothing` (new; the contract's profile string `node .fork/ci/bin/tdd.mjs single {file} "{name}"` is expanded and run through a shell from the repo root of the staged layout, `node` resolving to the running Node first on PATH; the unmatched name carries regex metacharacters)
+- red: the test passed on its first run (`node --test --test-name-pattern="^A4 " .fork/ci/test/tdd-cli.test.mjs` -> 1 passed; inside-out, over U14/U15/U23). Mutant: `.fork/ci/bin/tdd.mjs:80` `exit = 3;` changed to `exit = 0;` (the false green R5 guards against), then the same command
+  -> `AssertionError [ERR_ASSERTION]: ℹ tests 0` / `actual: 0,` (1 failed). Mutant reverted from a byte copy.
+- green: no production change. Suite `node --test .fork/ci/test/` -> 130 passed, 0 failed
+- refactor: none needed
+- notes: deviation: `.specify/memory/tdd-profile.md` doesn't exist yet (T014 writes it), so the string is taken verbatim from contracts/tdd-profile.md; T014 records the same string.
+- commit: (this commit)
