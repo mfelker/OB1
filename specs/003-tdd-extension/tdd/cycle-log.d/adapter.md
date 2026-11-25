@@ -69,3 +69,13 @@
 - green: `.fork/ci/lib/tdd-target.mjs:44` a missing Worktree line returns `repoRoot` for lane `fork`, else throws `plan Worktree required for <lane> lane` (FR-007). Suite `node --test .fork/ci/test/` -> 109 passed, 0 failed
 - refactor: none needed
 - commit: (this commit)
+
+## Cycle: U9 a Worktree not on disk, or not a git work tree, is an error
+
+- test: `.fork/ci/test/tdd-target.test.mjs::U9 a Worktree not on disk, or not a git work tree, is an error` (new; a path never created, and a plain temp dir with no `.git`)
+- red: `node --test --test-name-pattern="^U9 " .fork/ci/test/tdd-target.test.mjs`
+  -> `AssertionError [ERR_ASSERTION]: Missing expected exception.` / `actual: undefined,` (1 failed)
+- green: `.fork/ci/lib/tdd-target.mjs:57` `workTree()` realpaths the named path and requires `git rev-parse --show-toplevel` to equal it, else throws `worktree not found: <path>` (adapter A3); `:53` a named Worktree goes through it. Suite `node --test .fork/ci/test/` -> 110 passed, 0 failed
+- refactor: none needed
+- notes: a subdirectory of a work tree is also rejected (top-level must equal the named path); R3 says "must be a git work tree", read here as the work tree's root.
+- commit: (this commit)

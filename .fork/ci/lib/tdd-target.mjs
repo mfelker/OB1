@@ -1,5 +1,6 @@
 // Resolve the TDD adapter's target from the active feature's plan (data-model TddTarget; research R3).
-import { readFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { readFileSync, realpathSync } from 'node:fs';
 import { isAbsolute, join, relative, resolve, sep } from 'node:path';
 
 /** A target-resolution error with a single-line message; the CLI exits 2. */
@@ -49,7 +50,17 @@ function parseTree(value, repoRoot, planRel, lane) {
   if (/^none/i.test(value ?? '')) return repoRoot;
   const m = /`([^`]*)`/.exec(value ?? '');
   if (!m || !isAbsolute(m[1])) throw new TargetError('plan Worktree must be an absolute path or "none"');
-  return m[1];
+  return workTree(m[1]);
+}
+
+/** The real path of `path` when it is the top of a git work tree, else a TargetError. */
+function workTree(path) {
+  try {
+    const real = realpathSync(path);
+    const top = execFileSync('git', ['rev-parse', '--show-toplevel'], { cwd: real, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
+    if (realpathSync(top) === real) return real;
+  } catch { /* missing, or not a work tree */ }
+  throw new TargetError(`worktree not found: ${path}`);
 }
 
 /** @returns {{repoRoot:string, featureDir:string, lane:string, tree:string, folder:string, folderExists:boolean}} */

@@ -136,3 +136,10 @@ test('U8 a missing Worktree line gives repoRoot for fork; staged and upstream-bo
   throwsTarget(featureRepo({ lane: 'staged upstream PR #1', worktree: null }), {}, 'plan Worktree required for staged lane');
   throwsTarget(featureRepo({ lane: 'upstream-bound feature', worktree: null }), {}, 'plan Worktree required for upstream-bound lane');
 });
+
+test('U9 a Worktree not on disk, or not a git work tree, is an error', () => {
+  const gone = join(realpathSync(mkdtempSync(join(tmpdir(), 'fork-tdd-gone-'))), 'never-created');
+  throwsTarget(featureRepo({ lane: 'staged upstream PR #1', worktree: `\`${gone}\`` }), {}, `worktree not found: ${gone}`);
+  const plainDir = realpathSync(mkdtempSync(join(tmpdir(), 'fork-tdd-plain-')));
+  throwsTarget(featureRepo({ lane: 'staged upstream PR #1', worktree: `\`${plainDir}\`` }), {}, `worktree not found: ${plainDir}`);
+});
