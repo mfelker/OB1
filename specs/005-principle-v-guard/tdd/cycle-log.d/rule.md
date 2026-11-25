@@ -39,7 +39,7 @@
 - test: `.fork/ci/test/principle-v.test.mjs::U5 D4: a file that exists upstream is denied` (new)
 - red: `node --test --test-name-pattern="^U5 " .fork/ci/test/principle-v.test.mjs`
   -> `AssertionError [ERR_ASSERTION]: Expected values to be strictly equal: actual: true, expected: false` (1 failed)
-- green: `.fork/ci/lib/principle-v.mjs:9` added the D4 deny when `upstream.files` has `relPath`, via a `deny(rule)` helper whose `reason` and `suggestion` are empty until U10/U11. Suite `node --test .fork/ci/test/` -> 157 passed, 0 failed
+- green: `.fork/ci/lib/principle-v.mjs:8` added the D4 deny when `upstream.files` has `relPath`, via a `deny(rule)` helper whose `reason` and `suggestion` are empty until U10/U11. Suite `node --test .fork/ci/test/` -> 157 passed, 0 failed
 - refactor: none needed
 - commit: (this commit)
 
@@ -48,7 +48,7 @@
 - test: `.fork/ci/test/principle-v.test.mjs::U6 D8: a new file inside an upstream folder is denied; a sibling top-level path is not` (new)
 - red: `node --test --test-name-pattern="^U6 " .fork/ci/test/principle-v.test.mjs`
   -> `AssertionError [ERR_ASSERTION]: docs/x.md` with `actual: true, expected: false` (1 failed)
-- green: `.fork/ci/lib/principle-v.mjs:16` added an `ancestors()` helper and the D8 deny when any ancestor folder is in `upstream.dirs`. Suite `node --test .fork/ci/test/` -> 158 passed, 0 failed
+- green: `.fork/ci/lib/principle-v.mjs:5` added an `ancestors()` helper and (`:15`) the D8 deny when any ancestor folder is in `upstream.dirs`. Suite `node --test .fork/ci/test/` -> 158 passed, 0 failed
 - refactor: none needed
 - commit: (this commit)
 
@@ -57,6 +57,15 @@
 - test: `.fork/ci/test/principle-v.test.mjs::U7 D7: with upstream null, a non-fork path is denied` (new)
 - red: `node --test --test-name-pattern="^U7 " .fork/ci/test/principle-v.test.mjs`
   -> `AssertionError [ERR_ASSERTION]: Expected values to be strictly equal: actual: true, expected: false` (1 failed)
-- green: `.fork/ci/lib/principle-v.mjs:19` added the D7 deny when `upstream === null`, before D8. Suite `node --test .fork/ci/test/` -> 159 passed, 0 failed
+- green: `.fork/ci/lib/principle-v.mjs:15` added the D7 deny when `upstream === null`, before D8. Suite `node --test .fork/ci/test/` -> 159 passed, 0 failed
+- refactor: none needed
+- commit: (this commit)
+
+## Cycle: U8 D5: fork-only roots are allowed
+
+- test: `.fork/ci/test/principle-v.test.mjs::U8 D5: each fork-only root is allowed, even with upstream null; .forkx is not a root` (new)
+- red: `node --test --test-name-pattern="^U8 " .fork/ci/test/principle-v.test.mjs`
+  -> `AssertionError [ERR_ASSERTION]: .fork/ci/x.mjs` with `actual: false, expected: true` (1 failed)
+- green: `.fork/ci/lib/principle-v.mjs:17` added the D5 allow when the first segment is in `FORK_ROOTS`, after D4 and before D7. Suite `node --test .fork/ci/test/` -> 160 passed, 0 failed
 - refactor: none needed
 - commit: (this commit)

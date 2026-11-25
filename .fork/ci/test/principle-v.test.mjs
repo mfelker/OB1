@@ -58,3 +58,17 @@ test('U7 D7: with upstream null, a non-fork path is denied', () => {
   assert.equal(d.allowed, false);
   assert.equal(d.rule, 'D7');
 });
+
+test('U8 D5: each fork-only root is allowed, even with upstream null; .forkx is not a root', () => {
+  const dirs = new Set(['.fork', '.specify', 'specs', '.worktrees']);
+  for (const relPath of ['.fork/ci/x.mjs', '.specify/memory/c.md', 'specs/005/spec.md', '.worktrees/w/a.md']) {
+    for (const up of [null, { files: new Set(), dirs }]) {
+      const d = run({ relPath, upstream: up });
+      assert.equal(d.allowed, true, relPath);
+      assert.equal(d.rule, 'D5', relPath);
+    }
+  }
+  const notRoot = run({ relPath: '.forkx/a', upstream: null });
+  assert.equal(notRoot.allowed, false);
+  assert.equal(notRoot.rule, 'D7');
+});
