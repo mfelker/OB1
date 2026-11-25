@@ -58,3 +58,13 @@ Appended to `tdd/cycle-log.md` by the integrator in merge order (research R14).
 - refactor: none needed
 - commit: (this commit)
 - notes: the third U33 test is an invariant guard (base report unchanged) and passed before the change, because no section was rendered yet. T8 and T10 render the section heading followed by the single contract line.
+
+## Cycle: U34 bin/verdict.mjs keeps the same conclusion and exit for every TDD status
+
+- test: `.fork/ci/test/verdict.test.mjs::U34 bin/verdict.mjs: same conclusion and exit for every TDD status, including a throwing tddStatus` (new; spawns the bin against temp roots for PASS, PASS_WITH_GAPS, FAIL, BLOCKED, missing, unreadable, no link, push and a throwing `tddStatus` (`spec.md` is a directory, EISDIR), on both a success base (exit 0) and a failure base (exit 1), comparing exit, stdout and summary with the TDD section stripped against a run with no `HEAD_REF`; existing verdict tests untouched)
+- red: `node --test --test-name-pattern="U34" .fork/ci/test/verdict.test.mjs`
+  -> `AssertionError [ERR_ASSERTION]: success/PASS` at `verdict.test.mjs:182` (the section assertion; exit and stdout equality already held) (1 failed)
+- green: `.fork/ci/bin/verdict.mjs:42-50` computes `tddStatus(process.cwd(), process.env.HEAD_REF ?? '')` in `try`/`catch` (an exception becomes `{ error: message }`) and passes it to `renderReport` only; `computeVerdict` is unchanged. `.github/workflows/fork-ci.yml` adds `HEAD_REF: ${{ github.head_ref }}` to the Verdict step's `env:` only. Suite `node --test .fork/ci/test/` -> 110 passed, 0 failed
+- refactor: none needed
+- commit: (this commit)
+- notes: actionlint is not on PATH locally; it runs in CI's self-test job. No `verdict.json` is produced by `bin/verdict.mjs` today, so the contract's `verdict.json` invariant is covered by the exit code and summary comparison.
