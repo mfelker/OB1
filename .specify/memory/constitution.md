@@ -1,5 +1,13 @@
 <!--
 Sync Impact Report
+- Version: 1.1.0 → 1.2.0 (MINOR: every staged upstream PR is its own spec-kit feature)
+  - Modified principles: IV. Test-First (staged-PR lane rule references its feature's tasks),
+    VII. Sync Discipline (new staged-PR-as-feature rule; staged PRs land via fork PR, not --no-ff)
+  - Modified sections: Lanes & Branching (table "Lands in" aligned with the fork-PR runbook;
+    staged-PR spec directory naming)
+  - Added/removed sections: none
+  - Templates: spec-template already has "Lane: staged upstream PR #N" ✅; plan/tasks unchanged ✅
+  - Follow-up: .fork/README.md "Stage an upstream PR" should start with /speckit-specify (deferred)
 - Version: 1.0.1 → 1.1.0 (MINOR: Fork CI policy, Option C, in Quality Gates)
 - Version: 1.0.0 → 1.0.1 (PATCH: spec-kit runs from fork main; worktree-rooted task paths;
   cross-folder import rule softened to match observed code; Deno test caveat; ledger covers
@@ -76,7 +84,8 @@ The fork enforces TDD more strictly than upstream. Rules by lane (see Lanes & Br
 
 - **Fork features and upstream-bound features**: red-green-refactor. A failing test MUST be
   committed (or demonstrably run red) before the implementation that makes it pass.
-- **Staged upstream PRs**: the code already exists, so the rule is "tests before merge". Tests
+- **Staged upstream PRs**: the code already exists, so the rule is "tests before merge", and
+  those tests are tasks in the staged PR's own spec-kit feature (Principle VII). Tests
   covering the PR's changed behavior MUST be written and passing before the PR is merged into
   fork `main`. If the PR has no tests, the owner writes them.
 - Tests MUST live **inside the contribution folder** they cover so they stay within upstream's
@@ -120,8 +129,15 @@ rule 12 (scope check).
 - Upstream enters the fork only by **merge** of `upstream/main` into fork `main`; fork `main`
   is never rebased or force-pushed.
 - `git rerere` MUST be enabled in every clone/worktree used for syncing.
+- **Every staged upstream PR is its own spec-kit feature.** One upstream PR = one feature
+  directory `specs/###-stage-pr-<N>-<short-desc>/`, taken through `/speckit-specify` →
+  `/speckit-plan` → `/speckit-tasks` → `/speckit-implement`, with the spec's Lane set to
+  "staged upstream PR #N". Staged PRs MUST NOT be batched into a shared feature, and a staged PR
+  MUST NOT merge into fork `main` until its feature's tasks are complete and `fork-ci-verdict`
+  passes.
 - Staged upstream PRs MUST be fetched from `refs/pull/<N>/head`, keep the author's commits
-  unrewritten, and be merged with `--no-ff`. Each one MUST be recorded in
+  unrewritten, and land on fork `main` through a fork pull request merged with a merge commit
+  (never squash or rebase). Each one MUST be recorded in
   `.fork/staged-prs.md` (PR number, head SHA, test commit(s), status). The fork's own
   upstream-bound `contrib/` branches merged into fork `main` are recorded there too: once
   upstream opens a PR for them, upstream may squash or modify it just the same.
@@ -157,12 +173,13 @@ shared fixtures from `docs/` is tolerated; importing another contribution's code
 | Lane | Branch | Cut from | Lands in |
 |------|--------|----------|----------|
 | Fork feature | `fork/<short-desc>` | fork `main` | fork `main` |
-| Upstream-bound feature | `contrib/mfelker/<short-desc>` | `upstream/main` | upstream PR **and** fork `main` (merge) |
-| Staged upstream PR | `stage/pr-<N>-<short-desc>` | `refs/pull/<N>/head` (upstream) | fork `main` (`--no-ff`) |
+| Upstream-bound feature | `contrib/mfelker/<short-desc>` | `upstream/main` | upstream PR **and** fork `main` via a fork PR |
+| Staged upstream PR | `stage/pr-<N>-<short-desc>` | `refs/pull/<N>/head` (upstream) | fork `main` via a fork PR, as its own spec-kit feature |
 | Upstream sync | `sync/upstream-<YYYY-MM-DD>` (optional) | fork `main` | fork `main` |
 
 - Spec-kit spec directories (`specs/###-name/`) are independent of branch names; pass
-  `GIT_BRANCH_NAME` with the lane prefix when a branch is created for a feature.
+  `GIT_BRANCH_NAME` with the lane prefix when a branch is created for a feature. A staged PR's
+  feature uses `specs/###-stage-pr-<N>-<short-desc>/` and branch `stage/pr-<N>-<short-desc>`.
 - Specs for upstream-bound work are authored on fork `main`; implementation happens in a
   separate git worktree on the `contrib/` (or `stage/`) branch, per upstream's
   one-worktree-per-task rule.
@@ -228,4 +245,4 @@ deleted; they are enabled or disabled through repo settings only.
 - Re-run `/speckit-brownfield-validate` after upstream syncs that change `CONTRIBUTING.md`,
   `CLAUDE.md`, or `.github/metadata.schema.json`.
 
-**Version**: 1.1.0 | **Ratified**: 2026-11-24 | **Last Amended**: 2026-11-24
+**Version**: 1.2.0 | **Ratified**: 2026-11-24 | **Last Amended**: 2026-11-24

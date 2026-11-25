@@ -16,7 +16,7 @@ Authoritative rules: `.specify/memory/constitution.md` (Principles IV, V, VII).
 |------|--------|----------|----------|----------|
 | Fork feature | `fork/<desc>` | fork `main` | fork `main` | Red-green-refactor |
 | Upstream-bound feature | `contrib/mfelker/<desc>` | `upstream/main` | Upstream PR **and** fork `main` via a fork PR | Red-green-refactor; tests inside the contribution folder |
-| Staged upstream PR | `stage/pr-<N>-<desc>` | `upstream` `refs/pull/<N>/head` | Fork `main` **via a fork PR** | Tests written and green before merge |
+| Staged upstream PR | `stage/pr-<N>-<desc>` | `upstream` `refs/pull/<N>/head` | Fork `main` **via a fork PR**, as **its own spec-kit feature** | Tests written and green before merge |
 
 ## Where spec-kit runs
 
@@ -99,24 +99,67 @@ Never rebase or force-push fork `main`.
 
 ## Stage an upstream PR
 
+**Every staged upstream PR is its own spec-kit feature** (constitution v1.2.0, Principle VII): one PR = one `specs/###-stage-pr-<N>-<desc>/` folder, never batched with other PRs. Run all `/speckit-*` commands from the fork-`main` checkout (`~/Projects/ob1`); code changes happen in a worktree cut from the PR head.
+
+### 1. Specify (fork-`main` checkout)
+
 ```bash
-N=123; DESC=short-desc
-git fetch upstream "pull/$N/head:stage/pr-$N-$DESC"
-git worktree add "../ob1-stage-$N" "stage/pr-$N-$DESC"
-cd "../ob1-stage-$N"
-# 1. Read the diff: git diff upstream/main...HEAD --stat
-# 2. Write tests inside the PR's contribution folder; commit separately: "[category] Tests for #N"
-# 3. Run tests until green locally: node .fork/ci/bin/run-folder.mjs is not on this branch,
-#    so use the folder's own runner (deno test / npm test / pytest)
-git push -u origin "stage/pr-$N-$DESC"
-# Keep the upstream PR's own "[category] ..." title so the (advisory) OB1 PR Gate title rule passes:
-gh pr create -R mfelker/OB1 --base main --head "stage/pr-$N-$DESC" --title "$(gh pr view $N -R NateBJones-Projects/OB1 --json title -q .title) (staged #$N)"
-# 4. When fork-ci-verdict is green:
-gh pr merge <fork-PR-number> -R mfelker/OB1 --merge
-cd - && git worktree remove "../ob1-stage-$N"
+N=532; DESC=atomizer-default
+gh pr view $N -R NateBJones-Projects/OB1          # read it first
+gh pr diff $N -R NateBJones-Projects/OB1
 ```
 
-Then add a row to `staged-prs.md`. If the tests are worth offering upstream, comment on the PR with a link to the fork's test commit.
+Then run `/speckit-specify Stage upstream PR #$N: <what it does>` and fill the spec's **Lane & Contribution Target** table:
+
+| Field | Value |
+|-------|-------|
+| Lane | staged upstream PR |
+| Branch | `stage/pr-<N>-<desc>` |
+| Base | `refs/pull/<N>/head` |
+| Contribution folder | the folder the PR touches |
+| Upstream PR | `#<N>` |
+
+Decline the worktree extension's after-specify offer; the staging worktree is created in step 2.
+
+### 2. Worktree from the PR head
+
+```bash
+git fetch upstream "pull/$N/head:stage/pr-$N-$DESC"
+git worktree add ".worktrees/stage-pr-$N-$DESC" "stage/pr-$N-$DESC"   # ignored by .worktrees/.gitignore
+```
+
+The worktree has no `.specify/`, `specs/` or `.fork/` (it is upstream code).
+
+### 3. Plan and tasks (fork-`main` checkout)
+
+Run `/speckit-plan`, then `/speckit-tasks`. The plan's **Worktree** field is the absolute path of `.worktrees/stage-pr-<N>-<desc>`, and every task path is rooted there. The tasks MUST include the tests for the PR's changed behavior (Principle IV: written and green before merge). The existing code is not rewritten; tests are added in separate commits.
+
+### 4. Implement
+
+Run `/speckit-implement`. It writes tests into the worktree; commit them there separately (`[category] Tests for #N`). Run them with the folder's own runner (`deno test`, `npm test`, `node --test`, `pytest`); `.fork/ci/` is not on the staging branch. Before pushing, preview fork-ci's verdict by running the fork-`main` copy of `run-folder` from inside the worktree (it treats the current directory as the repo root):
+
+```bash
+cd ".worktrees/stage-pr-$N-$DESC"
+node ../../.fork/ci/bin/run-folder.mjs --path <folder> --mode strict --origin fork --out /tmp/r.json
+git status --short   # npm installs may leave a package-lock.json; don't commit it
+```
+
+### 5. Land through a fork PR
+
+```bash
+cd ".worktrees/stage-pr-$N-$DESC"
+git push -u origin "stage/pr-$N-$DESC"
+# Keep the upstream PR's own "[category] ..." title so the (advisory) OB1 PR Gate title rule passes:
+gh pr create -R mfelker/OB1 --base main --head "stage/pr-$N-$DESC" \
+  --title "$(gh pr view $N -R NateBJones-Projects/OB1 --json title -q .title) (staged #$N)"
+# When fork-ci-verdict is green and the feature's tasks are all [X]:
+gh pr merge <fork-PR-number> -R mfelker/OB1 --merge
+cd - && git worktree remove ".worktrees/stage-pr-$N-$DESC"
+```
+
+### 6. Record
+
+Add a row to `staged-prs.md`, including the **Spec** folder. Commit the feature's `specs/` updates on fork `main`. If the tests are worth offering upstream, comment on the upstream PR with a link to the fork's test commit.
 
 ### When upstream later lands a staged PR
 
