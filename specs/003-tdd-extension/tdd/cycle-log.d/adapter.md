@@ -42,3 +42,12 @@
 - green: `.fork/ci/lib/tdd-target.mjs:43` `parseTree()` takes the first backticked token of the Worktree value; `:61` sets `tree`. Suite `node --test .fork/ci/test/` -> 106 passed, 0 failed
 - refactor: none needed
 - commit: (this commit)
+
+## Cycle: U6 Worktree none… gives repoRoot
+
+- test: `.fork/ci/test/tdd-target.test.mjs::U6 Worktree none… gives repoRoot` (new; cases "none (fork-`main` checkout)", "None", "NONE: runs in `.`")
+- red: `node --test --test-name-pattern="^U6 " .fork/ci/test/tdd-target.test.mjs`
+  -> `AssertionError [ERR_ASSERTION]: none (fork-\`main\` checkout)` / `actual: 'main',` / `expected: '/private/var/folders/…/fork-tdd-target-pOb3J4',` (1 failed). The backtick rule picked up `main` from the annotation.
+- green: `.fork/ci/lib/tdd-target.mjs:44` a value starting `none` (case-insensitive) returns `repoRoot` before the backtick rule. Suite `node --test .fork/ci/test/` -> 107 passed, 0 failed
+- refactor: none needed
+- commit: (this commit)

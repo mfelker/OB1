@@ -105,3 +105,14 @@ test('U5 a backticked absolute Worktree path becomes tree', () => {
   const repo = featureRepo({ lane: 'staged upstream PR #1', worktree: `\`${wt}\`. Every source path is rooted here.` });
   assert.equal(resolveTarget({ repoRoot: repo, env: {} }).tree, wt);
 });
+
+test('U6 Worktree none… gives repoRoot', () => {
+  const treeOf = value => {
+    const root = featureRepo({ worktree: value });
+    return [resolveTarget({ repoRoot: root, env: {} }).tree, root];
+  };
+  for (const value of ['none (fork-`main` checkout)', 'None', 'NONE: runs in `.`']) {
+    const [tree, root] = treeOf(value);
+    assert.equal(tree, root, value);
+  }
+});
