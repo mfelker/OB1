@@ -108,7 +108,7 @@ test('A1 agent guard refuses a Write to a file that exists upstream, naming Prin
   assert.match(reason, /upstream-bound worktree/);
 });
 
-test('A2 agent guard refuses docs/domain_knowledge/CONTEXT.md and points to .fork/domain-knowledge/', OUTER, () => {
+test('A2 agent guard refuses docs/domain_knowledge/CONTEXT.md and points to .fork/domain-knowledge/', () => {
   const repo = guardRepo();
   const reason = denyReason(runHook(repo, join(repo.dir, 'docs/domain_knowledge/CONTEXT.md')));
   assert.match(reason, /docs\/domain_knowledge\/CONTEXT\.md/);

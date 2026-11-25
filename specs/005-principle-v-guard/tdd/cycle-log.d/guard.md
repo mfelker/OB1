@@ -17,3 +17,11 @@
 - green: `.fork/ci/bin/principle-v-guard.mjs:22` print the deny only when `!d.allowed`; allowed prints nothing. Suite `node --test .fork/ci/test/` -> 180 passed, 0 failed, 7 todo
 - refactor: none needed
 - commit: (this commit)
+
+## Cycle: A2 --hook points domain_knowledge writes to .fork/domain-knowledge/
+
+- test: `.fork/ci/test/principle-v-guard.acceptance.test.mjs::A2 agent guard refuses docs/domain_knowledge/CONTEXT.md and points to .fork/domain-knowledge/` (flipped from todo)
+- red: recorded at T029 (cycle-log.md 'Outer loop opened'); passes after the A1 and A3 commits, so no new red is invented: the flip is its own cycle. Check run: `node --test --test-name-pattern="^A2 " .fork/ci/test/principle-v-guard.acceptance.test.mjs` -> 1 passed, 0 failed
+- green: no CLI change needed (already covered by the A1/A3 pipeline: the D4 deny carries the domain-knowledge suggestion from decide()). Suite `node --test .fork/ci/test/` -> see commit
+- refactor: none needed
+- commit: (this commit)
