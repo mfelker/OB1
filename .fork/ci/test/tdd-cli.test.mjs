@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { spawnSync } from 'node:child_process';
-import { cpSync, mkdtempSync, mkdirSync, writeFileSync, realpathSync } from 'node:fs';
+import { execFileSync, spawnSync } from 'node:child_process';
+import { cpSync, mkdtempSync, mkdirSync, readFileSync, writeFileSync, realpathSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -129,4 +129,33 @@ test('U24 suite exit mapping, including the empty baseline (no-tests, exempt, mi
   const missing = tdd(cliRepo({ folder: '`recipes/not-yet`' }), ['suite']);
   assert.equal(missing.status, 0, missing.stdout + missing.stderr);
   assert.match(missing.lastLine, /→ empty baseline: folder does not exist yet$/);
+});
+
+const GIT_ENV = { ...process.env, GIT_AUTHOR_NAME: 'T', GIT_AUTHOR_EMAIL: 't@example.test', GIT_COMMITTER_NAME: 'T', GIT_COMMITTER_EMAIL: 't@example.test', GIT_CONFIG_NOSYSTEM: '1' };
+const gitIn = (dir, args) => execFileSync('git', args, { cwd: dir, env: GIT_ENV, stdio: ['ignore', 'pipe', 'pipe'], encoding: 'utf8' }).trim();
+
+/** Make `dir` a git repo with everything committed on `main`. */
+function commitAll(dir) {
+  gitIn(dir, ['init', '-q', '-b', 'main']);
+  gitIn(dir, ['add', '-A']);
+  gitIn(dir, ['-c', 'commit.gpgsign=false', 'commit', '-q', '-m', 'init']);
+}
+
+test('U25 suite restores a lockfile it modified that was clean before', () => {
+  // The passing test dirties both tracked lockfiles in its runtime root (cwd), as an install would.
+  const dirtying = "import { test } from 'node:test';\nimport { writeFileSync } from 'node:fs';\ntest('dirties', () => { writeFileSync('deno.lock', 'rewritten\\n'); writeFileSync('package-lock.json', 'rewritten\\n'); });\n";
+  const root = cliRepo({}, {
+    'recipes/x/a.mjs': 'export const a = 1;\n',
+    'recipes/x/a.test.mjs': dirtying,
+    'recipes/x/deno.lock': 'original deno lock\n',
+    'recipes/x/package-lock.json': 'original npm lock\n',
+  });
+  commitAll(root);
+  writeFileSync(join(root, 'recipes/x/package-lock.json'), 'edited by the developer\n'); // dirty before the run: left alone
+  const r = tdd(root, ['suite']);
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  assert.equal(readFileSync(join(root, 'recipes/x/deno.lock'), 'utf8'), 'original deno lock\n');
+  assert.ok(r.stdout.includes('[tdd] restored recipes/x/deno.lock'), r.stdout);
+  assert.equal(readFileSync(join(root, 'recipes/x/package-lock.json'), 'utf8'), 'rewritten\n');
+  assert.ok(!r.stdout.includes('restored recipes/x/package-lock.json'));
 });

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // TDD adapter: run the active feature's tests in its plan's worktree and folder (contracts/tdd-adapter-cli.md).
-import { spawn } from 'node:child_process';
+import { execFileSync, spawn } from 'node:child_process';
 import { existsSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { delimiter, dirname, join, resolve } from 'node:path';
@@ -91,6 +91,32 @@ const SUITE = {
   exempt: [0, 'empty baseline: docs-only'],
 };
 
+const LOCKFILES = new Set(['package-lock.json', 'deno.lock']);
+
+/** Tracked lockfiles under the folder with no uncommitted change (R6). */
+function cleanLockfiles(tree, folder) {
+  const git = args => execFileSync('git', args, { cwd: tree, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
+  try {
+    const tracked = git(['ls-files', '-z', '--', folder]).split('\0').filter(f => LOCKFILES.has(f.slice(f.lastIndexOf('/') + 1)));
+    const dirty = new Set(git(['diff', '--name-only', '-z', 'HEAD', '--', folder]).split('\0'));
+    return tracked.filter(f => !dirty.has(f));
+  } catch {
+    return []; // not a git checkout: nothing to restore
+  }
+}
+
+/** Restore the lockfiles that were clean before the run and changed during it (adapter A21). */
+function restoreLockfiles(tree, wereClean) {
+  for (const file of wereClean) {
+    try {
+      execFileSync('git', ['diff', '--quiet', 'HEAD', '--', file], { cwd: tree, stdio: 'ignore' });
+    } catch {
+      execFileSync('git', ['checkout', 'HEAD', '--', file], { cwd: tree, stdio: 'ignore' });
+      process.stdout.write(`[tdd] restored ${file}\n`);
+    }
+  }
+}
+
 /** `suite`: delegate to run-folder in the target tree, with childEnv; an empty baseline is green. */
 async function suite() {
   const target = resolveTarget({ repoRoot: REPO_ROOT, env: process.env });
@@ -100,7 +126,9 @@ async function suite() {
   }
   const out = join(mkdtempSync(join(tmpdir(), 'fork-tdd-suite-')), 'result.json');
   const argv = [process.execPath, RUN_FOLDER, '--path', target.folder, '--mode', 'strict', '--origin', 'fork', '--out', out];
+  const wereClean = cleanLockfiles(target.tree, target.folder);
   await run(argv, { cwd: target.tree, env: childEnv(process.env) });
+  restoreLockfiles(target.tree, wereClean);
   let result;
   try {
     result = JSON.parse(readFileSync(out, 'utf8'));

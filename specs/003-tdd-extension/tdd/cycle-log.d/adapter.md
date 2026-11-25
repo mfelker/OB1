@@ -226,3 +226,13 @@
 - refactor: `SUITE` entries changed from thunks to plain `[exit, summary]` pairs; suite re-run -> 125 passed, 0 failed
 - notes: the first draft of this test matched `/^\[tdd\] suite .*→ pass$/`; before going green it was loosened to `suite\b` so U27 (not this cycle) drives the `feature=`/`folder=` part of the summary. No green test was changed.
 - commit: (this commit)
+
+## Cycle: U25 suite restores a lockfile it modified that was clean before
+
+- test: `.fork/ci/test/tdd-cli.test.mjs::U25 suite restores a lockfile it modified that was clean before` (new; a committed fixture repo whose passing test rewrites `deno.lock` and `package-lock.json` in its runtime root; `package-lock.json` is already dirty before the run and must be left alone)
+- red: `node --test --test-name-pattern="^U25 " .fork/ci/test/tdd-cli.test.mjs`
+  -> `AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:` / `actual: 'rewritten\n',` (1 failed)
+- green: `.fork/ci/bin/tdd.mjs:97` `cleanLockfiles()` lists tracked `package-lock.json`/`deno.lock` under the folder with no diff against HEAD; `:109` `restoreLockfiles()` runs `git checkout HEAD -- <file>` for each one that changed during the run and prints `[tdd] restored <file>` (adapter A21, R6); `:129` wraps the run-folder call. Suite `node --test .fork/ci/test/` -> 126 passed, 0 failed
+- refactor: none needed
+- notes: the fixture dirties the lockfiles from its own test rather than relying on `npm install`, so the test is offline and deterministic. A tree that isn't a git checkout restores nothing.
+- commit: (this commit)
