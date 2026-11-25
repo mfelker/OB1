@@ -55,3 +55,9 @@ const failedReason = r => {
 test('U23 --hook with unparseable stdin prints the principle-v-guard failed deny and exits 0', () => {
   failedReason(guard(guardRepo(), '--hook', 'not json'));
 });
+
+test('U24 --hook for a matched tool with no target path prints the principle-v-guard failed deny and exits 0', () => {
+  const repo = guardRepo();
+  const reason = failedReason(guard(repo, '--hook', { hook_event_name: 'PreToolUse', tool_name: 'Write', cwd: repo.dir, tool_input: { content: 'x' } }));
+  assert.match(reason, /no target path/);
+});

@@ -59,3 +59,12 @@
 - green: `.fork/ci/bin/principle-v-guard.mjs` the catch appends the contract's `The write was refused; fix the guard or run it by hand: ...` text (`REFUSED`); the prefix, deny shape and exit 0 already came from the top-level `try`/`catch`. Suite `node --test .fork/ci/test/` -> 185 passed, 0 failed, 4 todo
 - refactor: none needed
 - commit: (this commit)
+
+## Cycle: U24 --hook fails closed when a matched tool has no target path
+
+- test: `.fork/ci/test/principle-v-guard.test.mjs::U24 --hook for a matched tool with no target path prints the principle-v-guard failed deny and exits 0` (new)
+- red: `node --test --test-name-pattern="^U24 " .fork/ci/test/principle-v-guard.test.mjs`
+  -> `AssertionError [ERR_ASSERTION]: The input did not match the regular expression /no target path/` with `actual: 'principle-v-guard failed: The "paths[1]" argument must be of type string. Received undefined. The write was refused; …'` (1 failed)
+- green: `.fork/ci/bin/principle-v-guard.mjs:19-20` a missing or empty target throws `no target path in tool_input (file_path or notebook_path)`, which the catch turns into the deny; `tool_input?.` tolerates a missing object. Suite `node --test .fork/ci/test/` -> 186 passed, 0 failed, 4 todo
+- refactor: none needed
+- commit: (this commit)
