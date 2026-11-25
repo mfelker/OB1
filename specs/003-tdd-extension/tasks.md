@@ -68,6 +68,7 @@ description: "Tasks for adopting the spec-kit-tdd extension (spec 003)"
 | U32 | The branch is compared literally (regex metacharacters, `../`) | T invariants | C, 〃 |
 | U33 | `renderReport` renders T1–T10 with escaped pipes; no section for `null` | contracts/fork-ci-tdd-status.md | C, `report.test.mjs` |
 | U34 | `bin/verdict.mjs`: same conclusion and exit for every status; `tddStatus` throwing renders the T10 line with the exit unchanged | `TddStatus.error`, FR-014 | C, `verdict.test.mjs` |
+| U36 | `selfTestNeeded` also fires for `.specify/templates/overrides/`, `.specify/extensions/tdd/`, `.specify/memory/constitution.md` and `.fork/README.md`, so the drift and docs tests run in CI when those change | FR-010, FR-011, FR-012 | C, `self-test-needed.test.mjs` (extend) |
 | U35 | Overrides: the installed base hash equals `base_sha256`; stripping the header and fork section reproduces the base | `OverrideFile.base_sha256`, `OverrideFile.name`, `OverrideFile` fork section | B, `tdd-overrides.test.mjs` |
 | A1 | Installed extension byte-identical to tag `v2.0.1` | FR-001 | integrator, `evidence/r1-verify.md` |
 | A2 | Profile commands each run before recording (single, zero-match, file, suite) | FR-009 | A, the profile's `verified:` and a cycle entry |
@@ -175,7 +176,7 @@ description: "Tasks for adopting the spec-kit-tdd extension (spec 003)"
   - Tests in `.fork/ci/test/tdd-status.test.mjs`.
   - Implement `.fork/ci/lib/tdd-status.mjs` `tddStatus(rootDir, headRef)`, covering data-model.md `TddStatus.headRef`, `TddStatus.features`, `TddStatus.verdict` and `TddStatus.linked`.
 - [ ] T017 [P] [US1] [U33] One cycle: extend `.fork/ci/test/report.test.mjs`, then add the optional 4th `tdd` parameter to `renderReport` in `.fork/ci/lib/report.mjs`, covering contract rows T1–T10.
-- [ ] T018 [P] [US1] [U34] One cycle:
+- [ ] T018 [P] [US1] [U34] [U36] One cycle per behavior (U36: extend `.fork/ci/test/self-test-needed.test.mjs`, then `.fork/ci/lib/self-test-needed.mjs`):
   - Extend `.fork/ci/test/verdict.test.mjs`, covering data-model.md `TddStatus.error`.
   - Wire `.fork/ci/bin/verdict.mjs`: call `tddStatus(process.cwd(), process.env.HEAD_REF ?? '')` inside `try`/`catch`, and pass the result (or `{error}`) to `renderReport` only, never to `computeVerdict`.
   - Then add `HEAD_REF: ${{ github.head_ref }}` to the verdict step's `env:` in `.github/workflows/fork-ci.yml`, and nothing else. Run actionlint 1.7.12 if it's available locally, otherwise on the PR.

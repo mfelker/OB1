@@ -97,6 +97,12 @@ Written by hand, under the extension's format (research R11): the extension can'
 | U33 | `renderReport` renders T1–T10 with escaped pipes; no section for `null` | FR-014 | example | PENDING | |
 | U34 | `bin/verdict.mjs`: same conclusion and exit for every status; a throw renders the T10 line | FR-014 | example | PENDING | |
 
+### `.fork/ci/lib/self-test-needed.mjs`
+
+| id  | behavior | traces | kind | state | test |
+| --- | -------- | ------ | ---- | ----- | ---- |
+| U36 | `selfTestNeeded` fires for overrides, the installed tdd extension, the constitution and `.fork/README.md` | FR-010, FR-011, FR-012 | example | PENDING | |
+
 ### `.specify/templates/overrides/`
 
 | id  | behavior | traces | kind | state | test |
