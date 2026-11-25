@@ -69,7 +69,8 @@ description: "Tasks for adopting the spec-kit-tdd extension (spec 003)"
 | U33 | `renderReport` renders T1–T10 with escaped pipes; no section for `null` | contracts/fork-ci-tdd-status.md | C, `report.test.mjs` |
 | U34 | `bin/verdict.mjs`: same conclusion and exit for every status; `tddStatus` throwing renders the T10 line with the exit unchanged | `TddStatus.error`, FR-014 | C, `verdict.test.mjs` |
 | U36 | `selfTestNeeded` also fires for `.specify/templates/overrides/`, `.specify/extensions/tdd/`, `.specify/memory/constitution.md` and `.fork/README.md`, so the drift and docs tests run in CI when those change | FR-010, FR-011, FR-012 | C, `self-test-needed.test.mjs` (extend) |
-| U35 | Overrides: the installed base hash equals `base_sha256`; stripping the header and fork section reproduces the base | `OverrideFile.base_sha256`, `OverrideFile.name`, `OverrideFile` fork section | B, `tdd-overrides.test.mjs` |
+| U35 | Overrides: the installed base hash equals `base_sha256`; stripping the header and fork section reproduces the base | `OverrideFile.base`, `OverrideFile.base_sha256`, `OverrideFile.name`, `OverrideFile` fork section | B, `tdd-overrides.test.mjs` |
+| U37 | `suite`'s summary line reports `tests=`/`pass=`/`fail=` summed over the runtimes that ran | US2 AS1, contract Summary line | A (integrator, T024 remediation H2), `tdd-cli.test.mjs` |
 | A1 | Installed extension byte-identical to tag `v2.0.1` | FR-001 | integrator, `evidence/r1-verify.md` |
 | A2 | Profile commands each run before recording (single, zero-match, file, suite) | FR-009 | A, the profile's `verified:` and a cycle entry |
 | A3 | US2 AS1: `suite` for a feature whose plan names a real git worktree runs that worktree's folder | US2, FR-004 | A, `tdd-cli.test.mjs` (acceptance) |
@@ -165,7 +166,7 @@ description: "Tasks for adopting the spec-kit-tdd extension (spec 003)"
 ### Stream B: overrides (US3), worktree `WB`
 
 - [X] T015 [P] [US3] [U35] One cycle, in a single uninterrupted block (the red is never committed):
-  1. Write `.fork/ci/test/tdd-overrides.test.mjs` first, per data-model.md `OverrideFile.base_sha256`, `OverrideFile.name` and the `OverrideFile` fork section.
+  1. Write `.fork/ci/test/tdd-overrides.test.mjs` first, per data-model.md `OverrideFile.base`, `OverrideFile.base_sha256`, `OverrideFile.name` and the `OverrideFile` fork section.
   2. Observe red: "override file missing".
   3. Create `.specify/templates/overrides/tdd-test-quality-rubric.md` (rules S1–S4) and `.specify/templates/overrides/tdd-loop-playbook.md` (the 5-step base-red procedure), per contracts/staged-evidence-override.md. Each is a copy of the installed template plus the header and one delimited fork section that states it applies only when the plan's Lane is `staged upstream PR`.
   4. Go green with the full suite, then commit.
@@ -224,8 +225,9 @@ description: "Tasks for adopting the spec-kit-tdd extension (spec 003)"
   - Check that every relative link in those files resolves (constitution docs gate).
 - [ ] T024 Run `/speckit-analyze` on 003 **from `M`** (fresh subagent; it reads `W`'s artifacts by absolute path). Resolve any CRITICAL or HIGH finding before continuing (SC-005).
 - [ ] T025 [P] Lane hygiene: `git -C W diff --stat main...HEAD` lists only fork-only paths per FR-015 (`.specify/`, `.fork/`, `specs/003-tdd-extension/`, `.claude/skills/speckit-tdd-*`, `.github/workflows/fork-ci.yml`). Also run a secret scan of the diff.
-- [ ] T026 [P] Confirm in the test list that U1–U35, A1–A6, A13 and A14 are `DONE`. A7–A12, A15 and A16 stay `PENDING` (post-merge or on-PR). The cycle log has one entry per cycle, each with a red.
-- [ ] T027 Tick T001–T026. Push `fork/tdd-extension`.
+- [ ] T026 [P] Confirm in the test list that U1–U37, A1–A6, A13 and A14 are `DONE`. A7–A12, A15 and A16 stay `PENDING` (post-merge or on-PR). The cycle log has one entry per cycle, each with a red.
+- [ ] T026a Pre-merge TDD audit (T024 finding C1: Gate 1 of constitution 1.3.0 requires it before merge). In a fresh subagent working from `M`, follow `W/.specify/extensions/tdd/commands/speckit.tdd.verify.md` by hand on `W`'s 003 artifacts (the extension isn't installed in `M` until T029) and write `W/specs/003-tdd-extension/tdd/verification.md`. Required verdict: PASS or PASS_WITH_GAPS, with the fork section inert (base rules). Behaviors whose test passed on its first run and whose red is a deliberate mutant (A3–A6, U29, U32) are marked covered in the test list, per the playbook's "test passes on first run" row. A FAIL blocks T027; fix it under the same TDD rules and re-audit. Commit the report.
+- [ ] T027 Tick T001–T026a. Push `fork/tdd-extension`.
 - [ ] T028 [A16] Open the fork PR: `gh pr create -R mfelker/OB1 --base main --head fork/tdd-extension --title "[fork] Adopt spec-kit-tdd for enforced TDD (spec 003)"`.
   - The body has the A1 table, the test counts, and the note that `OB1 Review` is expected to fail on a fork-only PR.
   - Wait with an `until` loop for `fork-ci-verdict` and `self-test`.
@@ -253,7 +255,7 @@ description: "Tasks for adopting the spec-kit-tdd extension (spec 003)"
   5. In fresh subagents, run the verify procedure on the fixture, expecting C1/K4 `PROVEN` and C3 `TEST_AFTER`, then on 002 (switch `feature.json`), expecting `BLOCKED` "no test list".
   6. Vet every cited line yourself.
   7. Restore `feature.json` to 003, remove the 002 worktree, and commit the reports.
-- [ ] T032 [US3] [A12] Audit 003 in a fresh subagent (verify, with remediation allowed). Expect PASS or PASS_WITH_GAPS, with the fork section inert (base rules).
+- [ ] T032 [US3] [A12] Re-audit 003 from `M` in a fresh subagent, now through the installed extension (verify, with remediation allowed). This confirms T026a's pre-merge verdict. Expect PASS or PASS_WITH_GAPS, with the fork section inert (base rules).
   - Fix any fork-integration gap found in T030–T032 through a follow-up `fork/tdd-calibration-fixes` branch, under the same TDD rules, then re-run the affected step.
   - Mark A7–A12, A15 and A16 `DONE`, set spec.md Status to `Implemented`, tick T028–T032, and commit to `main`.
 

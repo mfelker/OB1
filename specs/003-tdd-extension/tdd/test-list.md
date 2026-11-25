@@ -4,7 +4,7 @@ loop: inside-out
 profile: .specify/memory/tdd-profile.md
 spec_criteria: 13
 planned_at: d83711a
-updated_at: d83711a
+updated_at: b4227e1
 suite_baseline: green
 ---
 
@@ -21,10 +21,10 @@ Written by hand, under the extension's format (research R11): the extension can'
 | --- | -------- | ------ | ---- | ----- | ---- |
 | A1  | The installed extension is byte-identical to tag `v2.0.1` | FR-001 | example | DONE | `specs/003-tdd-extension/evidence/r1-verify.md` (T004–T005) |
 | A2  | Profile commands were each run before being recorded (single, zero-match, file, suite) | FR-009 | example | DONE | cycle-log.md `A2`, commit `f40c89d` |
-| A3  | `suite` for a feature whose plan names a real git worktree runs that worktree's folder | US2 AS1, FR-004 | example | DONE | cycle-log.md `A3`, commit `21d2a1b` |
-| A4  | The profile's `single` command run as written exits 3 for a name that matches nothing | US2 AS2, FR-006 | example | DONE | cycle-log.md `A4`, commit `1009717` |
-| A5  | A fork feature with Worktree `none` uses the repo-root checkout | US2 AS3 | example | DONE | cycle-log.md `A5`, commit `dcaf663` |
-| A6  | A missing folder or no detectable runtime fails explicitly | US2 AS4, FR-007 | example | DONE | cycle-log.md `A6`, commit `2962db5` |
+| A3  | `suite` for a feature whose plan names a real git worktree runs that worktree's folder | US2 AS1, FR-004 | example | DONE | covered by U5, U9, U24; passed on first run, verified with a deliberate mutant (playbook); cycle-log.md `A3`, commit `21d2a1b` |
+| A4  | The profile's `single` command run as written exits 3 for a name that matches nothing | US2 AS2, FR-006 | example | DONE | covered by U14, U15, U23; passed on first run, verified with a deliberate mutant (playbook); cycle-log.md `A4`, commit `1009717` |
+| A5  | A fork feature with Worktree `none` uses the repo-root checkout | US2 AS3 | example | DONE | covered by U6; passed on first run, verified with a deliberate mutant (playbook); cycle-log.md `A5`, commit `dcaf663` |
+| A6  | A missing folder or no detectable runtime fails explicitly | US2 AS4, FR-007 | example | DONE | covered by U11, U13; passed on first run, verified with a deliberate mutant (playbook); cycle-log.md `A6`, commit `2962db5` |
 | A7  | `/speckit-implement` drives the behavior through the loop before anything else | US1 AS1, FR-002 | example | PENDING | |
 | A8  | With no test list, `/speckit-implement` stops | US1 AS2 | example | PENDING | |
 | A9  | The cycle log records the test, red command, failure line, green and commit | US1 AS3 | example | PENDING | |
@@ -90,10 +90,10 @@ Written by hand, under the extension's format (research R11): the extension can'
 | id  | behavior | traces | kind | state | test |
 | --- | -------- | ------ | ---- | ----- | ---- |
 | U28 | `tddStatus` per-feature fields and verdict values, including missing and unreadable | FR-014 | example | DONE | cycle-log.md `U28`, commit `eebd275` |
-| U29 | Several specs naming the same branch give one entry each | FR-014 | example | DONE | cycle-log.md `U29`, commit `02b4fd4` |
+| U29 | Several specs naming the same branch give one entry each | FR-014 | example | DONE | covered by U28; passed on first run, verified with a deliberate mutant (playbook); cycle-log.md `U29`, commit `02b4fd4` |
 | U30 | No spec names the branch gives `linked:false` | FR-014 | example | DONE | cycle-log.md `U30`, commit `a63299b` |
 | U31 | Empty headRef (push) gives `null` | FR-014 | example | DONE | cycle-log.md `U31`, commit `063c7a1` |
-| U32 | The branch is compared literally | FR-014 | example | DONE | cycle-log.md `U32`, commit `bb44e34` |
+| U32 | The branch is compared literally | FR-014 | example | DONE | covered by U28; passed on first run, verified with a deliberate mutant (playbook); cycle-log.md `U32`, commit `bb44e34` |
 | U33 | `renderReport` renders T1–T10 with escaped pipes; no section for `null` | FR-014 | example | DONE | cycle-log.md `U33`, commit `4f95dc0` |
 | U34 | `bin/verdict.mjs`: same conclusion and exit for every status; a throw renders the T10 line | FR-014 | example | DONE | cycle-log.md `U34`, commit `0f1f437` |
 
