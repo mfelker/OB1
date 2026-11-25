@@ -20,12 +20,33 @@ function reasonText(r) {
   return fromUpstream ? `${r.reason} (from upstream)` : r.reason;
 }
 
+const TDD_VERDICT_ICON = { PASS: '✅', PASS_WITH_GAPS: '⚠️', FAIL: '❌', BLOCKED: '❌', missing: '➖', unreadable: '⚠️' };
+const has = present => (present ? '✅' : '➖');
+
+/** Advisory TDD status section (specs/003-tdd-extension/contracts/fork-ci-tdd-status.md, T1-T10). */
+function tddSection(tdd) {
+  const lines = ['### TDD status (advisory)', ''];
+  if (tdd.error) {
+    lines.push(`TDD status unavailable: ${esc(tdd.error)} (advisory)`);
+  } else if (!tdd.linked) {
+    lines.push(`No feature linked to ${esc(tdd.headRef)} (advisory).`);
+  } else {
+    lines.push('| Feature | Cycle log | Audit report | Verdict |');
+    lines.push('|---------|-----------|--------------|---------|');
+    for (const f of tdd.features) {
+      lines.push(`| ${esc(f.dir)} | ${has(f.cycleLog)} | ${has(f.verification)} | ${TDD_VERDICT_ICON[f.verdict] ?? '⚠️'} ${esc(f.verdict)} |`);
+    }
+  }
+  return lines;
+}
+
 /**
  * @param {object} verdict  computeVerdict() output
  * @param {object[]} results folder results
  * @param {object|null} detect detect.mjs output (for skipped counts and matrix modes)
+ * @param {object|null} [tdd] tddStatus() output or {error}; advisory only, no section when null
  */
-export function renderReport(verdict, results, detect) {
+export function renderReport(verdict, results, detect, tdd = null) {
   const head = `## Fork CI verdict: ${verdict.conclusion === 'success' ? '✅ success' : '❌ failure'}`;
   const lines = [head, ''];
 
@@ -58,5 +79,6 @@ export function renderReport(verdict, results, detect) {
   for (const b of verdict.bypasses ?? []) {
     lines.push('', `Lane bypass: ${b.sha} merged ${esc(b.branch)} without a PR`);
   }
+  if (tdd) lines.push('', ...tddSection(tdd));
   return `${lines.join('\n')}\n`;
 }

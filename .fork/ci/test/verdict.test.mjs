@@ -119,3 +119,67 @@ test('US4: strict failures still fail alongside advisories', () => {
   assert.deepEqual(v.failing, ['recipes/s']);
   assert.deepEqual(v.advisories, ['recipes/u']);
 });
+
+// ---- spec 003 U34 (T018): the advisory TDD status never changes the verdict ----
+
+import { spawnSync } from 'node:child_process';
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const VERDICT_BIN = join(dirname(fileURLToPath(import.meta.url)), '..', 'bin', 'verdict.mjs');
+const featSpec = `# Feature Specification: a\n\n**Feature Branch**: \`fork/a\`\n`;
+const vReport = v => `---\nfeature: 001-a\nverdict: ${v}\n---\n`;
+
+// A repo root with fork-ci inputs plus the given specs/ files.
+function verdictRoot(files) {
+  const root = mkdtempSync(join(tmpdir(), 'fork-ci-verdict-'));
+  const all = { 'ci-detect/detect.json': JSON.stringify(detectFor('recipes/a')), 'ci-results/a.json': JSON.stringify(res('recipes/a', 'pass')), ...files };
+  for (const [rel, content] of Object.entries(all)) {
+    mkdirSync(dirname(join(root, rel)), { recursive: true });
+    if (content === null) mkdirSync(join(root, rel)); else writeFileSync(join(root, rel), content);
+  }
+  return root;
+}
+
+function runVerdict(root, headRef, detectResult) {
+  const env = { ...process.env };
+  delete env.HEAD_REF;
+  delete env.NODE_TEST_CONTEXT;
+  if (headRef !== undefined) env.HEAD_REF = headRef;
+  const summary = join(root, 'summary.md');
+  writeFileSync(summary, '');
+  const p = spawnSync(process.execPath, [VERDICT_BIN, '--detect', 'ci-detect/detect.json', '--results', 'ci-results',
+    '--detect-result', detectResult, '--test-result', 'success', '--test-sql-result', 'skipped',
+    '--self-test-result', 'skipped', '--summary', summary], { cwd: root, env, encoding: 'utf8' });
+  return { status: p.status, stdout: p.stdout, stderr: p.stderr, summary: readFileSync(summary, 'utf8') };
+}
+const withoutTdd = md => { const i = md.indexOf('\n\n### TDD status (advisory)'); return i < 0 ? md : `${md.slice(0, i)}\n`; };
+
+test('U34 bin/verdict.mjs: same conclusion and exit for every TDD status, including a throwing tddStatus', () => {
+  const variants = [
+    ['PASS', { 'specs/001-a/spec.md': featSpec, 'specs/001-a/tdd/cycle-log.md': '', 'specs/001-a/tdd/verification.md': vReport('PASS') }, 'fork/a', /\| specs\/001-a \| ✅ \| ✅ \| ✅ PASS \|/],
+    ['PASS_WITH_GAPS', { 'specs/001-a/spec.md': featSpec, 'specs/001-a/tdd/verification.md': vReport('PASS_WITH_GAPS') }, 'fork/a', /⚠️ PASS_WITH_GAPS/],
+    ['FAIL', { 'specs/001-a/spec.md': featSpec, 'specs/001-a/tdd/verification.md': vReport('FAIL') }, 'fork/a', /❌ FAIL/],
+    ['BLOCKED', { 'specs/001-a/spec.md': featSpec, 'specs/001-a/tdd/verification.md': vReport('BLOCKED') }, 'fork/a', /❌ BLOCKED/],
+    ['missing', { 'specs/001-a/spec.md': featSpec }, 'fork/a', /➖ missing/],
+    ['unreadable', { 'specs/001-a/spec.md': featSpec, 'specs/001-a/tdd/verification.md': vReport('NOPE') }, 'fork/a', /⚠️ unreadable/],
+    ['no link', { 'specs/001-a/spec.md': featSpec }, 'fork/zzz', /No feature linked to fork\/zzz \(advisory\)\./],
+    ['push', { 'specs/001-a/spec.md': featSpec }, '', null],
+    ['throws', { 'specs/001-a/spec.md': null }, 'fork/a', /TDD status unavailable: .*EISDIR.* \(advisory\)/],
+  ];
+  for (const detectResult of ['success', 'failure']) {
+    const base = runVerdict(verdictRoot({}), undefined, detectResult);
+    assert.equal(base.status, detectResult === 'success' ? 0 : 1, base.stderr);
+    assert.doesNotMatch(base.stdout, /TDD status/);
+    for (const [name, files, headRef, section] of variants) {
+      const r = runVerdict(verdictRoot(files), headRef, detectResult);
+      const label = `${detectResult}/${name}`;
+      assert.equal(r.status, base.status, `${label}: ${r.stderr}`);
+      assert.equal(withoutTdd(r.stdout), base.stdout, label);
+      assert.equal(withoutTdd(r.summary), base.summary, label);
+      if (section) assert.match(r.stdout, section, label); else assert.doesNotMatch(r.stdout, /TDD status/, label);
+    }
+  }
+});
