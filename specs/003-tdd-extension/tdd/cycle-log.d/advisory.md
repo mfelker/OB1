@@ -48,3 +48,13 @@ Appended to `tdd/cycle-log.md` by the integrator in merge order (research R14).
 - refactor: none needed
 - commit: (this commit)
 - notes: test-after relative to U28's implementation; the mutant is the evidence. Feature dirs come from `readdirSync`, never from `headRef`, so `../` in a branch can't select a path.
+
+## Cycle: U33 renderReport renders the advisory TDD status section
+
+- test: `.fork/ci/test/report.test.mjs::U33 renderReport renders the advisory TDD status section per contract T1-T10`, `::U33 pipes and newlines in TDD status names and messages are escaped`, `::U33 the TDD section leaves the rest of the report unchanged` (new; existing report tests untouched)
+- red: `node --test --test-name-pattern="U33" .fork/ci/test/report.test.mjs`
+  -> `AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:` and `AssertionError [ERR_ASSERTION]: The input did not match the regular expression /\| specs\/a\\\|b \| ✅ \| ✅ \| ✅ PASS \|/.` (2 failed, 1 passed)
+- green: `.fork/ci/lib/report.mjs:23-41` adds `tddSection` (error line, then "no feature linked", then the table, all through `esc()`); `:49` adds the optional 4th `tdd = null` parameter; `:82` appends the section after the existing report. Suite `node --test .fork/ci/test/` -> 109 passed, 0 failed
+- refactor: none needed
+- commit: (this commit)
+- notes: the third U33 test is an invariant guard (base report unchanged) and passed before the change, because no section was rendered yet. T8 and T10 render the section heading followed by the single contract line.

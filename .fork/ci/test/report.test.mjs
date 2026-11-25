@@ -79,3 +79,50 @@ test('US4: advisory upstream rows show ⚠️ and "(from upstream)"', () => {
   const md = renderReport(verdict({ conclusion: 'success', failing: [], advisories: ['recipes/u'], removed: [] }), rs, detect);
   assert.match(md, /\| recipes\/u \| advisory \| upstream \| ⚠️ no-tests \| node-plain ⚠️ \| no tests for node code \(from upstream\) \|/);
 });
+
+// ---- spec 003 U33 (T017): advisory TDD status section ----
+
+const ok = verdict({ conclusion: 'success', failing: [], removed: [] });
+const feat = (dir, verdict, cycleLog = true, verification = verdict !== 'missing') => ({ dir, cycleLog, verification, verdict });
+const tdd = (...features) => ({ headRef: 'fork/x', features, linked: features.length > 0, error: null });
+const tddSection = md => md.slice(md.indexOf('### TDD status (advisory)'));
+
+test('U33 renderReport renders the advisory TDD status section per contract T1-T10', () => {
+  const head = '### TDD status (advisory)\n\n| Feature | Cycle log | Audit report | Verdict |\n|---------|-----------|--------------|---------|\n';
+  // T1
+  assert.equal(tddSection(renderReport(ok, [], detect, tdd(feat('specs/003-a', 'PASS')))),
+    `${head}| specs/003-a | ✅ | ✅ | ✅ PASS |\n`);
+  // T2, T3, T5
+  const md = renderReport(ok, [], detect, tdd(
+    feat('specs/1', 'PASS_WITH_GAPS'), feat('specs/2', 'FAIL'), feat('specs/3', 'BLOCKED'), feat('specs/4', 'unreadable')));
+  assert.match(md, /\| specs\/1 \| ✅ \| ✅ \| ⚠️ PASS_WITH_GAPS \|/);
+  assert.match(md, /\| specs\/2 \| ✅ \| ✅ \| ❌ FAIL \|/);
+  assert.match(md, /\| specs\/3 \| ✅ \| ✅ \| ❌ BLOCKED \|/);
+  assert.match(md, /\| specs\/4 \| ✅ \| ✅ \| ⚠️ unreadable \|/);
+  // T4, T6
+  assert.match(renderReport(ok, [], detect, tdd(feat('specs/5', 'missing', false))), /\| specs\/5 \| ➖ \| ➖ \| ➖ missing \|/);
+  // T7: one row per feature
+  const rows = tddSection(renderReport(ok, [], detect, tdd(feat('specs/a', 'PASS'), feat('specs/b', 'FAIL')))).split('\n').filter(l => l.startsWith('| specs/'));
+  assert.equal(rows.length, 2);
+  // T8
+  assert.equal(tddSection(renderReport(ok, [], detect, tdd())), '### TDD status (advisory)\n\nNo feature linked to fork/x (advisory).\n');
+  // T9: no section for null or undefined
+  assert.doesNotMatch(renderReport(ok, [], detect, null), /TDD status/);
+  assert.doesNotMatch(renderReport(ok, [], detect), /TDD status/);
+  // T10
+  assert.equal(tddSection(renderReport(ok, [], detect, { error: 'EISDIR: illegal operation' })),
+    '### TDD status (advisory)\n\nTDD status unavailable: EISDIR: illegal operation (advisory)\n');
+});
+
+test('U33 pipes and newlines in TDD status names and messages are escaped', () => {
+  assert.match(renderReport(ok, [], detect, tdd(feat('specs/a|b', 'PASS'))), /\| specs\/a\\\|b \| ✅ \| ✅ \| ✅ PASS \|/);
+  assert.match(renderReport(ok, [], detect, { headRef: 'fork/a|b', features: [], linked: false, error: null }),
+    /No feature linked to fork\/a\\\|b \(advisory\)\./);
+  assert.match(renderReport(ok, [], detect, { error: 'bad | thing\nline2' }), /TDD status unavailable: bad \\\| thing line2 \(advisory\)/);
+});
+
+test('U33 the TDD section leaves the rest of the report unchanged', () => {
+  const base = renderReport(verdict(), results, detect);
+  const withTdd = renderReport(verdict(), results, detect, tdd(feat('specs/a', 'FAIL')));
+  assert.ok(withTdd.startsWith(base.trimEnd()));
+});
