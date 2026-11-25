@@ -39,6 +39,12 @@ function parseLane(value, planRel) {
   return hit[1];
 }
 
+/** The worktree path from the Worktree value: the first backticked token. */
+function parseTree(value) {
+  const m = /`([^`]*)`/.exec(value ?? '');
+  return m ? m[1] : undefined;
+}
+
 /** @returns {{repoRoot:string, featureDir:string, lane:string, tree:string, folder:string, folderExists:boolean}} */
 export function resolveTarget({ repoRoot, env = process.env } = {}) {
   const dir = env.SPECIFY_FEATURE_DIRECTORY || featureJsonDir(repoRoot);
@@ -52,5 +58,6 @@ export function resolveTarget({ repoRoot, env = process.env } = {}) {
     throw new TargetError(`plan not found: ${planRel}`);
   }
   const lane = parseLane(planField(planText, 'Lane'), planRel);
-  return { repoRoot, featureDir, lane };
+  const tree = parseTree(planField(planText, 'Worktree'));
+  return { repoRoot, featureDir, lane, tree };
 }

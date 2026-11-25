@@ -33,3 +33,12 @@
 - green: `.fork/ci/lib/tdd-target.mjs:25` `planField()` reads the text after the first `:` of a `**<field>**` line, `*(…)*` annotations removed; `:34` `parseLane()` maps the prefix to `staged` / `upstream-bound` / `fork` and throws on a missing line, `[` placeholder or unknown value; `:52` a missing plan is `plan not found`. Suite `node --test .fork/ci/test/` -> 105 passed, 0 failed
 - refactor: none needed
 - commit: (this commit)
+
+## Cycle: U5 a backticked absolute Worktree path becomes tree
+
+- test: `.fork/ci/test/tdd-target.test.mjs::U5 a backticked absolute Worktree path becomes tree` (new; real `git init` + `git worktree add` via the `addWorktree` helper)
+- red: `node --test --test-name-pattern="^U5 " .fork/ci/test/tdd-target.test.mjs`
+  -> `AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:` / `actual: undefined,` / `expected: '/private/var/folders/…/fork-tdd-wt-bfei5G/wt',` (1 failed)
+- green: `.fork/ci/lib/tdd-target.mjs:43` `parseTree()` takes the first backticked token of the Worktree value; `:61` sets `tree`. Suite `node --test .fork/ci/test/` -> 106 passed, 0 failed
+- refactor: none needed
+- commit: (this commit)

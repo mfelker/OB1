@@ -1,5 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
 import { mkdtempSync, mkdirSync, writeFileSync, realpathSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
@@ -83,4 +84,24 @@ test('U4 lane grammar: fork, upstream-bound, staged; placeholder and unknown are
   throwsTarget(featureRepo({ lane: 'experimental' }), {}, 'unknown lane: experimental (specs/001-a/plan.md)');
   throwsTarget(featureRepo({ lane: null }), {}, 'plan has no Lane line (specs/001-a/plan.md)');
   throwsTarget(fixtureRepo({ '.specify/feature.json': featureJson('specs/001-a') }), {}, 'plan not found: specs/001-a/plan.md');
+});
+
+const GIT_ENV = { ...process.env, GIT_AUTHOR_NAME: 'T', GIT_AUTHOR_EMAIL: 't@example.test', GIT_COMMITTER_NAME: 'T', GIT_COMMITTER_EMAIL: 't@example.test', GIT_CONFIG_NOSYSTEM: '1' };
+const gitIn = (dir, args) => execFileSync('git', args, { cwd: dir, env: GIT_ENV, stdio: ['ignore', 'pipe', 'pipe'], encoding: 'utf8' }).trim();
+
+/** Make `root` a git repo with one commit and add a linked worktree beside it; returns the worktree's real path. */
+function addWorktree(root) {
+  gitIn(root, ['init', '-q', '-b', 'main']);
+  gitIn(root, ['add', '-A']);
+  gitIn(root, ['-c', 'commit.gpgsign=false', 'commit', '-q', '-m', 'init']);
+  const wt = join(realpathSync(mkdtempSync(join(tmpdir(), 'fork-tdd-wt-'))), 'wt');
+  gitIn(root, ['worktree', 'add', '-q', '-b', 'feature', wt]);
+  return wt;
+}
+
+test('U5 a backticked absolute Worktree path becomes tree', () => {
+  const root = fixtureRepo({ '.fork/ci/x.mjs': 'export const x = 1;\n' });
+  const wt = addWorktree(root);
+  const repo = featureRepo({ lane: 'staged upstream PR #1', worktree: `\`${wt}\`. Every source path is rooted here.` });
+  assert.equal(resolveTarget({ repoRoot: repo, env: {} }).tree, wt);
 });
