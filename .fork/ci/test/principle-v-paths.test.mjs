@@ -4,7 +4,7 @@ import { mkdtempSync, realpathSync, symlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { makeRepo, git, writeFiles, commit } from './helpers/git-fixture.mjs';
-import { repoRelative } from '../lib/principle-v-paths.mjs';
+import { repoRelative, checkoutState } from '../lib/principle-v-paths.mjs';
 
 function tempRepo(files = { 'docs/a.md': '1' }) {
   const repo = makeRepo();
@@ -55,4 +55,13 @@ test('U16 repoRelative: outside every checkout, or the root itself, gives relPat
   assert.equal(repoRelative(join(outside, 'missing/dir/x.md'), repo.dir).relPath, null);
   assert.equal(repoRelative(repo.dir, outside).relPath, null);
   assert.equal(repoRelative('.', repo.dir).relPath, null);
+});
+
+test('U17 checkoutState: branch is the branch name, or HEAD when detached', () => {
+  const repo = tempRepo();
+  assert.equal(checkoutState(repo.dir).branch, 'main');
+  git(repo, ['checkout', '-q', '-b', 'contrib/x']);
+  assert.equal(checkoutState(repo.dir).branch, 'contrib/x');
+  git(repo, ['checkout', '-q', '--detach']);
+  assert.equal(checkoutState(repo.dir).branch, 'HEAD');
 });

@@ -29,3 +29,13 @@ export function repoRelative(path, cwd) {
   const rel = relative(root, abs).split('\\').join('/');
   return { root, relPath: rel === '' ? null : rel };
 }
+
+export function checkoutState(root) {
+  let branch;
+  try {
+    branch = gitOut(root, ['symbolic-ref', '--short', '-q', 'HEAD']);
+  } catch {
+    branch = 'HEAD'; // detached
+  }
+  return { branch, mergeInProgress: false };
+}

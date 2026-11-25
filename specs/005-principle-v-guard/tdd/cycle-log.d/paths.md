@@ -42,3 +42,12 @@
 - green: `.fork/ci/lib/principle-v-paths.mjs:26-33` a failing `git rev-parse` returns `{ root: null, relPath: null }`; an empty relative path (the root itself) becomes `null`. Suite `node --test .fork/ci/test/` -> 157 passed, 0 failed
 - refactor: dropped an unneeded outside-the-root branch before committing (realpath of both sides makes it unreachable)
 - commit: (this commit)
+
+## Cycle: U17 checkoutState: branch is the branch name, or HEAD when detached
+
+- test: `.fork/ci/test/principle-v-paths.test.mjs::U17 checkoutState: branch is the branch name, or HEAD when detached` (new)
+- red: `node --test --test-name-pattern="^U17 " .fork/ci/test/principle-v-paths.test.mjs`
+  -> `actual: null, expected: 'main'` (1 failed; `checkoutState` was an exported stub)
+- green: `.fork/ci/lib/principle-v-paths.mjs:41-48` branch from `git symbolic-ref --short -q HEAD`, `HEAD` when that fails (detached). Suite `node --test .fork/ci/test/` -> 158 passed, 0 failed
+- refactor: none needed
+- commit: (this commit)
