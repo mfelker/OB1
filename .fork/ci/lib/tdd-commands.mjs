@@ -41,6 +41,7 @@ export function buildCommand({ op, runtime, tree, file, name }) {
     const argv = [join(venv.dir, 'bin', 'python'), '-m', 'pytest', '-q', ...(op === 'single' ? ['-k', name] : []), rel];
     return { ...base, kind: 'python', argv, venv, countParser: pytestCounts };
   }
+  if (runtime.kind === 'node-script') return nodeScriptCommand(base, cwd, rel, op, name);
   if (runtime.kind === 'deno') {
     const argv = [...runtime.command, ...(op === 'single' ? ['--filter', name] : []), rel];
     return { ...base, kind: 'deno', argv, countParser: denoCounts };
@@ -69,6 +70,51 @@ function nodeCounts(output) {
   return [tests, passed, failed].includes(undefined) ? null : { tests, passed, failed };
 }
 
+/** vitest / jest from the root's package.json (test script or dependencies); null for any other runner. */
+function nodeScriptRunner(pkg) {
+  const deps = { ...pkg.dependencies, ...pkg.devDependencies };
+  const script = pkg.scripts?.test ?? '';
+  return ['vitest', 'jest'].find(r => script.includes(r) || r in deps) ?? null;
+}
+
+function nodeScriptCommand(base, cwd, rel, op, name) {
+  const pkg = JSON.parse(readFileSync(join(cwd, 'package.json'), 'utf8'));
+  const runner = nodeScriptRunner(pkg);
+  const nameArgs = op === 'single' ? ['-t', name] : [];
+  if (runner === 'vitest') return { ...base, kind: 'node-script', argv: ['npx', 'vitest', 'run', rel, ...nameArgs], countParser: vitestCounts };
+  if (runner === 'jest') return { ...base, kind: 'node-script', argv: ['npx', 'jest', rel, ...nameArgs], countParser: jestCounts };
+  return {
+    ...base,
+    kind: 'node-script',
+    argv: ['npm', 'test', '--', rel],
+    countParser: nodeCounts,
+    unsupported: op === 'single' ? `test runner "${pkg.scripts.test}" has no single-test filter; use \`file\`` : null,
+  };
+}
+
+/** vitest: the last `Tests  … (N)` line; skipped tests are not counted; "No test files found" is zero. */
+function vitestCounts(output) {
+  const text = output.replace(ANSI, '');
+  if (/No test files found/.test(text)) return { tests: 0, passed: 0, failed: 0 };
+  const line = text.split('\n').reverse().find(l => /^\s*Tests\s+.*\(\d+\)\s*$/.test(l));
+  if (!line) return null;
+  const n = word => countOf(line, word);
+  return { tests: n('passed') + n('failed'), passed: n('passed'), failed: n('failed') };
+}
+
+/** jest: the last `Tests: … N total` line; skipped tests are not counted; "No tests found" is zero. */
+function jestCounts(output) {
+  const text = output.replace(ANSI, '');
+  if (/No tests found/.test(text)) return { tests: 0, passed: 0, failed: 0 };
+  const line = text.split('\n').reverse().find(l => /^\s*Tests:\s+.*\d+ total/.test(l));
+  if (!line) return null;
+  const n = word => countOf(line, word);
+  return { tests: n('passed') + n('failed'), passed: n('passed'), failed: n('failed') };
+}
+
+/** The number before `word` in a summary line (0 when absent). */
+const countOf = (line, word) => Number(new RegExp(`(\\d+) ${word}`).exec(line)?.[1] ?? 0);
+
 const ANSI = /\u001b\[[0-9;]*m/g;
 
 /** deno test: the last `N passed | M failed` summary; "No test modules found" is zero. */
@@ -96,7 +142,7 @@ function pytestCounts(output, exitCode) {
   if (exitCode === 5) return { tests: 0, passed: 0, failed: 0 };
   const line = output.split('\n').reverse().find(l => / in [\d.]+s/.test(l) && /\d+ (passed|failed|error)/.test(l));
   if (!line) return null;
-  const n = word => Number(new RegExp(`(\\d+) ${word}`).exec(line)?.[1] ?? 0);
+  const n = word => countOf(line, word);
   const passed = n('passed');
   const failed = n('failed') + n('error');
   return { tests: passed + failed, passed, failed };

@@ -167,3 +167,13 @@
 - refactor: none needed
 - notes: `buildCommand` stays pure: it describes the venv (`venv` field, an addition to the data-model fields) and the CLI creates or refreshes it. "tree + root" is hashed as the joined cwd path.
 - commit: (this commit)
+
+## Cycle: U19 node-script: vitest and jest support single with -t; other runners are unsupported
+
+- test: `.fork/ci/test/tdd-commands.test.mjs::U19 node-script: vitest and jest support single with -t; other runners are unsupported` (new)
+- red: `node --test --test-name-pattern="^U19 " .fork/ci/test/tdd-commands.test.mjs`
+  -> `AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:` / `actual: 'node-test',` (1 failed)
+- green: `.fork/ci/lib/tdd-commands.mjs:44` node-script goes to `nodeScriptCommand()` (`:80`): the runner is vitest or jest when the root's `package.json` test script names it or a dependency is present (`:73`); vitest `npx vitest run <f> [-t <name>]`, jest `npx jest <f> [-t <name>]`; any other runner `npm test -- <f>` with `single` unsupported. `vitestCounts`/`jestCounts` read the last `Tests` summary (skipped not counted; "No test files found" / "No tests found" is zero), else null. Suite `node --test .fork/ci/test/` -> 120 passed, 0 failed
+- refactor: extracted `countOf(line, word)` from three copies of the same summary-count lambda (pytest, vitest, jest) and made `nodeScriptRunner` take the parsed package.json so it is read once; suite re-run -> 120 passed, 0 failed
+- notes: the other-runner `file` parser is `nodeCounts` (the `ℹ tests` summary), so a runner that prints no node summary gives null, which is a failure, never a pass.
+- commit: (this commit)

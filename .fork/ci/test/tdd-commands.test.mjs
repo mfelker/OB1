@@ -165,3 +165,43 @@ test('U18 python: cached venv keyed by tree + root and the requirements hash; ar
   assert.deepEqual(p('F.\nFAILED tests/test_imp.py::test_double - assert 3 == 4\n1 failed, 1 passed, 1 error in 0.03s\n', 1), { tests: 3, passed: 1, failed: 2 });
   assert.equal(p('ERROR: usage: python -m pytest\n', 4), null);
 });
+
+/** A node-script folder whose package.json has this test script and devDependencies. */
+function nodeScriptTree(testScript, devDependencies = {}) {
+  const tree = tempTree('fork-tdd-tree-', {
+    'dashboards/n/package.json': JSON.stringify({ name: 'n', private: true, scripts: { test: testScript }, devDependencies }),
+    'dashboards/n/src/a.mjs': 'export const a = 1;\n',
+    'dashboards/n/src/a.test.mjs': NODE_TEST,
+  });
+  const file = join(tree, 'dashboards/n/src/a.test.mjs');
+  const runtime = runtimeFor(file, { repoRoot: tree, tree, folder: 'dashboards/n' });
+  return { tree, file, runtime };
+}
+
+test('U19 node-script: vitest and jest support single with -t; other runners are unsupported', () => {
+  const v = nodeScriptTree('vitest run', { vitest: '^3.0.0' });
+  assert.equal(v.runtime.kind, 'node-script');
+  const vs = buildCommand({ op: 'single', ...v, name: 'adds' });
+  assert.equal(vs.kind, 'node-script');
+  assert.equal(vs.unsupported, null);
+  assert.equal(vs.cwd, join(v.tree, 'dashboards/n'));
+  assert.deepEqual(vs.argv, ['npx', 'vitest', 'run', 'src/a.test.mjs', '-t', 'adds']);
+  assert.deepEqual(buildCommand({ op: 'file', ...v }).argv, ['npx', 'vitest', 'run', 'src/a.test.mjs']);
+  assert.deepEqual(vs.countParser(' Test Files  1 passed (1)\n      Tests  1 failed | 2 passed (3)\n', 1), { tests: 3, passed: 2, failed: 1 });
+  assert.deepEqual(vs.countParser('      Tests  3 skipped (3)\n', 0), { tests: 0, passed: 0, failed: 0 });
+  assert.deepEqual(vs.countParser('No test files found, exiting with code 1\n', 1), { tests: 0, passed: 0, failed: 0 });
+
+  const j = nodeScriptTree('jest');
+  const js = buildCommand({ op: 'single', ...j, name: 'adds' });
+  assert.equal(js.unsupported, null);
+  assert.deepEqual(js.argv, ['npx', 'jest', 'src/a.test.mjs', '-t', 'adds']);
+  assert.deepEqual(js.countParser('Tests:       1 failed, 2 passed, 3 total\n', 1), { tests: 3, passed: 2, failed: 1 });
+  assert.deepEqual(js.countParser('Tests:       3 skipped, 3 total\n', 0), { tests: 0, passed: 0, failed: 0 });
+  assert.equal(js.countParser('Error: Cannot find module\n', 1), null);
+
+  const o = nodeScriptTree('node --test src/');
+  const os = buildCommand({ op: 'single', ...o, name: 'adds' });
+  assert.equal(os.unsupported, 'test runner "node --test src/" has no single-test filter; use `file`');
+  assert.deepEqual(buildCommand({ op: 'file', ...o }).argv, ['npm', 'test', '--', 'src/a.test.mjs']);
+  assert.equal(buildCommand({ op: 'file', ...o }).unsupported, null);
+});
