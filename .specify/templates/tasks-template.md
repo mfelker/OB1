@@ -11,6 +11,8 @@ description: "Task list template for feature implementation"
 
 **Tests**: MANDATORY (constitution Principle IV, NON-NEGOTIABLE). Fork and upstream-bound lanes: write tests first and confirm they FAIL. Staged upstream PR lane: tests covering the PR's behavior must be green before the merge into fork `main`. Docs-only work replaces unit tests with the documentation gates.
 
+**TDD loop** (spec-kit-tdd; see `.fork/README.md` "TDD workflow"): after `/speckit-tasks`, the `after_tasks` hook (`tdd.plan`) adds the `[U#]`/`[A#]` markers and reorders the test tasks, writing `tdd/test-list.md`. `/speckit-implement` then drives every marked behavior through the loop via the mandatory `before_implement` hook, recording each red in `tdd/cycle-log.md`, and ticks the marked tasks itself. **Never tick a marked task by hand**; unmarked tasks are ticked when done.
+
 **Organization**: Tasks are grouped by user story to enable independent implementation and testing of each story.
 
 ## Format: `[ID] [P?] [Story] Description`
@@ -85,7 +87,7 @@ Examples of foundational tasks (adjust based on your project):
 
 ### Tests for User Story 1 (MANDATORY) ⚠️
 
-> **NOTE: Write these tests FIRST, ensure they FAIL before implementation** (staged PR lane: write them against the PR's code and make them pass before merge)
+> **NOTE: Write these tests FIRST, ensure they FAIL before implementation** (staged PR lane: write them against the PR's code and make them pass before merge, recording the red at the PR base per the base-red step in `.specify/templates/overrides/tdd-loop-playbook.md`). The `[U#]`/`[A#]` markers on test tasks are added by the `after_tasks` hook, not by hand.
 
 - [ ] T010 [P] [US1] Tool contract test for `[tool_name]` (input schema, annotations) in `[folder]/index_test.ts`
 - [ ] T011 [P] [US1] Behavior test for [user journey] with mocked Supabase in `[folder]/tests/[name]_test.ts`
@@ -158,12 +160,14 @@ Examples of foundational tasks (adjust based on your project):
 - [ ] TXXX [P] `markdownlint-cli2 --config .github/.markdownlint.jsonc "[folder]/**/*.md"`
 - [ ] TXXX [P] README: Prerequisites, numbered steps, Expected outcome, relative links resolve, `docs/05-tool-audit.md` link (extensions/integrations)
 - [ ] TXXX [P] Secret / binary / profanity / SQL-safety scan of the folder
+- [ ] TXXX TDD audit: `/speckit-tdd-verify` (`tdd.verify`) writes `tdd/verification.md` with verdict PASS or PASS_WITH_GAPS (Quality Gate 1; fork-ci's TDD status only reports it, advisory)
+- [ ] TXXX Staged PR lane only: every behavior has a red recorded at the PR base (`git merge-base HEAD upstream/main`) and a green at the head in `tdd/cycle-log.md`, per `.specify/templates/overrides/tdd-loop-playbook.md`; a head-green alone is test-after
 - [ ] TXXX Scope check: `git diff --stat upstream/main...HEAD` lists only `[folder]/` (upstream-bound lane)
 - [ ] TXXX Run quickstart.md validation
 - [ ] TXXX Land by lane:
   - fork feature → merge `fork/<desc>` into `main`
   - upstream-bound → `gh pr create -R NateBJones-Projects/OB1` with title `[category] …`, then land the `contrib/` branch on fork `main` through a fork PR (`--merge`)
-  - staged PR → fork PR (`gh pr create -R mfelker/OB1 --base main`, title `<upstream title> (staged #N)`); merge with `gh pr merge --merge` only after all pre-merge tasks are `[X]` and `fork-ci-verdict` + `OB1 Review` are green; then post-merge recording: ledger row in `.fork/staged-prs.md`, optional upstream comment (owner approval), worktree removal
+  - staged PR → fork PR (`gh pr create -R mfelker/OB1 --base main`, title `<upstream title> (staged #N)`); merge with `gh pr merge --merge` only after all pre-merge tasks (including the `tdd.verify` audit) are `[X]` and `fork-ci-verdict` + `OB1 Review` are green; then post-merge recording: ledger row in `.fork/staged-prs.md`, optional upstream comment (owner approval), worktree removal
 
 ---
 
@@ -186,7 +190,7 @@ Examples of foundational tasks (adjust based on your project):
 
 ### Within Each User Story
 
-- Tests MUST be written and FAIL before implementation (staged PR lane: written and passing before merge)
+- Tests MUST be written and FAIL before implementation, with the red recorded in `tdd/cycle-log.md` (staged PR lane: written and passing before merge, red recorded at the PR base)
 - Models before services
 - Services before endpoints
 - Core implementation before integration
