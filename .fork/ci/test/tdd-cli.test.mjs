@@ -246,4 +246,19 @@ describe('acceptance', () => {
     assert.ok(r.stdout.includes('decisive failure marker'));
     assert.equal(r.lastLine, '[tdd] single node-test feature=specs/001-a folder=recipes/x: tests=1 pass=0 fail=1 → fail');
   });
+
+  test('A6 a missing folder or no detectable runtime fails explicitly', () => {
+    const { repo, wt } = stagedLayout(wt => ({ lane: 'staged upstream PR #1', worktree: `\`${wt}\``, folder: '`recipes/gone/`' }));
+    const gone = profile(repo, PROFILE_SINGLE, { file: 'a.test.mjs', name: 'adds' });
+    assert.equal(gone.status, 2, gone.stdout + gone.stderr);
+    assert.equal(gone.stderr, `tdd: folder not found in tree: recipes/gone (${wt})\n`);
+    const docs = stagedLayout(wt => ({ lane: 'staged upstream PR #1', worktree: `\`${wt}\`` }));
+    writeFileSync(join(docs.wt, 'recipes/x/README.md'), '# docs\n');
+    for (const file of ['recipes/x/README.md', 'recipes/x/a.mjs']) {
+      const r = profile(docs.repo, 'node .fork/ci/bin/tdd.mjs file {file}', { file, name: '' });
+      assert.equal(r.status, 2, r.stdout + r.stderr);
+      assert.ok(r.stderr.startsWith(`tdd: ${file} is not a test file of any runtime in recipes/x (patterns: `), r.stderr);
+      assert.equal(r.stderr.split('\n').length, 2, 'one line');
+    }
+  });
 });

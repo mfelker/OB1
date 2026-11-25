@@ -286,3 +286,13 @@
 - refactor: none needed
 - notes: a first mutant attempt was not applied (a `grep` guard didn't match the pattern), so its passing run is not evidence; the mutant above was applied with an exact-string replace and asserted before the run.
 - commit: (this commit)
+
+## Cycle: A6 a missing folder or no detectable runtime fails explicitly
+
+- test: `.fork/ci/test/tdd-cli.test.mjs::acceptance A6 a missing folder or no detectable runtime fails explicitly` (new; staged plan whose folder `recipes/gone/` is absent from the worktree, via the profile `single` string; and the profile `file` string on a README and on a code file in a folder whose only runtime owns neither)
+- red: the test passed on its first run (`node --test --test-name-pattern="^A6 " .fork/ci/test/tdd-cli.test.mjs` -> 1 passed; inside-out, over U11/U13). Mutant: `.fork/ci/lib/tdd-target.mjs:100` guard `if (!target.folderExists) throw` changed to `if (false) throw`, then the same command
+  -> `AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:` / `actual: 'tdd: file not found: a.test.mjs\n',` / `expected: 'tdd: folder not found in tree: recipes/gone (/private/var/folders/…/fork-tdd-accept-wt-XR9uex/wt)\n',` (1 failed). Mutant reverted from a byte copy.
+- green: no production change. Suite `node --test .fork/ci/test/` -> 132 passed, 0 failed
+- refactor: none needed
+- notes: `suite` on a missing folder stays an empty baseline (exit 0, FR-017, covered by U24); A6's explicit failure applies to `single`/`file`.
+- commit: (this commit)
