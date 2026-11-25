@@ -52,3 +52,9 @@ test('U6 D8: a new file inside an upstream folder is denied; a sibling top-level
   assert.equal(sibling.allowed, true);
   assert.equal(sibling.rule, 'D9');
 });
+
+test('U7 D7: with upstream null, a non-fork path is denied', () => {
+  const d = run({ relPath: 'NOTES.md', upstream: null });
+  assert.equal(d.allowed, false);
+  assert.equal(d.rule, 'D7');
+});

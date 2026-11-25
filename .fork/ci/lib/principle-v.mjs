@@ -12,6 +12,7 @@ export function decide(input) {
   if (input.branch !== 'main') return allow('D2');
   if (input.mergeInProgress) return allow('D3');
   if (input.upstream?.files.has(input.relPath)) return deny('D4');
+  if (input.upstream === null) return deny('D7');
   if (ancestors(input.relPath).some(dir => input.upstream?.dirs.has(dir))) return deny('D8');
   return allow('D9');
 }

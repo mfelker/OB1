@@ -51,3 +51,12 @@
 - green: `.fork/ci/lib/principle-v.mjs:16` added an `ancestors()` helper and the D8 deny when any ancestor folder is in `upstream.dirs`. Suite `node --test .fork/ci/test/` -> 158 passed, 0 failed
 - refactor: none needed
 - commit: (this commit)
+
+## Cycle: U7 D7: upstream unknown denies a non-fork path
+
+- test: `.fork/ci/test/principle-v.test.mjs::U7 D7: with upstream null, a non-fork path is denied` (new)
+- red: `node --test --test-name-pattern="^U7 " .fork/ci/test/principle-v.test.mjs`
+  -> `AssertionError [ERR_ASSERTION]: Expected values to be strictly equal: actual: true, expected: false` (1 failed)
+- green: `.fork/ci/lib/principle-v.mjs:19` added the D7 deny when `upstream === null`, before D8. Suite `node --test .fork/ci/test/` -> 159 passed, 0 failed
+- refactor: none needed
+- commit: (this commit)
