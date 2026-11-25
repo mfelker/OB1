@@ -508,3 +508,13 @@ Appended to `tdd/cycle-log.md` by the integrator in merge order (research R14).
 - green: `.specify/templates/overrides/tdd-test-quality-rubric.md` fork section adds the rule order (S4 first, by diffing the behavior's source base→head; S2 only for changed code). Only the fork section changed, so U35's byte check outside it still holds. Suite `node --test .fork/ci/test/` -> 149 passed, 0 failed
 - refactor: none needed
 - commit: (this commit)
+
+## Cycle: U39 python venv lives in the per-user cache, never in the shared temp dir
+
+- test: `.fork/ci/test/tdd-commands.test.mjs::U39 python venv lives in the per-user cache, never in the shared temp dir` (new)
+- red: `node --test --test-name-pattern="^U39 |^U18 " .fork/ci/test/tdd-commands.test.mjs`
+  -> `actual: { dir: '/var/folders/…/T/fork-tdd-venv-5a21115d…' …}` / `expected: { dir: '/Users/mfelker/.cache/fork-tdd/venv-5a21115d…' …}` (2 failed). Source: the post-merge security review (predictable venv path under the shared temp dir, reused without an ownership check).
+- green: `.fork/ci/lib/tdd-commands.mjs` `pythonVenv` puts the venv at `$XDG_CACHE_HOME/fork-tdd/venv-<sha1(cwd)>`, else `~/.cache/fork-tdd/venv-<sha1(cwd)>`. Suite `node --test .fork/ci/test/` -> 150 passed, 0 failed
+- refactor: none needed
+- commit: (this commit)
+- notes: deviation, behavior-driven: U18's expected venv path now follows the new location through an `expectedVenv` helper; its other assertions (argv, requirements hash, exit 5) are unchanged.
