@@ -18,7 +18,7 @@ Phase 0 decisions. The Technical Context has no open NEEDS CLARIFICATION items.
   - The stub **throws** for any URL other than the two provider endpoints, so an accidental real request fails fast (spec edge case).
 - **Rationale**: `atomizeText` uses the global `fetch` directly (`lib/atomize-text.mjs`) and has no injection point. A global swap needs no change to the author's code and no mocking library.
 - **Alternatives considered**:
-  - `node:test` `mock.method(globalThis, 'fetch')`: works on Node 20+, but the recipe states Node 18+, so plain assignment and restore is the portable choice.
+  - `node:test` `mock.method(globalThis, 'fetch')`: available from Node 18.13 / 19.1. Plain assignment and restore is simpler, has no mock-API version caveats, and makes the stub's throw-on-unknown-URL behavior explicit.
   - A local HTTP server with an overridden base URL: impossible, because the URLs are hard-coded.
   - Refactoring for dependency injection: it would rewrite the author's code.
 
@@ -64,10 +64,10 @@ Phase 0 decisions. The Technical Context has no open NEEDS CLARIFICATION items.
 ## R7: FR-006 red evidence against the pre-PR code
 
 - **Decision**:
-  1. In the worktree, run `git checkout 8bebd77^ -- recipes/atomizer/lib/atomize-text.mjs`.
-  2. Run `node --test atomize-text.test.mjs`. Expected: the default-model assertions fail (`claude-sonnet-4-5` ≠ `claude-sonnet-5-5`) and the override and OpenRouter tests pass.
-  3. Run `git checkout HEAD -- recipes/atomizer/lib/atomize-text.mjs` and confirm `git status` is clean.
-  4. Paste the failing summary into the fork PR description (Quality Gate 1: evidence in the PR).
+  1. In the worktree, run `BASE=$(git merge-base HEAD upstream/main)` (the PR base, `238df6c` today; still correct if the author force-pushes), then `git checkout "$BASE" -- recipes/atomizer/lib/atomize-text.mjs`.
+  2. Run `(cd recipes/atomizer && node --test atomize-text.test.mjs)`. Expected: the default-model assertions (C1, K4) fail (`claude-sonnet-4-5` ≠ `claude-sonnet-5-5`) and the other cases pass.
+  3. Run `git checkout HEAD -- recipes/atomizer/lib/atomize-text.mjs` and confirm `git status --short --untracked-files=no` is empty (the new test files are still untracked at this point).
+  4. Save the failing summary to `specs/002-stage-pr-532-atomizer-default/evidence/r532-red.txt` on fork `main` and paste it into the fork PR description (Quality Gate 1: evidence in the PR).
 - **Rationale**: It proves the tests detect the regression without committing anything to the branch.
 - **Alternatives considered**: a temporary revert commit (it pollutes history).
 
@@ -77,7 +77,7 @@ Phase 0 decisions. The Technical Context has no open NEEDS CLARIFICATION items.
   - Preview with `run-folder` (strict, origin fork), expecting `pass`.
   - Push `stage/pr-532-atomizer-default` to `origin`.
   - Open the fork PR titled `[recipes] atomizer: move the Anthropic default off claude-sonnet-4-5 (staged #532)`.
-  - Merge with `gh pr merge --merge` once `fork-ci-verdict` is green.
+  - Merge with `gh pr merge --merge` once all pre-merge tasks are `[X]` and both `fork-ci-verdict` and `OB1 Review` are green. The OB1 PR Gate is authoritative for `stage/` → `main` under the constitution's Fork CI policy.
   - Add the ledger row and comment upstream with the test commit link.
 - **Rationale**: Constitution Principle VII and FR-008 to FR-011.
 - **Alternatives considered**: a local merge. It is blocked by policy: fork-ci would report `lane-bypass`.

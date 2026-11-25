@@ -162,8 +162,8 @@ Examples of foundational tasks (adjust based on your project):
 - [ ] TXXX Run quickstart.md validation
 - [ ] TXXX Land by lane:
   - fork feature → merge `fork/<desc>` into `main`
-  - upstream-bound → `gh pr create -R NateBJones-Projects/OB1` with title `[category] …`, then merge the `contrib/` branch into fork `main`
-  - staged PR → `git merge --no-ff stage/pr-<N>-<desc>` into `main`; add a row to `.fork/staged-prs.md`; optionally offer the tests on the upstream PR
+  - upstream-bound → `gh pr create -R NateBJones-Projects/OB1` with title `[category] …`, then land the `contrib/` branch on fork `main` through a fork PR (`--merge`)
+  - staged PR → fork PR (`gh pr create -R mfelker/OB1 --base main`, title `<upstream title> (staged #N)`); merge with `gh pr merge --merge` only after all pre-merge tasks are `[X]` and `fork-ci-verdict` + `OB1 Review` are green; then post-merge recording: ledger row in `.fork/staged-prs.md`, optional upstream comment (owner approval), worktree removal
 
 ---
 

@@ -43,7 +43,7 @@ strict mode. It is recorded in `.fork/staged-prs.md`, and the tests are offered 
 
 **Project Type**: recipe
 
-**Constraints**: No secrets in files; no network in tests; author's commit unrewritten; `metadata.json` and README untouched; Node 18-compatible test APIs only (`node:test`, `node:assert/strict`, `node:child_process`)
+**Constraints**: No secrets in files; no network in tests; author's commit unrewritten; `metadata.json` and README untouched; test code must run on **Node 18.18+** (`node:test`, `node:assert/strict`, `node:child_process`; `--import` preload needs 18.18+)
 
 **Scale/Scope**: 1 library default + 1 script edit + 1 test file + 1 preload helper
 
@@ -91,7 +91,7 @@ recipes/atomizer/
 ```
 
 **Structure Decision**:
-- Put the test file at the folder root, next to `test-atomize.mjs`, as `atomize-text.test.mjs`. That basename matches fork-ci's `node-plain` pattern and the constitution's `node --test` convention.
+- Put the test file at the folder root, next to `test-atomize.mjs`, as `atomize-text.test.mjs`. That basename matches fork-ci's `node-plain` pattern (`.fork/ci/lib/runtimes.mjs`: `*.test.mjs` or `test-*.mjs`). The constitution's Testing Standards table lists `test-*.mjs` and `__tests__/*.test.js` as examples for plain Node; a root-level `*.test.mjs` is a third form that fork-ci accepts. It was chosen over `test-atomize-text.mjs`, which is easily confused with the live script.
 - Name the preload helper `fetch-stub.mjs` so it doesn't match a test pattern, and keep it in `test-support/` so it is never run as a test (see research R4).
 
 ### Commit sequence (on the staging branch)

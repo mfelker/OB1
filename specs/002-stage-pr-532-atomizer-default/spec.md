@@ -114,7 +114,7 @@ The staged PR is recorded in the fork's ledger with its spec folder, head commit
 
 ## Assumptions
 
-- The retirement of `claude-sonnet-4-5` (alias included) on 2026-11-30 is as stated in PR #532, which links Anthropic's model-deprecations page; it was not independently re-verified for this spec. `claude-sonnet-5-5` is a current Sonnet model ID.
+- The retirement of `claude-sonnet-4-5` (alias included) on 2026-11-30 is as stated in PR #532, which links Anthropic's model-deprecations page. Verified on 2026-11-24 (research R1): `claude-sonnet-4-5` is deprecated, retiring 2026-11-30, and `claude-sonnet-5-5` is the current Sonnet model ID.
 - The OpenRouter slug `anthropic/claude-sonnet-4.5` may follow its own schedule; if it is also retired, that's a separate staged PR or fork feature, not this one.
 - Upstream has not merged #532 at staging time (state OPEN, review required, as of 2026-11-24).
 - Sibling PR #531 (thought-enrichment) is staged as its own separate feature, per constitution Principle VII (no batching).

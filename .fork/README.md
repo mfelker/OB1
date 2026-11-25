@@ -149,10 +149,12 @@ git status --short   # npm installs may leave a package-lock.json; don't commit 
 ```bash
 cd ".worktrees/stage-pr-$N-$DESC"
 git push -u origin "stage/pr-$N-$DESC"
-# Keep the upstream PR's own "[category] ..." title so the (advisory) OB1 PR Gate title rule passes:
+# Keep the upstream PR's own "[category] ..." title so the OB1 PR Gate title rule passes
+# (the gate is authoritative for stage/ -> main PRs; constitution Fork CI policy):
 gh pr create -R mfelker/OB1 --base main --head "stage/pr-$N-$DESC" \
   --title "$(gh pr view $N -R NateBJones-Projects/OB1 --json title -q .title) (staged #$N)"
-# When fork-ci-verdict is green and the feature's tasks are all [X]:
+# When fork-ci-verdict AND "OB1 Review" are green and the feature's pre-merge tasks are all [X]
+# (only post-merge recording -- ledger row, upstream comment, worktree removal -- may follow the merge):
 gh pr merge <fork-PR-number> -R mfelker/OB1 --merge
 cd - && git worktree remove ".worktrees/stage-pr-$N-$DESC"
 ```
