@@ -73,9 +73,11 @@ specs/005-principle-v-guard/
 
 ```text
 .fork/ci/
-├── lib/principle-v.mjs          # decide(), upstreamPaths(), checkoutState(), repoRelative()
+├── lib/principle-v.mjs          # decide(): the pure rule
+├── lib/principle-v-paths.mjs    # repoRelative(), checkoutState(), upstreamPaths(), GuardError (git/fs I/O)
 ├── bin/principle-v-guard.mjs    # --hook (PreToolUse JSON in/out) | --staged (pre-commit)
 ├── test/principle-v.test.mjs    # rule
+├── test/principle-v-paths.test.mjs  # helpers, in temp repos
 ├── test/principle-v-guard.test.mjs  # both guards end to end in temp repos
 └── lib/self-test-needed.mjs     # + .fork/githooks/, .claude/settings.json triggers
 .fork/githooks/pre-commit        # sh: exec node <root>/.fork/ci/bin/principle-v-guard.mjs --staged

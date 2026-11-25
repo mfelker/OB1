@@ -1,4 +1,4 @@
-# Contract: the Principle V rule (`.fork/ci/lib/principle-v.mjs`)
+# Contract: the Principle V rule (`.fork/ci/lib/principle-v.mjs` and `principle-v-paths.mjs`)
 
 ## `decide(input) → Decision`
 
@@ -36,7 +36,9 @@ Every deny has:
   - for `relPath` under `docs/domain_knowledge/`: `"Write fork knowledge to .fork/domain-knowledge/ instead (the knowledge root for /speckit-grill-with-docs, see .fork/README.md)."`
   - otherwise: `"Make this change in an upstream-bound worktree (contrib/mfelker/<desc> from upstream/main) or a staged PR, not on fork main."`
 
-## Helpers (I/O, thin)
+## Helpers (I/O, thin): `.fork/ci/lib/principle-v-paths.mjs`
+
+Kept apart from the pure rule so each has its own module and test file.
 
 | Function | Returns | Failure |
 |----------|---------|---------|
