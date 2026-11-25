@@ -37,3 +37,13 @@ test('U1 SPECIFY_FEATURE_DIRECTORY wins over feature.json', () => {
   const t = resolveTarget({ repoRoot: root, env: { SPECIFY_FEATURE_DIRECTORY: 'specs/002-b' } });
   assert.equal(t.featureDir, join(root, 'specs/002-b'));
 });
+
+test('U2 feature.json feature_directory is used when there is no env', () => {
+  const root = fixtureRepo({
+    '.specify/feature.json': featureJson('specs/001-a'),
+    'specs/001-a/plan.md': plan(),
+    '.fork/ci/x.mjs': 'export const x = 1;\n',
+  });
+  const t = resolveTarget({ repoRoot: root, env: {} });
+  assert.equal(t.featureDir, join(root, 'specs/001-a'));
+});
