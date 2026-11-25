@@ -1,5 +1,5 @@
 // Spec 005 outer loop (A1–A9): the Principle V guards through their real entry points.
-// Written first as `todo` (recorded reds, T029); stream G flips each to a plain test in the
+// Written first as `todo` (recorded reds, T029); stream G flipped each to a plain test in the
 // commit that makes it pass (T012, T015).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -12,7 +12,6 @@ import { addRemoteRef, branch, checkout, commit, git, makeRepo, writeFiles } fro
 
 const CI = join(dirname(fileURLToPath(import.meta.url)), '..');
 const ROOT = join(CI, '..', '..');
-const OUTER = { todo: 'outer loop: red until stream G implements the guard CLI (T012, T015)' };
 
 // Files upstream owns in every fixture: top-level, in a content folder, and inside the
 // upstream folders that also hold fork-only zones (.claude/, .github/).
@@ -99,7 +98,7 @@ function linkedWorktree(repo, name) {
 
 // ── US1: the agent guard ────────────────────────────────────────────────────
 
-test('A1 agent guard refuses a Write to a file that exists upstream, naming Principle V and the upstream-bound route', OUTER, () => {
+test('A1 agent guard refuses a Write to a file that exists upstream, naming Principle V and the upstream-bound route', () => {
   const repo = guardRepo();
   const reason = denyReason(runHook(repo, join(repo.dir, 'CLAUDE.md')));
   assert.match(reason, /CLAUDE\.md/);
@@ -108,14 +107,14 @@ test('A1 agent guard refuses a Write to a file that exists upstream, naming Prin
   assert.match(reason, /upstream-bound worktree/);
 });
 
-test('A2 agent guard refuses docs/domain_knowledge/CONTEXT.md and points to .fork/domain-knowledge/', OUTER, () => {
+test('A2 agent guard refuses docs/domain_knowledge/CONTEXT.md and points to .fork/domain-knowledge/', () => {
   const repo = guardRepo();
   const reason = denyReason(runHook(repo, join(repo.dir, 'docs/domain_knowledge/CONTEXT.md')));
   assert.match(reason, /docs\/domain_knowledge\/CONTEXT\.md/);
   assert.match(reason, /\.fork\/domain-knowledge\//);
 });
 
-test('A3 agent guard allows every fork-only root and zone', OUTER, () => {
+test('A3 agent guard allows every fork-only root and zone', () => {
   const repo = guardRepo();
   for (const rel of ['.fork/notes.md', '.specify/memory/x.md', 'specs/006-x/spec.md', '.worktrees/scratch.md',
     '.claude/settings.json', '.claude/skills/speckit-x/SKILL.md', '.github/workflows/fork-ci.yml']) {
@@ -123,13 +122,13 @@ test('A3 agent guard allows every fork-only root and zone', OUTER, () => {
   }
 });
 
-test('A4 agent guard allows an upstream path in a linked worktree on another branch, from a main-checkout session', OUTER, () => {
+test('A4 agent guard allows an upstream path in a linked worktree on another branch, from a main-checkout session', () => {
   const repo = guardRepo();
   const wt = linkedWorktree(repo, 'contrib/owner/x');
   assertAllowed(runHook(repo, join(wt, 'CLAUDE.md'), { cwd: repo.dir }), 'worktree CLAUDE.md');
 });
 
-test('A5 agent guard allows editing an upstream file while a merge is in progress on main', OUTER, () => {
+test('A5 agent guard allows editing an upstream file while a merge is in progress on main', () => {
   const repo = guardRepo();
   branch(repo, 'incoming');
   checkout(repo, 'incoming');
@@ -142,7 +141,7 @@ test('A5 agent guard allows editing an upstream file while a merge is in progres
 
 // ── US2: the commit guard ───────────────────────────────────────────────────
 
-test('A6 commit guard refuses a commit on main that stages upstream paths, listing each with its reason', OUTER, () => {
+test('A6 commit guard refuses a commit on main that stages upstream paths, listing each with its reason', () => {
   const repo = guardRepo();
   enableCommitGuard(repo);
   writeFiles(repo, { 'CLAUDE.md': '# changed\n', 'docs/new.md': '# new\n', '.fork/ok.md': 'fine\n' });
@@ -156,7 +155,7 @@ test('A6 commit guard refuses a commit on main that stages upstream paths, listi
   assert.match(r.stderr, /--no-verify/);
 });
 
-test('A7 commit guard allows a commit on main that stages only fork-only paths', OUTER, () => {
+test('A7 commit guard allows a commit on main that stages only fork-only paths', () => {
   const repo = guardRepo();
   enableCommitGuard(repo);
   writeFiles(repo, { '.fork/notes.md': 'n\n', 'specs/006-x/spec.md': '# s\n' });
@@ -165,7 +164,7 @@ test('A7 commit guard allows a commit on main that stages only fork-only paths',
   assert.equal(r.status, 0, r.stderr);
 });
 
-test('A8 commit guard allows committing a conflicted merge that touches upstream files', OUTER, () => {
+test('A8 commit guard allows committing a conflicted merge that touches upstream files', () => {
   const repo = guardRepo();
   enableCommitGuard(repo);
   branch(repo, 'incoming');
@@ -183,7 +182,7 @@ test('A8 commit guard allows committing a conflicted merge that touches upstream
   assert.equal(r.status, 0, r.stderr);
 });
 
-test('A9 commit guard allows a commit staging upstream files in a linked worktree on another branch', OUTER, () => {
+test('A9 commit guard allows a commit staging upstream files in a linked worktree on another branch', () => {
   const repo = guardRepo();
   enableCommitGuard(repo);
   const wt = linkedWorktree(repo, 'contrib/owner/y');
