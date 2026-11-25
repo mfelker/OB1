@@ -90,7 +90,19 @@ specs/005-principle-v-guard/
 
 ## Complexity Tracking
 
-No constitution violations.
+One owner-accepted Gate 1 exception (2026-11-25), plus trade-offs.
+
+**Gate 1 outcome (owner decision, 2026-11-25)**: the final re-audit (`tdd/verification.md`, `516f306`, at `fbf3eb6`) is **FAIL** on six `TEST_AFTER` behaviors, with 43 of 49 `PROVEN`, 0 of 36 mutants surviving and 11 of 11 acceptance criteria covered end to end. The owner accepted all six and merges 005 with that FAIL recorded, without changing the rubric:
+
+- **U25, U26**: behavior prescribed by the contract landed in A1 (`22a59fb`) and A6 (`34be6cf`) before their tests (row below).
+- **U33**: end-to-end confirmation of the case fix; U31 and U32 had already delivered the behavior, so the test passed on first run (both-layer mutant recorded).
+- **U36, U37, U38**: tests added after the first audit to kill its surviving mutants M13, M06, M10 on correct, existing code. A test written to catch a mutant of existing code always post-dates that code, so this rubric grades it `TEST_AFTER`. Accepted knowingly: future audits that end in test strengthening will meet the same result.
+
+| Exception | Why | Simpler alternative rejected because |
+|-----------|-----|--------------------------------------|
+| **U25 and U26 are `TEST_AFTER`** (`tdd/verification.md`): their behavior (the dynamic `import()` inside the top-level `try`, and `--no-renames`) landed in the A1 (`22a59fb`) and A6 (`34be6cf`) commits, before their tests (`1133ecd`, `4568300`). Both tests are mutant-verified. | Root cause: `contracts/guards.md` prescribed both implementation details, so the stream built them up front instead of as the smallest change for their own cycles. The owner accepted these two as `TEST_AFTER` for 005; every other behavior must be `PROVEN`, and Gate 1 is otherwise held. | Rewriting history to fake the order is dishonest; a fork-wide rubric class for "pre-existing, mutant-verified" was declined as a broader governance change. |
+
+Process fix: the plan template now warns that contracts must not prescribe behavior-bearing implementation details ahead of their tests.
 
 - **Settings file inside an upstream folder**: `.claude/settings.json` sits in `.claude/`, which upstream has (for `skills/review-pr.md`). The path itself does not exist upstream, so it is fork-only content under Principle V, and the rule's fork-only zones list (FR-003) makes that explicit.
 - **`core.hooksPath` is per clone**: git does not version hook enablement. The runbook gives the one command; the agent guard still applies when a clone has not run it (spec edge case).

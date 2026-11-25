@@ -46,4 +46,4 @@ Source: Claude Code hooks reference (`code.claude.com/docs/en/hooks`: common inp
 ## R8: Detached HEAD, rebase, cherry-pick on main
 
 - **Decision**: detached HEAD reports branch `HEAD`, so D2 allows it. Fork main is updated by merge, not rebase, so only `MERGE_HEAD` gets an explicit exception.
-- **Rationale**: keeps the rule small; the commit guard still checks the final commit on `main`.
+- **Rationale**: keeps the rule small. This is a deliberate gap, not a backstop: on the fork-main checkout, a detached HEAD or an in-progress rebase or cherry-pick reports branch `HEAD`, so **both** guards allow everything, and a rebase makes no commit that runs `pre-commit`. Fork `main` is never rebased (`.fork/README.md`), so the gap is accepted (analyze F2).

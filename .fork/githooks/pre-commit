@@ -1,0 +1,3 @@
+#!/bin/sh
+# Principle V commit guard (spec 005). Enable with: git config core.hooksPath .fork/githooks
+exec node "$(git rev-parse --show-toplevel)/.fork/ci/bin/principle-v-guard.mjs" --staged

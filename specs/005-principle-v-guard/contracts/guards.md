@@ -16,7 +16,7 @@ One CLI, two modes. Both resolve each path with `repoRelative()`, read `checkout
 - **Input**: none; runs in the current repository. Paths from `git diff --cached --name-only -z --no-renames` (R6).
 - **Output**:
   - every path allowed → exit 0, no output.
-  - any path denied → exit 1; stderr lists one line per denied path (indented two spaces), `<relPath>: <reason> <suggestion>`, after a header `principle-v-guard: commit refused (constitution Principle V)`, and ends with `Bypass deliberately with git commit --no-verify.`
+  - any path denied → exit 1; stderr lists one line per denied path (indented two spaces), `<reason> <suggestion>` (the reason already starts with `<relPath>:`), after a header `principle-v-guard: commit refused (constitution Principle V)`, and ends with `Bypass deliberately with git commit --no-verify.`
   - guard failure → exit 1 with `principle-v-guard failed: <message>`.
 
 ## Wiring

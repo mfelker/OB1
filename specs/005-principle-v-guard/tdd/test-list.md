@@ -4,7 +4,7 @@ loop: outside-in # outside-in | inside-out
 profile: .specify/memory/tdd-profile.md # stack profile the commands must read
 spec_criteria: 11 # acceptance criteria found in spec.md
 planned_at: 92977db # short SHA the list was derived from
-updated_at: 92977db # short SHA of the last change to this file
+updated_at: 516f306 # short SHA of the last change to this file
 suite_baseline: green # green | red | unknown, at planning time
 ---
 
@@ -23,17 +23,17 @@ The rubric grades a behavior `PROVEN` only when its red is recorded **and** its 
 
 | id  | behavior | traces | kind | state | test |
 | --- | -------- | ------ | ---- | ----- | ---- |
-| A1  | On a `main` checkout, the agent guard (run exactly as `.claude/settings.json` invokes it) refuses a `Write` to a file that exists upstream, printing the `PreToolUse` deny JSON whose reason names Principle V and the upstream-bound/staged route | US1 AS1, FR-005, FR-007 | example | PENDING | |
-| A2  | The agent guard refuses a `Write` to `docs/domain_knowledge/CONTEXT.md` with a reason naming `.fork/domain-knowledge/` | US1 AS2, FR-005 | example | PENDING | |
-| A3  | The agent guard allows writes under each fork-only root and zone: exit 0, no output | US1 AS3, FR-003 | example | PENDING | |
-| A4  | The agent guard allows a write to an upstream path inside a linked worktree on another branch, even when the session `cwd` is the `main` checkout | US1 AS4, FR-004 | example | PENDING | |
-| A5  | The agent guard allows a write to an upstream file while a merge is in progress on `main` | US1 AS5, FR-004 | example | PENDING | |
-| A6  | On `main` with `core.hooksPath` at `.fork/githooks`, `git commit` with a staged upstream file fails; stderr has the header, one line per protected path with reason and suggestion, and the `--no-verify` note | US2 AS1, FR-008 | example | PENDING | |
-| A7  | On `main`, a commit that stages only fork-only paths succeeds | US2 AS2 | example | PENDING | |
-| A8  | On `main`, committing a conflicted merge that touches upstream files succeeds | US2 AS3, FR-004 | example | PENDING | |
-| A9  | In a linked worktree on another branch, a commit staging upstream files succeeds | US2 AS4, FR-004 | example | PENDING | |
-| A10 | `.fork/README.md` names `.fork/domain-knowledge/` as the canonical knowledge root for `/speckit-grill-with-docs`, with its layout (`CONTEXT.md`, topic documents, `adr/`) | US3 AS1, FR-012 | example | PENDING | |
-| A11 | `.fork/README.md` has a Principle V guard section covering both guards, the merge exception, `--no-verify`, and the enable command `git config core.hooksPath .fork/githooks` | US3 AS2, FR-009, FR-012 | example | PENDING | |
+| A1  | On a `main` checkout, the agent guard (run exactly as `.claude/settings.json` invokes it) refuses a `Write` to a file that exists upstream, printing the `PreToolUse` deny JSON whose reason names Principle V and the upstream-bound/staged route | US1 AS1, FR-005, FR-007 | example | DONE | cycle-log.md `A1`, commit `22a59fb` |
+| A2  | The agent guard refuses a `Write` to `docs/domain_knowledge/CONTEXT.md` with a reason naming `.fork/domain-knowledge/` | US1 AS2, FR-005 | example | DONE | cycle-log.md `A2`, commit `3b847a7` |
+| A3  | The agent guard allows writes under each fork-only root and zone: exit 0, no output | US1 AS3, FR-003 | example | DONE | cycle-log.md `A3`, commit `3d24446` |
+| A4  | The agent guard allows a write to an upstream path inside a linked worktree on another branch, even when the session `cwd` is the `main` checkout | US1 AS4, FR-004 | example | DONE | cycle-log.md `A4`, commit `389bb7b` |
+| A5  | The agent guard allows a write to an upstream file while a merge is in progress on `main` | US1 AS5, FR-004 | example | DONE | cycle-log.md `A5`, commit `f54be77` |
+| A6  | On `main` with `core.hooksPath` at `.fork/githooks`, `git commit` with a staged upstream file fails; stderr has the header, one line per protected path with reason and suggestion, and the `--no-verify` note | US2 AS1, FR-008 | example | DONE | cycle-log.md `A6`, commit `34be6cf` |
+| A7  | On `main`, a commit that stages only fork-only paths succeeds | US2 AS2 | example | DONE | cycle-log.md `A7`, commit `ca85dfb` |
+| A8  | On `main`, committing a conflicted merge that touches upstream files succeeds | US2 AS3, FR-004 | example | DONE | cycle-log.md `A8`, commit `fc31859` |
+| A9  | In a linked worktree on another branch, a commit staging upstream files succeeds | US2 AS4, FR-004 | example | DONE | cycle-log.md `A9`, commit `3133a58` |
+| A10 | `.fork/README.md` names `.fork/domain-knowledge/` as the canonical knowledge root for `/speckit-grill-with-docs`, with its layout (`CONTEXT.md`, topic documents, `adr/`) | US3 AS1, FR-012 | example | DONE | cycle-log.md `A10`, commit `321583b` |
+| A11 | `.fork/README.md` has a Principle V guard section covering both guards, the merge exception, `--no-verify`, and the enable command `git config core.hooksPath .fork/githooks` | US3 AS2, FR-009, FR-012 | example | DONE | cycle-log.md `A11`, commit `e5780a8` |
 
 ## Inner loop: unit behaviors
 
@@ -41,51 +41,69 @@ The rubric grades a behavior `PROVEN` only when its red is recorded **and** its 
 
 | id  | behavior | traces | kind | state | test |
 | --- | -------- | ------ | ---- | ----- | ---- |
-| U1  | D1: `relPath: null` is allowed, rule `D1` | FR-010 | example | PENDING | |
-| U2  | D2: a branch other than `main` (including `HEAD` when detached) is allowed; `main` itself is not covered by D2 | FR-004 | example | PENDING | |
-| U3  | D3: `mergeInProgress: true` is allowed on `main` | FR-004 | example | PENDING | |
-| U4  | D9: a new top-level path upstream does not have (`NOTES.md`) is allowed | FR-002 (boundary) | example | PENDING | |
-| U5  | D4: a file that exists in `upstream.files` (`CLAUDE.md`) is denied, rule `D4` | FR-002 | example | PENDING | |
-| U6  | D8: a new file inside an upstream folder is denied (`docs/x.md`, and nested `docs/a/b/c.md`); a sibling top-level path (`docsx.md`) is not | FR-002 | example | PENDING | |
-| U7  | D7: with `upstream: null`, a non-fork path is denied, rule `D7` | FR-006 | example | PENDING | |
-| U8  | D5: each fork-only root (`.fork/`, `.specify/`, `specs/`, `.worktrees/`) is allowed even with `upstream: null`; `.forkx/a` is not a root | FR-003, FR-006 | example | PENDING | |
-| U9  | D6: `.claude/settings.json`, `.claude/skills/speckit-x/SKILL.md` and `.github/workflows/fork-ci.yml` are allowed inside upstream folders; `.claude/settings.local.json` and `.github/workflows/forked.yml` are not; and a zone path that exists in `upstream.files` is still denied (D4 before D6) | FR-003 | example | PENDING | |
-| U10 | Deny reasons match contracts/rule.md for D4 (`file exists in upstream/main`), D8 (`inside upstream folder <dir>/`) and D7 (`upstream/main is unavailable; run git fetch upstream`) | FR-005, FR-006 | example | PENDING | |
-| U11 | Suggestions: under `docs/domain_knowledge/` → the `.fork/domain-knowledge/` text; anything else (including `docs/domain_knowledge_x/`) → the upstream-bound/staged text | FR-005 | example | PENDING | |
+| U1  | D1: `relPath: null` is allowed, rule `D1` | FR-010 | example | DONE | cycle-log.md `U1`, commit `b6d855f` |
+| U2  | D2: a branch other than `main` (including `HEAD` when detached) is allowed; `main` itself is not covered by D2 | FR-004 | example | DONE | cycle-log.md `U2`, commit `74642c0` |
+| U3  | D3: `mergeInProgress: true` is allowed on `main` | FR-004 | example | DONE | cycle-log.md `U3`, commit `f7abd81` |
+| U4  | D9: a new top-level path upstream does not have (`NOTES.md`) is allowed | FR-002 (boundary) | example | DONE | cycle-log.md `U4`, commit `4a729dc` |
+| U5  | D4: a file that exists in `upstream.files` (`CLAUDE.md`) is denied, rule `D4` | FR-002 | example | DONE | cycle-log.md `U5`, commit `b0d6260` |
+| U6  | D8: a new file inside an upstream folder is denied (`docs/x.md`, and nested `docs/a/b/c.md`); a sibling top-level path (`docsx.md`) is not | FR-002 | example | DONE | cycle-log.md `U6`, commit `10c29c5` |
+| U7  | D7: with `upstream: null`, a non-fork path is denied, rule `D7` | FR-006 | example | DONE | cycle-log.md `U7`, commit `21fed79` |
+| U8  | D5: each fork-only root (`.fork/`, `.specify/`, `specs/`, `.worktrees/`) is allowed even with `upstream: null`; `.forkx/a` is not a root | FR-003, FR-006 | example | DONE | cycle-log.md `U8`, commit `c2285c6` |
+| U9  | D6: `.claude/settings.json`, `.claude/skills/speckit-x/SKILL.md` and `.github/workflows/fork-ci.yml` are allowed inside upstream folders; `.claude/settings.local.json` and `.github/workflows/forked.yml` are not; and a zone path that exists in `upstream.files` is still denied (D4 before D6) | FR-003 | example | DONE | cycle-log.md `U9`, commit `fc4f852` |
+| U10 | Deny reasons match contracts/rule.md for D4 (`file exists in upstream/main`), D8 (`inside upstream folder <dir>/`) and D7 (`upstream/main is unavailable; run git fetch upstream`) | FR-005, FR-006 | example | DONE | cycle-log.md `U10`, commit `28be22b` |
+| U11 | Suggestions: under `docs/domain_knowledge/` → the `.fork/domain-knowledge/` text; anything else (including `docs/domain_knowledge_x/`) → the upstream-bound/staged text | FR-005 | example | DONE | cycle-log.md `U11`, commit `cc635d9` |
 
 ### `.fork/ci/lib/principle-v-paths.mjs` (stream P; rows in cycle order)
 
 | id  | behavior | traces | kind | state | test |
 | --- | -------- | ------ | ---- | ----- | ---- |
-| U12 | `repoRelative`: a relative path, its absolute form and a `..` form give the same `relPath` (first cycle may take `root` from `cwd`) | FR-010 | example | PENDING | |
-| U13 | `repoRelative`: `root` is the git top-level of the path's own checkout, so a path in a linked worktree reports the worktree when `cwd` is the main checkout | FR-004, research R3 | example | PENDING | |
-| U14 | `repoRelative`: a path through a symlinked directory gives the same `relPath` as the real path | FR-010 | example | PENDING | |
-| U15 | `repoRelative`: a file not yet created resolves through its nearest existing ancestor | FR-010 | example | PENDING | |
-| U16 | `repoRelative`: a path outside every checkout, or the root itself, gives `relPath: null` | FR-010 | example | PENDING | |
-| U17 | `checkoutState`: `branch` is the branch name, or `HEAD` when detached | FR-004 | example | PENDING | |
-| U18 | `checkoutState`: `mergeInProgress` is true while `MERGE_HEAD` exists, false otherwise | FR-004 | example | PENDING | |
-| U19 | `checkoutState` throws `GuardError` for a directory that is not a git work tree | FR-011 | example | PENDING | |
-| U20 | `upstreamPaths`: `files` from `upstream/main`, and `dirs` holding every proper ancestor of every file | FR-002 | example | PENDING | |
-| U21 | `upstreamPaths` returns `null` when `upstream/main` does not exist | FR-006 | example | PENDING | |
+| U12 | `repoRelative`: a relative path, its absolute form and a `..` form give the same `relPath` (first cycle may take `root` from `cwd`) | FR-010 | example | DONE | cycle-log.md `U12`, commit `7916204` |
+| U13 | `repoRelative`: `root` is the git top-level of the path's own checkout, so a path in a linked worktree reports the worktree when `cwd` is the main checkout | FR-004, research R3 | example | DONE | cycle-log.md `U13`, commit `a635e90` |
+| U14 | `repoRelative`: a path through a symlinked directory gives the same `relPath` as the real path | FR-010 | example | DONE | cycle-log.md `U14`, commit `f0f50f9` |
+| U15 | `repoRelative`: a file not yet created resolves through its nearest existing ancestor | FR-010 | example | DONE | cycle-log.md `U15`, commit `14870e1` |
+| U16 | `repoRelative`: a path outside every checkout, or the root itself, gives `relPath: null` | FR-010 | example | DONE | cycle-log.md `U16`, commit `cbad0ca` |
+| U17 | `checkoutState`: `branch` is the branch name, or `HEAD` when detached | FR-004 | example | DONE | cycle-log.md `U17`, commit `e585a4e` |
+| U18 | `checkoutState`: `mergeInProgress` is true while `MERGE_HEAD` exists, false otherwise | FR-004 | example | DONE | cycle-log.md `U18`, commit `b62d065` |
+| U19 | `checkoutState` throws `GuardError` for a directory that is not a git work tree | FR-011 | example | DONE | cycle-log.md `U19`, commit `1d3da8a` |
+| U20 | `upstreamPaths`: `files` from `upstream/main`, and `dirs` holding every proper ancestor of every file | FR-002 | example | DONE | cycle-log.md `U20`, commit `b9f5c6b` |
+| U21 | `upstreamPaths` returns `null` when `upstream/main` does not exist | FR-006 | example | DONE | cycle-log.md `U21`, commit `dc3f58d` |
 
 ### `.fork/ci/bin/principle-v-guard.mjs` (stream G; after A1–A9 are flipped as the CLI grows)
 
 | id  | behavior | traces | kind | state | test |
 | --- | -------- | ------ | ---- | ----- | ---- |
-| U22 | `--hook` reads `tool_input.notebook_path` when there is no `file_path`, and resolves a relative path against the input `cwd` | FR-007, research R1 | example | PENDING | |
-| U23 | `--hook` with unparseable stdin prints the deny JSON with reason starting `principle-v-guard failed:` and exits 0 | FR-011 | example | PENDING | |
-| U24 | `--hook` for a matched tool with no target path prints the `principle-v-guard failed:` deny and exits 0 | FR-011 | example | PENDING | |
-| U25 | `--hook` whose rule library fails to load prints the `principle-v-guard failed:` deny and exits 0 (never a non-zero exit, which would let the write through) | FR-011, research R1 | example | PENDING | |
-| U26 | `--staged` lists staged deletions and both sides of a rename | FR-008, research R6 | example | PENDING | |
-| U27 | `--staged` on a guard failure exits 1 with `principle-v-guard failed:` | FR-011 | example | PENDING | |
+| U22 | `--hook` reads `tool_input.notebook_path` when there is no `file_path`, and resolves a relative path against the input `cwd` | FR-007, research R1 | example | DONE | cycle-log.md `U22`, commit `659ed67` |
+| U23 | `--hook` with unparseable stdin prints the deny JSON with reason starting `principle-v-guard failed:` and exits 0 | FR-011 | example | DONE | cycle-log.md `U23`, commit `f3db841` |
+| U24 | `--hook` for a matched tool with no target path prints the `principle-v-guard failed:` deny and exits 0 | FR-011 | example | DONE | cycle-log.md `U24`, commit `6bdf930` |
+| U25 | `--hook` whose rule library fails to load prints the `principle-v-guard failed:` deny and exits 0 (never a non-zero exit, which would let the write through) | FR-011, research R1 | example | DONE | cycle-log.md `U25`, commit `1133ecd` (first-run pass; behavior landed in A1 `22a59fb`; mutant-verified) |
+| U26 | `--staged` lists staged deletions and both sides of a rename | FR-008, research R6 | example | DONE | cycle-log.md `U26`, commit `4568300` (first-run pass; behavior landed in A6 `34be6cf`; mutant-verified) |
+| U27 | `--staged` on a guard failure exits 1 with `principle-v-guard failed:` | FR-011 | example | DONE | cycle-log.md `U27`, commit `50f43cd` |
 
 ### Wiring (stream W)
 
 | id  | behavior | traces | kind | state | test |
 | --- | -------- | ------ | ---- | ----- | ---- |
-| U28 | `.claude/settings.json` has exactly one `PreToolUse` entry, matcher `Write\|Edit\|MultiEdit\|NotebookEdit`, one `command` hook running `node "$CLAUDE_PROJECT_DIR/.fork/ci/bin/principle-v-guard.mjs" --hook` with `timeout: 30` | FR-007 | example | PENDING | |
-| U29 | `.fork/githooks/pre-commit` is executable, starts `#!/bin/sh`, and `exec`s the guard with `--staged` from the top-level | FR-009 | example | PENDING | |
-| U30 | `selfTestNeeded` is true for `.fork/githooks/` paths and `.claude/settings.json`; existing triggers unchanged | FR-013 (CI coverage) | example | PENDING | |
+| U28 | `.claude/settings.json` has exactly one `PreToolUse` entry, matcher `Write\|Edit\|MultiEdit\|NotebookEdit`, one `command` hook running `node "$CLAUDE_PROJECT_DIR/.fork/ci/bin/principle-v-guard.mjs" --hook` with `timeout: 30` | FR-007 | example | DONE | cycle-log.md `U28`, commit `c07b76e` |
+| U29 | `.fork/githooks/pre-commit` is executable, starts `#!/bin/sh`, and `exec`s the guard with `--staged` from the top-level | FR-009 | example | DONE | cycle-log.md `U29`, commit `c2ae20e` |
+| U30 | `selfTestNeeded` is true for `.fork/githooks/` paths and `.claude/settings.json`; existing triggers unchanged | FR-013 (CI coverage) | example | DONE | cycle-log.md `U30`, commit `a5b6cce` |
+
+### Analyze fixes (stream F, after T024)
+
+| id  | behavior | traces | kind | state | test |
+| --- | -------- | ------ | ---- | ----- | ---- |
+| U31 | `repoRelative` reports the on-disk case for case-variant paths (skipped on case-sensitive filesystems) | FR-010, analyze F1 | example | DONE | cycle-log.md `U31`, commit `685ce44` |
+| U32 | D4 and D8 match upstream paths case-insensitively; D5/D6 stay exact-case | FR-002, FR-010, analyze F1 | example | DONE | cycle-log.md `U32`, commit `9b234ca` |
+| U33 | `--hook` denies case variants (`claude.md`, `Docs/x.md`) end to end | SC-001, analyze F1 | example | DONE | cycle-log.md `U33`, commit `4e223b6` (first-run pass; both-layer mutant recorded) |
+| U34 | `--staged` reads the upstream set once per commit | analyze F3 | example | DONE | cycle-log.md `U34`, commit `2ef1b76` |
+| U35 | An unknown or missing mode prints usage and exits 1 without reading stdin | analyze F4 | example | DONE | cycle-log.md `U35`, commit `e6dafcf` |
+
+### Audit hardening (stream H, after T023)
+
+| id  | behavior | traces | kind | state | test |
+| --- | -------- | ------ | ---- | ----- | ---- |
+| U36 | A file under a fork-only root that exists upstream is denied as D4 (D4 before D5) | FR-003, audit HIGH 1 | example | DONE | cycle-log.md `U36`, commit `bc850e5` (test strengthening; red = audit mutant) |
+| U37 | Zone look-alikes (`.claude/skills/other/…`, `.github/workflows/ci2.yml`) are denied as D8 | FR-003, audit HIGH 2 | example | DONE | cycle-log.md `U37`, commit `8696a93` (test strengthening; red = audit mutant) |
+| U38 | With nested upstream folders, the D8 reason names the outermost folder | FR-005, audit HIGH 3 | example | DONE | cycle-log.md `U38`, commit `6ed2379` (test strengthening; red = audit mutant) |
 
 ## Invariants and edge cases still to place
 

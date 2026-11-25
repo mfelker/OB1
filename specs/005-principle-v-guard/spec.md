@@ -99,7 +99,7 @@ The owner and any agent can find where the fork keeps its settled terminology an
 - **FR-007**: The agent guard MUST run before every agent file write (create, overwrite, edit, notebook edit) in this repository and refuse the write when the rule protects the path.
 - **FR-008**: The commit guard MUST check every staged path on `main`, refuse the commit if any is protected, and list each protected path with its reason.
 - **FR-009**: The commit guard MUST be versioned in the fork and enabled by one documented command.
-- **FR-010**: Path handling MUST resolve relative, absolute, `..` and symlinked forms to the same file; paths outside the repository MUST be allowed.
+- **FR-010**: Path handling MUST resolve relative, absolute, `..`, symlinked and (on a case-insensitive filesystem) case-variant forms to the same file; paths outside the repository MUST be allowed.
 - **FR-011**: If the agent guard fails internally or receives input it cannot read, it MUST refuse the write with a message saying the guard failed and why.
 - **FR-012**: `.fork/README.md` MUST designate `.fork/domain-knowledge/` as the canonical knowledge root for `/speckit-grill-with-docs`, describe its layout, and document both guards and how to enable the commit guard.
 - **FR-013**: All new files MUST live in fork-only paths (Principle V), and no upstream-tracked file may change.

@@ -46,3 +46,10 @@ test('bin prints true/false for a push range', () => {
   assert.equal(p.status, 0, p.stderr);
   assert.equal(p.stdout.trim(), 'true');
 });
+
+test('U30 true for .fork/githooks/ paths and .claude/settings.json, not look-alikes', () => {
+  for (const p of ['.fork/githooks/pre-commit', '.fork/githooks/other']) assert.equal(selfTestNeeded([p]), true, p);
+  assert.equal(selfTestNeeded(['.claude/settings.json']), true, '.claude/settings.json');
+  for (const p of ['.claude/settings.local.json', '.claude/skills/review-pr.md', '.fork/githooks', '.fork/githooksx/a', 'docs/.claude/settings.json'])
+    assert.equal(selfTestNeeded([p]), false, p);
+});

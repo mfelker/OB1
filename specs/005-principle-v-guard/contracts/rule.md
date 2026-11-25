@@ -36,6 +36,15 @@ Every deny has:
   - for `relPath` under `docs/domain_knowledge/`: `"Write fork knowledge to .fork/domain-knowledge/ instead (the knowledge root for /speckit-grill-with-docs, see .fork/README.md)."`
   - otherwise: `"Make this change in an upstream-bound worktree (contrib/mfelker/<desc> from upstream/main) or a staged PR, not on fork main."`
 
+## Interpretations settled during implementation
+
+- `upstream.dirs` entries carry no leading or trailing slash (`docs`, `.github/workflows`); the D8 reason appends the `/`.
+- When several ancestors of `relPath` are upstream folders, the D8 reason names the outermost one (`docs/a/b/c.md` → `inside upstream folder docs/`).
+- The `.fork/domain-knowledge/` suggestion is chosen by path, not by row: any deny (D4, D7 or D8) of a path under `docs/domain_knowledge/` gets it.
+- An allow is `{ allowed: true, rule }` with no `reason` or `suggestion`.
+- `repoRelative` returns `{ root: null, relPath: null }` when no checkout contains the path.
+- `repoRelative` reports the on-disk case of existing path segments (`realpathSync.native`), and D4/D8 match upstream paths case-insensitively; D5/D6 stay exact-case, so case handling can only deny more (analyze F1, U31–U32).
+
 ## Helpers (I/O, thin): `.fork/ci/lib/principle-v-paths.mjs`
 
 Kept apart from the pure rule so each has its own module and test file.
