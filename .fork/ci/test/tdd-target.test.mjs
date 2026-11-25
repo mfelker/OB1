@@ -129,3 +129,10 @@ test('U7 a Worktree placeholder or a non-absolute token is an error', () => {
   throwsTarget(featureRepo({ worktree: 'the sibling checkout' }), {}, NOT_ABS);
   throwsTarget(featureRepo({ worktree: '' }), {}, NOT_ABS);
 });
+
+test('U8 a missing Worktree line gives repoRoot for fork; staged and upstream-bound get an error', () => {
+  const root = featureRepo({ lane: 'fork feature', worktree: null });
+  assert.equal(resolveTarget({ repoRoot: root, env: {} }).tree, root);
+  throwsTarget(featureRepo({ lane: 'staged upstream PR #1', worktree: null }), {}, 'plan Worktree required for staged lane');
+  throwsTarget(featureRepo({ lane: 'upstream-bound feature', worktree: null }), {}, 'plan Worktree required for upstream-bound lane');
+});

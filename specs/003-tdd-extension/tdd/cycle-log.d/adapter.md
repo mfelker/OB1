@@ -60,3 +60,12 @@
 - green: `.fork/ci/lib/tdd-target.mjs:44` a `[` in the value throws `plan Worktree is a placeholder (<plan>)` (checked first, R3 rule 1); `:47` no backticked token, or a non-absolute one, throws `plan Worktree must be an absolute path or "none"`. Suite `node --test .fork/ci/test/` -> 108 passed, 0 failed
 - refactor: none needed
 - commit: (this commit)
+
+## Cycle: U8 a missing Worktree line gives repoRoot for fork; staged and upstream-bound get an error
+
+- test: `.fork/ci/test/tdd-target.test.mjs::U8 a missing Worktree line gives repoRoot for fork; staged and upstream-bound get an error` (new)
+- red: `node --test --test-name-pattern="^U8 " .fork/ci/test/tdd-target.test.mjs`
+  -> `Error [TargetError]: plan Worktree must be an absolute path or "none"` (1 failed). The missing line fell through to the absolute-path rule.
+- green: `.fork/ci/lib/tdd-target.mjs:44` a missing Worktree line returns `repoRoot` for lane `fork`, else throws `plan Worktree required for <lane> lane` (FR-007). Suite `node --test .fork/ci/test/` -> 109 passed, 0 failed
+- refactor: none needed
+- commit: (this commit)

@@ -40,7 +40,11 @@ function parseLane(value, planRel) {
 }
 
 /** The worktree path from the Worktree value: `none…` is the repo root, else the first backticked token, which must be absolute. */
-function parseTree(value, repoRoot, planRel) {
+function parseTree(value, repoRoot, planRel, lane) {
+  if (value === undefined) {
+    if (lane === 'fork') return repoRoot;
+    throw new TargetError(`plan Worktree required for ${lane} lane`);
+  }
   if ((value ?? '').includes('[')) throw new TargetError(`plan Worktree is a placeholder (${planRel})`);
   if (/^none/i.test(value ?? '')) return repoRoot;
   const m = /`([^`]*)`/.exec(value ?? '');
@@ -61,6 +65,6 @@ export function resolveTarget({ repoRoot, env = process.env } = {}) {
     throw new TargetError(`plan not found: ${planRel}`);
   }
   const lane = parseLane(planField(planText, 'Lane'), planRel);
-  const tree = parseTree(planField(planText, 'Worktree'), repoRoot, planRel);
+  const tree = parseTree(planField(planText, 'Worktree'), repoRoot, planRel, lane);
   return { repoRoot, featureDir, lane, tree };
 }
