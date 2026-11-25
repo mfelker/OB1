@@ -10,8 +10,9 @@ import { buildCommand, resolveFile, runtimeFor } from '../lib/tdd-commands.mjs';
 import { childEnv } from '../lib/tdd-env.mjs';
 import { scanRuntimes } from '../lib/runtimes.mjs';
 
-const RUN_FOLDER = join(dirname(fileURLToPath(import.meta.url)), 'run-folder.mjs');
-const REPO_ROOT = realpathSync(resolve(dirname(fileURLToPath(import.meta.url)), '..', '..', '..'));
+const BIN_DIR = dirname(fileURLToPath(import.meta.url));
+const RUN_FOLDER = join(BIN_DIR, 'run-folder.mjs');
+const REPO_ROOT = realpathSync(resolve(BIN_DIR, '..', '..', '..'));
 // pytest's "no tests collected"; every other runtime's zero-match exits 0.
 const ZERO_EXIT = { python: 5 };
 
@@ -52,6 +53,17 @@ function where() {
   return 0;
 }
 
+/** [exit, result] for a run's counts: never a pass without a clean exit and at least one test. */
+function outcome(counts, code, kind, op, name) {
+  if (counts === null) return [1, 'fail: test counts unreadable'];
+  if (counts.failed > 0) return [1, 'fail'];
+  if (counts.tests === 0 && (code === 0 || ZERO_EXIT[kind] === code)) {
+    return [3, op === 'single' ? `no tests matched "${name}"` : 'no tests matched'];
+  }
+  if (code !== 0 || counts.tests === 0) return [1, `fail (exit ${code})`];
+  return [0, 'pass'];
+}
+
 /** `single <file> <name>` / `file <file>`: exit 0 pass, 1 fail, 3 zero tests, 4 unsupported. */
 async function runTests(op, file, name) {
   const target = requireFolder(resolveTarget({ repoRoot: REPO_ROOT, env: process.env }));
@@ -72,15 +84,7 @@ async function runTests(op, file, name) {
   }
   const r = await run(cmd.argv, { cwd: cmd.cwd, env });
   const counts = r.notFound ? null : cmd.countParser(r.output, r.code);
-  let exit; let result;
-  if (r.notFound) { exit = 1; result = `fail: runner not found: ${cmd.argv[0]}`; }
-  else if (counts === null) { exit = 1; result = 'fail: test counts unreadable'; }
-  else if (counts.failed > 0) { exit = 1; result = 'fail'; }
-  else if (counts.tests === 0 && (r.code === 0 || ZERO_EXIT[cmd.kind] === r.code)) {
-    exit = 3; result = op === 'single' ? `no tests matched "${name}"` : 'no tests matched';
-  }
-  else if (r.code !== 0 || counts.tests === 0) { exit = 1; result = `fail (exit ${r.code})`; }
-  else { exit = 0; result = 'pass'; }
+  const [exit, result] = r.notFound ? [1, `fail: runner not found: ${cmd.argv[0]}`] : outcome(counts, r.code, cmd.kind, op, name);
   const n = counts ?? { tests: '?', passed: '?', failed: '?' };
   process.stdout.write(`[tdd] ${op} ${cmd.kind} ${label(target)}: tests=${n.tests} pass=${n.passed} fail=${n.failed} → ${result}\n`);
   return exit;

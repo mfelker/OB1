@@ -46,9 +46,9 @@ function parseTree(value, repoRoot, planRel, lane) {
     if (lane === 'fork') return repoRoot;
     throw new TargetError(`plan Worktree required for ${lane} lane`);
   }
-  if ((value ?? '').includes('[')) throw new TargetError(`plan Worktree is a placeholder (${planRel})`);
-  if (/^none/i.test(value ?? '')) return repoRoot;
-  const m = /`([^`]*)`/.exec(value ?? '');
+  if (value.includes('[')) throw new TargetError(`plan Worktree is a placeholder (${planRel})`);
+  if (/^none/i.test(value)) return repoRoot;
+  const m = /`([^`]*)`/.exec(value);
   if (!m || !isAbsolute(m[1])) throw new TargetError('plan Worktree must be an absolute path or "none"');
   return workTree(m[1]);
 }

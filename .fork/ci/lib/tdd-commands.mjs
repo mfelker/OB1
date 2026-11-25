@@ -96,25 +96,21 @@ function nodeScriptCommand(base, cwd, rel, op, name) {
   };
 }
 
-/** vitest: the last `Tests  … (N)` line; skipped tests are not counted; "No test files found" is zero. */
-function vitestCounts(output) {
+/** A runner summary: `zero` text means no tests; otherwise the last line matching `lineRx`; skipped tests not counted. */
+function summaryCounts(output, zero, lineRx) {
   const text = output.replace(ANSI, '');
-  if (/No test files found/.test(text)) return { tests: 0, passed: 0, failed: 0 };
-  const line = text.split('\n').reverse().find(l => /^\s*Tests\s+.*\(\d+\)\s*$/.test(l));
+  if (zero.test(text)) return { tests: 0, passed: 0, failed: 0 };
+  const line = text.split('\n').reverse().find(l => lineRx.test(l));
   if (!line) return null;
-  const n = word => countOf(line, word);
-  return { tests: n('passed') + n('failed'), passed: n('passed'), failed: n('failed') };
+  const [passed, failed] = [countOf(line, 'passed'), countOf(line, 'failed')];
+  return { tests: passed + failed, passed, failed };
 }
 
-/** jest: the last `Tests: … N total` line; skipped tests are not counted; "No tests found" is zero. */
-function jestCounts(output) {
-  const text = output.replace(ANSI, '');
-  if (/No tests found/.test(text)) return { tests: 0, passed: 0, failed: 0 };
-  const line = text.split('\n').reverse().find(l => /^\s*Tests:\s+.*\d+ total/.test(l));
-  if (!line) return null;
-  const n = word => countOf(line, word);
-  return { tests: n('passed') + n('failed'), passed: n('passed'), failed: n('failed') };
-}
+/** vitest: the last `Tests  … (N)` line; "No test files found" is zero. */
+const vitestCounts = output => summaryCounts(output, /No test files found/, /^\s*Tests\s+.*\(\d+\)\s*$/);
+
+/** jest: the last `Tests: … N total` line; "No tests found" is zero. */
+const jestCounts = output => summaryCounts(output, /No tests found/, /^\s*Tests:\s+.*\d+ total/);
 
 /** psql verify: one script, so exit 0 is one pass and anything else one failure. */
 const sqlCounts = (output, exitCode) => (exitCode === 0 ? { tests: 1, passed: 1, failed: 0 } : { tests: 1, passed: 0, failed: 1 });

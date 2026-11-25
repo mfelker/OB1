@@ -296,3 +296,19 @@
 - refactor: none needed
 - notes: `suite` on a missing folder stays an empty baseline (exit 0, FR-017, covered by U24); A6's explicit failure applies to `single`/`file`.
 - commit: (this commit)
+
+## Refactor pass (T013) and quickstart §2–§3
+
+- scope: `lib/tdd-target.mjs`, `lib/tdd-commands.mjs`, `lib/tdd-env.mjs`, `bin/tdd.mjs`; structure only, no behavior change, no test changed.
+- moves, each followed by `node --test .fork/ci/test/` -> 132 passed, 0 failed:
+  1. `lib/tdd-commands.mjs`: `vitestCounts` and `jestCounts` were the same function with different regexes; both are now one-line calls to `summaryCounts(output, zero, lineRx)`.
+  2. `bin/tdd.mjs`: the exit/result ladder in `runTests` extracted into the pure `outcome(counts, code, kind, op, name)`; `BIN_DIR` computed once for `RUN_FOLDER` and `REPO_ROOT`. `lib/tdd-target.mjs`: `parseTree` dropped the `value ?? ''` guards that became dead after U8's missing-line branch.
+- `lib/tdd-env.mjs`: no refactor needed.
+- quickstart, run from this worktree (`WA`); `where` resolved `tree` = `/Users/mfelker/Projects/ob1/.worktrees/fork-tdd-extension` (spec 003's plan Worktree, the integration worktree, used read-only), `folder` = `.fork/ci`, `lane` = `fork`, runtimes node-plain (14 `test/*.test.mjs`) + sql:
+  - §2 `node .fork/ci/bin/tdd.mjs where` -> exit 0
+  - §3 `single .fork/ci/test/paths.test.mjs "CATEGORIES lists the seven upstream contribution categories"` -> `tests=1 pass=1 fail=0 → pass`, exit **0**
+  - §3 `single .fork/ci/test/paths.test.mjs "no such test xyz"` -> `tests=0 pass=0 fail=0 → no tests matched "no such test xyz"`, exit **3**
+  - §3 `file .fork/ci/test/paths.test.mjs` -> `tests=7 pass=7 fail=0 → pass`, exit **0**
+  - §3 `suite` -> node-plain `pass`, sql `sql-unverified`, `→ sql-unverified`, exit **0** (5 s)
+  - expected 0 / 3 / 0 / 0: matched. The integration worktree's `git status --short` was the same before and after (only the integrator's `tasks.md` edit).
+- commit: (this commit)
