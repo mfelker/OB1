@@ -50,6 +50,21 @@
       },
       "registered_skills": [],
       "installed_at": "2026-11-25T05:52:03.213445+00:00"
+    },
+    "grill": {
+      "version": "1.0.3",
+      "source": "local",
+      "manifest_hash": "sha256:c6a07a3a34380324ccd2305e048da63018dd905b95371b7f221f8615d1093cbd",
+      "enabled": true,
+      "priority": 10,
+      "registered_commands": {
+        "claude": [
+          "speckit.grill.me",
+          "speckit.grill.with-docs"
+        ]
+      },
+      "registered_skills": [],
+      "installed_at": "2026-11-25T18:28:40.861903+00:00"
     }
   }
 }
