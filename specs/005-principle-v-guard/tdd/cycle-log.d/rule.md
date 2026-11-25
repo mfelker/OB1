@@ -33,3 +33,12 @@
 - green: `.fork/ci/lib/principle-v.mjs:8` replaced the stub deny with the D9 fallthrough allow (`allow('D9')`). Suite `node --test .fork/ci/test/` -> 156 passed, 0 failed
 - refactor: none needed
 - commit: (this commit)
+
+## Cycle: U5 D4: a file that exists upstream is denied
+
+- test: `.fork/ci/test/principle-v.test.mjs::U5 D4: a file that exists upstream is denied` (new)
+- red: `node --test --test-name-pattern="^U5 " .fork/ci/test/principle-v.test.mjs`
+  -> `AssertionError [ERR_ASSERTION]: Expected values to be strictly equal: actual: true, expected: false` (1 failed)
+- green: `.fork/ci/lib/principle-v.mjs:9` added the D4 deny when `upstream.files` has `relPath`, via a `deny(rule)` helper whose `reason` and `suggestion` are empty until U10/U11. Suite `node --test .fork/ci/test/` -> 157 passed, 0 failed
+- refactor: none needed
+- commit: (this commit)

@@ -35,3 +35,9 @@ test('U4 D9: a new top-level path upstream does not have is allowed', () => {
   assert.equal(d.allowed, true);
   assert.equal(d.rule, 'D9');
 });
+
+test('U5 D4: a file that exists upstream is denied', () => {
+  const d = run({ relPath: 'CLAUDE.md' });
+  assert.equal(d.allowed, false);
+  assert.equal(d.rule, 'D4');
+});
