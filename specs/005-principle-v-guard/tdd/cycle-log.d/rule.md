@@ -87,3 +87,12 @@
 - green: `.fork/ci/lib/principle-v.mjs:9` `deny(rule, relPath, why)` now builds the contract reason; D4, D7 and D8 (`:26`, `:29`, `:30-31`) pass their `why`, D8 naming the outermost matching upstream folder. Suite `node --test .fork/ci/test/` -> 162 passed, 0 failed
 - refactor: none needed
 - commit: (this commit)
+
+## Cycle: U11 deny suggestions match the contract
+
+- test: `.fork/ci/test/principle-v.test.mjs::U11 messages: suggestion names .fork/domain-knowledge/ under docs/domain_knowledge/, else the upstream-bound text` (new)
+- red: `node --test --test-name-pattern="^U11 " .fork/ci/test/principle-v.test.mjs`
+  -> `AssertionError [ERR_ASSERTION]: ... actual: '', expected: 'Write fork knowledge to .fork/domain-knowledge/ instead (the knowledge root for /speckit-grill-with-docs, see .fork/README.md).'` (1 failed)
+- green: `.fork/ci/lib/principle-v.mjs:18` `deny()` now picks `KNOWLEDGE_SUGGESTION` for `docs/domain_knowledge/` paths and `UPSTREAM_BOUND_SUGGESTION` otherwise. Suite `node --test .fork/ci/test/` -> 163 passed, 0 failed
+- refactor: none needed
+- commit: (this commit)

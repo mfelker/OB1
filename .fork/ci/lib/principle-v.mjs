@@ -6,11 +6,16 @@ const isForkZone = relPath =>
   relPath.startsWith('.github/workflows/fork-');
 
 const allow = rule => ({ allowed: true, rule });
+const KNOWLEDGE_SUGGESTION =
+  'Write fork knowledge to .fork/domain-knowledge/ instead (the knowledge root for /speckit-grill-with-docs, see .fork/README.md).';
+const UPSTREAM_BOUND_SUGGESTION =
+  'Make this change in an upstream-bound worktree (contrib/mfelker/<desc> from upstream/main) or a staged PR, not on fork main.';
+
 const deny = (rule, relPath, why) => ({
   allowed: false,
   rule,
   reason: `${relPath}: constitution Principle V reserves this path for upstream (${why}).`,
-  suggestion: '',
+  suggestion: relPath.startsWith('docs/domain_knowledge/') ? KNOWLEDGE_SUGGESTION : UPSTREAM_BOUND_SUGGESTION,
 });
 
 // Every proper ancestor folder of a POSIX path, outermost first: 'a/b/c.md' -> ['a', 'a/b'].

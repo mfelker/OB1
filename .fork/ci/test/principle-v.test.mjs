@@ -101,3 +101,14 @@ test('U10 messages: D4, D8 and D7 reasons match the contract', () => {
   const d7 = run({ relPath: 'NOTES.md', upstream: null });
   assert.equal(d7.reason, 'NOTES.md: constitution Principle V reserves this path for upstream (upstream/main is unavailable; run git fetch upstream).');
 });
+
+test('U11 messages: suggestion names .fork/domain-knowledge/ under docs/domain_knowledge/, else the upstream-bound text', () => {
+  const knowledge = 'Write fork knowledge to .fork/domain-knowledge/ instead (the knowledge root for /speckit-grill-with-docs, see .fork/README.md).';
+  const generic = 'Make this change in an upstream-bound worktree (contrib/mfelker/<desc> from upstream/main) or a staged PR, not on fork main.';
+  const withDomain = { files: new Set(), dirs: new Set(['docs', 'docs/domain_knowledge', 'docs/domain_knowledge_x']) };
+  assert.equal(run({ relPath: 'docs/domain_knowledge/CONTEXT.md', upstream: withDomain }).suggestion, knowledge);
+  assert.equal(run({ relPath: 'docs/domain_knowledge/a/b.md', upstream: null }).suggestion, knowledge);
+  assert.equal(run({ relPath: 'docs/domain_knowledge_x/a.md', upstream: withDomain }).suggestion, generic);
+  assert.equal(run({ relPath: 'CLAUDE.md' }).suggestion, generic);
+  assert.equal(run({ relPath: 'docs/x.md' }).suggestion, generic);
+});
