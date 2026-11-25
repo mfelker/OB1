@@ -14,3 +14,12 @@ test('U1 D1: relPath null is allowed', () => {
   assert.equal(d.allowed, true);
   assert.equal(d.rule, 'D1');
 });
+
+test('U2 D2: a branch other than main (or detached HEAD) is allowed; main is not covered by D2', () => {
+  for (const branch of ['feature/x', 'fork/principle-v-guard', 'HEAD']) {
+    const d = run({ branch });
+    assert.equal(d.allowed, true, branch);
+    assert.equal(d.rule, 'D2', branch);
+  }
+  assert.notEqual(run({ branch: 'main' }).rule, 'D2');
+});
