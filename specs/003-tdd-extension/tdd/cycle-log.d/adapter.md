@@ -325,3 +325,19 @@
 - refactor: none needed
 - notes: Phase 4 (constitution) skipped by instruction; stream D owns Principle IV. Deviation (R7/I22): the test list predates the profile. The profile body adds, beyond the contract's list: the exit-code table, the `describe` name-matching rule probed in U14, deno's substring `--filter`, and the SQL `file` op not applying bootstrap.
 - commit: (this commit)
+
+## Corrections to earlier entries in this fragment
+
+Past entries are not edited; this entry corrects them.
+
+- **Line references** (checked with `git show <cycle commit>:<file> | grep -n`):
+  - U13: `runtimeFor` is at `.fork/ci/lib/tdd-commands.mjs:22`, not `:24`.
+  - U14: `buildCommand` is at `:33` and `escapeRegex` at `:43`, not `:35`/`:45`.
+  - U15: `nodeCounts` is at `:49`, not `:48`.
+  - U19: `nodeScriptRunner` is at `:74`, not `:73`.
+  - U23: `runTests` is at `.fork/ci/bin/tdd.mjs:51`, not `:56`. `:56` is its `unsupported` check.
+- **U16 refactor line**: the `base` reshape was part of the green edit, not a separate refactor step. The suite ran once after it (117 passed), not again.
+- **Real plans, checked with `where` after A2**:
+  - `SPECIFY_FEATURE_DIRECTORY=specs/001-fork-ci` gives `tdd: plan has no Contribution folder (specs/001-fork-ci/plan.md)`, as R3 expects.
+  - `specs/002-stage-pr-532-atomizer-default` gives `tdd: worktree not found: /Users/mfelker/Projects/ob1/.worktrees/stage-pr-532-atomizer-default`, because that worktree has been removed.
+  - The Worktree line is resolved before the folder line, so 001's folder error appears only while its backticked `/Users/mfelker/Projects/ob1` path is a git work tree. Otherwise 001 fails earlier, with `worktree not found`.
