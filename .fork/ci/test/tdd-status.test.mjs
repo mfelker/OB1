@@ -26,3 +26,26 @@ test('U30 no spec names the branch gives linked:false with no features', () => {
   const root = tree({ 'specs/001-a/spec.md': spec('fork/a'), 'specs/002-b/spec.md': spec('stage/b') });
   assert.deepEqual(tddStatus(root, 'fork/other'), { headRef: 'fork/other', features: [], linked: false, error: null });
 });
+
+const report = verdictLine => `---\nfeature: 001-a\n${verdictLine}\nstandard: x.md # rubric\n---\n\n# Verification\n`;
+
+test('U28 tddStatus reports per-feature cycle log, audit report and verdict', () => {
+  const cases = [
+    ['PASS', { 'tdd/cycle-log.md': '# log\n', 'tdd/verification.md': report('verdict: PASS') }, true, true],
+    ['PASS_WITH_GAPS', { 'tdd/verification.md': report('verdict: PASS_WITH_GAPS # gaps noted') }, false, true],
+    ['FAIL', { 'tdd/verification.md': report('verdict: FAIL').replace(/\n/g, '\r\n') }, false, true],
+    ['BLOCKED', { 'tdd/cycle-log.md': '', 'tdd/verification.md': report('verdict: BLOCKED   ') }, true, true],
+    ['missing', { 'tdd/cycle-log.md': '# log\n' }, true, false],
+    ['unreadable', { 'tdd/verification.md': report('verdict: GREAT') }, false, true],
+    ['unreadable', { 'tdd/verification.md': report('verdict:') }, false, true],
+    ['unreadable', { 'tdd/verification.md': '# Verification\n\nverdict: PASS\n' }, false, true],
+    ['unreadable', { 'tdd/verification.md': '---\nfeature: 001-a\n---\n\nverdict: PASS\n' }, false, true],
+  ];
+  for (const [verdict, files, cycleLog, verification] of cases) {
+    const fx = { 'specs/001-a/spec.md': spec('fork/a'), 'specs/002-b/spec.md': spec('fork/b') };
+    for (const [rel, content] of Object.entries(files)) fx[`specs/001-a/${rel}`] = content;
+    const s = tddStatus(tree(fx), 'fork/a');
+    assert.equal(s.linked, true, verdict);
+    assert.deepEqual(s.features, [{ dir: 'specs/001-a', cycleLog, verification, verdict }], JSON.stringify(files));
+  }
+});

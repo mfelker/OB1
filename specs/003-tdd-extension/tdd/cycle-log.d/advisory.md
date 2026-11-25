@@ -19,3 +19,12 @@ Appended to `tdd/cycle-log.md` by the integrator in merge order (research R14).
 - green: `.fork/ci/lib/tdd-status.mjs:11-12` returns `{ headRef, features: [], linked: features.length > 0, error: null }` (fake it; U28 triangulates the scan). Suite `node --test .fork/ci/test/` -> 103 passed, 0 failed
 - refactor: none needed
 - commit: (this commit)
+
+## Cycle: U28 tddStatus reports per-feature artifacts and verdict
+
+- test: `.fork/ci/test/tdd-status.test.mjs::U28 tddStatus reports per-feature cycle log, audit report and verdict` (new; PASS, PASS_WITH_GAPS with a trailing comment, FAIL with CRLF, BLOCKED with trailing spaces, missing, and four unreadable variants: invalid value, empty value, no frontmatter, `verdict:` only in the body)
+- red: `node --test --test-name-pattern="U28" .fork/ci/test/tdd-status.test.mjs`
+  -> `AssertionError [ERR_ASSERTION]: PASS` / `actual: false,` / `expected: true,` (1 failed; `linked` was still faked)
+- green: `.fork/ci/lib/tdd-status.mjs:46-57` scans `specs/*/spec.md`, matches the backticked Feature Branch with `===`, and builds `{ dir, cycleLog, verification, verdict }`; `reportVerdict` (`:18-27`) reads `verdict:` only inside the leading `---` frontmatter. Suite `node --test .fork/ci/test/` -> 104 passed, 0 failed
+- refactor: none needed (helpers `featureBranch`, `reportVerdict`, `featureStatus` were written small at green)
+- commit: (this commit)
