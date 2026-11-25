@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, realpathSync, symlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { makeRepo, git, writeFiles, commit, branch, checkout } from './helpers/git-fixture.mjs';
-import { repoRelative, checkoutState, GuardError } from '../lib/principle-v-paths.mjs';
+import { makeRepo, git, writeFiles, commit, branch, checkout, addRemoteRef } from './helpers/git-fixture.mjs';
+import { repoRelative, checkoutState, GuardError, upstreamPaths } from '../lib/principle-v-paths.mjs';
 
 function tempRepo(files = { 'docs/a.md': '1' }) {
   const repo = makeRepo();
@@ -88,4 +88,24 @@ test('U19 checkoutState: throws GuardError for a directory that is not a git wor
   assert.throws(() => checkoutState(join(plain, 'missing')), GuardError);
   const repo = tempRepo();
   assert.throws(() => checkoutState(join(repo.dir, '.git')), GuardError);
+});
+
+test('U20 upstreamPaths: files from upstream/main, dirs hold every proper ancestor', () => {
+  const repo = tempRepo({ 'local-only.md': 'x' });
+  writeFiles(repo, {
+    'CLAUDE.md': '1',
+    'docs/x.md': '1',
+    'docs/assets/img/a.png': '1',
+    'docs/with space.md': '1',
+  });
+  addRemoteRef(repo, 'upstream/main', commit(repo, 'upstream shaped'));
+  writeFiles(repo, { 'fork-later.md': '1', 'CLAUDE.md': null });
+  commit(repo, 'fork moves past upstream');
+  const got = upstreamPaths(repo.dir);
+  assert.notEqual(got, null);
+  assert.deepEqual(
+    [...got.files].sort(),
+    ['CLAUDE.md', 'docs/assets/img/a.png', 'docs/with space.md', 'docs/x.md', 'local-only.md'].sort(),
+  );
+  assert.deepEqual([...got.dirs].sort(), ['docs', 'docs/assets', 'docs/assets/img']);
 });

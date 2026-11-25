@@ -66,6 +66,15 @@
 - test: `.fork/ci/test/principle-v-paths.test.mjs::U19 checkoutState: throws GuardError for a directory that is not a git work tree` (new)
 - red: `node --test --test-name-pattern="^U19 " .fork/ci/test/principle-v-paths.test.mjs`
   -> `AssertionError [ERR_ASSERTION]: Missing expected exception.` (1 failed; `GuardError` was an exported stub class)
-- green: `.fork/ci/lib/principle-v-paths.mjs:36-47` `GuardError` sets its name; `checkoutState` first requires `git rev-parse --is-inside-work-tree` to print `true`, else throws `GuardError`. Suite `node --test .fork/ci/test/` -> 160 passed, 0 failed
+- green: `.fork/ci/lib/principle-v-paths.mjs:33-47` `GuardError` sets its name; `checkoutState` first requires `git rev-parse --is-inside-work-tree` to print `true`, else throws `GuardError`. Suite `node --test .fork/ci/test/` -> 160 passed, 0 failed
+- refactor: none needed
+- commit: (this commit)
+
+## Cycle: U20 upstreamPaths: files from upstream/main, dirs hold every proper ancestor
+
+- test: `.fork/ci/test/principle-v-paths.test.mjs::U20 upstreamPaths: files from upstream/main, dirs hold every proper ancestor` (new)
+- red: `node --test --test-name-pattern="^U20 " .fork/ci/test/principle-v-paths.test.mjs`
+  -> `AssertionError [ERR_ASSERTION]: Expected "actual" to be strictly unequal to: null` (1 failed; `upstreamPaths` was an exported stub returning null)
+- green: `.fork/ci/lib/principle-v-paths.mjs:62-75` `git ls-tree -r -z --name-only upstream/main` split on NUL into `files`; every proper ancestor of every file added to `dirs`. The first green attempt failed on a wrong expected list in my own uncommitted test (listed a file the fixture never creates); corrected the expectation, not the behavior. Suite `node --test .fork/ci/test/` -> 161 passed, 0 failed
 - refactor: none needed
 - commit: (this commit)

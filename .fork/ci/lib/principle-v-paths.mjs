@@ -59,3 +59,17 @@ export function checkoutState(root) {
   }
   return { branch, mergeInProgress };
 }
+
+export function upstreamPaths(root) {
+  // Not trimmed: -z output is NUL-separated and names may carry spaces.
+  const out = execFileSync('git', ['-C', root, 'ls-tree', '-r', '-z', '--name-only', 'upstream/main'], {
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  const files = new Set(out.split('\0').filter(Boolean));
+  const dirs = new Set();
+  for (const file of files) {
+    for (let dir = dirname(file); dir !== '.'; dir = dirname(dir)) dirs.add(dir);
+  }
+  return { files, dirs };
+}
