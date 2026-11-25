@@ -15,3 +15,12 @@
 - green: `.fork/githooks/pre-commit` created (`#!/bin/sh`, `exec node ... --staged`, chmod +x). Suite `node --test .fork/ci/test/` -> 154 passed, 0 failed
 - refactor: none needed
 - commit: (this commit)
+
+## Cycle: U30 self-test trigger covers the guard wiring
+
+- test: `.fork/ci/test/self-test-needed.test.mjs::U30 true for .fork/githooks/ paths and .claude/settings.json, not look-alikes` (new)
+- red: `node --test --test-name-pattern="^U30 " .fork/ci/test/self-test-needed.test.mjs`
+  -> `AssertionError [ERR_ASSERTION]: .fork/githooks/pre-commit` / `false !== true` (1 failed)
+- green: `.fork/ci/lib/self-test-needed.mjs` added the `.fork/githooks/` prefix and `.claude/settings.json` exact path. Suite `node --test .fork/ci/test/` -> 155 passed, 0 failed
+- refactor: none needed
+- commit: (this commit)
