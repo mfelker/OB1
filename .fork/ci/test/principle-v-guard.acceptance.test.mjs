@@ -1,5 +1,5 @@
 // Spec 005 outer loop (A1–A9): the Principle V guards through their real entry points.
-// Written first as `todo` (recorded reds, T029); stream G flips each to a plain test in the
+// Written first as `todo` (recorded reds, T029); stream G flipped each to a plain test in the
 // commit that makes it pass (T012, T015).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -12,7 +12,6 @@ import { addRemoteRef, branch, checkout, commit, git, makeRepo, writeFiles } fro
 
 const CI = join(dirname(fileURLToPath(import.meta.url)), '..');
 const ROOT = join(CI, '..', '..');
-const OUTER = { todo: 'outer loop: red until stream G implements the guard CLI (T012, T015)' };
 
 // Files upstream owns in every fixture: top-level, in a content folder, and inside the
 // upstream folders that also hold fork-only zones (.claude/, .github/).

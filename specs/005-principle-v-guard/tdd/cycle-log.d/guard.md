@@ -112,3 +112,8 @@
 - green: no CLI change needed (decideFor reads the worktree's own branch (D2)). Suite `node --test .fork/ci/test/` -> 191 passed, 0 failed, 0 todo
 - refactor: none needed
 - commit: (this commit)
+
+## Cleanup: outer loop closed (A1-A9 all plain tests)
+
+- refactor: deleted the now-unused `OUTER` constant from `.fork/ci/test/principle-v-guard.acceptance.test.mjs` and changed the header comment's tense ("flips" -> "flipped"). No assertion touched. Suite `node --test .fork/ci/test/` -> 191 passed, 0 failed, 0 todo
+- commit: (this commit)
