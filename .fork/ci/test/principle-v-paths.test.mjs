@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, realpathSync } from 'node:fs';
+import { mkdtempSync, realpathSync, symlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { makeRepo, git, writeFiles, commit } from './helpers/git-fixture.mjs';
@@ -28,4 +28,14 @@ test('U13 repoRelative: root is the git top-level of the path\'s own checkout', 
   git(repo, ['worktree', 'add', '-q', '-b', 'other', wt]);
   const got = repoRelative(join(wt, 'docs/a.md'), repo.dir);
   assert.deepEqual(got, { root: wt, relPath: 'docs/a.md' });
+});
+
+test('U14 repoRelative: a path through a symlinked directory matches the real path', () => {
+  const repo = tempRepo();
+  const outside = realpathSync(mkdtempSync(join(tmpdir(), 'fork-ci-ln-')));
+  symlinkSync(join(repo.dir, 'docs'), join(outside, 'viaLink'));
+  symlinkSync(join(repo.dir, 'docs'), join(repo.dir, 'inRepoLink'));
+  const real = repoRelative(join(repo.dir, 'docs/a.md'), repo.dir);
+  assert.deepEqual(repoRelative(join(outside, 'viaLink/a.md'), repo.dir), real);
+  assert.deepEqual(repoRelative('inRepoLink/a.md', repo.dir), real);
 });
