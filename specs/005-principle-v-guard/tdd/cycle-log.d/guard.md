@@ -88,3 +88,11 @@
 - refactor: extracted `decideFor(root, relPath)` (libs loaded by dynamic `import()`, state, upstream, `decide`) out of the `--hook` path so both modes share it; behavior unchanged (suite stays green).
 - note (contract wording): contracts/guards.md says each line is `<relPath>: <reason> <suggestion>`, but `decide()`'s reason already begins `<relPath>: constitution Principle V ...` (contracts/rule.md "Messages"). The line is therefore `  <reason> <suggestion>`, so the path appears once, not twice. A6's patterns (`CLAUDE\.md: .*file exists in upstream\/main`) hold either way.
 - commit: (this commit)
+
+## Cycle: A7 --staged allows a fork-only commit
+
+- test: `.fork/ci/test/principle-v-guard.acceptance.test.mjs::A7 commit guard allows a commit on main that stages only fork-only paths` (flipped from todo)
+- red: recorded at T029 (cycle-log.md 'Outer loop opened'); passes after the A6 commit, so no new red is invented: the flip is its own cycle. Check run: `node --test --test-name-pattern="^A7 " .fork/ci/test/principle-v-guard.acceptance.test.mjs` -> 1 passed, 0 failed
+- green: no CLI change needed (no deny lines, so the guard exits 0 silently). Suite `node --test .fork/ci/test/` -> 189 passed, 0 failed, 2 todo
+- refactor: none needed
+- commit: (this commit)

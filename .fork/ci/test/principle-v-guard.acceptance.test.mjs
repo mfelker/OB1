@@ -156,7 +156,7 @@ test('A6 commit guard refuses a commit on main that stages upstream paths, listi
   assert.match(r.stderr, /--no-verify/);
 });
 
-test('A7 commit guard allows a commit on main that stages only fork-only paths', OUTER, () => {
+test('A7 commit guard allows a commit on main that stages only fork-only paths', () => {
   const repo = guardRepo();
   enableCommitGuard(repo);
   writeFiles(repo, { '.fork/notes.md': 'n\n', 'specs/006-x/spec.md': '# s\n' });
