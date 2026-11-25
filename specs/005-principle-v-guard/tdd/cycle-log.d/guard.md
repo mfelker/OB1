@@ -33,3 +33,11 @@
 - green: no CLI change needed (already covered by the A1/A3 pipeline: repoRelative/checkoutState read the worktree's own root and branch (D2)). Suite `node --test .fork/ci/test/` -> see commit
 - refactor: none needed
 - commit: (this commit)
+
+## Cycle: A5 --hook allows an upstream file during a merge
+
+- test: `.fork/ci/test/principle-v-guard.acceptance.test.mjs::A5 agent guard allows editing an upstream file while a merge is in progress on main` (flipped from todo)
+- red: recorded at T029 (cycle-log.md 'Outer loop opened'); passes after the A1 and A3 commits, so no new red is invented: the flip is its own cycle. Check run: `node --test --test-name-pattern="^A5 " .fork/ci/test/principle-v-guard.acceptance.test.mjs` -> 1 passed, 0 failed
+- green: no CLI change needed (already covered by the A1/A3 pipeline: checkoutState reports MERGE_HEAD (D3)). Suite `node --test .fork/ci/test/` -> see commit
+- refactor: none needed
+- commit: (this commit)

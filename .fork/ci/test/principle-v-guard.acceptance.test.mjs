@@ -129,7 +129,7 @@ test('A4 agent guard allows an upstream path in a linked worktree on another bra
   assertAllowed(runHook(repo, join(wt, 'CLAUDE.md'), { cwd: repo.dir }), 'worktree CLAUDE.md');
 });
 
-test('A5 agent guard allows editing an upstream file while a merge is in progress on main', OUTER, () => {
+test('A5 agent guard allows editing an upstream file while a merge is in progress on main', () => {
   const repo = guardRepo();
   branch(repo, 'incoming');
   checkout(repo, 'incoming');
