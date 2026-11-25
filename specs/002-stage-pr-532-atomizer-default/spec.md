@@ -4,7 +4,7 @@
 
 **Created**: 2026-11-24
 
-**Status**: Draft
+**Status**: Implemented
 
 **Input**: User description: "Stage upstream PR #532 atomizer default model"
 

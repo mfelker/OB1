@@ -1,0 +1,18 @@
+{
+  "path": "recipes/atomizer",
+  "mode": "strict",
+  "origin": "fork",
+  "outcome": "pass",
+  "reason": "all tests passed",
+  "runtimes": [
+    {
+      "kind": "node-plain",
+      "root": "recipes/atomizer",
+      "outcome": "pass",
+      "reason": "tests passed",
+      "durationMs": 309,
+      "outputExcerpt": "✔ C1 anthropic default model is claude-sonnet-5-5 (10.89375ms)\n✔ C2 anthropic explicit model is sent verbatim (0.338583ms)\n✔ K4 anthropic CLI with key requests the default model (stubbed) (53.001167ms)\n✔ C3 openrouter default model is unchanged (0.684ms)\n✔ C4 openrouter explicit model is sent verbatim (0.267041ms)\n✔ C5 anthropic and openrouter without a key reject before any fetch (0.302375ms)\n✔ C6 unknown provider rejects before any fetch (0.072333ms)\n✔ network guard: the test stub refuses any other host (0.059ms)\n✔ K1 openrouter CLI without a key skips with exit 0 (44.0715ms)\n✔ K2 anthropic CLI without a key skips with exit 0 (46.074042ms)\n✔ K3 openrouter CLI with key is unchanged (stubbed) (51.732541ms)\nskipped: no API key for openrouter (set OPENROUTER_API_KEY in .env.local or process env)\n✔ test-atomize.mjs (47.044291ms)\nℹ tests 12\nℹ suites 0\nℹ pass 12\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 264.394708"
+    }
+  ],
+  "durationMs": 310
+}

@@ -1,0 +1,21 @@
+✔ C1 anthropic default model is claude-sonnet-5-5 (10.409708ms)
+✔ C2 anthropic explicit model is sent verbatim (0.285958ms)
+✔ K4 anthropic CLI with key requests the default model (stubbed) (58.514375ms)
+✔ C3 openrouter default model is unchanged (0.778ms)
+✔ C4 openrouter explicit model is sent verbatim (0.274167ms)
+✔ C5 anthropic and openrouter without a key reject before any fetch (0.401167ms)
+✔ C6 unknown provider rejects before any fetch (0.075041ms)
+✔ network guard: the test stub refuses any other host (0.054666ms)
+✔ K1 openrouter CLI without a key skips with exit 0 (46.177917ms)
+✔ K2 anthropic CLI without a key skips with exit 0 (43.620834ms)
+✔ K3 openrouter CLI with key is unchanged (stubbed) (54.178542ms)
+skipped: no API key for openrouter (set OPENROUTER_API_KEY in .env.local or process env)
+✔ test-atomize.mjs (46.189542ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 12
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 271.136084

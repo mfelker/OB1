@@ -38,7 +38,7 @@ description: "Tasks for staging upstream PR #532 (atomizer Anthropic default mod
 
 ## Phase 1: Setup
 
-- [ ] T001 Verify the staging worktree `/Users/mfelker/Projects/ob1/.worktrees/stage-pr-532-atomizer-default`:
+- [X] T001 Verify the staging worktree `/Users/mfelker/Projects/ob1/.worktrees/stage-pr-532-atomizer-default`:
   - The branch is `stage/pr-532-atomizer-default`, `HEAD` is `8bebd77`, and `git status --short` is empty.
   - `git merge-base --is-ancestor upstream/main main` succeeds in the fork-`main` checkout (Principle VII).
   - The upstream PR head is still `8bebd77` (`gh pr view 532 -R NateBJones-Projects/OB1 --json headRefOid,state`).
@@ -53,12 +53,12 @@ description: "Tasks for staging upstream PR #532 (atomizer Anthropic default mod
 
 ## Phase 2: Foundational (test infrastructure; blocks all stories)
 
-- [ ] T002 [P] Create the preload stub `/Users/mfelker/Projects/ob1/.worktrees/stage-pr-532-atomizer-default/recipes/atomizer/test-support/fetch-stub.mjs`, following contracts/test-atomize-cli.md § fetch-stub and research R2/R4:
+- [X] T002 [P] Create the preload stub `/Users/mfelker/Projects/ob1/.worktrees/stage-pr-532-atomizer-default/recipes/atomizer/test-support/fetch-stub.mjs`, following contracts/test-atomize-cli.md § fetch-stub and research R2/R4:
   - It replaces `globalThis.fetch`.
   - For the `api.anthropic.com` and `openrouter.ai` hosts, it returns the matching canned response shape with atoms `["a","b"]`, and writes `[fetch-stub] <host> model=<body.model>` to stderr.
   - Any other URL throws.
   - Use only Node 18.18-compatible APIs. The basename must stay out of fork-ci's test patterns.
-- [ ] T003 [P] Create `/Users/mfelker/Projects/ob1/.worktrees/stage-pr-532-atomizer-default/recipes/atomizer/atomize-text.test.mjs` with shared helpers only, no cases yet:
+- [X] T003 [P] Create `/Users/mfelker/Projects/ob1/.worktrees/stage-pr-532-atomizer-default/recipes/atomizer/atomize-text.test.mjs` with shared helpers only, no cases yet:
   - An in-process fetch stub (research R2), installed in `beforeEach` and restored in `afterEach`. It records `{url, body}` for each call and throws on unexpected URLs.
   - `runScript(args, envOverrides, {preload})` (research R5). It spawns `process.execPath [--import <fetch-stub URL>] <F>/test-atomize.mjs`, with paths taken from `import.meta.url`. The child env is `process.env` minus `NODE_TEST_CONTEXT`, plus the overrides. It returns `{code, stdout, stderr}`.
   - Use only `node:test` and `node:assert/strict`.
@@ -80,23 +80,23 @@ description: "Tasks for staging upstream PR #532 (atomizer Anthropic default mod
 
 ### Tests for User Story 1 (MANDATORY)
 
-- [ ] T004 [US1] Add case **C1 anthropic default model** to `atomize-text.test.mjs`:
+- [X] T004 [US1] Add case **C1 anthropic default model** to `atomize-text.test.mjs`:
   - Call `atomizeText("x", {provider:"anthropic", anthropicApiKey:"test-key-not-real"})`.
   - Assert exactly one fetch to `https://api.anthropic.com/v1/messages`, with `body.model === "claude-sonnet-5-5"`, and atoms `["a","b"]`.
   - Covers the `AtomizeOptions.anthropicModel` default in data-model.md (FR-002).
-- [ ] T005 [US1] Add case **C2 anthropic explicit model**:
+- [X] T005 [US1] Add case **C2 anthropic explicit model**:
   - Make the same call plus `anthropicModel:"claude-opus-5-5"`.
   - Assert that it sends exactly `claude-opus-5-5`.
   - Covers the explicit `AtomizeOptions.anthropicModel` value in data-model.md (FR-003).
-- [ ] T006 [US1] Add case **K4 anthropic CLI with key**:
+- [X] T006 [US1] Add case **K4 anthropic CLI with key**:
   - Call `runScript(["--provider=anthropic"], {ANTHROPIC_API_KEY:"test-key-not-real"}, {preload:true})`.
   - Assert exit 0, `[test] PASS — got 2 atoms` on stdout, and `[fetch-stub] api.anthropic.com model=claude-sonnet-5-5` on stderr.
   - Covers FR-002 end to end, and FR-007's "unchanged with a key".
 
 ### Verification for User Story 1
 
-- [ ] T007 [US1] Run the US1 Independent Test command above. It must report at least 3 tests, all passing.
-- [ ] T008 [US1] Run the FR-006 regression check (research R7, quickstart §2) in `W`:
+- [X] T007 [US1] Run the US1 Independent Test command above. It must report at least 3 tests, all passing.
+- [X] T008 [US1] Run the FR-006 regression check (research R7, quickstart §2) in `W`:
   1. Run `git checkout "$BASE" -- recipes/atomizer/lib/atomize-text.mjs`.
   2. Run `(cd recipes/atomizer && node --test atomize-text.test.mjs)`. Expected: exit 1, with only C1 and K4 failing on `claude-sonnet-4-5`.
   3. Save the summary to `E/r532-red.txt`.
@@ -117,33 +117,33 @@ description: "Tasks for staging upstream PR #532 (atomizer Anthropic default mod
 
 ### Tests for User Story 2 (MANDATORY; K1/K2 are written red first)
 
-- [ ] T009 [US2] Add the OpenRouter model cases, covering `AtomizeOptions.openrouterModel` in data-model.md (FR-004, FR-003):
+- [X] T009 [US2] Add the OpenRouter model cases, covering `AtomizeOptions.openrouterModel` in data-model.md (FR-004, FR-003):
   - **C3 openrouter default model**: `provider:"openrouter"` with a dummy key. Assert a fetch to `https://openrouter.ai/api/v1/chat/completions` with `body.model === "anthropic/claude-sonnet-4.5"`.
   - **C4 openrouter explicit model**: the same as C3 plus `openrouterModel:"some/other-model"`. Assert the model is sent exactly as given.
-- [ ] T010 [US2] Add the guard cases (FR-005):
+- [X] T010 [US2] Add the guard cases (FR-005):
   - **C5 missing key rejects before fetch**. Covers `AtomizeOptions.anthropicApiKey` and `AtomizeOptions.openrouterApiKey` in data-model.md. `provider:"anthropic"` with no `anthropicApiKey` rejects with 0 fetch calls; so does `provider:"openrouter"` with no `openrouterApiKey`.
   - **C6 unknown provider rejects**. Covers `AtomizeOptions.provider` in data-model.md. `provider:"codex"` rejects with 0 fetch calls.
   - **Network guard**: with the stub installed, `globalThis.fetch("https://example.invalid/")` rejects. `atomizeText`'s URLs are hard-coded, so the guard is tested on the stub itself.
-- [ ] T011 [US2] Add the skip cases from contracts/test-atomize-cli.md:
+- [X] T011 [US2] Add the skip cases from contracts/test-atomize-cli.md:
   - **K1 openrouter CLI skip**: `runScript([], {OPENROUTER_API_KEY:"", ANTHROPIC_API_KEY:""})`.
   - **K2 anthropic CLI skip**: `runScript(["--provider=anthropic"], {ANTHROPIC_API_KEY:"", OPENROUTER_API_KEY:""})`.
   - Assert exit 0, stdout containing `skipped: no API key for openrouter` or `skipped: no API key for anthropic`, and stdout NOT containing `[test] provider:`.
-- [ ] T012 [US2] Add case **K3 openrouter CLI with key**:
+- [X] T012 [US2] Add case **K3 openrouter CLI with key**:
   - Call `runScript([], {OPENROUTER_API_KEY:"test-key-not-real"}, {preload:true})`.
   - Assert exit 0, `[test] PASS — got 2 atoms` on stdout, and `[fetch-stub] openrouter.ai model=anthropic/claude-sonnet-4.5` on stderr.
-- [ ] T013 [US2] Run `(cd F && node --test atomize-text.test.mjs)` and confirm that only K1 and K2 are **red**. They exit 1 with the old "requires …_API_KEY" message; everything else passes.
+- [X] T013 [US2] Run `(cd F && node --test atomize-text.test.mjs)` and confirm that only K1 and K2 are **red**. They exit 1 with the old "requires …_API_KEY" message; everything else passes.
   - Save the summary to `E/r532-skip-red.txt`.
   - Then commit in `W`: `git add recipes/atomizer/atomize-text.test.mjs recipes/atomizer/test-support/fetch-stub.mjs`, with the message `[recipes] Tests for #532: atomizer model defaults` (plan commit 2).
 
 ### Implementation for User Story 2
 
-- [ ] T014 [US2] Edit `/Users/mfelker/Projects/ob1/.worktrees/stage-pr-532-atomizer-default/recipes/atomizer/test-atomize.mjs` (research R6):
+- [X] T014 [US2] Edit `/Users/mfelker/Projects/ob1/.worktrees/stage-pr-532-atomizer-default/recipes/atomizer/test-atomize.mjs` (research R6):
   - Change only the two missing-key branches. Replace `console.error(...); process.exit(1)` with `console.log("skipped: no API key for <provider> (set <VAR> in .env.local or process env)"); process.exit(0)`.
   - Leave everything else unchanged. `git diff` must touch only those lines.
-- [ ] T015 [US2] Run `(cd F && OPENROUTER_API_KEY= ANTHROPIC_API_KEY= node --test atomize-text.test.mjs test-atomize.mjs)`. Everything must pass, in under 5 s (SC-003).
+- [X] T015 [US2] Run `(cd F && OPENROUTER_API_KEY= ANTHROPIC_API_KEY= node --test atomize-text.test.mjs test-atomize.mjs)`. Everything must pass, in under 5 s (SC-003).
   - Save the summary to `E/r532-green.txt`.
   - Commit in `W` with the message `[recipes] atomizer: test-atomize skips cleanly without a provider key` (plan commit 3).
-- [ ] T016 [US2] Preview fork-ci from `W` (quickstart §3):
+- [X] T016 [US2] Preview fork-ci from `W` (quickstart §3):
   - Run `OPENROUTER_API_KEY= ANTHROPIC_API_KEY= node ../../.fork/ci/bin/run-folder.mjs --path recipes/atomizer --mode strict --origin fork --out E/r532-run-folder.json`.
   - The outcome must be `pass`.
   - Confirm `git status --short` is empty (no lockfiles).
@@ -154,17 +154,17 @@ description: "Tasks for staging upstream PR #532 (atomizer Anthropic default mod
 
 ## Phase 5: Gate Self-Check (before the fork PR; Quality Gates 1–5, Principle VI)
 
-- [ ] T017 [P] Lane hygiene in `W` (quickstart §4): `git diff --stat upstream/main...HEAD` must list only these four paths under `recipes/atomizer/`:
+- [X] T017 [P] Lane hygiene in `W` (quickstart §4): `git diff --stat upstream/main...HEAD` must list only these four paths under `recipes/atomizer/`:
   - `lib/atomize-text.mjs`
   - `test-atomize.mjs`
   - `atomize-text.test.mjs`
   - `test-support/fetch-stub.mjs`
-- [ ] T018 [P] Scan the staging diff in `W` (Principle VI, Gate 4):
+- [X] T018 [P] Scan the staging diff in `W` (Principle VI, Gate 4):
   - Secrets: the only key-like strings are `test-key-not-real`, and nothing matches the OB1 gate's credential patterns.
   - No binaries and no profanity.
   - `metadata.json` and `README.md` are unchanged (`git diff --quiet upstream/main...HEAD -- recipes/atomizer/metadata.json recipes/atomizer/README.md`).
-- [ ] T019 [P] Gate 3, run from `W`: `npx --yes -p ajv-cli@5 -p ajv-formats ajv validate --spec=draft2020 -c ajv-formats -s .github/metadata.schema.json -d recipes/atomizer/metadata.json` must print `valid`.
-- [ ] T020 Gate 4: self-check upstream rules 1–16 (CONTRIBUTING.md § "The Automated Review Rules") against `recipes/atomizer/` on the staging branch.
+- [X] T019 [P] Gate 3, run from `W`: `npx --yes -p ajv-cli@5 -p ajv-formats ajv validate --spec=draft2020 -c ajv-formats -s .github/metadata.schema.json -d recipes/atomizer/metadata.json` must print `valid`.
+- [X] T020 Gate 4: self-check upstream rules 1–16 (CONTRIBUTING.md § "The Automated Review Rules") against `recipes/atomizer/` on the staging branch.
   - Record a one-line pass/N-A per rule in `E/r532-gate-rules.md`.
   - Any failure blocks T021.
   - Gate 2 doesn't apply: no Markdown changes in the folder.
@@ -177,7 +177,7 @@ description: "Tasks for staging upstream PR #532 (atomizer Anthropic default mod
 
 **Independent Test**: the fork PR is merged with a merge commit, and fork `main` contains `8bebd77` and both test commits (FR-001, FR-008).
 
-- [ ] T021 [US3] Push and open the fork PR from `W`:
+- [X] T021 [US3] Push and open the fork PR from `W`:
   - Push the branch: `git push -u origin stage/pr-532-atomizer-default`.
   - Create the PR: `gh pr create -R mfelker/OB1 --base main --head stage/pr-532-atomizer-default --title "[recipes] atomizer: move the Anthropic default off claude-sonnet-4-5 (staged #532)"` (FR-009).
   - The PR body includes:
@@ -187,14 +187,14 @@ description: "Tasks for staging upstream PR #532 (atomizer Anthropic default mod
     - the run-folder outcome;
     - the Gate 4 result;
     - the Complexity Tracking justification for the `test-atomize.mjs` edit.
-- [ ] T022 [US3] Wait with an `until` loop on `gh pr checks <N> -R mfelker/OB1` until **both** of these are green:
+- [X] T022 [US3] Wait with an `until` loop on `gh pr checks <N> -R mfelker/OB1` until **both** of these are green:
   - `fork-ci-verdict` in strict mode, with 0 advisories for `recipes/atomizer/` (SC-004);
   - `OB1 Review`, which is authoritative for `stage/` → `main` under the constitution's Fork CI policy.
   - If either fails, fix it on the branch and repeat T015–T020 as needed.
-- [ ] T023 [US3] Confirm the fork PR's diff (`gh pr diff <N> -R mfelker/OB1 --name-only`) lists only the four paths from T017.
-- [ ] T024 [US3] Prepare the ledger row text for `.fork/staged-prs.md`. Fill every column defined by `StagedPrLedgerRow` in data-model.md, leaving only **Merged into fork** blank. The Notes column must record that the fork keeps the `test-atomize.mjs` skip (plan Complexity Tracking) until upstream adopts it.
+- [X] T023 [US3] Confirm the fork PR's diff (`gh pr diff <N> -R mfelker/OB1 --name-only`) lists only the four paths from T017.
+- [X] T024 [US3] Prepare the ledger row text for `.fork/staged-prs.md`. Fill every column defined by `StagedPrLedgerRow` in data-model.md, leaving only **Merged into fork** blank. The Notes column must record that the fork keeps the `test-atomize.mjs` skip (plan Complexity Tracking) until upstream adopts it.
   - Keep the text in `E/r532-ledger-row.md`; it is applied in T027.
-- [ ] T025 [US3] On fork `main` (`/Users/mfelker/Projects/ob1`):
+- [X] T025 [US3] On fork `main` (`/Users/mfelker/Projects/ob1`):
   - Set spec.md **Status** to `Implemented`.
   - Mark T001–T025 `[X]` in this file.
   - Commit `E/` and both files as `[fork] Spec 002: evidence and status before merge`, then push.

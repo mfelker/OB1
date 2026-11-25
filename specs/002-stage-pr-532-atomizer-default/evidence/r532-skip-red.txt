@@ -1,0 +1,59 @@
+✔ C1 anthropic default model is claude-sonnet-5-5 (9.718ms)
+✔ C2 anthropic explicit model is sent verbatim (0.26125ms)
+✔ K4 anthropic CLI with key requests the default model (stubbed) (51.089417ms)
+✔ C3 openrouter default model is unchanged (0.679625ms)
+✔ C4 openrouter explicit model is sent verbatim (0.285791ms)
+✔ C5 anthropic and openrouter without a key reject before any fetch (0.345458ms)
+✔ C6 unknown provider rejects before any fetch (0.059167ms)
+✔ network guard: the test stub refuses any other host (0.064917ms)
+✖ K1 openrouter CLI without a key skips with exit 0 (41.067125ms)
+✖ K2 anthropic CLI without a key skips with exit 0 (44.2535ms)
+✔ K3 openrouter CLI with key is unchanged (stubbed) (59.097833ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 9
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 262.493959
+
+✖ failing tests:
+
+test at atomize-text.test.mjs:138:1
+✖ K1 openrouter CLI without a key skips with exit 0 (41.067125ms)
+  AssertionError [ERR_ASSERTION]: --provider=openrouter requires OPENROUTER_API_KEY in .env.local or process env
+  
+  
+  1 !== 0
+  
+      at TestContext.<anonymous> (file:///Users/mfelker/Projects/ob1/.worktrees/stage-pr-532-atomizer-default/recipes/atomizer/atomize-text.test.mjs:140:10)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at atomize-text.test.mjs:145:1
+✖ K2 anthropic CLI without a key skips with exit 0 (44.2535ms)
+  AssertionError [ERR_ASSERTION]: --provider=anthropic requires ANTHROPIC_API_KEY in .env.local or process env
+  
+  
+  1 !== 0
+  
+      at TestContext.<anonymous> (file:///Users/mfelker/Projects/ob1/.worktrees/stage-pr-532-atomizer-default/recipes/atomizer/atomize-text.test.mjs:147:10)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
