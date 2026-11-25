@@ -236,3 +236,13 @@
 - refactor: none needed
 - notes: the fixture dirties the lockfiles from its own test rather than relying on `npm install`, so the test is offline and deterministic. A tree that isn't a git checkout restores nothing.
 - commit: (this commit)
+
+## Cycle: U26 usage, target and Node < 26 errors exit 2 with a single-line message
+
+- test: `.fork/ci/test/tdd-cli.test.mjs::U26 usage, target and Node < 26 errors exit 2 with a single-line message` (new; missing/unknown subcommand, missing arguments, plan not found, no active feature, worktree not found, folder not found, and Node 24 simulated with a `--import data:` preload that redefines `process.versions.node` in the spawned adapter only; `tdd()` gained an optional `nodeArgs` parameter for that)
+- red: `node --test --test-name-pattern="^U26 " .fork/ci/test/tdd-cli.test.mjs`
+  -> `AssertionError [ERR_ASSERTION]: tdd: missing subcommand; usage: tdd.mjs where | single <file> <name> | file <file> | suite` / `actual: 0,` / `expected: 2,` (1 failed). Re-observed against the committed CLI after fixing a draft case (see notes).
+- green: `.fork/ci/bin/tdd.mjs:152` `parseArgs()` throws a `UsageError` for a missing or unknown subcommand or missing arguments; `:163` Node major < 26 is `requires Node >= 26 (found <v>)` (adapter A20), checked before anything else; `main` prints `tdd: <message>` (usage errors append `; <synopsis>`) as one stderr line and exits 2. Suite `node --test .fork/ci/test/` -> 127 passed, 0 failed
+- refactor: none needed
+- notes: contract ambiguity resolved: "usage errors print the synopsis" and U26's "single-line message" are reconciled by putting the synopsis on the same line. A draft case (`SPECIFY_FEATURE_DIRECTORY: ''`) was wrong before green (an empty env falls back to feature.json, per U2) and was replaced with `specs/999-none` → `plan not found`; the red was then re-observed with the committed CLI swapped back in.
+- commit: (this commit)

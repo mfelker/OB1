@@ -143,15 +143,33 @@ async function suite() {
   return exit;
 }
 
+const USAGE = 'usage: tdd.mjs where | single <file> <name> | file <file> | suite';
+const MIN_NODE = 26;
+
+/** A usage or version error: one line on stderr, exit 2. */
+class UsageError extends Error {}
+
+function parseArgs([op, ...rest]) {
+  if (op === undefined) throw new UsageError('missing subcommand');
+  if (op === 'single' && rest.length < 2) throw new UsageError('single needs <file> <name>');
+  if (op === 'file' && rest.length < 1) throw new UsageError('file needs <file>');
+  if (!['where', 'single', 'file', 'suite'].includes(op)) throw new UsageError(`unknown subcommand "${op}"`);
+  return { op, file: rest[0], name: rest[1] };
+}
+
 async function main(argv) {
-  const [op, ...rest] = argv;
   try {
+    const major = Number(process.versions.node.split('.')[0]);
+    if (major < MIN_NODE) throw new TargetError(`requires Node >= ${MIN_NODE} (found ${process.versions.node})`);
+    const { op, file, name } = parseArgs(argv);
     if (op === 'where') return where();
-    if (op === 'single') return await runTests('single', rest[0], rest[1]);
-    if (op === 'file') return await runTests('file', rest[0]);
     if (op === 'suite') return await suite();
-    return 0;
+    return await runTests(op, file, name);
   } catch (err) {
+    if (err instanceof UsageError) {
+      process.stderr.write(`tdd: ${err.message}; ${USAGE}\n`);
+      return 2;
+    }
     if (err instanceof TargetError) {
       process.stderr.write(`tdd: ${err.message}\n`);
       return 2;

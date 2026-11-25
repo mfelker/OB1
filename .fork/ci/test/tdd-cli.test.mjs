@@ -46,9 +46,9 @@ function cliRepo(planOpts = {}, files = {}) {
 }
 
 /** Run the copied adapter from the repo root, as the extension would. */
-function tdd(root, args, extraEnv = {}) {
+function tdd(root, args, extraEnv = {}, nodeArgs = []) {
   const { NODE_TEST_CONTEXT: _n, SPECIFY_FEATURE_DIRECTORY: _s, ...env } = process.env;
-  const r = spawnSync(process.execPath, [join(root, '.fork/ci/bin/tdd.mjs'), ...args], { cwd: root, env: { ...env, ...extraEnv }, encoding: 'utf8' });
+  const r = spawnSync(process.execPath, [...nodeArgs, join(root, '.fork/ci/bin/tdd.mjs'), ...args], { cwd: root, env: { ...env, ...extraEnv }, encoding: 'utf8' });
   return { ...r, lastLine: r.stdout.trimEnd().split('\n').at(-1) ?? '' };
 }
 
@@ -158,4 +158,28 @@ test('U25 suite restores a lockfile it modified that was clean before', () => {
   assert.ok(r.stdout.includes('[tdd] restored recipes/x/deno.lock'), r.stdout);
   assert.equal(readFileSync(join(root, 'recipes/x/package-lock.json'), 'utf8'), 'rewritten\n');
   assert.ok(!r.stdout.includes('restored recipes/x/package-lock.json'));
+});
+
+test('U26 usage, target and Node < 26 errors exit 2 with a single-line message', () => {
+  const root = cliRepo({}, { 'recipes/x/a.mjs': 'export const a = 1;\n', 'recipes/x/a.test.mjs': PASS });
+  const USAGE = 'usage: tdd.mjs where | single <file> <name> | file <file> | suite';
+  const errs = [
+    [tdd(root, []), `tdd: missing subcommand; ${USAGE}`],
+    [tdd(root, ['bogus']), `tdd: unknown subcommand "bogus"; ${USAGE}`],
+    [tdd(root, ['single', 'a.test.mjs']), `tdd: single needs <file> <name>; ${USAGE}`],
+    [tdd(root, ['file']), `tdd: file needs <file>; ${USAGE}`],
+    [tdd(root, ['where'], { SPECIFY_FEATURE_DIRECTORY: 'specs/999-none' }), 'tdd: plan not found: specs/999-none/plan.md'],
+  ];
+  const noFeature = cliRepo();
+  writeFileSync(join(noFeature, '.specify/feature.json'), '{}\n');
+  errs.push([tdd(noFeature, ['where']), 'tdd: no active feature (set SPECIFY_FEATURE_DIRECTORY or .specify/feature.json)']);
+  const gone = join(realpathSync(mkdtempSync(join(tmpdir(), 'fork-tdd-gone-'))), 'wt');
+  errs.push([tdd(cliRepo({ lane: 'staged upstream PR #1', worktree: `\`${gone}\`` }), ['suite']), `tdd: worktree not found: ${gone}`]);
+  const newFolder = cliRepo({ folder: '`recipes/new`' });
+  errs.push([tdd(newFolder, ['file', 'a.test.mjs']), `tdd: folder not found in tree: recipes/new (${newFolder})`]);
+  errs.push([tdd(root, ['where'], {}, ['--import', 'data:text/javascript,Object.defineProperty(process.versions,"node",{value:"24.1.0"})']), 'tdd: requires Node >= 26 (found 24.1.0)']);
+  for (const [r, message] of errs) {
+    assert.equal(r.status, 2, `${message}\n${r.stdout}${r.stderr}`);
+    assert.equal(r.stderr, `${message}\n`);
+  }
 });
