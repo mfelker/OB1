@@ -74,6 +74,7 @@ description: "Tasks for adopting the spec-kit-tdd extension (spec 003)"
 | U38 | The rubric override states S4 takes precedence over S2 | FR-010, contract staged-evidence-override.md | fixes branch, `tdd-overrides.test.mjs` |
 | U39 | The python venv cache is per-user, not in the shared temp dir | FR-016, R5 | fixes branch, `tdd-commands.test.mjs` |
 | U40 | A cached venv is reused only when privately owned | FR-016, R5 | fixes branch, `tdd-commands.test.mjs` |
+| U41 | `single`, `file` and `suite` blank credentials end to end | FR-016 | fix branch `fork/tdd-env-wiring`, `tdd-cli.test.mjs` |
 | A1 | Installed extension byte-identical to tag `v2.0.1` | FR-001 | integrator, `evidence/r1-verify.md` |
 | A2 | Profile commands each run before recording (single, zero-match, file, suite) | FR-009 | A, the profile's `verified:` and a cycle entry |
 | A3 | US2 AS1: `suite` for a feature whose plan names a real git worktree runs that worktree's folder | US2, FR-004 | A, `tdd-cli.test.mjs` (acceptance) |

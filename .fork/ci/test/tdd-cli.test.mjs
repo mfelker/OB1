@@ -209,6 +209,30 @@ test('U37 suite summary reports tests/pass/fail counts summed over the runtimes 
 });
 
 /**
+ * A child test that fails if the adapter passed it a credential. NODE_TEST_CONTEXT is not probed here: under
+ * `suite` the child's own `node --test` sets it for each isolated file, so its presence proves nothing.
+ */
+const ENV_PROBE = `import { test } from 'node:test';
+import assert from 'node:assert/strict';
+test('child env probe', () => {
+  assert.equal(process.env.OPENAI_API_KEY, '', 'named credential leaked');
+  assert.equal(process.env.MY_SERVICE_API_KEY, '', 'suffix credential leaked');
+});
+`;
+
+test('U41 single, file and suite run the child with credentials blanked (FR-016)', () => {
+  const root = cliRepo({}, { 'recipes/x/a.mjs': 'export const a = 1;\n', 'recipes/x/env.test.mjs': ENV_PROBE });
+  // NODE_TEST_CONTEXT is set too: if it leaked, the nested runner would switch to child-reporting mode and the
+  // `tests=1 pass=1` summary below would not parse, so the leak still fails this test.
+  const dirty = { OPENAI_API_KEY: 'fake-openai-value', MY_SERVICE_API_KEY: 'fake-service-value', NODE_TEST_CONTEXT: 'child-v8' };
+  for (const args of [['single', 'env.test.mjs', 'child env probe'], ['file', 'env.test.mjs'], ['suite']]) {
+    const r = tdd(root, args, dirty);
+    assert.equal(r.status, 0, `${args[0]}: ${r.stdout}${r.stderr}`);
+    assert.match(r.lastLine, /tests=1 pass=1 fail=0 → pass$/, `${args[0]}: ${r.lastLine}`);
+  }
+});
+
+/**
  * Acceptance layout: a committed repo R (adapter copy + feature plan) whose recipes/x test FAILS,
  * plus a real linked worktree W where recipes/x's test PASSES. Routing to the wrong tree shows as a failure.
  */
