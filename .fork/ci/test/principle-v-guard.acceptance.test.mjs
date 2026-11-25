@@ -99,7 +99,7 @@ function linkedWorktree(repo, name) {
 
 // ── US1: the agent guard ────────────────────────────────────────────────────
 
-test('A1 agent guard refuses a Write to a file that exists upstream, naming Principle V and the upstream-bound route', OUTER, () => {
+test('A1 agent guard refuses a Write to a file that exists upstream, naming Principle V and the upstream-bound route', () => {
   const repo = guardRepo();
   const reason = denyReason(runHook(repo, join(repo.dir, 'CLAUDE.md')));
   assert.match(reason, /CLAUDE\.md/);
