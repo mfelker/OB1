@@ -129,3 +129,12 @@ test('U32 D4/D8: upstream matches are case-insensitive; D5 and D6 stay exact-cas
   assert.equal(run({ relPath: '.Claude/settings.json' }).allowed, false);
   assert.equal(run({ relPath: '.claude/Settings.json' }).allowed, false);
 });
+
+test('U36 D4 before D5: a file under a fork-only root that exists upstream is denied with D4', () => {
+  const files = new Set(['.fork/x.md', '.specify/x.md', 'specs/x.md', '.worktrees/x.md']);
+  for (const relPath of files) {
+    const d = run({ relPath, upstream: { files, dirs: new Set() } });
+    assert.equal(d.allowed, false, relPath);
+    assert.equal(d.rule, 'D4', relPath);
+  }
+});
