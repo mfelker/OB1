@@ -22,7 +22,7 @@
 
 - test: `.fork/ci/test/principle-v-guard.acceptance.test.mjs::A2 agent guard refuses docs/domain_knowledge/CONTEXT.md and points to .fork/domain-knowledge/` (flipped from todo)
 - red: recorded at T029 (cycle-log.md 'Outer loop opened'); passes after the A1 and A3 commits, so no new red is invented: the flip is its own cycle. Check run: `node --test --test-name-pattern="^A2 " .fork/ci/test/principle-v-guard.acceptance.test.mjs` -> 1 passed, 0 failed
-- green: no CLI change needed (already covered by the A1/A3 pipeline: the D4 deny carries the domain-knowledge suggestion from decide()). Suite `node --test .fork/ci/test/` -> see commit
+- green: no CLI change needed (already covered by the A1/A3 pipeline: the D4 deny carries the domain-knowledge suggestion from decide()). Suite `node --test .fork/ci/test/` -> 181 passed, 0 failed, 6 todo
 - refactor: none needed
 - commit: (this commit)
 
@@ -30,7 +30,7 @@
 
 - test: `.fork/ci/test/principle-v-guard.acceptance.test.mjs::A4 agent guard allows an upstream path in a linked worktree on another branch, from a main-checkout session` (flipped from todo)
 - red: recorded at T029 (cycle-log.md 'Outer loop opened'); passes after the A1 and A3 commits, so no new red is invented: the flip is its own cycle. Check run: `node --test --test-name-pattern="^A4 " .fork/ci/test/principle-v-guard.acceptance.test.mjs` -> 1 passed, 0 failed
-- green: no CLI change needed (already covered by the A1/A3 pipeline: repoRelative/checkoutState read the worktree's own root and branch (D2)). Suite `node --test .fork/ci/test/` -> see commit
+- green: no CLI change needed (already covered by the A1/A3 pipeline: repoRelative/checkoutState read the worktree's own root and branch (D2)). Suite `node --test .fork/ci/test/` -> 182 passed, 0 failed, 5 todo
 - refactor: none needed
 - commit: (this commit)
 
@@ -38,6 +38,15 @@
 
 - test: `.fork/ci/test/principle-v-guard.acceptance.test.mjs::A5 agent guard allows editing an upstream file while a merge is in progress on main` (flipped from todo)
 - red: recorded at T029 (cycle-log.md 'Outer loop opened'); passes after the A1 and A3 commits, so no new red is invented: the flip is its own cycle. Check run: `node --test --test-name-pattern="^A5 " .fork/ci/test/principle-v-guard.acceptance.test.mjs` -> 1 passed, 0 failed
-- green: no CLI change needed (already covered by the A1/A3 pipeline: checkoutState reports MERGE_HEAD (D3)). Suite `node --test .fork/ci/test/` -> see commit
+- green: no CLI change needed (already covered by the A1/A3 pipeline: checkoutState reports MERGE_HEAD (D3)). Suite `node --test .fork/ci/test/` -> 183 passed, 0 failed, 4 todo
+- refactor: none needed
+- commit: (this commit)
+
+## Cycle: U22 --hook reads notebook_path and resolves a relative path against cwd
+
+- test: `.fork/ci/test/principle-v-guard.test.mjs::U22 --hook reads tool_input.notebook_path when there is no file_path, resolving a relative path against the input cwd` (new)
+- red: `node --test --test-name-pattern="^U22 " .fork/ci/test/principle-v-guard.test.mjs`
+  -> `AssertionError [ERR_ASSERTION]: The input did not match the regular expression /^CLAUDE\.md: constitution Principle V/` with `actual: 'principle-v-guard failed: The "paths[1]" argument must be of type string. Received undefined'` (1 failed)
+- green: `.fork/ci/bin/principle-v-guard.mjs:17` target is `tool_input.file_path ?? tool_input.notebook_path`; `repoRelative` already resolves a relative path against the input `cwd`. Suite `node --test .fork/ci/test/` -> 184 passed, 0 failed, 4 todo
 - refactor: none needed
 - commit: (this commit)

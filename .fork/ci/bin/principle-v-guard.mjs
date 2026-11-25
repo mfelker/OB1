@@ -12,7 +12,7 @@ try {
   const input = JSON.parse(readFileSync(0, 'utf8'));
   const { decide } = await lib('principle-v.mjs');
   const { repoRelative, checkoutState, upstreamPaths } = await lib('principle-v-paths.mjs');
-  const target = input.tool_input.file_path;
+  const target = input.tool_input.file_path ?? input.tool_input.notebook_path;
   const { root, relPath } = repoRelative(target, input.cwd);
   const state = relPath === null ? { branch: 'HEAD', mergeInProgress: false } : checkoutState(root);
   const upstream = relPath === null ? null : upstreamPaths(root);
