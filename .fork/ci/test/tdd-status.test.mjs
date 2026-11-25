@@ -49,3 +49,14 @@ test('U28 tddStatus reports per-feature cycle log, audit report and verdict', ()
     assert.deepEqual(s.features, [{ dir: 'specs/001-a', cycleLog, verification, verdict }], JSON.stringify(files));
   }
 });
+
+test('U29 several specs naming the same branch give one entry each, sorted by dir', () => {
+  const root = tree({
+    'specs/010-c/spec.md': spec('fork/shared'),
+    'specs/002-b/spec.md': spec('fork/other'),
+    'specs/001-a/spec.md': spec('fork/shared'),
+    'specs/001-a/tdd/verification.md': report('verdict: PASS'),
+  });
+  const s = tddStatus(root, 'fork/shared');
+  assert.deepEqual(s.features.map(f => [f.dir, f.verdict]), [['specs/001-a', 'PASS'], ['specs/010-c', 'missing']]);
+});

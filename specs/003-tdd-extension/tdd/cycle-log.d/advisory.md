@@ -28,3 +28,13 @@ Appended to `tdd/cycle-log.md` by the integrator in merge order (research R14).
 - green: `.fork/ci/lib/tdd-status.mjs:46-57` scans `specs/*/spec.md`, matches the backticked Feature Branch with `===`, and builds `{ dir, cycleLog, verification, verdict }`; `reportVerdict` (`:18-27`) reads `verdict:` only inside the leading `---` frontmatter. Suite `node --test .fork/ci/test/` -> 104 passed, 0 failed
 - refactor: none needed (helpers `featureBranch`, `reportVerdict`, `featureStatus` were written small at green)
 - commit: (this commit)
+
+## Cycle: U29 several specs naming the same branch give one entry each
+
+- test: `.fork/ci/test/tdd-status.test.mjs::U29 several specs naming the same branch give one entry each, sorted by dir` (new)
+- red: none natural. The test passed on first run because U28's scan already filters every spec. Deliberate-mutant check per the playbook: `.fork/ci/lib/tdd-status.mjs:55` changed to `.slice(0, 1).map(...)`, then `node --test --test-name-pattern="U29" .fork/ci/test/tdd-status.test.mjs`
+  -> `AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:` (1 failed). Mutant reverted exactly (`git diff` empty).
+- green: no implementation change (covered by U28). Suite `node --test .fork/ci/test/` -> 105 passed, 0 failed
+- refactor: none needed
+- commit: (this commit)
+- notes: test-after relative to U28's implementation; the mutant is the evidence that the test can fail.
