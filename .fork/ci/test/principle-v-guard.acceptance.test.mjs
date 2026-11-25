@@ -115,7 +115,7 @@ test('A2 agent guard refuses docs/domain_knowledge/CONTEXT.md and points to .for
   assert.match(reason, /\.fork\/domain-knowledge\//);
 });
 
-test('A3 agent guard allows every fork-only root and zone', OUTER, () => {
+test('A3 agent guard allows every fork-only root and zone', () => {
   const repo = guardRepo();
   for (const rel of ['.fork/notes.md', '.specify/memory/x.md', 'specs/006-x/spec.md', '.worktrees/scratch.md',
     '.claude/settings.json', '.claude/skills/speckit-x/SKILL.md', '.github/workflows/fork-ci.yml']) {

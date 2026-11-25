@@ -17,7 +17,7 @@ try {
   const state = relPath === null ? { branch: 'HEAD', mergeInProgress: false } : checkoutState(root);
   const upstream = relPath === null ? null : upstreamPaths(root);
   const d = decide({ relPath, ...state, upstream });
-  console.log(denyJson(`${d.reason} ${d.suggestion}`));
+  if (!d.allowed) console.log(denyJson(`${d.reason} ${d.suggestion}`));
 } catch (e) {
   console.log(denyJson(`principle-v-guard failed: ${e.message}`));
 }
