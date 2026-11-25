@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, realpathSync, symlinkSync } from 'node:fs';
+import { existsSync, mkdtempSync, realpathSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { makeRepo, git, writeFiles, commit, branch, checkout, addRemoteRef } from './helpers/git-fixture.mjs';
@@ -116,4 +116,18 @@ test('U21 upstreamPaths: null when upstream/main does not exist', () => {
   addRemoteRef(repo, 'origin/main', git(repo, ['rev-parse', 'HEAD']));
   assert.equal(upstreamPaths(repo.dir), null);
   assert.equal(upstreamPaths(realpathSync(mkdtempSync(join(tmpdir(), 'fork-ci-plain-')))), null);
+});
+
+/** True when the filesystem holding `dir` resolves names case-insensitively (macOS APFS default). */
+function caseInsensitiveFs(dir) {
+  writeFileSync(join(dir, 'caseprobe.tmp'), '');
+  return existsSync(join(dir, 'CASEPROBE.TMP'));
+}
+
+test('U31 repoRelative: a differently-cased path resolves to the on-disk case of its existing ancestors', t => {
+  const repo = tempRepo({ 'docs/a.md': '1', 'CLAUDE.md': '2' });
+  if (!caseInsensitiveFs(repo.dir)) return t.skip('case-sensitive filesystem: case variants are distinct paths');
+  assert.equal(repoRelative('Docs/new.md', repo.dir).relPath, 'docs/new.md');
+  assert.equal(repoRelative('claude.md', repo.dir).relPath, 'CLAUDE.md');
+  assert.equal(repoRelative(join(repo.dir, 'DOCS/a.md'), repo.dir).relPath, 'docs/a.md');
 });

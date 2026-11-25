@@ -18,7 +18,7 @@ export function repoRelative(path, cwd) {
     tail.unshift(basename(existing));
     existing = dirname(existing);
   }
-  const real = realpathSync(existing);
+  const real = realpathSync.native(existing);
   const abs = join(real, ...tail);
   let root;
   try {

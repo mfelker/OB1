@@ -1,8 +1,9 @@
 // Unit behaviors of the Principle V guard CLI (spec 005, U22-U27): spawn the CLI like the hook runner does.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { spawnSync } from 'node:child_process';
-import { cpSync, realpathSync, writeFileSync } from 'node:fs';
+import { execFileSync, spawn, spawnSync } from 'node:child_process';
+import { chmodSync, cpSync, existsSync, mkdtempSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { addRemoteRef, commit, git, makeRepo, writeFiles } from './helpers/git-fixture.mjs';
@@ -21,8 +22,8 @@ function guardRepo() {
 }
 
 /** Run `principle-v-guard.mjs <mode>` from the repo copy with `input` (string or object) on stdin. */
-function guard(repo, mode, input, cwd = repo.dir) {
-  const { NODE_TEST_CONTEXT: _n, ...env } = process.env;
+function guard(repo, mode, input, cwd = repo.dir, extraEnv = {}) {
+  const { NODE_TEST_CONTEXT: _n, ...env } = { ...process.env, ...extraEnv };
   return spawnSync(process.execPath, [join(repo.dir, '.fork/ci/bin/principle-v-guard.mjs'), mode], {
     cwd, env, encoding: 'utf8', input: typeof input === 'string' ? input : JSON.stringify(input),
   });
@@ -92,4 +93,65 @@ test('U27 --staged on a guard failure exits 1 with principle-v-guard failed:', (
   const r = guard(repo, '--staged', '');
   assert.equal(r.status, 1);
   assert.match(r.stderr, /^principle-v-guard failed: /);
+});
+
+// ── case variants (spec 005 analyze finding F1) ─────────────────────────────
+
+test('U33 --hook denies case variants of upstream paths on a case-insensitive filesystem', t => {
+  const repo = guardRepo();
+  if (!existsSync(join(repo.dir, 'CLAUDE.MD'))) return t.skip('case-sensitive filesystem: case variants are distinct paths');
+  for (const [name, rel] of [['claude.md', /^CLAUDE\.md: .*file exists in upstream\/main/], ['Docs/x.md', /^docs\/x\.md: .*inside upstream folder docs\//]]) {
+    const reason = denyReason(guard(repo, '--hook', {
+      hook_event_name: 'PreToolUse', tool_name: 'Write', cwd: repo.dir, tool_input: { file_path: join(repo.dir, name) },
+    }));
+    assert.match(reason, /constitution Principle V/);
+    assert.match(reason, rel);
+  }
+});
+
+// ── --staged cost (finding F3) ──────────────────────────────────────────────
+
+test('U34 --staged lists upstream/main once per commit, however many paths are staged', () => {
+  const repo = guardRepo();
+  const realGit = execFileSync('which', ['git'], { encoding: 'utf8' }).trim();
+  // A `git` shim first on PATH: logs every ls-tree call, then runs the real git.
+  const shimDir = realpathSync(mkdtempSync(join(tmpdir(), 'fork-ci-shim-')));
+  const log = join(shimDir, 'ls-tree.log');
+  writeFileSync(join(shimDir, 'git'), `#!/bin/sh\ncase " $* " in *" ls-tree "*) echo ls-tree >> '${log}';; esac\nexec '${realGit}' "$@"\n`);
+  chmodSync(join(shimDir, 'git'), 0o755);
+  writeFiles(repo, { 'docs/a.md': 'a\n', 'docs/b.md': 'b\n', 'docs/c.md': 'c\n' });
+  git(repo, ['add', 'docs']);
+  const r = guard(repo, '--staged', '', repo.dir, { PATH: `${shimDir}:${process.env.PATH}` });
+  assert.equal(r.status, 1, r.stderr);
+  for (const f of ['a', 'b', 'c']) assert.match(r.stderr, new RegExp(`docs/${f}\\.md: .*inside upstream folder docs/`));
+  assert.equal(readFileSync(log, 'utf8').trim().split('\n').length, 1, 'git ls-tree upstream/main ran once');
+});
+
+// ── argument handling (finding F4) ──────────────────────────────────────────
+
+/** Run the CLI with stdin left open and never written: a read of stdin would hang until the timeout kills it. */
+function guardArgsOnly(repo, args) {
+  const { NODE_TEST_CONTEXT: _n, ...env } = process.env;
+  return new Promise(resolve => {
+    const child = spawn(process.execPath, [join(repo.dir, '.fork/ci/bin/principle-v-guard.mjs'), ...args], { cwd: repo.dir, env, stdio: ['pipe', 'pipe', 'pipe'] });
+    let stdout = '';
+    let stderr = '';
+    let timedOut = false;
+    child.stdout.on('data', d => { stdout += d; });
+    child.stderr.on('data', d => { stderr += d; });
+    const timer = setTimeout(() => { timedOut = true; child.kill('SIGKILL'); }, 3000);
+    child.on('close', status => { clearTimeout(timer); resolve({ status, stdout, stderr, timedOut }); });
+  });
+}
+
+test('U35 an unknown or missing mode prints a one-line usage to stderr, exits 1 and never reads stdin', async () => {
+  const repo = guardRepo();
+  for (const args of [[], ['--hok'], ['--stage'], ['staged']]) {
+    const r = await guardArgsOnly(repo, args);
+    const label = JSON.stringify(args);
+    assert.equal(r.timedOut, false, `${label}: blocked reading stdin`);
+    assert.equal(r.status, 1, `${label}: ${r.stderr}`);
+    assert.equal(r.stdout, '', label);
+    assert.match(r.stderr, /^usage: principle-v-guard\.mjs --hook \| --staged\n$/, label);
+  }
 });
