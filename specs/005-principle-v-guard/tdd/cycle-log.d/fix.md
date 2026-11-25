@@ -36,3 +36,12 @@
 - green: `.fork/ci/bin/principle-v-guard.mjs` `decideFor` split into `checkoutContext(root)` (state + upstream sets) and `decideWith(relPath, context)`; `staged()` builds the context once (skipped when nothing is staged) and `hook()` builds it once for its one path. Suite `node --test .fork/ci/test/` -> 197 passed, 0 failed
 - refactor: none needed (the split is the change)
 - commit: (this commit)
+
+## Cycle: U35 an unknown or missing mode prints usage and exits 1 without reading stdin
+
+- test: `.fork/ci/test/principle-v-guard.test.mjs::U35 an unknown or missing mode prints a one-line usage to stderr, exits 1 and never reads stdin` (new; async `spawn` with stdin left open and never written, 3 s kill timer, so a blocking stdin read shows as `timedOut`; modes: none, `--hok`, `--stage`, `staged`)
+- red: `node --test --test-name-pattern="^U35 " .fork/ci/test/principle-v-guard.test.mjs`
+  -> `AssertionError [ERR_ASSERTION]: []: blocked reading stdin` with `actual: true, expected: false` (1 failed)
+- green: `.fork/ci/bin/principle-v-guard.mjs` bottom dispatch: exactly `--staged` and `--hook` run a mode; anything else prints `usage: principle-v-guard.mjs --hook | --staged` to stderr and sets exit code 1. Suite `node --test .fork/ci/test/` -> 198 passed, 0 failed
+- refactor: none needed
+- commit: (this commit)

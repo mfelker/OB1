@@ -1,7 +1,7 @@
 // Unit behaviors of the Principle V guard CLI (spec 005, U22-U27): spawn the CLI like the hook runner does.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { execFileSync, spawnSync } from 'node:child_process';
+import { execFileSync, spawn, spawnSync } from 'node:child_process';
 import { chmodSync, cpSync, existsSync, mkdtempSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
@@ -125,4 +125,33 @@ test('U34 --staged lists upstream/main once per commit, however many paths are s
   assert.equal(r.status, 1, r.stderr);
   for (const f of ['a', 'b', 'c']) assert.match(r.stderr, new RegExp(`docs/${f}\\.md: .*inside upstream folder docs/`));
   assert.equal(readFileSync(log, 'utf8').trim().split('\n').length, 1, 'git ls-tree upstream/main ran once');
+});
+
+// ── argument handling (finding F4) ──────────────────────────────────────────
+
+/** Run the CLI with stdin left open and never written: a read of stdin would hang until the timeout kills it. */
+function guardArgsOnly(repo, args) {
+  const { NODE_TEST_CONTEXT: _n, ...env } = process.env;
+  return new Promise(resolve => {
+    const child = spawn(process.execPath, [join(repo.dir, '.fork/ci/bin/principle-v-guard.mjs'), ...args], { cwd: repo.dir, env, stdio: ['pipe', 'pipe', 'pipe'] });
+    let stdout = '';
+    let stderr = '';
+    let timedOut = false;
+    child.stdout.on('data', d => { stdout += d; });
+    child.stderr.on('data', d => { stderr += d; });
+    const timer = setTimeout(() => { timedOut = true; child.kill('SIGKILL'); }, 3000);
+    child.on('close', status => { clearTimeout(timer); resolve({ status, stdout, stderr, timedOut }); });
+  });
+}
+
+test('U35 an unknown or missing mode prints a one-line usage to stderr, exits 1 and never reads stdin', async () => {
+  const repo = guardRepo();
+  for (const args of [[], ['--hok'], ['--stage'], ['staged']]) {
+    const r = await guardArgsOnly(repo, args);
+    const label = JSON.stringify(args);
+    assert.equal(r.timedOut, false, `${label}: blocked reading stdin`);
+    assert.equal(r.status, 1, `${label}: ${r.stderr}`);
+    assert.equal(r.stdout, '', label);
+    assert.match(r.stderr, /^usage: principle-v-guard\.mjs --hook \| --staged\n$/, label);
+  }
 });

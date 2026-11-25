@@ -60,5 +60,10 @@ async function stagedGuarded() {
   }
 }
 
-if (process.argv[2] === '--staged') await stagedGuarded();
-else await hook();
+const mode = process.argv[2];
+if (mode === '--staged') await stagedGuarded();
+else if (mode === '--hook') await hook();
+else {
+  console.error('usage: principle-v-guard.mjs --hook | --staged');
+  process.exitCode = 1;
+}
