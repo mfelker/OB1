@@ -312,3 +312,16 @@
   - §3 `suite` -> node-plain `pass`, sql `sql-unverified`, `→ sql-unverified`, exit **0** (5 s)
   - expected 0 / 3 / 0 / 0: matched. The integration worktree's `git status --short` was the same before and after (only the integrator's `tasks.md` edit).
 - commit: (this commit)
+
+## Cycle: A2 profile commands each run before recording (single, zero-match, file, suite)
+
+- test: `.specify/memory/tdd-profile.md` `verified:` and its "Verification record" table (new file; written by hand under `speckit.tdd.setup` Phases 2–3, per contracts/tdd-profile.md and research R7)
+- red: n/a for a document. The behavior's failure mode is a command recorded without being run; each command was run first, from this worktree, against the target `where` resolved (feature `specs/003-tdd-extension`, tree `/Users/mfelker/Projects/ob1/.worktrees/fork-tdd-extension`, folder `.fork/ci`):
+  - `node .fork/ci/bin/tdd.mjs single .fork/ci/test/runtimes.test.mjs "deno runtime: deno.json root, code vs tests, sandboxed command without --allow-net"` -> only that test ran (`✔ deno runtime: …`), `tests=1 pass=1 fail=0 → pass`, exit 0
+  - `node .fork/ci/bin/tdd.mjs single .fork/ci/test/runtimes.test.mjs "no test is named this"` -> `tests=0 pass=0 fail=0 → no tests matched "no test is named this"`, exit **3**
+  - `node .fork/ci/bin/tdd.mjs file .fork/ci/test/runtimes.test.mjs` -> `tests=9 pass=9 fail=0 → pass`, exit 0
+  - `node .fork/ci/bin/tdd.mjs suite` -> `→ sql-unverified`, exit 0, `real 4.97` (`/usr/bin/time -p`)
+- green: profile recorded with `verified: [single, file, suite]`, `suite_baseline: green`, `suite_seconds: 5` naming the measured target, `detected_at: d3ad0cd`, and a reason and consequence for each null (watch, coverage, mutation, acceptance, property, approval, contract). Every exemplar and helper path was opened before recording: `recipes/atomizer/atomize-text.test.mjs` (fetch stub, `runScript()` at line 63, `test-support/fetch-stub.mjs`), `integrations/hermes-agent-memory/plugin/tests/test_ob1_provider.py` (offline, `urlopen` mocked), `.fork/ci/test/runtimes.test.mjs`, `.fork/ci/test/fixtures.mjs`, `.fork/ci/test/helpers/{folder,git-fixture}.mjs`. Suite `node --test .fork/ci/test/` -> 132 passed, 0 failed
+- refactor: none needed
+- notes: Phase 4 (constitution) skipped by instruction; stream D owns Principle IV. Deviation (R7/I22): the test list predates the profile. The profile body adds, beyond the contract's list: the exit-code table, the `describe` name-matching rule probed in U14, deno's substring `--filter`, and the SQL `file` op not applying bootstrap.
+- commit: (this commit)
