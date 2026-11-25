@@ -66,6 +66,38 @@ To verify a future upgrade, as a fork feature of its own:
 4. Rebase the overrides on the new templates: their header records the base template's SHA-256, and the drift test (`.fork/ci/test/tdd-overrides.test.mjs`) fails until they are updated.
 5. Update this table and write a new evidence file.
 
+## Domain knowledge
+
+`.fork/domain-knowledge/` is the canonical knowledge root for `/speckit-grill-with-docs` on the fork. Upstream owns `docs/`, so the grill's glossary and decisions live here, where the fork owns the path:
+
+```text
+.fork/domain-knowledge/
+├── CONTEXT.md        # the glossary and domain overview
+├── <topic>.md        # topic documents, one per area
+└── adr/              # architecture decision records
+```
+
+The folder does not exist until the grill records its first item. Do not create it by hand.
+
+## Principle V guard
+
+Constitution Principle V keeps the fork-`main` checkout free of upstream-owned paths. Two guards enforce it, both running the same rule (`.fork/ci/lib/principle-v.mjs`) through one CLI, `.fork/ci/bin/principle-v-guard.mjs` (see `.fork/ci/README.md`):
+
+- **Agent guard.** A Claude Code `PreToolUse` hook, registered in `.claude/settings.json`, checks every `Write`, `Edit`, `MultiEdit` and `NotebookEdit` before it runs. It is active as soon as the repository is opened in Claude Code.
+- **Commit guard.** The git `pre-commit` hook in `.fork/githooks/` checks every staged path. Git does not use it until you enable it, once per clone (worktrees share the setting):
+
+```bash
+git config core.hooksPath .fork/githooks
+```
+
+**What is refused**, only on a checkout of `main`: changing a file that exists in `upstream/main`, creating a new file inside a folder that exists upstream, and any path when `upstream/main` cannot be read (run `git fetch upstream`). The message names the reason and where to make the change instead: an upstream-bound worktree (`contrib/mfelker/<desc>` from `upstream/main`) or a staged PR. A refused write under `docs/domain_knowledge/` points to `.fork/domain-knowledge/`.
+
+**What is allowed**: everything on any other branch, in a linked worktree, or on a detached HEAD; fork-only paths (`.fork/`, `.specify/`, `specs/`, `.worktrees/`, `.claude/settings.json`, `.claude/skills/speckit-*`, `.github/workflows/fork-*`); new top-level paths upstream does not have; and paths outside the repository.
+
+**Merge exception**: while a merge is in progress (`MERGE_HEAD` exists), both guards allow everything, so syncing upstream and resolving conflicts works.
+
+**Bypass**: a refused commit can be forced deliberately with `git commit --no-verify`. The agent guard has no bypass; make the change in the right worktree instead. If the guard itself fails, it refuses (fail closed) rather than letting the change through.
+
 ## One-time setup (per clone or worktree)
 
 ```bash
