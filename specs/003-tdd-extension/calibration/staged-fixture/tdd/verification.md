@@ -1,103 +1,206 @@
 ---
-feature: specs/003-tdd-extension/calibration/staged-fixture
+feature: staged-fixture # specs/003-tdd-extension/calibration/staged-fixture
 verdict: FAIL
-standard: .specify/templates/overrides/tdd-test-quality-rubric.md # fork override of spec-kit-tdd 2.0.1; staged-PR section applied (plan Lane: staged upstream PR #532)
-test_list_template: .specify/extensions/tdd/templates/tdd-test-list-template.md # no override or preset exists
-verified_at: de2f9eb # fork-main HEAD (spec-kit artifacts); code under test at worktree head 58b0567, PR base 238df6c
-lane: staged
-tree: /Users/mfelker/Projects/ob1/.worktrees/stage-pr-532-atomizer-default
-folder: recipes/atomizer
-behaviors: 3
+standard: .specify/templates/overrides/tdd-test-quality-rubric.md # fork override of spec-kit-tdd 2.0.1; fork staged-PR section applied
+verified_at: 58b0567 # worktree stage/pr-532-atomizer-default HEAD; fork-main checkout HEAD 90cf00d
+pr_base: 238df6c # git merge-base HEAD upstream/main
+lane: staged upstream PR #532
+behaviors: 4
 proven: 2
 likely: 0
-test_after: 0
+test_after: 1
 no_test: 0
 not_applicable: 1
-high_smells: 1
-criteria_total: 3 # acceptance scenarios US1-AS1, US1-AS2, US2-AS1 (FR-001, FR-002)
-criteria_covered: 3
-mutation_score: unmeasured # no mutation tool in profile; 3 deliberate mutants, 3 caught
+high_smells: 2
+high_findings_total: 3
+criteria_total: 4
+criteria_covered: 4
+mutation_score: unmeasured # no mutation tool; 6 deliberate mutants, 6 killed, 0 survivors in a DONE behavior
 mutants_survived: 0
-suite: 12 passed, 0 failed, 0.55s wall (node .fork/ci/bin/tdd.mjs suite, Node 26.13.0)
+suite: 12 passed, 0 failed, 0.55s # node .fork/ci/bin/tdd.mjs suite, Node 26.13.0
 ---
 
 # TDD Verification: calibration fixture (staged lane, PR #532)
 
-**Verdict: FAIL.** The PR turned the pre-existing test file `recipes/atomizer/test-atomize.mjs` (matched by the profile's `test_glob`, counted by the suite) from a hard failure into an unconditional `skipped` exit 0, so under this repository's runner, which always blanks keys, it can only ever report a pass while asserting nothing (Finding 1, HIGH: always-skipped / weakened existing test).
+**Verdict: FAIL.** U4 (K2, CLI skips without a key) is `TEST_AFTER` by rule S2: the PR changed its code
+(`58b0567`, `recipes/atomizer/test-atomize.mjs:47-50`) and the cycle log records only a head green, no base-red.
 
-The fixture's own behaviors are sound: U1 and U2 are `PROVEN` by reproduced base-reds (S1), every acceptance criterion has a test through a real entry point, and all three deliberate mutants were caught. U3 does not classify the way the fixture's cycle log and the override contract expect (S2, `TEST_AFTER`): the PR did not change the OpenRouter default, the test passes at the base, and rule S4 makes it `NOT_APPLICABLE` (Finding 2). Had U3 been graded by S2 instead, the verdict would also be `FAIL`, so Finding 2 does not decide the verdict; Finding 1 does.
+U1 and U2 are `PROVEN` by rule S1, and I reproduced both base-reds. U3 is `NOT_APPLICABLE` by rule S4,
+because its code is the same at the base and the head. Every acceptance criterion has a test through a real
+entry point. All six deliberate mutants were killed. Three further `HIGH` findings stand on their own and
+would also produce a `FAIL`:
+- an existing glob-matched test, `test-atomize.mjs`, now always passes without asserting anything under the
+  adapter;
+- a tautological network-guard test;
+- `T003` is ticked although its behavior is `BASELINE`.
 
-Audit independence: this audit was run by a fresh agent that did not write the tests, the cycle log, or the fixture.
+This audit was run from cold context by an agent that did not write these tests.
+
+## Standard and templates resolved
+
+- Rubric: `.specify/templates/overrides/tdd-test-quality-rubric.md`. It is the first match in the stack: an
+  override exists, there is no `.specify/presets/` directory, and the extension copy was not used.
+- Test list template: `.specify/extensions/tdd/templates/tdd-test-list-template.md`. There is no override and no
+  preset, so the extension copy is used.
+- Lane section: the rubric's `<!-- fork: staged-pr evidence -->` section (lines 62-88) applies, because
+  `plan.md` has `**Lane**: staged upstream PR #532`. `node .fork/ci/bin/tdd.mjs where` confirms lane `staged`,
+  tree `/Users/mfelker/Projects/ob1/.worktrees/stage-pr-532-atomizer-default` and folder `recipes/atomizer`.
+- Rule order: I followed the override's stated order, "S4 takes precedence over S2" (rubric line 84). For each
+  behavior I first diffed its source between base `238df6c` and head `58b0567` to test S4. I applied S2 or S3
+  only to behaviors whose code the PR changed, and S1 where a base-red is recorded.
 
 ## Test-first evidence
 
-Staged lane rules (override rubric, fork section). PR base `238df6c` (`git merge-base HEAD upstream/main`), head `58b0567`. History, observed: source `8bebd77` (lib/atomize-text.mjs) lands before tests `cfbfe76` (atomize-text.test.mjs, test-support/fetch-stub.mjs); that ordering is test-after by base rules and is excused only by the staged rule, which replaces history ordering with base-red evidence.
+The git history, read alone, shows source first: `8bebd77` (lib), then `cfbfe76` (tests), then `58b0567`
+(CLI). That is expected on the staged lane. The override replaces history ordering with a base-red at the PR
+base plus a green at the head.
 
-| Behavior | Class            | Rule | Evidence |
-| -------- | ---------------- | ---- | -------- |
-| U1 (C1)  | `PROVEN`         | S1   | Cycle 1 records command, base `238df6c`, decisive line `actual: 'claude-sonnet-4-5'` / `expected: 'claude-sonnet-5-5'`, head green. Reproduced by this audit: base copy of `lib/atomize-text.mjs` gives `tests=1 pass=0 fail=1 → fail` with the same actual/expected; head gives pass. Failure is the missing behavior (the default value, `lib/atomize-text.mjs:252`). |
-| U2 (K4)  | `PROVEN`         | S1   | Cycle 2 records command, base, decisive line `actual: '[fetch-stub] api.anthropic.com model=claude-sonnet-4-5\n'` against `/...model=claude-sonnet-5-5/`, head green. Reproduced identically by this audit. Failure is the behavior, not setup. |
-| U3 (C3)  | `NOT_APPLICABLE` | S4   | No base-red recorded (cycle 3, deliberate). But the PR's diff of `lib/atomize-text.mjs` (238df6c..58b0567) touches only the Anthropic default (lines 28, 240, 252); `openrouterModel = "anthropic/claude-sonnet-4.5"` (`lib/atomize-text.mjs:254`) and `atomizeViaOpenRouter` (`:189`ff) are unchanged. This audit ran C3 against the base copy: `tests=1 pass=1 fail=0 → pass`. Code unchanged at base → S4, characterization. S2 also matches literally, but every S4 case matches S2 (unchanged code can never produce a base-red), so S4 is the specific rule. See Finding 2. |
+| Behavior | Class | Rule | Evidence |
+| -------- | ----- | ---- | -------- |
+| U1 (C1) | PROVEN | S1 | The PR changed the code: `8bebd77` moves `lib/atomize-text.mjs:252` from `claude-sonnet-4-5` to `claude-sonnet-5-5`. Cycle 1 records the command, base `238df6c`, the decisive line (`actual: 'claude-sonnet-4-5'` / `expected: 'claude-sonnet-5-5'`) and a head green. I reproduced it: `single … "C1 …"` with base lib gives `tests=1 pass=0 fail=1 → fail`, exit=1, with the same actual and expected; at head the suite is green. |
+| U2 (K4) | PROVEN | S1 | The PR changed the code (same default, reached through the CLI). Cycle 2 records the command, the base, the decisive line (`actual: '[fetch-stub] api.anthropic.com model=claude-sonnet-4-5\n'` against `/…model=claude-sonnet-5-5/`) and a head green. I reproduced it: exit=1, `→ fail`, the same failure line. |
+| U3 (C3) | NOT_APPLICABLE | S4 | The code is unchanged. `git diff 238df6c HEAD -- recipes/atomizer/lib/atomize-text.mjs` has `openrouterModel` (`lib/atomize-text.mjs:254`, and line 205 where it is used) only on context lines. C3 passes at the base lib: `tests=1 pass=1 fail=0 → pass`, exit=0. S4 was checked first, so S2 is not applied. The test list records U3 as `characterization` / `BASELINE`, which matches. |
+| U4 (K2) | TEST_AFTER | S2 | S4 does not apply: `58b0567` changes the anthropic no-key branch at `test-atomize.mjs:47-50` from `console.error(…requires…)` + `exit(1)` to `console.log("skipped: …")` + `exit(0)`. Cycle 4 records no red ("none recorded, deliberately"), only a head green, so S2 applies and fails closed. The missing S1 elements are the base SHA, the red command and the decisive failure line. My own base reproduction (below) does not upgrade the class, because the class is graded on recorded evidence. |
 
-Exit codes of the reproduced runs were not captured (zsh `PIPESTATUS`); the adapter summary lines (`fail=1 → fail` / `pass=1 → pass`) were observed.
+Observation for U4: a valid base-red is obtainable but was not recorded. With `test-atomize.mjs` checked out
+at `238df6c`, `single … "K2 anthropic CLI without a key skips with exit 0"` gives exit=1, `tests=1 pass=0
+fail=1 → fail`, decisive line `actual: 1, expected: 0` (message `--provider=anthropic requires
+ANTHROPIC_API_KEY …`). That failure is the missing behavior, so recording it would satisfy S1.
 
-### Existing tests changed by the PR
+### Existing tests changed by the range
 
-Diff range `238df6c..58b0567` (3 commits, 4 files). Only one pre-existing test file was touched: `recipes/atomizer/test-atomize.mjs` (commit `58b0567`). No config, threshold, filter or skip-marker changes. See Finding 1.
+`git diff 238df6c HEAD --stat` touches four files. `atomize-text.test.mjs` and `test-support/fetch-stub.mjs`
+are new. `lib/atomize-text.mjs` is source. `test-atomize.mjs` existed at the base and matches the profile's
+`test_glob` (`**/test-*.mjs`), and `where` lists it in `testFiles`, so it is an existing test that the range
+changed:
+
+- Before (`238df6c`): with no key for the selected provider, it printed `--provider=<p> requires <VAR> …` to
+  stderr and exited 1, so the runner reported a failure.
+- After (`58b0567`, `test-atomize.mjs:47-56`): it prints `skipped: no API key for <p> …` to stdout and exits 0.
+- Effect: the adapter blanks every `*_API_KEY` (profile, Notes), so in the committed state this file always
+  takes the skip path. The runner counts it as a pass, not a skip: `file recipes/atomizer/test-atomize.mjs`
+  reports `tests=1 pass=1`, `skipped 0`. It contributes 1 of the suite's 12 passes and asserts nothing.
+- Justification given: the commit message, and FR-003/K2, which make the skip the specified behavior. Per the
+  rubric this is reported whatever the reason. The behavior itself is properly asserted by K2. The finding is
+  that a glob-matched "test" now always reports green without checking anything (Finding 2).
+
+There are no other removed or loosened assertions, skip markers, config exclusions or threshold changes. The
+repository has no coverage or mutation thresholds.
 
 ### tasks.md against the test list
 
-T001 [U1], T002 [U2], T003 [U3] are ticked `[X]`; all three behaviors are `DONE` on the list. Consistent, no unearned ticks. (U3's state should be `BASELINE`, see Finding 2.)
+| Task | Box | Behavior state | Judgment |
+| ---- | --- | -------------- | -------- |
+| T001 | [X] | U1 DONE | consistent |
+| T002 | [X] | U2 DONE | consistent |
+| T003 | [X] | U3 BASELINE | **mismatch**. The verify skill says a ticked task whose behavior is not `DONE` is a `HIGH` finding, and `speckit-tdd-run` (`.claude/skills/speckit-tdd-run/SKILL.md:272-274`) says never to tick a task whose behavior is `BASELINE`. Mitigation: the characterization evidence exists (I reproduced the base green). See Finding 3. |
+| T004 | [X] | U4 DONE | consistent with the list. The list's `DONE` rests on a head green only (see U4). |
 
 ## Findings
 
-| #   | Severity | Finding | Evidence |
-| --- | -------- | ------- | -------- |
-| 1   | HIGH | **Existing test made always-skipped, reported as pass.** `test-atomize.mjs` matches `test_glob` (`**/test-*.mjs`), `tdd.mjs where` lists it as a test file, and the suite counts it (12 = 11 in `atomize-text.test.mjs` + 1). Before: missing key → `console.error(...)`, `process.exit(1)`. After: `console.log("skipped: ...")`, `process.exit(0)`. The adapter blanks every `*_API_KEY` for every child, so in this repository the script can only take the skip path. Observed: base copy under `node .fork/ci/bin/tdd.mjs file recipes/atomizer/test-atomize.mjs` → `tests=1 pass=0 fail=1 → fail`; head → prints `skipped: no API key for openrouter ...`, `tests=1 pass=1 fail=0 → pass`. It asserts nothing and inflates the pass count. Mitigation (not an excuse): its live path is exercised with a stub by K3/K4 and its skip path by K1/K2 in `atomize-text.test.mjs`. Should: either report as skipped (a skip signal fork-ci/the adapter counts as skip, not pass), or be declared non-test/exempt in the profile and fork-ci with that decision recorded, not silently counted green. | `recipes/atomizer/test-atomize.mjs:47-50, 53-56` (head); base `238df6c:recipes/atomizer/test-atomize.mjs:48-49, 54-55`; commit `58b0567` |
-| 2   | MED | **Calibration control does not exercise S2; U3 is mislabelled.** The fixture means U3 as the "head green, no base-red → `TEST_AFTER`" control (cycle-log cycle 3; tasks.md T003; contract `specs/003-tdd-extension/contracts/staged-evidence-override.md:36` expects "C3 as S2 → TEST_AFTER"). But C3's code is unchanged by the PR and the test passes at the base, so the resolved rubric's S4 governs. The test list records U3 as `kind: example`, `state: DONE` where S4 calls for characterization / `BASELINE`. Per the contract's own line 37, "any other result is a fork-integration gap": the S2 path is currently unvalidated by this fixture, and the S2/S4 overlap has no stated precedence in the rubric. Should: pick a control whose code the PR did change (e.g. C2, explicit Anthropic model passthrough, if its code path differs at base — or another behavior with a real code change) with no base-red recorded; and/or state S4-over-S2 precedence in the rubric override and contract. | `specs/003-tdd-extension/calibration/staged-fixture/tdd/test-list.md` U3 row; `tdd/cycle-log.md` cycle 3; `lib/atomize-text.mjs:254` (unchanged since base) |
-| 3   | MED | **Test exercises the test's own stub.** `network guard: the test stub refuses any other host` asserts only that the in-file `globalThis.fetch` replacement rejects unknown hosts; no feature code runs (Framework under test / test infrastructure under test). Outside this fixture's three behaviors; traces to nothing in this fixture's spec. | `recipes/atomizer/atomize-text.test.mjs:132-134` |
-| 4   | LOW | Spec cross-references drift: the test file's section comments cite FR-002/FR-003 (US1) and FR-003/FR-004/FR-005/FR-007 (US2), which are spec 002's ids; this fixture's spec has FR-001/FR-002. Harmless here, but traces should be read through the test list, not these comments. | `recipes/atomizer/atomize-text.test.mjs:74, 101, 136` |
+Ordered by severity.
 
-Smell pass on U1/U2/U3 tests (`atomize-text.test.mjs:76-82, 94-99, 103-109`): no HIGH smells. Assertions are on specific values (model string, URL, call count, atoms), not truthiness; the only double is `fetch` at the network boundary, so the subject runs for real; no conditional logic; deterministic (no clock, randomness, or network; subprocess with 15 s timeout in K4). C1/C3 carry four unlabelled assertions each, but all pin one behavior and `node:assert` diffs identify the failing one, so not reported as roulette. Style matches the profile's node-plain exemplar (which is this file). Suite is fast (0.55 s).
+| # | Severity | Finding | Evidence | Should be |
+| - | -------- | ------- | -------- | --------- |
+| 1 | HIGH (blocking) | U4 is `TEST_AFTER` under S2. The code changed between the base and the head, and there is no base-red in the cycle log. | `test-atomize.mjs:47-50` (`58b0567`); cycle-log Cycle 4 "red: none recorded" | A Cycle 4 entry that records the base-red procedure for K2: the command, base `238df6c`, the decisive line `actual: 1 / expected: 0`, and a head green. |
+| 2 | HIGH | Weakened existing test, and an always-skipped test in the committed state: `test-atomize.mjs` (glob-matched) went from exit 1 to exit 0 without a key. Under the adapter, where keys are always blank, it always passes and asserts nothing. | `test-atomize.mjs:47-56`; `tdd.mjs file recipes/atomizer/test-atomize.mjs` → `tests=1 pass=1`, `skipped 0` | The script reports as skipped rather than passed (for example, the runner sees a skip), or it is excluded from `test_glob` discovery as a live sanity script, so the suite count does not include a green that verifies nothing. The owner should decide which, because FR-003 mandates exit 0. |
+| 3 | HIGH | `T003` is ticked `[X]` while U3 is `BASELINE`. This is a completion claim that the lifecycle rules forbid. | `tasks.md:5` (T003); `tdd/test-list.md` U3 row; `.claude/skills/speckit-tdd-run/SKILL.md:272-274` | `T003` unticked, or reworded through the planning step so that a characterization task is not tracked as an implementation checkbox. Practical risk is low: `/speckit-implement` would skip it, and no implementation is needed. |
+| 4 | HIGH (smell: Tautological assertion) | `network guard: the test stub refuses any other host` asserts that the test's own `beforeEach` stub throws for an unknown host. That is exactly what `atomize-text.test.mjs:48` configured. It proves nothing about `atomizeText` or the CLI. | `recipes/atomizer/atomize-text.test.mjs:132-134` (stub at `:45-54`) | Assert the property against the subject. For example, record every URL `atomizeText` requests and assert the list equals the expected provider endpoint, or rely on the stub's throw inside the behavior tests. Outside the fixture's U1-U4 scope, but in a new test file, so it is graded. |
+| 5 | MED (smell: Eager test) | `C5` checks two providers' missing-key guards in one test, so it has two reasons to fail. | `atomize-text.test.mjs:121-125` | Split into one test per provider. Outside U1-U4 scope. |
+| 6 | LOW | The cycle-log header attributes the PR's source change only to `8bebd77`. The range has a second source commit, `58b0567` (`test-atomize.mjs`), by a different author from `8bebd77`, with a fork session trailer. Cycle 4 acknowledges it later. | `tdd/cycle-log.md` header; `git log 238df6c..HEAD` | The header names both source commits, and says whether `58b0567` is part of upstream PR #532 or a fork addition on the staging branch. |
+| 7 | LOW | The section comments in the test file cite spec 002's ids (`FR-002, FR-003`, `FR-007`), not this fixture's (`FR-001`-`FR-003`). K2 sits under a "US2" banner, but it is US3 here. | `atomize-text.test.mjs:74,101,136` | Informational: the file belongs to spec 002, and this fixture re-describes it. No change required in the PR. |
+| 8 | LOW | `spec.md` says the fixture "re-describes three behaviors", but the test list has four (U1-U4). | `spec.md` line 6; `tdd/test-list.md` | Make the count consistent. |
+| 9 | INFO | Cycle 3's original entry calls C3 a `TEST_AFTER` (S2) control. A later "Correction" entry reclassifies it as S4 (`BASELINE`), which agrees with this audit. The log is append-only, so the superseded text remains. | `tdd/cycle-log.md` Cycle 3 and Correction | None. |
+
+Smell pass coverage:
+- Files graded: all three glob-matched test files in the range: `atomize-text.test.mjs` (11 tests), the
+  helper `test-support/fetch-stub.mjs` (as its support module), and `test-atomize.mjs`.
+- Repository-relative items:
+  - The profile's node-plain exemplar is `recipes/atomizer/atomize-text.test.mjs`, the audited file itself, so
+    `Foreign style` cannot be judged independently. The folder had no prior tests to compare against.
+  - The recorded helpers (`.fork/ci/test/fixtures.mjs`, `.fork/ci/test/helpers/folder.mjs`,
+    `git-fixture.mjs`) build runtime-detection fixture folders and temp git repos for `.fork/ci`. They do not
+    apply to atomizer tests, so there is no `Bypassed test utility`.
+  - There is no `Framework under test` finding beyond #4, and no `Redundant test`: C1 (in-process) and K4
+    (CLI) cover one criterion at two levels.
+- U1-U4 tests individually:
+  - Each asserts a specific value (`model`, exit code, an anchored stdout or stderr regex). There are no
+    vacuous or truthiness checks and no conditional assertions.
+  - Determinism holds. `loadEnv` gives `process.env` precedence over `.env.local`
+    (`lib/entity-resolver.mjs:433-437`), and K2 and K4 set the keys explicitly, so a local `.env.local` cannot
+    change their outcome. K4 also runs under a preload stub that throws for any other host.
+  - Speed is fine: the whole suite takes 0.55 s.
 
 ## Mutation results
 
-No mutation tool (`mutation: null` in profile). Deliberate mutants, one at a time, each restored with `git checkout HEAD -- recipes/atomizer/lib/atomize-text.mjs` and the full suite re-run green (12/12) after each.
+There is no mutation tool (profile: `mutation: null`), so I used deliberate mutants. Each was applied singly in
+the worktree and the behavior's test was run with `node .fork/ci/bin/tdd.mjs single`. The file was then
+restored with `git checkout HEAD -- <file>`, the suite was re-run (`tests=12 pass=12 fail=0 → pass` after
+every restore), and `git status --short --untracked-files=no` was confirmed empty.
 
 | Mutant | Behavior | Test run | Survived | Judgment |
 | ------ | -------- | -------- | -------- | -------- |
-| M1 `lib/atomize-text.mjs:252` default `"claude-sonnet-5-5"` → `"claude-sonnet-5-4"` | U1, U2 | C1, K4 | No (both fail) | Default value pinned at library and CLI level |
-| M2 `lib/atomize-text.mjs:159` `model: anthropicModel` → `model: "claude-sonnet-4-5"` (drop the wiring) | U1, U2 | C1, K4 | No (both fail) | Wiring from option to request body pinned |
-| M3 `lib/atomize-text.mjs:254` openrouter default → `"anthropic/claude-sonnet-5-5"` | U3 | C3 | No (fails) | Unchanged-default guard works as a regression pin |
+| M1 `lib/atomize-text.mjs:252` default `claude-sonnet-5-5` → `claude-sonnet-5-0` | U1 | C1 | No | Caught (`actual: 'claude-sonnet-5-0'`). |
+| M2 `lib/atomize-text.mjs:159` `model: anthropicModel` → `model: "claude-sonnet-5-5"` | U1 (C2) | C1, then C2 | C1: yes · C2: no | Equivalent with respect to U1, because the default value is still sent, so this is not a U1 survivor. It is killed by C2 (`actual: 'claude-sonnet-5-5'`, expected the explicit model). |
+| M3 `test-atomize.mjs:63` CLI forces `anthropicModel: "claude-sonnet-4-5"` | U2 | K4 | No | Caught (stderr `model=claude-sonnet-4-5`). |
+| M4 `test-atomize.mjs:49` skip branch `exit(0)` → `exit(1)` | U4 | K2 | No | Caught (`actual: 1`). |
+| M5 `test-atomize.mjs:48` skip message names `openrouter` instead of `anthropic` | U4 | K2 | No | Caught (regex `/skipped: no API key for anthropic/` failed). |
+| M6 `lib/atomize-text.mjs:254` OpenRouter default → `anthropic/claude-sonnet-5-5` | U3 | C3 | No | Caught (`actual: 'anthropic/claude-sonnet-5-5'`). |
 
-Sampled: all 3 behaviors, 3 mutants. Not exhaustive; no mutants on `test-atomize.mjs`.
+Summary: 4 behaviors sampled (all of U1-U4), 6 distinct mutants, 6 killed, 0 survivors inside a `DONE`
+behavior. The base-reds for U1, U2 and U4, reproduced above, act as three more natural mutants and were all
+caught. Coverage is unavailable (`coverage: null`).
 
 ## Traceability
 
-| Criterion | Tests | End to end |
-| --------- | ----- | ---------- |
-| US1-AS1 / FR-001 (C1) | U1 `atomize-text.test.mjs::C1 anthropic default model is claude-sonnet-5-5` (`:76`) | Yes: public `atomizeText`, fetch doubled at the network boundary only |
-| US1-AS2 / FR-001 (K4) | U2 `atomize-text.test.mjs::K4 anthropic CLI with key requests the default model (stubbed)` (`:94`) | Yes: spawns the real CLI `test-atomize.mjs` with a fetch-stub preload |
-| US2-AS1 / FR-002 (C3) | U3 `atomize-text.test.mjs::C3 openrouter default model is unchanged` (`:103`) | Yes: public `atomizeText` |
+| Criterion | Behaviors / tests | Exists and runs | End to end |
+| --------- | ----------------- | --------------- | ---------- |
+| US1 AS1 (C1), FR-001 | U1 `atomize-text.test.mjs::C1 anthropic default model is claude-sonnet-5-5` (`:76`) | Yes (suite green) | Yes. Real `atomizeText`; only the network (`fetch`) is stubbed. |
+| US1 AS2 (K4), FR-001 | U2 `::K4 anthropic CLI with key requests the default model (stubbed)` (`:94`) | Yes | Yes. Spawns the real CLI with a fetch preload. |
+| US2 AS1 (C3), FR-002 | U3 `::C3 openrouter default model is unchanged` (`:103`) | Yes | Yes. Real `atomizeText`, fetch stubbed. |
+| US3 AS1 (K2), FR-003 | U4 `::K2 anthropic CLI without a key skips with exit 0` (`:145`) | Yes | Yes. Real CLI, no doubles. |
 
-All three claimed tests exist and pass individually via `tdd.mjs single`. Untested criteria: none. Tests tracing to nothing in this fixture: C2, C4–C6, K1–K3 (declared out of scope, covered by spec 002), `network guard` (Finding 3), and `test-atomize.mjs` as a standalone test (Finding 1).
+Untested criteria: none. Tests that trace to nothing in this fixture: C2, C4, C5, C6, the network guard, K1,
+K3, and the `test-atomize.mjs` script entry. The test list's "Out of scope" section declares these as covered
+by spec 002, so they are not undocumented requirements here.
+
+## Remediation
+
+These tasks are listed here only. By the auditor's instructions for this run, `tasks.md`, the test list, the
+cycle log and all tests and source were left untouched, and no remediation section was appended. **The
+feature is not done until R1 is cleared.** R2 and R3 are also `HIGH`.
+
+- R1 (Finding 1, blocking): append a Cycle 4 base-red entry for K2 to `tdd/cycle-log.md`. Run it with
+  `git -C <tree> checkout 238df6c -- recipes/atomizer/test-atomize.mjs` and then
+  `node .fork/ci/bin/tdd.mjs single recipes/atomizer/atomize-text.test.mjs "K2 anthropic CLI without a key skips with exit 0"`.
+  Expect exit 1 with `actual: 1 / expected: 0`. Restore with `checkout HEAD --` and record the head green.
+  Done when this audit re-classifies U4 as `PROVEN` (S1). As a calibration fixture, U4 is a deliberate S2
+  control, so the maintainer may instead accept this `FAIL` as the expected calibration outcome.
+- R2 (Finding 2): decide how the live sanity script `recipes/atomizer/test-atomize.mjs` (`:47-56`) is
+  reported when it skips. Done when
+  `node .fork/ci/bin/tdd.mjs file recipes/atomizer/test-atomize.mjs` no longer reports a pass that verifies
+  nothing, or when the script is excluded from discovery by a documented rule. This affects upstream PR
+  content, so it is the PR owner's call.
+- R3 (Finding 3): untick `T003` in `tasks.md`, or re-plan it as a non-checkbox characterization note. Done
+  when every `[X]` maps to a `DONE` behavior.
+- R4 (Finding 4): replace `atomize-text.test.mjs:132-134` with an assertion on the subject's requested URLs.
+  Done when the test fails under a mutant that sends `atomizeText` to a wrong host. This is spec 002's test,
+  so route it there.
+- R5 (Finding 5): split `C5` (`atomize-text.test.mjs:121-125`) into one test per provider (spec 002).
+- R6-R7 (Findings 6 and 8): correct the cycle-log header's source-commit attribution, and the behavior count
+  in `spec.md`.
 
 ## What was not audited
 
-- Coverage: `coverage: null` in the profile; not measured.
-- Mutation by tool: none available; deliberate-mutant sample only (3 mutants, `lib/atomize-text.mjs` only).
-- Behaviors C2, C4–C6, K1–K3 and the network guard were out of this fixture's test list; only smell-checked where noted, not graded for test-first evidence.
-- `test-support/fetch-stub.mjs` was read but not mutated.
-- The live (real-network) path of `test-atomize.mjs` was not exercised; the adapter blanks keys by design.
-- Performance, security, and the remaining atomizer recipe files were out of scope.
-- The cycle log's baseline claim "12/12 at head" was reproduced; no base-suite baseline was recorded by the cycle log (this audit observed `test-atomize.mjs` red at base, so the base suite was not green).
-
-## Remediation (listed, not applied)
-
-Per the audit's instructions, `tasks.md` was not modified (`--no-tasks` equivalent). Suggested tasks, in order:
-
-1. (Finding 1, blocking) Decide how `recipes/atomizer/test-atomize.mjs` is counted: make its no-key path report as a skip that fork-ci and `tdd.mjs` count as skipped rather than passed, or record it as an exempt live script in the profile and fork-ci. Done when `node .fork/ci/bin/tdd.mjs suite` no longer reports it as a pass with blanked keys. Note this touches upstream PR #532's code; it may be a fork-adapter change instead.
-2. (Finding 2) Replace the U3 control with a behavior whose code the PR changed and record no base-red for it, or reclassify U3 as `characterization`/`BASELINE`; and state S4-over-S2 precedence in `.specify/templates/overrides/tdd-test-quality-rubric.md` and the override contract. Done when re-running `speckit-tdd-verify` on the fixture yields one `TEST_AFTER` via S2.
-3. (Finding 3) Move or relabel the `network guard` test as test-infrastructure, or drop it. Verify with `node .fork/ci/bin/tdd.mjs file recipes/atomizer/atomize-text.test.mjs`.
-
-Worktree state after audit: `git -C /Users/mfelker/Projects/ob1/.worktrees/stage-pr-532-atomizer-default status --short --untracked-files=no` empty.
+- Mutation was by 6 hand-made mutants on U1-U4 only, scoped to `lib/atomize-text.mjs` and
+  `test-atomize.mjs`. It was not a tool run and it is not exhaustive. Other code in `lib/atomize-text.mjs`
+  (the claude-cli path, the prompt, parsing, timeouts) was not mutated.
+- Coverage: no tool is configured, so it was not measured.
+- Tests outside U1-U4 (C2, C4-C6, K1, K3, the network guard) were graded for smells only. Their test-first
+  evidence belongs to spec 002 and was not classified here.
+- Whether `58b0567` is part of upstream PR #532 or a fork-only commit on the staging branch was not checked
+  against GitHub.
+- Live-provider behavior (real Anthropic or OpenRouter calls), performance and load: no criterion, not
+  assessed.
+- The other atomizer scripts (`atomize-packs.mjs`, `audit-gmail-pipeline.mjs`, and so on) are not in the
+  range and were not assessed.
