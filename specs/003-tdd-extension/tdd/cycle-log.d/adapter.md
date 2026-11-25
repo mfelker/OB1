@@ -276,3 +276,13 @@
 - refactor: none needed
 - notes: deviation: `.specify/memory/tdd-profile.md` doesn't exist yet (T014 writes it), so the string is taken verbatim from contracts/tdd-profile.md; T014 records the same string.
 - commit: (this commit)
+
+## Cycle: A5 a fork feature with Worktree none uses the repo-root checkout
+
+- test: `.fork/ci/test/tdd-cli.test.mjs::acceptance A5 a fork feature with Worktree none uses the repo-root checkout` (new; same two-tree layout, plan lane `fork feature`, Worktree "none (fork-`main` checkout)"; the repo root's copy of the test fails, so the profile `single` string must exit 1 with the root's failure marker)
+- red: the test passed on its first run (`node --test --test-name-pattern="^A5 " .fork/ci/test/tdd-cli.test.mjs` -> 1 passed; inside-out, over U6). Mutant: `.fork/ci/lib/tdd-target.mjs:50` `return repoRoot;` changed to `return undefined;` for a `none…` value, then the same command
+  -> `SyntaxError [Error]: Unexpected end of JSON input` (1 failed): `where` crashed without printing a target. Mutant reverted from a byte copy.
+- green: no production change. Suite `node --test .fork/ci/test/` -> 131 passed, 0 failed
+- refactor: none needed
+- notes: a first mutant attempt was not applied (a `grep` guard didn't match the pattern), so its passing run is not evidence; the mutant above was applied with an exact-string replace and asserted before the run.
+- commit: (this commit)

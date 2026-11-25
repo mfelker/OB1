@@ -236,4 +236,14 @@ describe('acceptance', () => {
     const hit = profile(repo, PROFILE_SINGLE, { file: 'recipes/x/a.test.mjs', name: 'adds' });
     assert.equal(hit.status, 0, hit.stdout + hit.stderr);
   });
+
+  test('A5 a fork feature with Worktree none uses the repo-root checkout', () => {
+    // Another worktree exists, but the fork plan says none: the repo root's (failing) copy is the one that runs.
+    const { repo } = stagedLayout(() => ({ lane: 'fork feature', worktree: 'none (fork-`main` checkout)' }));
+    assert.equal(JSON.parse(tdd(repo, ['where']).lastLine).tree, repo);
+    const r = profile(repo, PROFILE_SINGLE, { file: 'recipes/x/a.test.mjs', name: 'adds' });
+    assert.equal(r.status, 1, r.stdout + r.stderr);
+    assert.ok(r.stdout.includes('decisive failure marker'));
+    assert.equal(r.lastLine, '[tdd] single node-test feature=specs/001-a folder=recipes/x: tests=1 pass=0 fail=1 → fail');
+  });
 });
