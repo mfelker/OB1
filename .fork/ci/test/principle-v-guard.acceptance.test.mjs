@@ -204,8 +204,13 @@ test('A8 commit guard allows committing a conflicted merge that touches upstream
   checkout(repo, 'main');
   writeFiles(repo, { 'CLAUDE.md': '# fork side\n' });
   git(repo, ['-c', 'core.hooksPath=/dev/null', 'commit', '-q', '-am', 'fork side']);
-  const m = spawnSync('git', ['merge', 'incoming'], { cwd: repo.dir, encoding: 'utf8', env: { ...process.env, HOME: repo.dir } });
+  const m = spawnSync('git', ['merge', 'incoming'], {
+    cwd: repo.dir, encoding: 'utf8',
+    env: { ...process.env, HOME: repo.dir, GIT_AUTHOR_NAME: 'Fork Owner', GIT_AUTHOR_EMAIL: 'owner@example.test', GIT_COMMITTER_NAME: 'Fork Owner', GIT_COMMITTER_EMAIL: 'owner@example.test' },
+  });
   assert.notEqual(m.status, 0, 'fixture: the merge must conflict');
+  // A failed merge is not enough: without an identity git can refuse before merging (Linux CI), leaving no MERGE_HEAD.
+  assert.ok(git(repo, ['rev-parse', '-q', '--verify', 'MERGE_HEAD']), `fixture: a conflicted merge must be in progress; merge said: ${m.stderr}`);
   writeFiles(repo, { 'CLAUDE.md': '# resolved\n' });
   git(repo, ['add', 'CLAUDE.md']);
   const trace = gitTrace();

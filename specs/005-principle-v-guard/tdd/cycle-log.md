@@ -509,3 +509,14 @@ Run in a temp repo on `main` with `docs/domain_knowledge/CONTEXT.md` committed a
 - refactor: none needed
 - commit: (this commit)
 - notes: test strengthening against Gate 1 audit finding MED 5. Deviation: this edits committed acceptance tests (strengthens only, no assertion removed or loosened). The first observation attempt, a `git` shim on PATH, saw only the outer commit because git puts its own exec-path ahead of PATH for hooks; replaced by the preload.
+
+<!-- integrator: CI fix after PR #19 self-test failed on Linux -->
+
+## Cycle: A8 fixture fix (CI-only failure)
+
+- test: `.fork/ci/test/principle-v-guard.acceptance.test.mjs::A8 commit guard allows committing a conflicted merge that touches upstream files` (fixture corrected)
+- red: PR #19 `self-test` on `ubuntu-latest` -> `AssertionError [ERR_ASSERTION]: principle-v-guard: commit refused (constitution Principle V)` / `CLAUDE.md: … (file exists in upstream/main)`. Reproduced locally with `GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=user.useConfigOnly GIT_CONFIG_VALUE_0=true node --test --test-name-pattern="^A8 " .fork/ci/test/principle-v-guard.acceptance.test.mjs` -> `ℹ fail 1`, same message.
+- cause: the fixture's `git merge incoming` ran with `HOME` set to the temp repo and no committer identity. macOS git synthesizes one, so the merge stopped at the conflict as intended; Linux git refuses before merging, which also exits non-zero, and the fixture only checked `status !== 0`. No `MERGE_HEAD` → the guard correctly refused the commit. The guard was right; the fixture was wrong.
+- green: the merge gets the same identity env as the fixture's other git calls, and the precondition now asserts `MERGE_HEAD` exists (a stricter check than before; no assertion removed). Suite `node --test .fork/ci/test/` -> 201 passed, 0 failed, both normally and with `user.useConfigOnly=true`.
+- refactor: none needed
+- commit: (this commit)
