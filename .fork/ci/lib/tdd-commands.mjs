@@ -153,3 +153,6 @@ function pytestCounts(output, exitCode) {
 
 /** Escape the regex metacharacters \\ ^ $ . * + ? ( ) [ ] { } | so the name matches literally. */
 export const escapeRegex = s => s.replace(/[\\^$.*+?()[\]{}|]/g, '\\$&');
+
+/** Count parsers for run-folder's runtime kinds (`suite`); node-script's runner is unknown there, so it has none. */
+export const SUITE_COUNT_PARSERS = { 'node-plain': nodeCounts, deno: denoCounts, python: pytestCounts, sql: sqlCounts };

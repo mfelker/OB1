@@ -26,7 +26,7 @@ The target is resolved per data-model `TddTarget` (grammar in research R3), and 
 | A9 | `single`, name matching nothing | **3** | `… tests=0 → no tests matched "<name>"` |
 | A10 | `single` on sql, a plain script, or a node-script runner other than vitest/jest | 4 | `tdd: single unsupported for <kind>: <reason>; use 'file'` |
 | A11 | `file` | 0, 1 or 3 | As A7–A9, for the whole file |
-| A12 | `suite` outcome `pass` or `sql-unverified` | 0 | One line per runtime, then `[tdd] suite … → <outcome>` |
+| A12 | `suite` outcome `pass` or `sql-unverified` | 0 | One line per runtime, then `[tdd] suite … : tests=<n> pass=<n> fail=<n> → <outcome>` (counts summed over the runtimes that ran; `?` when unparseable; omitted when none ran) |
 | A13 | `suite` outcome `no-tests` or `exempt`, or the folder doesn't exist yet | 0 | `[tdd] suite … → empty baseline: <why>` |
 | A14 | `suite`, any other outcome | 1 | The same, with the reason |
 | A15 | A file path (absolute **or** resolved relative) outside the tree | 2 | `tdd: <file> is outside the target tree <tree>` |

@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import { delimiter, dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { requireFolder, resolveTarget, TargetError } from '../lib/tdd-target.mjs';
-import { buildCommand, resolveFile, runtimeFor } from '../lib/tdd-commands.mjs';
+import { buildCommand, resolveFile, runtimeFor, SUITE_COUNT_PARSERS } from '../lib/tdd-commands.mjs';
 import { childEnv } from '../lib/tdd-env.mjs';
 import { scanRuntimes } from '../lib/runtimes.mjs';
 
@@ -124,6 +124,19 @@ function restoreLockfiles(tree, wereClean) {
   }
 }
 
+/**
+ * `: tests=N pass=N fail=N` summed over the runtimes whose tests ran (pass or fail), parsed from
+ * run-folder's output excerpts; `?` when any of them can't be parsed; '' when none ran.
+ */
+function suiteCounts(runtimes) {
+  const ran = runtimes.filter(rt => rt.outcome === 'pass' || rt.outcome === 'fail');
+  if (!ran.length) return '';
+  const parsed = ran.map(rt => SUITE_COUNT_PARSERS[rt.kind]?.(rt.outputExcerpt ?? '', rt.outcome === 'pass' ? 0 : 1) ?? null);
+  if (parsed.includes(null)) return ': tests=? pass=? fail=?';
+  const sum = key => parsed.reduce((n, c) => n + c[key], 0);
+  return `: tests=${sum('tests')} pass=${sum('passed')} fail=${sum('failed')}`;
+}
+
 /** `suite`: delegate to run-folder in the target tree, with childEnv; an empty baseline is green. */
 async function suite() {
   const target = resolveTarget({ repoRoot: REPO_ROOT, env: process.env });
@@ -146,7 +159,7 @@ async function suite() {
   for (const rt of result.runtimes) process.stdout.write(`[tdd] suite ${rt.kind} ${rt.root}: ${rt.outcome} (${rt.reason})\n`);
   if (result.outcome === 'sql-unverified') process.stdout.write('[tdd] sql unverified (advisory)\n');
   const [exit, summary] = SUITE[result.outcome] ?? [1, `${result.outcome}: ${result.reason}`];
-  process.stdout.write(`[tdd] suite ${label(target)} → ${summary}\n`);
+  process.stdout.write(`[tdd] suite ${label(target)}${suiteCounts(result.runtimes)} → ${summary}\n`);
   return exit;
 }
 

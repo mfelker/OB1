@@ -191,9 +191,21 @@ test('U27 the summary line names feature= and folder=', () => {
     '[tdd] single node-test feature=specs/001-a folder=recipes/x: tests=1 pass=1 fail=0 → pass');
   assert.equal(tdd(root, ['file', 'a.test.mjs']).lastLine,
     '[tdd] file node-test feature=specs/001-a folder=recipes/x: tests=1 pass=1 fail=0 → pass');
-  assert.equal(tdd(root, ['suite']).lastLine, '[tdd] suite feature=specs/001-a folder=recipes/x → pass');
+  assert.equal(tdd(root, ['suite']).lastLine, '[tdd] suite feature=specs/001-a folder=recipes/x: tests=1 pass=1 fail=0 → pass');
   assert.equal(tdd(cliRepo({ folder: '`recipes/new`' }), ['suite']).lastLine,
     '[tdd] suite feature=specs/001-a folder=recipes/new → empty baseline: folder does not exist yet');
+});
+
+test('U37 suite summary reports tests/pass/fail counts summed over the runtimes that ran', () => {
+  const suite = files => tdd(cliRepo({}, files), ['suite']);
+  const pass = suite({ 'recipes/x/a.mjs': 'export const a = 1;\n', 'recipes/x/a.test.mjs': PASS, 'recipes/x/b.test.mjs': PASS.replace("'adds'", "'adds again'") });
+  assert.equal(pass.status, 0, pass.stdout + pass.stderr);
+  assert.equal(pass.lastLine, '[tdd] suite feature=specs/001-a folder=recipes/x: tests=2 pass=2 fail=0 → pass');
+  const fail = suite({ 'recipes/x/a.mjs': 'export const a = 1;\n', 'recipes/x/a.test.mjs': PASS, 'recipes/x/b.test.mjs': FAIL });
+  assert.equal(fail.status, 1, fail.stdout + fail.stderr);
+  assert.match(fail.lastLine, /: tests=2 pass=1 fail=1 → fail: tests failed \(exit 1\)$/);
+  const noTests = suite({ 'recipes/x/a.mjs': 'export const a = 1;\n' });
+  assert.equal(noTests.lastLine, '[tdd] suite feature=specs/001-a folder=recipes/x → empty baseline: no tests yet');
 });
 
 /**
@@ -216,7 +228,7 @@ describe('acceptance', () => {
     assert.equal(JSON.parse(tdd(repo, ['where']).lastLine).tree, wt);
     const r = tdd(repo, ['suite']);
     assert.equal(r.status, 0, r.stdout + r.stderr);
-    assert.equal(r.lastLine, '[tdd] suite feature=specs/001-a folder=recipes/x → pass');
+    assert.equal(r.lastLine, '[tdd] suite feature=specs/001-a folder=recipes/x: tests=1 pass=1 fail=0 → pass');
   });
 
   // contracts/tdd-profile.md `single`, verbatim, expanded the way the extension does and run by a shell from the repo root.

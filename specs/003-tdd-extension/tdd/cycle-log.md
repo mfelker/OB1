@@ -475,3 +475,15 @@ Appended to `tdd/cycle-log.md` by the integrator in merge order (research R14).
 - green: added the "TDD workflow" section to `.fork/README.md` (`tdd.plan` via the optional `after_tasks` hook adding the `[U#]`/`[A#]` markers, the loop via the mandatory `before_implement` hook, `tdd.verify` before merge, the staged base-red rule, the advisory CI status, the per-checkout `.specify/feature.json` and `tdd.mjs where`, credential blanking, disabling the hook with `enabled: false` plus a reason, and the extension version record with upgrade steps); also updated the Lanes table and "Stage an upstream PR" steps 3–5. Suite `node --test .fork/ci/test/` -> 103 passed, 0 failed
 - refactor: none needed
 - commit: (this commit)
+
+<!-- integrator: T024 analyze remediation (H2, owner decision: add counts) -->
+
+## Cycle: U37 suite summary reports tests/pass/fail counts summed over the runtimes that ran
+
+- test: `.fork/ci/test/tdd-cli.test.mjs::U37 suite summary reports tests/pass/fail counts summed over the runtimes that ran` (new)
+- red: `node --test --test-name-pattern="^U37 |^U27 " .fork/ci/test/tdd-cli.test.mjs`
+  -> `actual: '[tdd] suite feature=specs/001-a folder=recipes/x → pass'` (2 failed). The suite line existed but carried no counts, against spec US2 AS1 ("reports pass/fail counts") and the contract Summary line.
+- green: `.fork/ci/lib/tdd-commands.mjs` exports `SUITE_COUNT_PARSERS` (the existing node, deno, pytest and sql parsers keyed by run-folder runtime kind); `.fork/ci/bin/tdd.mjs` `suiteCounts()` sums them over the runtimes whose outcome is `pass` or `fail`, parsed from run-folder's `outputExcerpt`, prints `?` when any is unparseable (never an invented zero) and nothing when none ran. `run-folder.mjs` (shared with fork-ci) is unchanged. Suite `node --test .fork/ci/test/` -> 147 passed, 0 failed
+- refactor: none needed
+- commit: (this commit)
+- notes: deviation, contract-driven: U27 and A3 asserted the literal pre-count `suite` line; both expected strings now carry `: tests=1 pass=1 fail=0`. No assertion was removed, and A3 still proves routing (the wrong tree's test fails). Contract row A12 updated to the counted line.

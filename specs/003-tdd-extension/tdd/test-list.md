@@ -108,6 +108,7 @@ Written by hand, under the extension's format (research R11): the extension can'
 | id  | behavior | traces | kind | state | test |
 | --- | -------- | ------ | ---- | ----- | ---- |
 | U35 | The installed base hash equals `base_sha256`, and stripping the header and fork section reproduces the base | FR-010 | example | DONE | cycle-log.md `U35`, commit `c77f3e4` |
+| U37 | `suite`'s summary line reports `tests=`/`pass=`/`fail=` summed over the runtimes that ran (`?` when unparseable) | US2 AS1, FR-004 | example | DONE | cycle-log.md `U37` (T024 remediation H2) |
 
 ## Invariants and edge cases still to place
 
