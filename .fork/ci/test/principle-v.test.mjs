@@ -129,3 +129,27 @@ test('U32 D4/D8: upstream matches are case-insensitive; D5 and D6 stay exact-cas
   assert.equal(run({ relPath: '.Claude/settings.json' }).allowed, false);
   assert.equal(run({ relPath: '.claude/Settings.json' }).allowed, false);
 });
+
+test('U36 D4 before D5: a file under a fork-only root that exists upstream is denied with D4', () => {
+  const files = new Set(['.fork/x.md', '.specify/x.md', 'specs/x.md', '.worktrees/x.md']);
+  for (const relPath of files) {
+    const d = run({ relPath, upstream: { files, dirs: new Set() } });
+    assert.equal(d.allowed, false, relPath);
+    assert.equal(d.rule, 'D4', relPath);
+  }
+});
+
+test('U37 D6 zones are narrow: other files in .claude/skills and .github/workflows are denied with D8', () => {
+  for (const relPath of ['.claude/skills/other/SKILL.md', '.github/workflows/ci2.yml']) {
+    const d = run({ relPath });
+    assert.equal(d.allowed, false, relPath);
+    assert.equal(d.rule, 'D8', relPath);
+  }
+});
+
+test('U38 D8 names the outermost upstream folder when several enclose the path', () => {
+  const d = run({ relPath: 'docs/a/new.md', upstream: { files: new Set(), dirs: new Set(['docs', 'docs/a']) } });
+  assert.equal(d.allowed, false);
+  assert.equal(d.rule, 'D8');
+  assert.ok(d.reason.includes('(inside upstream folder docs/)'), d.reason);
+});
