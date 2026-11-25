@@ -213,7 +213,7 @@ description: "Tasks for staging upstream PR #532 (atomizer Anthropic default mod
   - Update fork `main` to the merged state: `git pull --ff-only origin main`.
   - Apply `E/r532-ledger-row.md` to `/Users/mfelker/Projects/ob1/.fork/staged-prs.md`, filling in `StagedPrLedgerRow.Merged into fork` from data-model.md with the merge date. Status is `staged` (FR-010, SC-005: exactly one `#532` row).
   - Commit `[fork] Ledger: staged #532` and push.
-- [ ] T028 [US3] **Ask the owner before doing this; it is outward-facing.** Comment on upstream PR #532 (`gh pr comment 532 -R NateBJones-Projects/OB1`):
+- [X] T028 [US3] **Ask the owner before doing this; it is outward-facing.** Comment on upstream PR #532 (`gh pr comment 532 -R NateBJones-Projects/OB1`):
   - Link the fork's test commits.
   - Offer the tests and the `test-atomize.mjs` skip (FR-011).
   - Then add "tests and test-atomize skip offered upstream" to the ledger Notes and commit.
