@@ -183,7 +183,7 @@ test('A8 commit guard allows committing a conflicted merge that touches upstream
   assert.equal(r.status, 0, r.stderr);
 });
 
-test('A9 commit guard allows a commit staging upstream files in a linked worktree on another branch', OUTER, () => {
+test('A9 commit guard allows a commit staging upstream files in a linked worktree on another branch', () => {
   const repo = guardRepo();
   enableCommitGuard(repo);
   const wt = linkedWorktree(repo, 'contrib/owner/y');

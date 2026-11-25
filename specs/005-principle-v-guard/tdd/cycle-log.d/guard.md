@@ -104,3 +104,11 @@
 - green: no CLI change needed (decideFor reads MERGE_HEAD (D3)). Suite `node --test .fork/ci/test/` -> 190 passed, 0 failed, 1 todo
 - refactor: none needed
 - commit: (this commit)
+
+## Cycle: A9 --staged allows a commit in a linked worktree
+
+- test: `.fork/ci/test/principle-v-guard.acceptance.test.mjs::A9 commit guard allows a commit staging upstream files in a linked worktree on another branch` (flipped from todo)
+- red: recorded at T029 (cycle-log.md 'Outer loop opened'); passes after the A6 commit, so no new red is invented: the flip is its own cycle. Check run: `node --test --test-name-pattern="^A9 " .fork/ci/test/principle-v-guard.acceptance.test.mjs` -> 1 passed, 0 failed
+- green: no CLI change needed (decideFor reads the worktree's own branch (D2)). Suite `node --test .fork/ci/test/` -> 191 passed, 0 failed, 0 todo
+- refactor: none needed
+- commit: (this commit)
