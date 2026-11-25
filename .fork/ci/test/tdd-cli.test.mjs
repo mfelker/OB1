@@ -183,3 +183,14 @@ test('U26 usage, target and Node < 26 errors exit 2 with a single-line message',
     assert.equal(r.stderr, `${message}\n`);
   }
 });
+
+test('U27 the summary line names feature= and folder=', () => {
+  const root = cliRepo({}, { 'recipes/x/a.mjs': 'export const a = 1;\n', 'recipes/x/a.test.mjs': PASS });
+  assert.equal(tdd(root, ['single', 'a.test.mjs', 'adds']).lastLine,
+    '[tdd] single node-test feature=specs/001-a folder=recipes/x: tests=1 pass=1 fail=0 → pass');
+  assert.equal(tdd(root, ['file', 'a.test.mjs']).lastLine,
+    '[tdd] file node-test feature=specs/001-a folder=recipes/x: tests=1 pass=1 fail=0 → pass');
+  assert.equal(tdd(root, ['suite']).lastLine, '[tdd] suite feature=specs/001-a folder=recipes/x → pass');
+  assert.equal(tdd(cliRepo({ folder: '`recipes/new`' }), ['suite']).lastLine,
+    '[tdd] suite feature=specs/001-a folder=recipes/new → empty baseline: folder does not exist yet');
+});

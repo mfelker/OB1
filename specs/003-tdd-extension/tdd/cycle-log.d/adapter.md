@@ -246,3 +246,13 @@
 - refactor: none needed
 - notes: contract ambiguity resolved: "usage errors print the synopsis" and U26's "single-line message" are reconciled by putting the synopsis on the same line. A draft case (`SPECIFY_FEATURE_DIRECTORY: ''`) was wrong before green (an empty env falls back to feature.json, per U2) and was replaced with `specs/999-none` → `plan not found`; the red was then re-observed with the committed CLI swapped back in.
 - commit: (this commit)
+
+## Cycle: U27 the summary line names feature= and folder=
+
+- test: `.fork/ci/test/tdd-cli.test.mjs::U27 the summary line names feature= and folder=` (new; exact last lines for `single`, `file`, `suite`, and `suite` on a folder not yet created)
+- red: `node --test --test-name-pattern="^U27 " .fork/ci/test/tdd-cli.test.mjs`
+  -> `AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:` / `actual: '[tdd] single node-test: tests=1 pass=1 fail=0 → pass',` (1 failed)
+- green: `.fork/ci/bin/tdd.mjs:44` `label()` = `feature=<featureDir relative to repo root> folder=<folder>`, used in every `[tdd] <op> …` summary (`:68`, `:85`, `:127`, `:139`, `:145`), giving the contract's `[tdd] <op> <kind> feature=… folder=…: tests=… pass=… fail=… → <result>` (R2, I5). Suite `node --test .fork/ci/test/` -> 128 passed, 0 failed
+- refactor: none needed
+- notes: `suite` has no single kind, so its summary is `[tdd] suite feature=… folder=… → <outcome>`; the per-runtime lines above it name each kind and root.
+- commit: (this commit)

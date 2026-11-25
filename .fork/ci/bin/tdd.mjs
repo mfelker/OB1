@@ -3,7 +3,7 @@
 import { execFileSync, spawn } from 'node:child_process';
 import { existsSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { delimiter, dirname, join, resolve } from 'node:path';
+import { delimiter, dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { requireFolder, resolveTarget, TargetError } from '../lib/tdd-target.mjs';
 import { buildCommand, resolveFile, runtimeFor } from '../lib/tdd-commands.mjs';
@@ -40,6 +40,9 @@ async function ensureVenv(venv, cwd, env) {
   return true;
 }
 
+/** `feature=<featureDir rel> folder=<folder>`, so a run against the wrong feature is visible (R2). */
+const label = t => `feature=${relative(t.repoRoot, t.featureDir).split(sep).join('/')} folder=${t.folder}`;
+
 function where() {
   const target = resolveTarget({ repoRoot: REPO_ROOT, env: process.env });
   const runtimes = target.folderExists
@@ -62,7 +65,7 @@ async function runTests(op, file, name) {
   let env = childEnv(process.env);
   if (cmd.venv) {
     if (!(await ensureVenv(cmd.venv, cmd.cwd, env))) {
-      process.stdout.write(`[tdd] ${op} ${cmd.kind}: → fail: python venv setup failed\n`);
+      process.stdout.write(`[tdd] ${op} ${cmd.kind} ${label(target)}: → fail: python venv setup failed\n`);
       return 1;
     }
     env = { ...env, VIRTUAL_ENV: cmd.venv.dir, PATH: `${join(cmd.venv.dir, 'bin')}${delimiter}${env.PATH ?? ''}` };
@@ -79,7 +82,7 @@ async function runTests(op, file, name) {
   else if (r.code !== 0 || counts.tests === 0) { exit = 1; result = `fail (exit ${r.code})`; }
   else { exit = 0; result = 'pass'; }
   const n = counts ?? { tests: '?', passed: '?', failed: '?' };
-  process.stdout.write(`[tdd] ${op} ${cmd.kind}: tests=${n.tests} pass=${n.passed} fail=${n.failed} → ${result}\n`);
+  process.stdout.write(`[tdd] ${op} ${cmd.kind} ${label(target)}: tests=${n.tests} pass=${n.passed} fail=${n.failed} → ${result}\n`);
   return exit;
 }
 
@@ -121,7 +124,7 @@ function restoreLockfiles(tree, wereClean) {
 async function suite() {
   const target = resolveTarget({ repoRoot: REPO_ROOT, env: process.env });
   if (!target.folderExists) {
-    process.stdout.write('[tdd] suite → empty baseline: folder does not exist yet\n');
+    process.stdout.write(`[tdd] suite ${label(target)} → empty baseline: folder does not exist yet\n`);
     return 0;
   }
   const out = join(mkdtempSync(join(tmpdir(), 'fork-tdd-suite-')), 'result.json');
@@ -133,13 +136,13 @@ async function suite() {
   try {
     result = JSON.parse(readFileSync(out, 'utf8'));
   } catch {
-    process.stdout.write('[tdd] suite → setup: run-folder wrote no result\n');
+    process.stdout.write(`[tdd] suite ${label(target)} → setup: run-folder wrote no result\n`);
     return 1;
   }
   for (const rt of result.runtimes) process.stdout.write(`[tdd] suite ${rt.kind} ${rt.root}: ${rt.outcome} (${rt.reason})\n`);
   if (result.outcome === 'sql-unverified') process.stdout.write('[tdd] sql unverified (advisory)\n');
   const [exit, summary] = SUITE[result.outcome] ?? [1, `${result.outcome}: ${result.reason}`];
-  process.stdout.write(`[tdd] suite → ${summary}\n`);
+  process.stdout.write(`[tdd] suite ${label(target)} → ${summary}\n`);
   return exit;
 }
 
