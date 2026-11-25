@@ -197,3 +197,12 @@
 - refactor: none needed
 - notes: the named list is set when absent too, per R10's rationale (`key in env` must hold so `.env.local` cannot fill it); suffix patterns can only apply to names that are present.
 - commit: (this commit)
+
+## Cycle: U22 where prints the JSON, including featureDir and folderExists
+
+- test: `.fork/ci/test/tdd-cli.test.mjs::U22 where prints the JSON, including featureDir and folderExists` (new file; `cliRepo()` copies `.fork/ci/{bin,lib,sql}` into a temp repo so the adapter's repo root, three levels above `bin/tdd.mjs`, is the fixture; `tdd()` spawns `process.execPath` from that root with `NODE_TEST_CONTEXT` and `SPECIFY_FEATURE_DIRECTORY` removed)
+- red: `node --test --test-name-pattern="^U22 " .fork/ci/test/tdd-cli.test.mjs`
+  -> `AssertionError [ERR_ASSERTION]: stdout: ` / `actual: false,` / `expected: true,` (1 failed). `bin/tdd.mjs` existed only as a two-line header stub, so it ran and printed nothing.
+- green: `.fork/ci/bin/tdd.mjs:10` `REPO_ROOT` is the realpath three levels above the script; `:12` `where` prints `resolveTarget()` plus `runtimes:[{kind, root, testFiles}]` from `scanRuntimes` (empty when the folder doesn't exist yet) as one JSON line (adapter A1). Suite `node --test .fork/ci/test/` -> 123 passed, 0 failed
+- refactor: none needed
+- commit: (this commit)
