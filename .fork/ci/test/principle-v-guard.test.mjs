@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { cpSync, realpathSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, realpathSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { addRemoteRef, commit, git, makeRepo, writeFiles } from './helpers/git-fixture.mjs';
@@ -92,4 +92,18 @@ test('U27 --staged on a guard failure exits 1 with principle-v-guard failed:', (
   const r = guard(repo, '--staged', '');
   assert.equal(r.status, 1);
   assert.match(r.stderr, /^principle-v-guard failed: /);
+});
+
+// ── case variants (spec 005 analyze finding F1) ─────────────────────────────
+
+test('U33 --hook denies case variants of upstream paths on a case-insensitive filesystem', t => {
+  const repo = guardRepo();
+  if (!existsSync(join(repo.dir, 'CLAUDE.MD'))) return t.skip('case-sensitive filesystem: case variants are distinct paths');
+  for (const [name, rel] of [['claude.md', /^CLAUDE\.md: .*file exists in upstream\/main/], ['Docs/x.md', /^docs\/x\.md: .*inside upstream folder docs\//]]) {
+    const reason = denyReason(guard(repo, '--hook', {
+      hook_event_name: 'PreToolUse', tool_name: 'Write', cwd: repo.dir, tool_input: { file_path: join(repo.dir, name) },
+    }));
+    assert.match(reason, /constitution Principle V/);
+    assert.match(reason, rel);
+  }
 });
