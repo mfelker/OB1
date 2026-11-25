@@ -15,7 +15,7 @@ Install spec-kit-tdd v2.0.1, which adds four commands: setup, plan, run and veri
 3. **Template overrides** in `.specify/templates/overrides/`, so a staged PR counts "red against the PR base, green at the head" as test-first evidence.
 4. **Advisory fork-ci TDD status** (FR-014). The verdict summary shows the linked feature's cycle log, audit report and verdict, and never changes the outcome.
 5. **Rules and docs**: amend constitution Principle IV, and update the runbook and the tasks template.
-6. **Calibration**: run `tdd.verify` on spec 002.
+6. **Calibration**, after the merge and from the fork-`main` checkout: `tdd.verify` on spec 002 (expected `BLOCKED`), on a calibration fixture with real base-red evidence (the positive staged-PR check), and on spec 003. Plus a post-merge smoke run proving `/speckit-implement` is blocked without a test list and drives the loop with one.
 
 ## Lane
 
@@ -26,7 +26,7 @@ Install spec-kit-tdd v2.0.1, which adds four commands: setup, plan, run and veri
 
 ## Technical Context
 
-**Language/Version**: Node.js ESM (`.mjs`), the same as `.fork/ci/`. Local and CI use Node 26. The adapter needs Node ≥ 22.8 for `--test-isolation=none` (research R5); it is fork tooling, not an upstream recipe. The extension itself is Markdown prompts.
+**Language/Version**: Node.js ESM (`.mjs`), the same as `.fork/ci/`. Local and CI use Node 26. The adapter requires **Node ≥ 26**: that's the only version its `--test-isolation=none` and `--test-reporter=spec` behavior was verified on (research R5). It's fork tooling, not an upstream recipe. The extension itself is Markdown prompts.
 
 **Primary Dependencies**: none new in code. The adapter imports `.fork/ci/lib/runtimes.mjs` (`scanRuntimes`) and `exec.mjs` (`runCommand`). The extension spec-kit-tdd v2.0.1 (MIT) is installed with `specify extension add --dev`.
 
@@ -72,7 +72,7 @@ Install spec-kit-tdd v2.0.1, which adds four commands: setup, plan, run and veri
 ```text
 specs/003-tdd-extension/
 ├── plan.md                # This file
-├── research.md            # Phase 0: R1–R13
+├── research.md            # Phase 0: R1–R14
 ├── data-model.md          # Phase 1: TddTarget, RuntimeCommand, TddStatus, OverrideFile, profile
 ├── quickstart.md          # Phase 1: validation run guide
 ├── contracts/
@@ -82,7 +82,10 @@ specs/003-tdd-extension/
 │   └── fork-ci-tdd-status.md     # advisory section in the verdict summary
 ├── tdd/                   # written by hand, in the extension's format (R11)
 │   ├── test-list.md
-│   └── cycle-log.md
+│   ├── cycle-log.md
+│   └── cycle-log.d/       # per-stream fragments during parallel work (R14)
+├── evidence/              # r1-verify.md (install check), smoke.md
+├── calibration/staged-fixture/   # post-merge positive check of the staged-PR override
 ├── checklists/requirements.md
 └── tasks.md               # /speckit-tasks output
 ```
@@ -94,19 +97,22 @@ specs/003-tdd-extension/
 ├── bin/tdd.mjs                   # NEW adapter CLI: where | single | file | suite
 ├── bin/verdict.mjs               # EDIT: render the advisory TDD status
 ├── lib/tdd-target.mjs            # NEW: feature → {tree, folder}
-├── lib/tdd-commands.mjs          # NEW: runtime → argv, plus the zero-match guard
+├── lib/tdd-commands.mjs          # NEW: buildCommand (runtime → argv, cwd), parsers, zero-match guard
+├── lib/tdd-env.mjs               # NEW: childEnv (credential blanking, FR-016)
 ├── lib/tdd-status.mjs            # NEW: PR head ref → feature → artifact status
 ├── lib/report.mjs                # EDIT: "TDD status (advisory)" section
 ├── test/tdd-target.test.mjs      # NEW
 ├── test/tdd-commands.test.mjs    # NEW
 ├── test/tdd-cli.test.mjs         # NEW: end to end against fixture trees
 ├── test/tdd-status.test.mjs      # NEW
+├── test/tdd-env.test.mjs         # NEW
 ├── test/tdd-overrides.test.mjs   # NEW: override drift pin (R8)
+├── test/tdd-docs.test.mjs        # NEW: US4 statements (A13, A14)
 └── README.md                     # EDIT: adapter + advisory docs
 .github/workflows/fork-ci.yml     # EDIT: pass HEAD_REF to the verdict step
 .specify/
 ├── extensions/tdd/               # INSTALLED (specify extension add --dev), never edited
-├── extensions.yml                # UPDATED by the installer (3 hooks)
+├── extensions.yml                # UPDATED by the installer (4 tdd hooks)
 ├── memory/tdd-profile.md         # NEW: verified profile
 ├── memory/constitution.md        # AMEND: Principle IV (1.2.0 → 1.3.0)
 ├── templates/overrides/tdd-test-quality-rubric.md   # NEW
@@ -128,3 +134,5 @@ No constitution violations. Two deliberate trade-offs are recorded in research:
 
 - **R11**: the feature hand-follows the loop instead of letting the extension drive it.
 - **R12**: landing a fork-only PR uses the admin bypass for `OB1 Review`.
+- **Test placement**: `.fork/ci/test/` also holds the override drift test and the docs test, although they cover `.specify/` files. Those files have no runner of their own, and `.fork/ci/test/` is the fork tooling's suite that CI already runs.
+- **Constitution bump is MINOR**: Principle IV isn't redefined. Its rule ("a failing test committed or demonstrably run red") is kept; the amendment names the cycle log as the form that evidence takes and adds the enforcement hook.

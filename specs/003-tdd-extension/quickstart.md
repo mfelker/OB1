@@ -8,7 +8,7 @@ cd "$W"
 
 ## Prerequisites
 
-- Node ≥ 22.8 (26 locally and in CI). `deno` and `python3` with `pytest` are needed only for the runtime checks in §3.
+- Node ≥ 26 (the adapter refuses older versions). `deno` and `python3` are needed only for their runtimes; the adapter provisions pytest in a cached venv.
 - `.specify/feature.json` points to `specs/003-tdd-extension` (in the checkout being tested).
 
 ## 1. The installed extension matches the reviewed release (FR-001)
@@ -21,7 +21,7 @@ grep -n 'speckit.tdd' .specify/extensions.yml
 **Expected**:
 
 - Hooks are registered: `after_tasks` (optional), `before_implement` (**optional: false**), `after_implement` (optional), `after_converge` (optional).
-- The verification log from research R1 shows 0 differing files and records the zip's SHA-256.
+- `specs/003-tdd-extension/evidence/r1-verify.md` shows 0 differing files and records the zip's SHA-256.
 
 ## 2. The adapter resolves the right tree and folder (US2)
 
@@ -72,15 +72,18 @@ Read `.specify/memory/constitution.md` Principle IV (v1.3.0), `.fork/README.md` 
 
 **Expected**: they name the cycle log as red evidence, the test list as the source of test tasks, the staged base-red rule, and how to disable the mandatory hook. `/speckit-analyze` reports 0 contradictions.
 
-## 7. Calibration (US5, FR-013)
-
-From `$M`, after the merge, run the extension's verify command on spec 002, then on spec 003:
+## 7. Calibration and smoke (US1, US5, FR-013), after the merge, from `$M`
 
 ```bash
-# /speckit-tdd-verify 002-stage-pr-532-atomizer-default   then   /speckit-tdd-verify 003-tdd-extension
+cd "$M"   # spec-kit commands run from the fork-main checkout (constitution)
 ```
 
-**Expected**:
+1. **Spec 002**: switch `.specify/feature.json` to 002 and recreate its worktree. The verify procedure (a fresh subagent) should give **`BLOCKED`**, reason "no test list".
+2. **Calibration fixture** (`specs/003-tdd-extension/calibration/staged-fixture/`): its cycle log holds real base-red runs. Verify should give C1 and K4 `PROVEN` and C3 `TEST_AFTER` (contracts/staged-evidence-override.md).
+3. **Spec 003**: verify should give `PASS` or `PASS_WITH_GAPS`, with no fork-integration gaps.
+4. **Smoke**, on a throwaway fork feature:
+   - `/speckit-implement` with no test list must stop with "plan the test list first".
+   - With a one-behavior list, it must drive one recorded cycle.
+   - Remove the throwaway afterwards and record the result in `specs/003-tdd-extension/evidence/smoke.md`.
 
-- Each run writes a `specs/<feature>/tdd/verification.md` with a verdict.
-- On spec 002, C1 and K4 are classified per the override (contract S1). Every other finding is either justified by the evidence, or a fork-integration gap that this feature fixes before it's considered done.
+Switch `.specify/feature.json` back to 003 afterwards, and confirm with `node .fork/ci/bin/tdd.mjs where`.

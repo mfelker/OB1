@@ -16,7 +16,7 @@
 | **Branch** | `fork/tdd-extension` |
 | **Base** | fork `main` |
 | **Category** | N/A: fork-only tooling (`.specify/`, `.fork/`, `specs/`, `.claude/skills/`) |
-| **Contribution folder** | N/A. Fork-only paths, never offered upstream |
+| **Contribution folder** | `.fork/ci` (the adapter and fork-ci code and tests). Other fork-only paths are edited too; all are never offered upstream |
 | **Upstream PR** | N/A (fork-only) |
 | **Requires** | The spec-kit-tdd extension v2.0.1 (MIT, `d0whc3r/spec-kit-tdd`) and spec-kit ≥ 0.12.17 (installed: 1.4.4) |
 
@@ -109,7 +109,7 @@ Before the extension gates a new feature, the audit is run on spec 002, a comple
 - **Docs-only feature** (no behaviors): the mandatory hook doesn't block. The test list records zero behaviors with a reason, and implement proceeds.
 - **A contribution folder with several runtimes** (for example Deno plus a Node script): each command targets the runtime that owns the file, as fork-ci does.
 - **A red baseline suite** in the target folder: the loop refuses to start and reports the failing tests (the extension's own rule). Pre-existing failures in upstream code are reported, not fixed.
-- **A test that needs credentials or network**: it's reported as a constraint in the profile and never run live by the loop. This is the `test-atomize.mjs` lesson.
+- **A test that needs credentials or network**: the adapter blanks credential variables for every run (FR-016), so a script like `test-atomize.mjs` takes its skip path. It is also recorded as a profile constraint.
 - **A feature started before adoption** (specs 001 and 002): existing work isn't re-gated. Only calibration reads spec 002.
 - **The mandatory hook needs to be off temporarily**: it can be disabled explicitly and visibly in `.specify/extensions.yml`, never by deleting the extension.
 - **A PR that touches more than one feature's files, or none** (an upstream sync, a fork-only docs PR): fork-ci reports each linked feature's TDD status, or "no feature linked". The advisory never blocks (FR-014).
@@ -121,19 +121,26 @@ Before the extension gates a new feature, the audit is run on spec 002, a comple
 
 - **FR-001**: The fork MUST install the spec-kit-tdd extension at exactly version 2.0.1 from its release archive, and MUST verify before installing that the archive's commands and templates match the reviewed source.
 - **FR-002**: The extension's mandatory pre-implementation hook MUST be active, so `/speckit-implement` drives the feature's behaviors through the red-green loop before implementing anything else.
-- **FR-003**: The extension's optional post-tasks hook (derive the test list) and post-implementation hook (audit) MUST be registered and offered.
+- **FR-003**: All four of the extension's hooks MUST be registered: `after_tasks` (derive the test list, optional), `before_implement` (the loop, **mandatory**), `after_implement` (audit, optional) and `after_converge` (extend the test list, optional).
 - **FR-004**: The fork MUST provide an adapter that the extension's profile commands call. It resolves the active feature (from spec-kit's feature pointer and that feature's plan) to a working tree (the plan's worktree, or the fork-`main` checkout for fork features) and a contribution folder.
 - **FR-005**: The adapter MUST support "single test by file and name", "one file", and "the folder's suite". It MUST select the runner with the same runtime detection fork-ci uses.
 - **FR-006**: The adapter's single-test command MUST report zero tests and exit non-zero when the name matches nothing.
-- **FR-007**: The adapter MUST fail with an explicit message, and never fall back to another folder or tree, when the feature, worktree, folder or runtime cannot be resolved.
+- **FR-007**: The adapter MUST fail with an explicit message, and never fall back to another folder or tree, when the feature, worktree, folder or runtime cannot be resolved. A feature whose lane is not `fork feature` MUST name a worktree; only a fork feature may use the fork-`main` checkout. Every file path, however given, MUST resolve inside the target tree.
 - **FR-008**: The adapter MUST have its own automated tests in the fork's CI test suite, written test-first. This feature dogfoods the loop where the extension can already run on fork-only code.
 - **FR-009**: The fork MUST hold a verified test profile for the extension that records only commands actually executed, and records the known constraints: no repo-wide runner, live-credential scripts, Deno and Python availability.
 - **FR-010**: The fork MUST provide template overrides, using the extension's override mechanism and never editing the installed extension, that let staged-PR behaviors count as test-first when the cycle log records a red against the PR base and a green at the PR head. Without that evidence they stay test-after.
 - **FR-011**: Constitution Principle IV MUST be amended to name the cycle log as the red evidence (fork and upstream-bound lanes) and red-against-PR-base as the staged-PR evidence, with a version bump and sync report.
 - **FR-012**: The runbook (`.fork/README.md`) and the tasks template MUST describe the extension workflow (test list, loop, audit) for all three lanes, including how to disable the mandatory hook explicitly.
-- **FR-013**: The audit MUST be run on spec 002 as calibration. Its report MUST be kept, and every finding caused by a fork-integration gap (adapter or override) MUST be fixed within this feature.
-- **FR-014**: fork-ci MUST report, **advisory only**, the TDD artifact status for each PR into fork `main` whose changes belong to a spec-kit feature: whether the feature's cycle log and audit report exist, and the audit verdict (PASS / PASS_WITH_GAPS / FAIL / BLOCKED / missing). It MUST appear in the verdict summary and MUST NOT change `fork-ci-verdict`'s pass/fail outcome. A PR whose feature can't be identified is reported as "no feature linked", not as a failure. *(Clarified 2026-11-25, Q1 option B: advisory now. Making it blocking for `stage/`/`contrib/` PRs is a possible later follow-up once calibration (US5) has proven the audit fair.)*
-- **FR-015**: The feature MUST change only fork-only paths (`.specify/`, `.fork/`, `specs/`, `.claude/skills/`, `.github/workflows/fork-*`). No upstream-tracked file may change.
+- **FR-013**: Calibration MUST run **after the merge, from the fork-`main` checkout** (constitution: spec-kit commands run there). It covers three targets:
+  - **Spec 002**: it has no test list, so the expected verdict is `BLOCKED`, and the report must say why.
+  - **A calibration fixture**: a small staged-lane feature whose cycle log records a **real** base-red and head-green for spec 002's C1 and K4 tests. It is the positive test of FR-010 (expected `PROVEN` for both), plus one behavior without base-red (expected `TEST_AFTER`).
+  - **Spec 003 itself**.
+  
+  Every report MUST be kept. Every finding caused by a fork-integration gap (adapter or override) MUST be fixed within this feature, through a follow-up fork PR if it is found after the merge.
+- **FR-014**: fork-ci MUST report, **advisory only**, the TDD artifact status for each PR into fork `main` whose changes belong to a spec-kit feature: whether the feature's cycle log and audit report exist, and the audit verdict (PASS / PASS_WITH_GAPS / FAIL / BLOCKED / missing). Verdict values are `PASS`, `PASS_WITH_GAPS`, `FAIL`, `BLOCKED`, `missing` and `unreadable`. It MUST appear in the verdict summary and MUST NOT change `fork-ci-verdict`'s pass/fail outcome, **even when computing the status fails** (an error is reported as a one-line advisory). A PR whose feature can't be identified is reported as "no feature linked", not as a failure. *(Clarified 2026-11-25, Q1 option B: advisory now. Making it blocking for `stage/`/`contrib/` PRs is a possible later follow-up once calibration (US5) has proven the audit fair.)*
+- **FR-015**: The feature MUST change only fork-only paths (`.specify/`, `.fork/`, `specs/`, `.claude/skills/speckit-*`, `.github/workflows/fork-*`). No upstream-tracked file may change.
+- **FR-016**: Every test process the adapter starts MUST run with credential variables blanked: known provider keys, and any variable ending in `_API_KEY`, `_TOKEN`, `_SECRET` or `_SERVICE_ROLE_KEY`, set to the empty string so they also override `.env.local` files. The loop can never make a live call through a recipe's sanity script.
+- **FR-017**: The suite command MUST treat an empty baseline as green with a notice, so the loop can start. That covers a folder with no tests yet (`no-tests`), a docs-only folder (`exempt`), and a contribution folder that doesn't exist yet in the tree. Any other non-pass outcome is red.
 
 ### Testing Requirements *(mandatory)*
 
@@ -144,6 +151,8 @@ Before the extension gates a new feature, the audit is run on spec 002, a comple
   - Single test on a known name, and a zero-match name reported as non-zero (FR-006).
   - Suite counts.
   - Overrides: staged-PR classification with and without base-red evidence (FR-010). This one is verified by the calibration run, since the overrides are prompt text.
+  - Credential blanking for every child (FR-016), and empty-baseline handling (FR-017).
+  - Documentation statements required by US4, checked by an automated test.
   - fork-ci advisory TDD status (FR-014): artifacts present, missing, each verdict value, "no feature linked", and that `fork-ci-verdict`'s outcome is unchanged in every case.
 - **Existing test coverage**: fork-ci's `lib/` (101 tests) covers runtime detection, which the adapter reuses. There's no coverage yet for feature resolution.
 
@@ -153,7 +162,7 @@ Before the extension gates a new feature, the audit is run on spec 002, a comple
 
 - **SC-001**: 100% of features implemented after adoption have a cycle log with a recorded red for every behavior, or an explicit test-after admission.
 - **SC-002**: 0 behavioral tasks in features implemented after adoption are completed by the normal implement step instead of the loop.
-- **SC-003**: The adapter runs the correct folder in the correct tree in 100% of tested cases, including all five fork-ci runtimes, and never reports a green for a test name that matches nothing.
+- **SC-003**: The adapter runs the correct folder in the correct tree in 100% of tested cases, including all five fork-ci runtimes, and meets FR-006 in every case.
 - **SC-004**: The calibration audit on spec 002 produces a verdict with 0 findings caused by fork-integration gaps once this feature lands.
 - **SC-005**: The constitution, runbook and tasks template contain 0 statements that contradict the extension workflow (checked by `/speckit-analyze`).
 - **SC-006**: Adoption adds no more than one extra command to the owner's per-feature workflow beyond `/speckit-implement`. The loop and audit run through hooks.
@@ -165,6 +174,6 @@ Before the extension gates a new feature, the audit is run on spec 002, a comple
 - Hooks run automatically (`auto_execute_hooks: true` in `.specify/extensions.yml`), so the mandatory pre-implementation hook really blocks test-after implementation in agent sessions.
 - Mutation tooling is absent for most contribution folders, and the fork won't add dependencies to upstream folders. The audit uses its deliberate-mutant fallback.
 - The adapter reuses fork-ci's existing runtime detection rather than duplicating it, so fork-ci and the TDD loop can't disagree about which runner owns a file.
-- Specs 001 and 002 aren't retrofitted with test lists. Spec 002 is only read for calibration.
+- Specs 001 and 002 aren't retrofitted with test lists. Spec 002 is only read for calibration, where its expected verdict is `BLOCKED` (no test list). The positive staged-PR check uses a separate calibration fixture (FR-013).
 - The extension writes per-feature artifacts (`tdd/test-list.md`, `tdd/cycle-log.md`, `tdd/verification.md`) inside `specs/<feature>/`, which is fork-only and stays on fork `main`.
 - Deferred: the fork-ci "manual scripts" mechanism from spec 002 is a separate feature. The adapter only needs to record live-credential scripts as constraints.

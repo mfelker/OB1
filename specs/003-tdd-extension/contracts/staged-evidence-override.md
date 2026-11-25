@@ -29,4 +29,9 @@ Never commit a base checkout. If the test still passes at the base, it doesn't d
 
 ## Calibration expectation (US5)
 
-On spec 002, behaviors C1 (default model) and K4 (CLI default model) have a recorded base-red, in `evidence/r532-red.txt` and copied into the PR #15 body, so they classify as S1. Their cycle-log equivalent is reconstructed only from that recorded output, never invented. Spec 002 has no cycle log, so the audit is expected to note "evidence in a non-standard location". The calibration report states this rather than counting it as a fork-integration gap.
+Calibration runs after the merge, from the fork-`main` checkout (research R11).
+
+- **Spec 002** has no test list and no cycle log, and it isn't retrofitted. The expected verdict is **`BLOCKED`** (the rubric's "the feature has no test list"). The report must say so. Its out-of-format evidence (`evidence/r532-red.txt`) is noted but is not converted into a cycle log.
+- **The calibration fixture** `specs/003-tdd-extension/calibration/staged-fixture/` is the positive test of this contract. Its lane is staged, and its plan's Worktree is the recreated 002 worktree. Its cycle log is produced by **really running** the base-red procedure above for 002's tests `C1 anthropic default model is claude-sonnet-5-5` and `K4 anthropic CLI with key requests the default model (stubbed)`, and it records one more behavior (C3) with a head-green only.
+  - Expected: C1 and K4 classify as **S1 → PROVEN**, and C3 as **S2 → TEST_AFTER**.
+  - Any other result is a fork-integration gap.

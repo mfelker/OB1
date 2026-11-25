@@ -20,7 +20,7 @@ stacks:
     property: null
     approval: null
     contract: null
-    test_glob: "**/*.test.mjs | **/test-*.mjs | **/*_test.ts | **/test_*.py | tests/verify.sql (fork-ci TEST_PATTERNS)"
+    test_glob: "**/*.{test,spec}.{ts,tsx,js,mjs,cjs} | **/*_test.{ts,js,mjs} | **/test-*.mjs | **/test_*.py | **/*_test.py | tests/verify.sql"  # = fork-ci TEST_PATTERNS
     exemplar:
       unit: .fork/ci/test/runtimes.test.mjs
     helpers:
@@ -28,7 +28,7 @@ stacks:
       - .fork/ci/test/helpers/
 verified: [single, file, suite]
 suite_baseline: green
-suite_seconds: <observed for the target folder>
+suite_seconds: <observed>  # per target; the body names the measured target
 ```
 
 **The body MUST state these:**
@@ -36,10 +36,13 @@ suite_seconds: <observed for the target folder>
 1. **Target resolution**: commands act on the active feature's plan Worktree and Contribution folder (contracts/tdd-adapter-cli.md). Switch the feature with `.specify/feature.json`, never by editing the profile.
 2. **Conventions**:
    - Imitate the target folder's existing tests first.
-   - Otherwise use the per-runtime exemplars: node-plain `recipes/atomizer/atomize-text.test.mjs` (fetch stub, `runScript` helper), Python `integrations/hermes-agent-memory/tests/`, fork tooling `.fork/ci/test/`.
+   - Otherwise use the per-runtime exemplars: node-plain `recipes/atomizer/atomize-text.test.mjs` (fetch stub, `runScript` helper), Python `integrations/hermes-agent-memory/plugin/tests/test_ob1_provider.py`, fork tooling `.fork/ci/test/`.
 3. **Constraints**:
    - There's no repo-wide runner.
-   - Live-credential scripts (for example `recipes/atomizer/test-atomize.mjs`) are run only with empty keys.
+   - Credential variables are blanked by the adapter for every run (FR-016), so live scripts such as `recipes/atomizer/test-atomize.mjs` take their skip path.
+   - Every `suite` run installs dependencies (npm, pip): it's networked and slow. Changed lockfiles are restored.
+   - Shell quoting: the caller must escape `"`, `$` and backticks in `{name}`.
+   - `suite_seconds` varies per target; the body records which target was measured.
    - Deno and Python must be installed locally for their folders.
    - There's no mutation tool, so the audit uses deliberate mutants.
    - Never add dependencies to upstream folders.
