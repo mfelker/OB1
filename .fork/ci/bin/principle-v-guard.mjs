@@ -5,6 +5,8 @@ import { join } from 'node:path';
 
 const lib = async name => import(new URL(`../lib/${name}`, import.meta.url));
 
+const REFUSED = 'The write was refused; fix the guard or run it by hand: node .fork/ci/bin/principle-v-guard.mjs --hook';
+
 const denyJson = reason =>
   JSON.stringify({ hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'deny', permissionDecisionReason: reason } });
 
@@ -19,5 +21,5 @@ try {
   const d = decide({ relPath, ...state, upstream });
   if (!d.allowed) console.log(denyJson(`${d.reason} ${d.suggestion}`));
 } catch (e) {
-  console.log(denyJson(`principle-v-guard failed: ${e.message}`));
+  console.log(denyJson(`principle-v-guard failed: ${e.message}. ${REFUSED}`));
 }

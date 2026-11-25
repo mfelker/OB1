@@ -50,3 +50,12 @@
 - green: `.fork/ci/bin/principle-v-guard.mjs:17` target is `tool_input.file_path ?? tool_input.notebook_path`; `repoRelative` already resolves a relative path against the input `cwd`. Suite `node --test .fork/ci/test/` -> 184 passed, 0 failed, 4 todo
 - refactor: none needed
 - commit: (this commit)
+
+## Cycle: U23 --hook fails closed on unparseable stdin
+
+- test: `.fork/ci/test/principle-v-guard.test.mjs::U23 --hook with unparseable stdin prints the principle-v-guard failed deny and exits 0` (new)
+- red: `node --test --test-name-pattern="^U23 " .fork/ci/test/principle-v-guard.test.mjs`
+  -> `AssertionError [ERR_ASSERTION]: The input did not match the regular expression /The write was refused; fix the guard or run it by hand: node \.fork\/ci\/bin\/principle-v-guard\.mjs --hook/` with ``actual: `principle-v-guard failed: Unexpected token 'o', "not json" is not valid JSON` `` (1 failed)
+- green: `.fork/ci/bin/principle-v-guard.mjs` the catch appends the contract's `The write was refused; fix the guard or run it by hand: ...` text (`REFUSED`); the prefix, deny shape and exit 0 already came from the top-level `try`/`catch`. Suite `node --test .fork/ci/test/` -> 185 passed, 0 failed, 4 todo
+- refactor: none needed
+- commit: (this commit)

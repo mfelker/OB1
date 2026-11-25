@@ -44,3 +44,14 @@ test('U22 --hook reads tool_input.notebook_path when there is no file_path, reso
   }));
   assert.match(reason, /^CLAUDE\.md: constitution Principle V/);
 });
+
+const failedReason = r => {
+  const reason = denyReason(r);
+  assert.match(reason, /^principle-v-guard failed: /);
+  assert.match(reason, /The write was refused; fix the guard or run it by hand: node \.fork\/ci\/bin\/principle-v-guard\.mjs --hook/);
+  return reason;
+};
+
+test('U23 --hook with unparseable stdin prints the principle-v-guard failed deny and exits 0', () => {
+  failedReason(guard(guardRepo(), '--hook', 'not json'));
+});
