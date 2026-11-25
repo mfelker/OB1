@@ -267,6 +267,7 @@ jobs:
           EVENT: ${{ github.event_name }}
           PUSH_BEFORE: ${{ github.event.before }}
           PUSH_AFTER: ${{ github.sha }}
+          HEAD_REF: ${{ github.head_ref }}
         run: |
           mkdir -p ci-results
           set --

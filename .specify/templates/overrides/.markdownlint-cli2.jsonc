@@ -1,0 +1,7 @@
+// Fork-only: these overrides must stay byte-identical to the vendored spec-kit-tdd
+// base templates outside the delimited fork section (pinned by
+// .fork/ci/test/tdd-overrides.test.mjs), so they are exempt from lint like
+// .specify/extensions.
+{
+  "config": { "default": false }
+}

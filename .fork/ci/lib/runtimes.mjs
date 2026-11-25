@@ -5,7 +5,7 @@ import { join, posix } from 'node:path';
 const SKIP_DIRS = new Set(['node_modules', '.git', '__pycache__', '.venv', 'venv', '.deno']);
 const CODE_EXT = /\.(ts|tsx|js|mjs|cjs|py|svelte)$/;
 const NOT_CODE = [/\.d\.ts$/, /\.config\.(js|mjs|cjs|ts)$/];
-const TEST_PATTERNS = {
+export const TEST_PATTERNS = {
   deno: /(_test|\.test|\.spec)\.(ts|tsx|js|mjs)$/,
   'node-script': /(\.(test|spec)\.(ts|tsx|js|mjs|cjs)$)|(^test-[^/]*\.mjs$)/,
   'node-plain': /(\.(test|spec)\.(ts|tsx|js|mjs|cjs)$)|(^test-[^/]*\.mjs$)/,

@@ -1,0 +1,5 @@
+// Fork-only: spec-kit extensions are vendored third-party content (verified at install,
+// overwritten on upgrade, never edited); exempt from lint like .claude/skills.
+{
+  "config": { "default": false }
+}

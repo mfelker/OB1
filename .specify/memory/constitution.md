@@ -1,5 +1,23 @@
 <!--
 Sync Impact Report
+- Version: 1.2.0 → 1.3.0 (MINOR: spec-kit-tdd adoption, spec 003. Principle IV's rule "a
+  failing test committed or demonstrably run red" is unchanged; the amendment names the
+  evidence form and the enforcement)
+  - Modified principles: IV. Test-First (tdd/cycle-log.md is the red evidence for the fork and
+    upstream-bound lanes; staged base-red rule via .specify/templates/overrides/; mandatory
+    before_implement hook as enforcement; disabling needs enabled: false plus a reason in the plan)
+  - Modified sections: Quality Gates (Gate 1 includes a speckit.tdd.verify PASS or
+    PASS_WITH_GAPS; fork-ci TDD status is advisory). Lanes & Branching unchanged: spec-kit
+    commands still run only from the fork-`main` checkout
+  - Added/removed sections: none
+  - Templates: tasks-template.md ✅ (hook-added [U#]/[A#] markers, no hand-ticking, tdd.verify
+    in the pre-merge gate, staged base-red step); plan-template.md ✅ (real Worktree and
+    Contribution folder values, read by the adapter); spec-template.md unchanged ✅
+  - Fork-only docs: .fork/README.md ✅ (TDD workflow section, staging steps 3–5, extension
+    version record); .fork/ci/README.md ✅ (bin/tdd.mjs, TDD status advisory)
+  - Follow-up: post-merge calibration and smoke run of the loop (spec 003 T030–T032)
+  - Exception: spec 003 itself merges under a one-time Gate 1 bootstrap exemption (audit FAIL
+    recorded in its tdd/verification.md; rationale in its plan.md Complexity Tracking)
 - Version: 1.1.0 → 1.2.0 (MINOR: every staged upstream PR is its own spec-kit feature)
   - Modified principles: IV. Test-First (staged-PR lane rule references its feature's tasks),
     VII. Sync Discipline (new staged-PR-as-feature rule; staged PRs land via fork PR, not --no-ff)
@@ -83,11 +101,27 @@ contract can go upstream unchanged.
 The fork enforces TDD more strictly than upstream. Rules by lane (see Lanes & Branching):
 
 - **Fork features and upstream-bound features**: red-green-refactor. A failing test MUST be
-  committed (or demonstrably run red) before the implementation that makes it pass.
+  committed (or demonstrably run red) before the implementation that makes it pass. The red
+  evidence for fork features and upstream-bound features is the feature's
+  `tdd/cycle-log.md`: one entry per cycle with the test, the red command and its decisive
+  failure line, the green, and the commit, recorded by the spec-kit-tdd loop
+  (`speckit.tdd.run`). A behavior with no recorded red in the cycle log counts as test-after.
 - **Staged upstream PRs**: the code already exists, so the rule is "tests before merge", and
   those tests are tasks in the staged PR's own spec-kit feature (Principle VII). Tests
   covering the PR's changed behavior MUST be written and passing before the PR is merged into
   fork `main`. If the PR has no tests, the owner writes them.
+- **Staged base-red rule**: for a staged PR, test-first evidence is a red recorded at the PR
+  base (`git merge-base HEAD upstream/main`, with only the PR-changed source files checked out
+  at the base) plus a green at the PR head, both in the cycle log. A green at the head alone
+  is test-after. The procedure and the evidence classification live in the fork's template
+  overrides in `.specify/templates/overrides/`, which apply only when the plan's Lane is
+  "staged upstream PR".
+- **Enforcement**: the spec-kit-tdd extension's mandatory `before_implement` hook
+  (`speckit.tdd.run`, `optional: false`) makes `/speckit-implement` drive every behavior on the
+  feature's `tdd/test-list.md` through the loop before anything else, and stops when there is
+  no test list. Disabling the hook requires setting `enabled: false` on it in
+  `.specify/extensions.yml` and stating the reason in the feature's plan (Complexity Tracking);
+  a disabled hook without a stated reason is a Principle IV violation.
 - Tests MUST live **inside the contribution folder** they cover so they stay within upstream's
   scope check and can be offered back upstream.
 - Docs-only changes (README, skills prose, primitives) are exempt from unit tests but MUST
@@ -210,7 +244,9 @@ mocked or stubbed, following `server/test-stateless.mjs` (no infra) as the model
 
 A change is mergeable into fork `main` only when all applicable gates pass:
 
-1. Tests for the lane pass (Principle IV), with evidence recorded in the PR/merge description.
+1. Tests for the lane pass (Principle IV), with evidence recorded in the PR/merge description,
+   and the feature's TDD audit (`speckit.tdd.verify`, written to `tdd/verification.md`) has
+   the verdict PASS or PASS_WITH_GAPS.
 2. `markdownlint-cli2 --config .github/.markdownlint.jsonc` passes on changed Markdown.
 3. `metadata.json` validates against `.github/metadata.schema.json`.
 4. Upstream gate rules 1–16 (CONTRIBUTING.md "The Automated Review Rules") are self-checked
@@ -231,6 +267,9 @@ deleted; they are enabled or disabled through repo settings only.
   any not listed as enabled above.
 - Upstream CI runs no contribution tests, so Principle IV is enforced by a fork-only workflow
   (`fork-ci`, fork-only file name), not by upstream CI.
+- fork-ci's "TDD status (advisory)" section shows each linked feature's cycle log, audit
+  report and audit verdict. It is **advisory**: it never changes `fork-ci-verdict`'s
+  conclusion. Gate 1's audit verdict is checked by the owner before merge, not by CI.
 
 ## Governance
 
@@ -245,4 +284,4 @@ deleted; they are enabled or disabled through repo settings only.
 - Re-run `/speckit-brownfield-validate` after upstream syncs that change `CONTRIBUTING.md`,
   `CLAUDE.md`, or `.github/metadata.schema.json`.
 
-**Version**: 1.2.0 | **Ratified**: 2026-11-24 | **Last Amended**: 2026-11-24
+**Version**: 1.3.0 | **Ratified**: 2026-11-24 | **Last Amended**: 2026-11-25

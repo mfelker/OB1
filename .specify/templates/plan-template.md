@@ -15,7 +15,19 @@
 **Lane**: [fork feature / upstream-bound feature / staged upstream PR #N]
 **Branch / Base**: [`fork/<desc>` from fork `main` | `contrib/mfelker/<desc>` from `upstream/main` | `stage/pr-<N>-<desc>` from `refs/pull/<N>/head`]
 **Contribution folder**: `[category]/[kebab-case-name]/`
-**Worktree** *(upstream-bound / staged)*: `[/absolute/path/to/worktree]` — all source paths in this plan and in tasks.md are rooted here; spec-kit commands still run from the fork-`main` checkout
+**Worktree**: [`/absolute/path/to/worktree` for upstream-bound and staged lanes, or none (fork-`main` checkout) for a fork feature done in place] — all source paths in this plan and in tasks.md are rooted here; spec-kit commands still run from the fork-`main` checkout
+
+<!--
+  REQUIRED, read by the TDD adapter (`node .fork/ci/bin/tdd.mjs`, see .fork/ci/README.md):
+  - Lane line: starts with one of "fork feature", "upstream-bound feature", "staged upstream PR #N".
+  - Worktree line: a real value. Either an absolute path in backticks (required for the
+    upstream-bound and staged lanes), or a value starting with "none", e.g.
+    "none (fork-`main` checkout)", for a fork feature done in place.
+  - Contribution folder line: a real repo-relative path in backticks (no leading "/", no "..").
+    A fork-only feature names its main code folder, e.g. `.fork/ci`. A value starting with
+    "N/A" is rejected.
+  Any line still containing "[" is an unfilled placeholder, and the adapter refuses to run.
+-->
 
 ## Technical Context
 
@@ -49,7 +61,7 @@
 - [ ] **I. Additive-only data** — no ALTER/DROP of existing `thoughts` columns; no DROP TABLE / DROP DATABASE / TRUNCATE / unqualified DELETE; RLS on new user-data tables
 - [ ] **II. Remote MCP only** — Edge Function + `@hono/mcp`; no stdio / `claude_desktop_config.json`; every tool annotated; secrets via env
 - [ ] **III. Contribution contract** — one `<category>/<kebab-name>/` folder from `_template/`; README (Prerequisites, numbered steps, Expected outcome, links resolve, tool-audit link if extension/integration); `metadata.json` valid against `.github/metadata.schema.json`; category artifacts present
-- [ ] **IV. Test-First** — runner chosen; tests inside the contribution folder; lane rule stated (red-green-refactor, or tests-green-before-merge for staged PRs); no live credentials
+- [ ] **IV. Test-First** — runner chosen; tests inside the contribution folder; lane rule stated (red-green-refactor with the red in `tdd/cycle-log.md`, or tests-green-before-merge with the red at the PR base for staged PRs); the mandatory `before_implement` TDD hook stays enabled, or Complexity Tracking states why it is `enabled: false`; no live credentials
 - [ ] **V. Lane separation** — upstream-bound branch cut from `upstream/main` and touches one folder only; no fork-only paths (`.specify/`, `specs/`, `.fork/`) on it; no edits to upstream-tracked files on fork `main` without justification
 - [ ] **VI. Security, content & licensing** — no secrets, no binaries >1 MB, no profanity, license-compatible deps
 - [ ] **VII. Sync discipline** — fork `main` synced with `upstream/main` before branching; staged PR recorded in `.fork/staged-prs.md`
