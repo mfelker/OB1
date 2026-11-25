@@ -42,3 +42,8 @@
 - green: `.fork/README.md` new "Principle V guard" section (both guards, refused/allowed, merge exception, `--no-verify`, `git config core.hooksPath .fork/githooks`). Suite `node --test .fork/ci/test/` -> 157 passed, 0 failed
 - refactor: none needed
 - commit: (this commit)
+
+## T018 document principle-v-guard CLI
+
+- docs only, no behavior: `.fork/ci/README.md` gained a "Principle V guard" section (`--hook`, `--staged`, exit codes, fail-closed) and the Layout rows. Suite `node --test .fork/ci/test/` -> 157 passed, 0 failed; markdownlint 0 issues.
+- commit: (this commit)

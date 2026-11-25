@@ -99,6 +99,19 @@ On `pull_request` runs, `bin/verdict.mjs` adds a "TDD status (advisory)" table t
 
 The section is **advisory**: it never changes `fork-ci-verdict`'s conclusion, its exit code or `verdict.json`. Contract: `specs/003-tdd-extension/contracts/fork-ci-tdd-status.md`.
 
+## Principle V guard (`bin/principle-v-guard.mjs`)
+
+Enforces constitution Principle V on the fork-`main` checkout. One CLI, two modes, both calling the same rule (`lib/principle-v.mjs`, with path and git helpers in `lib/principle-v-paths.mjs`). It is not called by CI. Wiring and the enable command are in `.fork/README.md`; contract: `specs/005-principle-v-guard/contracts/guards.md`.
+
+| Mode | Called by | Input | Exit codes and output |
+|------|-----------|-------|-----------------------|
+| `--hook` | Claude Code `PreToolUse` hook (`.claude/settings.json`) | one hook JSON object on stdin; target is `tool_input.file_path`, else `tool_input.notebook_path`, resolved against `cwd` | always exit 0. Allowed: no output. Denied: a `hookSpecificOutput` JSON with `permissionDecision: "deny"` and the reason plus suggestion |
+| `--staged` | git `pre-commit` hook (`.fork/githooks/pre-commit`) | the staged paths (`git diff --cached --name-only -z --no-renames`) | exit 0 and no output when every path is allowed; exit 1 with a header, one line per refused path and a `git commit --no-verify` note on stderr otherwise |
+
+**Fail closed.** Unparseable stdin, a matched tool with no target path, a library that fails to load, or any other exception is a refusal, never a pass: `--hook` prints the deny JSON with a reason starting `principle-v-guard failed:` (still exit 0, because a non-zero exit would let the write through); `--staged` exits 1 with `principle-v-guard failed:` on stderr.
+
+Run the hook by hand: `echo '{"tool_input":{"file_path":"README.md"},"cwd":"."}' | node .fork/ci/bin/principle-v-guard.mjs --hook`.
+
 ## Run locally
 
 ```bash
@@ -116,8 +129,8 @@ SQL verification needs `psql` and `PG*` environment variables pointing at a Post
 
 | Path | Contents |
 |------|----------|
-| `lib/` | Logic: `paths`, `changes`, `runtimes`, `exec`, `origin`, `verdict`, `report`, `bypass`, `self-test-needed`, `args`; TDD: `tdd-target`, `tdd-commands`, `tdd-env`, `tdd-status` |
-| `bin/` | CLIs called by the workflow: `detect`, `run-folder`, `verdict`, `self-test-needed` (contract: `specs/001-fork-ci/contracts/cli.md`); `tdd` is called by the TDD loop, not by CI |
+| `lib/` | Logic: `paths`, `changes`, `runtimes`, `exec`, `origin`, `verdict`, `report`, `bypass`, `self-test-needed`, `args`; TDD: `tdd-target`, `tdd-commands`, `tdd-env`, `tdd-status`; Principle V: `principle-v`, `principle-v-paths` |
+| `bin/` | CLIs called by the workflow: `detect`, `run-folder`, `verdict`, `self-test-needed` (contract: `specs/001-fork-ci/contracts/cli.md`); `tdd` is called by the TDD loop and `principle-v-guard` by the Claude Code and git hooks, not by CI |
 | `sql/bootstrap.sql` | Postgres bootstrap, drift-checked against `docs/01-getting-started.md` |
 | `test/` | `node:test` suites; fixtures are in-memory file maps (`fixtures.mjs`) so their sample tests are never picked up by `node --test` |
 
