@@ -72,3 +72,23 @@ test('U8 D5: each fork-only root is allowed, even with upstream null; .forkx is 
   assert.equal(notRoot.allowed, false);
   assert.equal(notRoot.rule, 'D7');
 });
+
+test('U9 D6: fork-only zones are allowed inside upstream folders; look-alikes and upstream files in a zone are denied', () => {
+  for (const relPath of ['.claude/settings.json', '.claude/skills/speckit-x/SKILL.md', '.github/workflows/fork-ci.yml']) {
+    const d = run({ relPath });
+    assert.equal(d.allowed, true, relPath);
+    assert.equal(d.rule, 'D6', relPath);
+    assert.equal(run({ relPath, upstream: null }).rule, 'D6', `${relPath} with upstream null`);
+  }
+  for (const relPath of ['.claude/settings.local.json', '.github/workflows/forked.yml']) {
+    const d = run({ relPath });
+    assert.equal(d.allowed, false, relPath);
+    assert.equal(d.rule, 'D8', relPath);
+  }
+  const inZoneUpstream = run({
+    relPath: '.claude/settings.json',
+    upstream: { files: new Set(['.claude/settings.json']), dirs: upstream.dirs },
+  });
+  assert.equal(inZoneUpstream.allowed, false);
+  assert.equal(inZoneUpstream.rule, 'D4');
+});

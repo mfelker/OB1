@@ -69,3 +69,12 @@
 - green: `.fork/ci/lib/principle-v.mjs:17` added the D5 allow when the first segment is in `FORK_ROOTS`, after D4 and before D7. Suite `node --test .fork/ci/test/` -> 160 passed, 0 failed
 - refactor: none needed
 - commit: (this commit)
+
+## Cycle: U9 D6: fork-only zones are allowed
+
+- test: `.fork/ci/test/principle-v.test.mjs::U9 D6: fork-only zones are allowed inside upstream folders; look-alikes and upstream files in a zone are denied` (new)
+- red: `node --test --test-name-pattern="^U9 " .fork/ci/test/principle-v.test.mjs`
+  -> `AssertionError [ERR_ASSERTION]: .claude/settings.json` with `actual: false, expected: true` (1 failed)
+- green: `.fork/ci/lib/principle-v.mjs:23` added the D6 allow via `isForkZone()` after D5 and before D7 (so D4 still wins for an upstream file in a zone, and `upstream: null` still allows zones). Suite `node --test .fork/ci/test/` -> 161 passed, 0 failed
+- refactor: none needed
+- commit: (this commit)
