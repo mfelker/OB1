@@ -14,9 +14,26 @@ test('true when fork-ci code or its workflow changed', () => {
 });
 
 test('false for other paths, including other fork-only paths', () => {
-  assert.equal(selfTestNeeded(['specs/001/spec.md', '.fork/README.md', 'recipes/a/index.ts']), false);
+  assert.equal(selfTestNeeded(['specs/001/spec.md', 'recipes/a/index.ts']), false);
   assert.equal(selfTestNeeded(['.github/workflows/ob1-gate-v2.yml']), false);
   assert.equal(selfTestNeeded([]), false);
+});
+
+test('U36 true for TDD overrides, the tdd extension, the constitution and .fork/README.md', () => {
+  for (const p of [
+    '.specify/templates/overrides/tdd-loop-playbook.md',
+    '.specify/extensions/tdd/templates/tdd-test-quality-rubric.md',
+    '.specify/memory/constitution.md',
+    '.fork/README.md',
+  ]) assert.equal(selfTestNeeded([p]), true, p);
+  for (const p of [
+    '.specify/templates/spec-template.md',
+    '.specify/extensions/other/x.md',
+    '.specify/extensions/tddx/x.md',
+    '.specify/memory/tdd-profile.md',
+    '.fork/README.md.bak',
+    'docs/.fork/README.md',
+  ]) assert.equal(selfTestNeeded([p]), false, p);
 });
 
 test('bin prints true/false for a push range', () => {

@@ -68,3 +68,13 @@ Appended to `tdd/cycle-log.md` by the integrator in merge order (research R14).
 - refactor: none needed
 - commit: (this commit)
 - notes: actionlint is not on PATH locally; it runs in CI's self-test job. No `verdict.json` is produced by `bin/verdict.mjs` today, so the contract's `verdict.json` invariant is covered by the exit code and summary comparison.
+
+## Cycle: U36 selfTestNeeded fires for the TDD overrides, extension, constitution and fork README
+
+- test: `.fork/ci/test/self-test-needed.test.mjs::U36 true for TDD overrides, the tdd extension, the constitution and .fork/README.md` (new; includes near-miss negatives such as `.specify/extensions/tddx/`, `.specify/memory/tdd-profile.md` and `.fork/README.md.bak`)
+- red: `node --test --test-name-pattern="U36" .fork/ci/test/self-test-needed.test.mjs`
+  -> `AssertionError [ERR_ASSERTION]: .specify/templates/overrides/tdd-loop-playbook.md` / `actual: false,` / `expected: true,` (1 failed)
+- green: `.fork/ci/lib/self-test-needed.mjs:5-10` adds the `.specify/templates/overrides/` and `.specify/extensions/tdd/` prefixes and the exact paths `.specify/memory/constitution.md` and `.fork/README.md`; the existing `.fork/ci/` and `fork-ci.yml` triggers are unchanged. Suite `node --test .fork/ci/test/` -> 111 passed, 0 failed
+- refactor: none needed (prefix and exact lists written at green)
+- commit: (this commit)
+- notes: deviation. The existing test `false for other paths, including other fork-only paths` asserted `.fork/README.md` -> `false`, which U36 explicitly supersedes. Only that one path was removed from its first assertion (`['specs/001/spec.md', '.fork/README.md', 'recipes/a/index.ts']` -> `['specs/001/spec.md', 'recipes/a/index.ts']`). The test name and its other assertions are unchanged, and the U36 test pins `.fork/README.md.bak` as still `false`.
