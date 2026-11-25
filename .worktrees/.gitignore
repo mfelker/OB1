@@ -1,0 +1,4 @@
+# Fork-only: git worktrees created by the spec-kit worktree extension
+# (/speckit-worktree-create) live here. Ignore everything except this file.
+*
+!.gitignore

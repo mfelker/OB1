@@ -1,5 +1,6 @@
 installed:
 - brownfield
+- worktree
 settings:
   auto_execute_hooks: true
 hooks:
@@ -11,4 +12,13 @@ hooks:
     priority: 10
     prompt: Scan this existing project to customize spec-kit configuration?
     description: Auto-scan project after spec-kit init to detect tech stack and conventions
+    condition: null
+  after_specify:
+  - extension: worktree
+    command: speckit.worktree.create
+    enabled: true
+    optional: true
+    priority: 10
+    prompt: Create an isolated worktree for this new feature?
+    description: Auto-spawn a worktree after a new feature is specified
     condition: null
