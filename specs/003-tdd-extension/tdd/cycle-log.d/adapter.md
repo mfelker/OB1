@@ -79,3 +79,13 @@
 - refactor: none needed
 - notes: a subdirectory of a work tree is also rejected (top-level must equal the named path); R3 says "must be a git work tree", read here as the work tree's root.
 - commit: (this commit)
+
+## Cycle: U10 Contribution folder grammar: placeholder, N/A before backticks, trailing / stripped, leading / or .. rejected
+
+- test: `.fork/ci/test/tdd-target.test.mjs::U10 Contribution folder grammar: placeholder, N/A before backticks, trailing / stripped, leading / or .. rejected` (new; includes the plan template's literal `[category]/[kebab-case-name]/` line and spec 001's literal "N/A. Fork infrastructure lives in `.fork/ci/` …" line)
+- red: `node --test --test-name-pattern="^U10 " .fork/ci/test/tdd-target.test.mjs`
+  -> `AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:` / `actual: undefined,` (1 failed)
+- green: `.fork/ci/lib/tdd-target.mjs:67` `parseFolder()`: a missing line, a `[` placeholder or an `N/A` prefix (checked before backticks) throws `plan has no Contribution folder (<plan>)` (adapter A4); otherwise the first backticked token with trailing `/` stripped; a leading `/` or a `..` segment throws. Suite `node --test .fork/ci/test/` -> 111 passed, 0 failed
+- refactor: none needed
+- notes: contract ambiguity resolved: the contract gives no message for a non-repo-relative folder, so it is `plan Contribution folder must be repo-relative: <folder>` (exit 2 like every TargetError). A value with no backticked token is treated as "no Contribution folder".
+- commit: (this commit)

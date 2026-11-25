@@ -143,3 +143,17 @@ test('U9 a Worktree not on disk, or not a git work tree, is an error', () => {
   const plainDir = realpathSync(mkdtempSync(join(tmpdir(), 'fork-tdd-plain-')));
   throwsTarget(featureRepo({ lane: 'staged upstream PR #1', worktree: `\`${plainDir}\`` }), {}, `worktree not found: ${plainDir}`);
 });
+
+test('U10 Contribution folder grammar: placeholder, N/A before backticks, trailing / stripped, leading / or .. rejected', () => {
+  const folderOf = value => resolveTarget({ repoRoot: featureRepo({ folder: value }), env: {} }).folder;
+  assert.equal(folderOf('`.fork/ci` (the adapter and fork-ci code and tests)'), '.fork/ci');
+  assert.equal(folderOf('`recipes/atomizer/`'), 'recipes/atomizer');
+  const NO_FOLDER = 'plan has no Contribution folder (specs/001-a/plan.md)';
+  // The plan template's literal line, and spec 001's literal line (N/A wins over its backticked `.fork/ci/`).
+  throwsTarget(featureRepo({ folder: '`[category]/[kebab-case-name]/`' }), {}, NO_FOLDER);
+  throwsTarget(featureRepo({ folder: 'N/A. Fork infrastructure lives in `.fork/ci/` plus `.github/workflows/fork-ci.yml`.' }), {}, NO_FOLDER);
+  throwsTarget(featureRepo({ folder: null }), {}, NO_FOLDER);
+  throwsTarget(featureRepo({ folder: 'somewhere in recipes' }), {}, NO_FOLDER);
+  throwsTarget(featureRepo({ folder: '`/etc/passwd`' }), {}, 'plan Contribution folder must be repo-relative: /etc/passwd');
+  throwsTarget(featureRepo({ folder: '`recipes/../..`' }), {}, 'plan Contribution folder must be repo-relative: recipes/../..');
+});

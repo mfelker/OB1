@@ -63,6 +63,19 @@ function workTree(path) {
   throw new TargetError(`worktree not found: ${path}`);
 }
 
+/** The repo-relative folder from the Contribution folder value (R3: placeholder, then N/A, then the first backticked token). */
+function parseFolder(value, planRel) {
+  const none = new TargetError(`plan has no Contribution folder (${planRel})`);
+  if (value === undefined || value.includes('[') || /^N\/A/i.test(value)) throw none;
+  const m = /`([^`]*)`/.exec(value);
+  if (!m || m[1].replace(/\/+$/, '') === '') throw none;
+  const folder = m[1].replace(/\/+$/, '');
+  if (folder.startsWith('/') || folder.split('/').includes('..')) {
+    throw new TargetError(`plan Contribution folder must be repo-relative: ${folder}`);
+  }
+  return folder;
+}
+
 /** @returns {{repoRoot:string, featureDir:string, lane:string, tree:string, folder:string, folderExists:boolean}} */
 export function resolveTarget({ repoRoot, env = process.env } = {}) {
   const dir = env.SPECIFY_FEATURE_DIRECTORY || featureJsonDir(repoRoot);
@@ -77,5 +90,6 @@ export function resolveTarget({ repoRoot, env = process.env } = {}) {
   }
   const lane = parseLane(planField(planText, 'Lane'), planRel);
   const tree = parseTree(planField(planText, 'Worktree'), repoRoot, planRel, lane);
-  return { repoRoot, featureDir, lane, tree };
+  const folder = parseFolder(planField(planText, 'Contribution folder'), planRel);
+  return { repoRoot, featureDir, lane, tree, folder };
 }
