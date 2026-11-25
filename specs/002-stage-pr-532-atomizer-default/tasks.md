@@ -217,7 +217,7 @@ description: "Tasks for staging upstream PR #532 (atomizer Anthropic default mod
   - Link the fork's test commits.
   - Offer the tests and the `test-atomize.mjs` skip (FR-011).
   - Then add "tests and test-atomize skip offered upstream" to the ledger Notes and commit.
-- [ ] T029 Clean up: from `/Users/mfelker/Projects/ob1`, run `git worktree remove .worktrees/stage-pr-532-atomizer-default`. Then mark T026–T029 `[X]` and commit on fork `main`.
+- [X] T029 Clean up: from `/Users/mfelker/Projects/ob1`, run `git worktree remove .worktrees/stage-pr-532-atomizer-default`. Then mark T026–T029 `[X]` and commit on fork `main`.
 
 ---
 
