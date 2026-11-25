@@ -33,3 +33,12 @@
 - green: `.fork/README.md` new "Domain knowledge" section (root, `CONTEXT.md`, topic documents, `adr/`). Suite `node --test .fork/ci/test/` -> 156 passed, 0 failed
 - refactor: none needed
 - commit: (this commit)
+
+## Cycle: A11 runbook documents both guards, the merge exception, --no-verify and the enable command
+
+- test: `.fork/ci/test/principle-v-docs.test.mjs::A11 .fork/README.md has a Principle V guard section covering both guards and how to enable them` (new)
+- red: `node --test --test-name-pattern="^A11 " .fork/ci/test/principle-v-docs.test.mjs`
+  -> `AssertionError [ERR_ASSERTION]: a "## Principle V guard" section is required in .fork/README.md` (1 failed)
+- green: `.fork/README.md` new "Principle V guard" section (both guards, refused/allowed, merge exception, `--no-verify`, `git config core.hooksPath .fork/githooks`). Suite `node --test .fork/ci/test/` -> 157 passed, 0 failed
+- refactor: none needed
+- commit: (this commit)

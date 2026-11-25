@@ -56,3 +56,18 @@ test('A10 .fork/README.md names .fork/domain-knowledge/ as the grill knowledge r
   assert.match(sec, /topic documents?/i, 'layout must list topic documents');
   assert.match(sec, /adr\//, 'layout must list adr/');
 });
+
+test('A11 .fork/README.md has a Principle V guard section covering both guards and how to enable them', () => {
+  const sec = section(readRequired('.fork', 'README.md'), '## Principle V guard');
+  assert.ok(sec, 'a "## Principle V guard" section is required in .fork/README.md');
+  assert.match(sec, /Principle V/, 'must name Principle V');
+  assert.match(sec, /PreToolUse/, 'must describe the agent guard (PreToolUse hook)');
+  assert.match(sec, /\.claude\/settings\.json/, 'must name the agent guard wiring');
+  assert.match(sec, /pre-commit/, 'must describe the commit guard (pre-commit hook)');
+  assert.match(sec, /\.fork\/githooks/, 'must name the commit guard wiring');
+  assert.match(sec, /allow/i, 'must say what is allowed');
+  assert.match(sec, /refus|den(y|ie)/i, 'must say what is refused');
+  assert.match(sec, /merge/i, 'must state the merge exception');
+  assert.match(sec, /--no-verify/, 'must name the --no-verify bypass');
+  assert.match(sec, /git config core\.hooksPath \.fork\/githooks/, 'must give the enable command');
+});
