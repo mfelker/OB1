@@ -121,7 +121,7 @@ description: "Tasks for adopting the spec-kit-tdd extension (spec 003)"
 
 ## Phase 3: Parallel streams (one subagent each, own worktree)
 
-- [ ] T007 From `M`, create the four stream worktrees: `git worktree add .worktrees/fork-tdd-<s> -b fork/tdd-extension-<s> fork/tdd-extension` for `s` ∈ {adapter, overrides, advisory, docs}. Then dispatch four subagents in parallel, each briefed with:
+- [X] T007 From `M`, create the four stream worktrees: `git worktree add .worktrees/fork-tdd-<s> -b fork/tdd-extension-<s> fork/tdd-extension` for `s` ∈ {adapter, overrides, advisory, docs}. Then dispatch four subagents in parallel, each briefed with:
   - its worktree and branch;
   - its tasks;
   - the TDD rules above;
@@ -134,29 +134,29 @@ description: "Tasks for adopting the spec-kit-tdd extension (spec 003)"
 
 **Independent Test**: `node --test .fork/ci/test/tdd-target.test.mjs .fork/ci/test/tdd-commands.test.mjs .fork/ci/test/tdd-env.test.mjs .fork/ci/test/tdd-cli.test.mjs` passes.
 
-- [ ] T008 [P] [US2] [U1] [U2] [U3] [U4] [U5] [U6] [U7] [U8] [U9] [U10] [U11] One cycle per behavior, in order:
+- [X] T008 [P] [US2] [U1] [U2] [U3] [U4] [U5] [U6] [U7] [U8] [U9] [U10] [U11] One cycle per behavior, in order:
   - Tests in `.fork/ci/test/tdd-target.test.mjs`, using temp-dir fixture repos built from in-memory maps (pattern: `.fork/ci/test/fixtures.mjs`), with real `git init` / `git worktree add` where U5 and U9 need a work tree.
   - Implement `.fork/ci/lib/tdd-target.mjs` (`resolveTarget`, `TargetError`), covering data-model.md `TddTarget.repoRoot`, `TddTarget.featureDir`, `TddTarget.lane`, `TddTarget.tree`, `TddTarget.folder` and `TddTarget.folderExists`, with the R3 grammar.
   - Include spec 001's literal Contribution folder line and the plan template's placeholder lines as U7/U10 cases.
-- [ ] T009 [P] [US2] [U12] [U13] [U14] [U15] [U16] [U17] [U18] [U19] [U20] One cycle per behavior:
+- [X] T009 [P] [US2] [U12] [U13] [U14] [U15] [U16] [U17] [U18] [U19] [U20] One cycle per behavior:
   - Tests in `.fork/ci/test/tdd-commands.test.mjs`.
   - Implement `.fork/ci/lib/tdd-commands.mjs` (`buildCommand`, `resolveFile`, parsers), covering data-model.md `RuntimeCommand.op`, `RuntimeCommand.kind`, `RuntimeCommand.argv`, `RuntimeCommand.cwd`, `RuntimeCommand.countParser` and `RuntimeCommand.unsupported`.
   - It reuses `scanRuntimes` and `runtime.command` from `.fork/ci/lib/runtimes.mjs`, without copying either.
   - The anchored name escapes the regex metacharacters ``\ ^ $ . * + ? ( ) [ ] { } |``.
-- [ ] T010 [P] [US2] [U21] One cycle: tests in `.fork/ci/test/tdd-env.test.mjs`; implement `.fork/ci/lib/tdd-env.mjs` `childEnv()` per data-model.md `ChildEnv`.
-- [ ] T011 [P] [US2] [U22] [U23] [U24] [U25] [U26] [U27] One cycle per behavior:
+- [X] T010 [P] [US2] [U21] One cycle: tests in `.fork/ci/test/tdd-env.test.mjs`; implement `.fork/ci/lib/tdd-env.mjs` `childEnv()` per data-model.md `ChildEnv`.
+- [X] T011 [P] [US2] [U22] [U23] [U24] [U25] [U26] [U27] One cycle per behavior:
   - Tests in `.fork/ci/test/tdd-cli.test.mjs`. They spawn `process.execPath .fork/ci/bin/tdd.mjs` against temp fixture repos with tiny real test files: one passing, one failing, and one plain script.
   - Implement `.fork/ci/bin/tdd.mjs` per contracts/tdd-adapter-cli.md, using the data-model.md `RuntimeCommand` exit codes and `SuiteResult`.
     - It streams and captures child output itself; `exec.mjs` truncates.
     - `suite` delegates to `.fork/ci/bin/run-folder.mjs`, with `childEnv` and the lockfile restore.
-- [ ] T012 [P] [US2] [A3] [A4] [A5] [A6] The acceptance cycles, in a `describe('acceptance')` block in `.fork/ci/test/tdd-cli.test.mjs`. Each runs a temp repo with a real `git worktree` and a plan, exactly as the extension would invoke the profile's command strings from the repo root:
+- [X] T012 [P] [US2] [A3] [A4] [A5] [A6] The acceptance cycles, in a `describe('acceptance')` block in `.fork/ci/test/tdd-cli.test.mjs`. Each runs a temp repo with a real `git worktree` and a plan, exactly as the extension would invoke the profile's command strings from the repo root:
   - **A3**: suite routes to the worktree folder.
   - **A4**: the profile `single` string with an unmatched name gives exit 3.
   - **A5**: a fork feature with Worktree `none` gives the repo root.
   - **A6**: a missing folder or runtime gives an explicit error.
-- [ ] T013 [P] [US2] Refactor pass over `lib/tdd-target.mjs`, `lib/tdd-commands.mjs`, `lib/tdd-env.mjs` and `bin/tdd.mjs`, with the full suite green after each move. "No refactor needed" is a valid outcome.
+- [X] T013 [P] [US2] Refactor pass over `lib/tdd-target.mjs`, `lib/tdd-commands.mjs`, `lib/tdd-env.mjs` and `bin/tdd.mjs`, with the full suite green after each move. "No refactor needed" is a valid outcome.
   - Then run quickstart §2–§3 in `WA` and record the exit codes (expected 0 / 3 / 0 / 0) in the fragment.
-- [ ] T014 [P] [US1] [A2] Write `.specify/memory/tdd-profile.md` in `WA`, per contracts/tdd-profile.md, following `.specify/extensions/tdd/commands/speckit.tdd.setup.md` Phases 2–3 by hand (R7):
+- [X] T014 [P] [US1] [A2] Write `.specify/memory/tdd-profile.md` in `WA`, per contracts/tdd-profile.md, following `.specify/extensions/tdd/commands/speckit.tdd.setup.md` Phases 2–3 by hand (R7):
   - Run each command against `WA`'s target, including zero-match (it must exit 3).
   - Open every exemplar and helper path before recording it.
   - Record `verified: [single, file, suite]`, `suite_seconds` with the measured target named, and a reason for each null.
@@ -164,7 +164,7 @@ description: "Tasks for adopting the spec-kit-tdd extension (spec 003)"
 
 ### Stream B: overrides (US3), worktree `WB`
 
-- [ ] T015 [P] [US3] [U35] One cycle, in a single uninterrupted block (the red is never committed):
+- [X] T015 [P] [US3] [U35] One cycle, in a single uninterrupted block (the red is never committed):
   1. Write `.fork/ci/test/tdd-overrides.test.mjs` first, per data-model.md `OverrideFile.base_sha256`, `OverrideFile.name` and the `OverrideFile` fork section.
   2. Observe red: "override file missing".
   3. Create `.specify/templates/overrides/tdd-test-quality-rubric.md` (rules S1–S4) and `.specify/templates/overrides/tdd-loop-playbook.md` (the 5-step base-red procedure), per contracts/staged-evidence-override.md. Each is a copy of the installed template plus the header and one delimited fork section that states it applies only when the plan's Lane is `staged upstream PR`.
@@ -172,29 +172,29 @@ description: "Tasks for adopting the spec-kit-tdd extension (spec 003)"
 
 ### Stream C: advisory (US1 visibility, FR-014), worktree `WC`
 
-- [ ] T016 [P] [US1] [U28] [U29] [U30] [U31] [U32] One cycle per behavior:
+- [X] T016 [P] [US1] [U28] [U29] [U30] [U31] [U32] One cycle per behavior:
   - Tests in `.fork/ci/test/tdd-status.test.mjs`.
   - Implement `.fork/ci/lib/tdd-status.mjs` `tddStatus(rootDir, headRef)`, covering data-model.md `TddStatus.headRef`, `TddStatus.features`, `TddStatus.verdict` and `TddStatus.linked`.
-- [ ] T017 [P] [US1] [U33] One cycle: extend `.fork/ci/test/report.test.mjs`, then add the optional 4th `tdd` parameter to `renderReport` in `.fork/ci/lib/report.mjs`, covering contract rows T1–T10.
-- [ ] T018 [P] [US1] [U34] [U36] One cycle per behavior (U36: extend `.fork/ci/test/self-test-needed.test.mjs`, then `.fork/ci/lib/self-test-needed.mjs`):
+- [X] T017 [P] [US1] [U33] One cycle: extend `.fork/ci/test/report.test.mjs`, then add the optional 4th `tdd` parameter to `renderReport` in `.fork/ci/lib/report.mjs`, covering contract rows T1–T10.
+- [X] T018 [P] [US1] [U34] [U36] One cycle per behavior (U36: extend `.fork/ci/test/self-test-needed.test.mjs`, then `.fork/ci/lib/self-test-needed.mjs`):
   - Extend `.fork/ci/test/verdict.test.mjs`, covering data-model.md `TddStatus.error`.
   - Wire `.fork/ci/bin/verdict.mjs`: call `tddStatus(process.cwd(), process.env.HEAD_REF ?? '')` inside `try`/`catch`, and pass the result (or `{error}`) to `renderReport` only, never to `computeVerdict`.
   - Then add `HEAD_REF: ${{ github.head_ref }}` to the verdict step's `env:` in `.github/workflows/fork-ci.yml`, and nothing else. Run actionlint 1.7.12 if it's available locally, otherwise on the PR.
 
 ### Stream D: docs and rules (US4), worktree `WD`
 
-- [ ] T019 [P] [US4] [A13] [A14] One cycle per behavior:
+- [X] T019 [P] [US4] [A13] [A14] One cycle per behavior:
   1. Write `.fork/ci/test/tdd-docs.test.mjs` first.
      - A13 asserts `.specify/memory/constitution.md` Principle IV names `tdd/cycle-log.md` as red evidence, the staged base-red rule and the mandatory `before_implement` hook.
      - A14 asserts `.fork/README.md` has a "TDD workflow" section covering `tdd.plan`, the loop, `tdd.verify` before merge, the advisory status and `enabled: false` with a reason.
   2. Observe red.
   3. Make it green through T020 and T021.
-- [ ] T020 [P] [US4] Amend `.specify/memory/constitution.md` to 1.3.0 (MINOR; rationale in plan.md Complexity Tracking), following the `/speckit-constitution` workflow:
+- [X] T020 [P] [US4] Amend `.specify/memory/constitution.md` to 1.3.0 (MINOR; rationale in plan.md Complexity Tracking), following the `/speckit-constitution` workflow:
   - **Principle IV**: the cycle log is the red evidence for the fork and upstream-bound lanes; the staged base-red rule; the mandatory hook enforces it; disabling it needs `enabled: false` plus a reason in the plan.
   - **Gate 1**: includes a `tdd.verify` PASS or PASS_WITH_GAPS. The fork-ci TDD status is advisory.
   - **Lanes**: `/speckit-*` commands still run only from fork `main`.
   - **Prepend** a 1.2.0 → 1.3.0 entry to the existing Sync Impact Report comment (keep the history).
-- [ ] T021 [P] [US4] Edit the docs:
+- [X] T021 [P] [US4] Edit the docs:
   - `.fork/README.md`:
     - A "TDD workflow" section covering:
       - `tdd.plan` through the `after_tasks` hook, which adds the markers;
@@ -213,7 +213,7 @@ description: "Tasks for adopting the spec-kit-tdd extension (spec 003)"
 
 ## Phase 4: Integration and gate (integrator, in `W`)
 
-- [ ] T022 Merge the four stream branches into `fork/tdd-extension` with `git merge --no-ff`, in the order adapter, overrides, advisory, docs. Then:
+- [X] T022 Merge the four stream branches into `fork/tdd-extension` with `git merge --no-ff`, in the order adapter, overrides, advisory, docs. Then:
   - Append each `tdd/cycle-log.d/<stream>.md` to `tdd/cycle-log.md` in merge order, and delete the fragments.
   - Set each reported behavior `DONE` in `tdd/test-list.md`, after checking its cycle entry has a real red.
   - Tick T008–T021 per the marker rule.
