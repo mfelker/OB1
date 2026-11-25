@@ -187,3 +187,13 @@
 - refactor: none needed
 - notes: the `file` op runs only the verify script, as R5 specifies; it does not run fork-ci's `bootstrap.sql` first (run-folder does that in `suite`).
 - commit: (this commit)
+
+## Cycle: U21 childEnv: NODE_TEST_CONTEXT removed; credential vars set to ""; others kept
+
+- test: `.fork/ci/test/tdd-env.test.mjs::U21 childEnv: NODE_TEST_CONTEXT removed; credential vars set to ""; others kept` (new file; obviously fake values only; near-miss names such as `TOKENIZER_MODEL`, `SECRET_SAUCE_DIR`, `API_KEY_FILE` are kept)
+- red: `node --test --test-name-pattern="^U21 " .fork/ci/test/tdd-env.test.mjs`
+  -> `TypeError [Error]: Cannot use 'in' operator to search for 'NODE_TEST_CONTEXT' in undefined` (1 failed). `lib/tdd-env.mjs` existed only as an empty `childEnv` stub, so the import resolved.
+- green: `.fork/ci/lib/tdd-env.mjs:10` `childEnv()` copies the base without `NODE_TEST_CONTEXT`, blanks every present name matching `/(_API_KEY|_TOKEN|_SECRET|_SERVICE_ROLE_KEY)$/`, and sets each of the seven named variables to `""` even when absent. Suite `node --test .fork/ci/test/` -> 122 passed, 0 failed
+- refactor: none needed
+- notes: the named list is set when absent too, per R10's rationale (`key in env` must hold so `.env.local` cannot fill it); suffix patterns can only apply to names that are present.
+- commit: (this commit)
