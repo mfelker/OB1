@@ -8,4 +8,6 @@
  */
 export function tddStatus(rootDir, headRef) {
   if (!headRef) return null;
+  const features = [];
+  return { headRef, features, linked: features.length > 0, error: null };
 }

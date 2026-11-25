@@ -21,3 +21,8 @@ test('U31 empty headRef (push event) gives null', () => {
   const root = tree({ 'specs/001-a/spec.md': spec('fork/a') });
   assert.equal(tddStatus(root, ''), null);
 });
+
+test('U30 no spec names the branch gives linked:false with no features', () => {
+  const root = tree({ 'specs/001-a/spec.md': spec('fork/a'), 'specs/002-b/spec.md': spec('stage/b') });
+  assert.deepEqual(tddStatus(root, 'fork/other'), { headRef: 'fork/other', features: [], linked: false, error: null });
+});
