@@ -203,13 +203,13 @@ description: "Tasks for staging upstream PR #532 (atomizer Anthropic default mod
 
 ## Merge (gate: T001–T025 all `[X]`, `fork-ci-verdict` and `OB1 Review` green)
 
-- [ ] T026 [US3] Merge the fork PR with `gh pr merge <N> -R mfelker/OB1 --merge` (FR-008; never squash or rebase).
+- [X] T026 [US3] Merge the fork PR with `gh pr merge <N> -R mfelker/OB1 --merge` (FR-008; never squash or rebase).
 
 ---
 
 ## Phase 7: Post-merge recording (runbook step 6; needs the merge's date and SHA)
 
-- [ ] T027 [US3] In `/Users/mfelker/Projects/ob1`:
+- [X] T027 [US3] In `/Users/mfelker/Projects/ob1`:
   - Update fork `main` to the merged state: `git pull --ff-only origin main`.
   - Apply `E/r532-ledger-row.md` to `/Users/mfelker/Projects/ob1/.fork/staged-prs.md`, filling in `StagedPrLedgerRow.Merged into fork` from data-model.md with the merge date. Status is `staged` (FR-010, SC-005: exactly one `#532` row).
   - Commit `[fork] Ledger: staged #532` and push.
