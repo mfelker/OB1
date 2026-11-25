@@ -15,3 +15,12 @@
 - green: `.fork/ci/lib/principle-v.mjs:5` added the D2 return when `branch !== 'main'`. Suite `node --test .fork/ci/test/` -> 154 passed, 0 failed
 - refactor: none needed
 - commit: (this commit)
+
+## Cycle: U3 D3: merge in progress is allowed
+
+- test: `.fork/ci/test/principle-v.test.mjs::U3 D3: mergeInProgress on main is allowed` (new)
+- red: `node --test --test-name-pattern="^U3 " .fork/ci/test/principle-v.test.mjs`
+  -> `AssertionError [ERR_ASSERTION]: Expected values to be strictly equal: actual: false, expected: true` (1 failed)
+- green: `.fork/ci/lib/principle-v.mjs:6` added the D3 return when `mergeInProgress`. Suite `node --test .fork/ci/test/` -> 155 passed, 0 failed
+- refactor: none needed
+- commit: (this commit)

@@ -23,3 +23,9 @@ test('U2 D2: a branch other than main (or detached HEAD) is allowed; main is not
   }
   assert.notEqual(run({ branch: 'main' }).rule, 'D2');
 });
+
+test('U3 D3: mergeInProgress on main is allowed', () => {
+  const d = run({ mergeInProgress: true });
+  assert.equal(d.allowed, true);
+  assert.equal(d.rule, 'D3');
+});
