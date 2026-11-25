@@ -89,3 +89,13 @@
 - refactor: none needed
 - notes: contract ambiguity resolved: the contract gives no message for a non-repo-relative folder, so it is `plan Contribution folder must be repo-relative: <folder>` (exit 2 like every TargetError). A value with no backticked token is treated as "no Contribution folder".
 - commit: (this commit)
+
+## Cycle: U11 folderExists:false is allowed for suite only; other operations get "folder not found"
+
+- test: `.fork/ci/test/tdd-target.test.mjs::U11 folderExists:false is allowed for suite only; other operations get "folder not found"` (new)
+- red: `node --test --test-name-pattern="^U11 " .fork/ci/test/tdd-target.test.mjs`
+  -> `AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:` / `actual: undefined,` (1 failed). `requireFolder` existed only as an empty exported stub, so the import resolved.
+- green: `.fork/ci/lib/tdd-target.mjs:94` `folderExists` is `tree/folder` being a directory; `:99` `requireFolder(target)` throws `folder not found in tree: <folder> (<tree>)` (adapter A5) when it is false. Suite `node --test .fork/ci/test/` -> 112 passed, 0 failed
+- refactor: none needed
+- notes: design choice: `resolveTarget({repoRoot, env})` keeps its data-model signature (no `op`); the per-operation rule is the separate exported guard `requireFolder`, which `single`/`file` call and `suite` does not.
+- commit: (this commit)

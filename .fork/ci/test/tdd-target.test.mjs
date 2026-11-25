@@ -4,7 +4,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdtempSync, mkdirSync, writeFileSync, realpathSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
-import { resolveTarget, TargetError } from '../lib/tdd-target.mjs';
+import { requireFolder, resolveTarget, TargetError } from '../lib/tdd-target.mjs';
 
 /** Plan text with the three R3 lines; pass null to omit a line. */
 function plan({ lane = 'fork feature', worktree = 'none (fork-`main` checkout)', folder = '`.fork/ci` (fork tooling)' } = {}) {
@@ -156,4 +156,16 @@ test('U10 Contribution folder grammar: placeholder, N/A before backticks, traili
   throwsTarget(featureRepo({ folder: 'somewhere in recipes' }), {}, NO_FOLDER);
   throwsTarget(featureRepo({ folder: '`/etc/passwd`' }), {}, 'plan Contribution folder must be repo-relative: /etc/passwd');
   throwsTarget(featureRepo({ folder: '`recipes/../..`' }), {}, 'plan Contribution folder must be repo-relative: recipes/../..');
+});
+
+test('U11 folderExists:false is allowed for suite only; other operations get "folder not found"', () => {
+  const present = featureRepo({});
+  const t = resolveTarget({ repoRoot: present, env: {} });
+  assert.equal(t.folderExists, true);
+  assert.equal(requireFolder(t), t);
+  const absent = featureRepo({ folder: '`recipes/new-thing/`' });
+  const u = resolveTarget({ repoRoot: absent, env: {} });
+  assert.equal(u.folderExists, false);
+  assert.throws(() => requireFolder(u), err => err instanceof TargetError
+    && err.message === `folder not found in tree: recipes/new-thing (${absent})`);
 });

@@ -1,6 +1,6 @@
 // Resolve the TDD adapter's target from the active feature's plan (data-model TddTarget; research R3).
 import { execFileSync } from 'node:child_process';
-import { readFileSync, realpathSync } from 'node:fs';
+import { readFileSync, realpathSync, statSync } from 'node:fs';
 import { isAbsolute, join, relative, resolve, sep } from 'node:path';
 
 /** A target-resolution error with a single-line message; the CLI exits 2. */
@@ -91,5 +91,12 @@ export function resolveTarget({ repoRoot, env = process.env } = {}) {
   const lane = parseLane(planField(planText, 'Lane'), planRel);
   const tree = parseTree(planField(planText, 'Worktree'), repoRoot, planRel, lane);
   const folder = parseFolder(planField(planText, 'Contribution folder'), planRel);
-  return { repoRoot, featureDir, lane, tree, folder };
+  const folderExists = statSync(join(tree, folder), { throwIfNoEntry: false })?.isDirectory() ?? false;
+  return { repoRoot, featureDir, lane, tree, folder, folderExists };
+}
+
+/** Guard for `single`/`file`: the folder must exist in the tree (`suite` allows an empty baseline). */
+export function requireFolder(target) {
+  if (!target.folderExists) throw new TargetError(`folder not found in tree: ${target.folder} (${target.tree})`);
+  return target;
 }
