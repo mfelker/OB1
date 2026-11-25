@@ -61,9 +61,11 @@ done
 
 | Lane | How it lands | What enforces it |
 |------|--------------|------------------|
-| `stage/`, `contrib/` | `gh pr create -R mfelker/OB1 --base main`, then `gh pr merge <N> -R mfelker/OB1 --merge` once green | The ruleset requires `fork-ci-verdict`; a red PR can only merge through the deliberate "bypass rules" checkbox |
+| `stage/`, `contrib/` | `gh pr create -R mfelker/OB1 --base main`, then `gh pr merge <N> -R mfelker/OB1 --merge` once green | The ruleset (`fork-ci required`) requires `fork-ci-verdict` **and** `OB1 Review`; a red PR can only merge through the deliberate "bypass rules" checkbox |
 | `fork/` | Local `git merge --no-ff`, then push (or a fork PR) | fork-ci runs after the push and reports |
 | Upstream sync | Local merge and push, or an optional `sync/upstream-<date>` fork PR | Upstream-only folders are advisory, so syncs are not blocked |
+
+`OB1 Review` runs on every PR into `main`. On fork-only PRs (`.specify/`, `specs/`, `.fork/`) and `sync/upstream-*` PRs its Folder-structure/Scope failures are expected, so those PRs need the admin bypass (or land by direct push / local merge, as the table allows).
 
 Use **Create a merge commit** (`--merge`), never squash or rebase. It keeps contributor commits intact for the ledger, and GitHub-committed merges are how fork-ci recognizes a PR merge.
 
