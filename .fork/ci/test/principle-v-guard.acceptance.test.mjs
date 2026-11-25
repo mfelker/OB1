@@ -123,7 +123,7 @@ test('A3 agent guard allows every fork-only root and zone', () => {
   }
 });
 
-test('A4 agent guard allows an upstream path in a linked worktree on another branch, from a main-checkout session', OUTER, () => {
+test('A4 agent guard allows an upstream path in a linked worktree on another branch, from a main-checkout session', () => {
   const repo = guardRepo();
   const wt = linkedWorktree(repo, 'contrib/owner/x');
   assertAllowed(runHook(repo, join(wt, 'CLAUDE.md'), { cwd: repo.dir }), 'worktree CLAUDE.md');

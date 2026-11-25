@@ -25,3 +25,11 @@
 - green: no CLI change needed (already covered by the A1/A3 pipeline: the D4 deny carries the domain-knowledge suggestion from decide()). Suite `node --test .fork/ci/test/` -> see commit
 - refactor: none needed
 - commit: (this commit)
+
+## Cycle: A4 --hook allows a linked worktree write
+
+- test: `.fork/ci/test/principle-v-guard.acceptance.test.mjs::A4 agent guard allows an upstream path in a linked worktree on another branch, from a main-checkout session` (flipped from todo)
+- red: recorded at T029 (cycle-log.md 'Outer loop opened'); passes after the A1 and A3 commits, so no new red is invented: the flip is its own cycle. Check run: `node --test --test-name-pattern="^A4 " .fork/ci/test/principle-v-guard.acceptance.test.mjs` -> 1 passed, 0 failed
+- green: no CLI change needed (already covered by the A1/A3 pipeline: repoRelative/checkoutState read the worktree's own root and branch (D2)). Suite `node --test .fork/ci/test/` -> see commit
+- refactor: none needed
+- commit: (this commit)
