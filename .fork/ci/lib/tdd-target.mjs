@@ -10,12 +10,21 @@ export class TargetError extends Error {
   }
 }
 
+const NO_FEATURE = 'no active feature (set SPECIFY_FEATURE_DIRECTORY or .specify/feature.json)';
+
+/** `feature_directory` from `.specify/feature.json`, or undefined when absent or unreadable. */
 function featureJsonDir(repoRoot) {
-  return JSON.parse(readFileSync(join(repoRoot, '.specify', 'feature.json'), 'utf8')).feature_directory;
+  try {
+    return JSON.parse(readFileSync(join(repoRoot, '.specify', 'feature.json'), 'utf8')).feature_directory;
+  } catch {
+    return undefined;
+  }
 }
 
 /** @returns {{repoRoot:string, featureDir:string, lane:string, tree:string, folder:string, folderExists:boolean}} */
 export function resolveTarget({ repoRoot, env = process.env } = {}) {
-  const featureDir = resolve(repoRoot, env.SPECIFY_FEATURE_DIRECTORY || featureJsonDir(repoRoot));
+  const dir = env.SPECIFY_FEATURE_DIRECTORY || featureJsonDir(repoRoot);
+  if (typeof dir !== 'string' || dir === '') throw new TargetError(NO_FEATURE);
+  const featureDir = resolve(repoRoot, dir);
   return { repoRoot, featureDir };
 }

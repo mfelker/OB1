@@ -47,3 +47,19 @@ test('U2 feature.json feature_directory is used when there is no env', () => {
   const t = resolveTarget({ repoRoot: root, env: {} });
   assert.equal(t.featureDir, join(root, 'specs/001-a'));
 });
+
+const NO_FEATURE = 'no active feature (set SPECIFY_FEATURE_DIRECTORY or .specify/feature.json)';
+
+/** Assert resolveTarget throws a TargetError with exactly this message. */
+function throwsTarget(root, env, message) {
+  assert.throws(() => resolveTarget({ repoRoot: root, env }), err => {
+    assert.ok(err instanceof TargetError, `expected TargetError, got ${err?.name}: ${err?.message}`);
+    assert.equal(err.message, message);
+    return true;
+  });
+}
+
+test('U3 neither env nor feature.json gives "no active feature"', () => {
+  throwsTarget(fixtureRepo({ 'specs/001-a/plan.md': plan() }), {}, NO_FEATURE);
+  throwsTarget(fixtureRepo({ '.specify/feature.json': '{}\n', 'specs/001-a/plan.md': plan() }), {}, NO_FEATURE);
+});
