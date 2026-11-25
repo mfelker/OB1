@@ -165,7 +165,7 @@ test('A7 commit guard allows a commit on main that stages only fork-only paths',
   assert.equal(r.status, 0, r.stderr);
 });
 
-test('A8 commit guard allows committing a conflicted merge that touches upstream files', OUTER, () => {
+test('A8 commit guard allows committing a conflicted merge that touches upstream files', () => {
   const repo = guardRepo();
   enableCommitGuard(repo);
   branch(repo, 'incoming');

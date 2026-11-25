@@ -96,3 +96,11 @@
 - green: no CLI change needed (no deny lines, so the guard exits 0 silently). Suite `node --test .fork/ci/test/` -> 189 passed, 0 failed, 2 todo
 - refactor: none needed
 - commit: (this commit)
+
+## Cycle: A8 --staged allows a conflicted merge commit
+
+- test: `.fork/ci/test/principle-v-guard.acceptance.test.mjs::A8 commit guard allows committing a conflicted merge that touches upstream files` (flipped from todo)
+- red: recorded at T029 (cycle-log.md 'Outer loop opened'); passes after the A6 commit, so no new red is invented: the flip is its own cycle. Check run: `node --test --test-name-pattern="^A8 " .fork/ci/test/principle-v-guard.acceptance.test.mjs` -> 1 passed, 0 failed
+- green: no CLI change needed (decideFor reads MERGE_HEAD (D3)). Suite `node --test .fork/ci/test/` -> 190 passed, 0 failed, 1 todo
+- refactor: none needed
+- commit: (this commit)
