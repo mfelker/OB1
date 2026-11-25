@@ -216,3 +216,13 @@
 - refactor: none needed
 - notes: deviation: the exit-4 path (adapter A10) has no Behavior Map id of its own; it is asserted here because U23 owns `single`/`file` end to end and T011 names the plain-script fixture. Zero tests with a non-zero exit is a failure (exit 1), never 3. The python and deno paths were also run by hand against scratchpad fixtures (pytest venv created; `single` pass 0, unmatched 3, `file` 0; deno `single` pass 0, unmatched 3); they are not in the automated suite because they need network/deno. The summary here omits `feature=`/`folder=`, which U27 drives.
 - commit: (this commit)
+
+## Cycle: U24 suite exit mapping, including the empty baseline (no-tests, exempt, missing folder)
+
+- test: `.fork/ci/test/tdd-cli.test.mjs::U24 suite exit mapping, including the empty baseline (no-tests, exempt, missing folder)` (new; pass, fail, sql-only, code without tests, docs-only, and a folder not yet created)
+- red: `node --test --test-name-pattern="^U24 " .fork/ci/test/tdd-cli.test.mjs`
+  -> `AssertionError [ERR_ASSERTION]: The input did not match the regular expression /^\[tdd\] suite\b.*→ pass$/. Input:` / `actual: '',` (1 failed). The CLI had no `suite`.
+- green: `.fork/ci/bin/tdd.mjs:95` `suite()`: a missing folder is `empty baseline: folder does not exist yet` without calling run-folder; otherwise it runs `run-folder.mjs --path <folder> --mode strict --origin fork --out <tmp>` (resolved beside the adapter, `:13`, not in the tree) with cwd = tree and `childEnv()`, prints one line per runtime, and maps the outcome via `:87` `SUITE` (pass / sql-unverified with the advisory notice / no-tests and exempt as empty baselines → 0; anything else → 1 with the reason; adapter A12–A14, FR-017). Suite `node --test .fork/ci/test/` -> 125 passed, 0 failed
+- refactor: `SUITE` entries changed from thunks to plain `[exit, summary]` pairs; suite re-run -> 125 passed, 0 failed
+- notes: the first draft of this test matched `/^\[tdd\] suite .*→ pass$/`; before going green it was loosened to `suite\b` so U27 (not this cycle) drives the `feature=`/`folder=` part of the summary. No green test was changed.
+- commit: (this commit)

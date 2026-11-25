@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // TDD adapter: run the active feature's tests in its plan's worktree and folder (contracts/tdd-adapter-cli.md).
 import { spawn } from 'node:child_process';
-import { existsSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { delimiter, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { requireFolder, resolveTarget, TargetError } from '../lib/tdd-target.mjs';
@@ -9,6 +10,7 @@ import { buildCommand, resolveFile, runtimeFor } from '../lib/tdd-commands.mjs';
 import { childEnv } from '../lib/tdd-env.mjs';
 import { scanRuntimes } from '../lib/runtimes.mjs';
 
+const RUN_FOLDER = join(dirname(fileURLToPath(import.meta.url)), 'run-folder.mjs');
 const REPO_ROOT = realpathSync(resolve(dirname(fileURLToPath(import.meta.url)), '..', '..', '..'));
 // pytest's "no tests collected"; every other runtime's zero-match exits 0.
 const ZERO_EXIT = { python: 5 };
@@ -81,12 +83,45 @@ async function runTests(op, file, name) {
   return exit;
 }
 
+// run-folder outcome → [exit, summary] (data-model SuiteResult; R6).
+const SUITE = {
+  pass: [0, 'pass'],
+  'sql-unverified': [0, 'sql-unverified'],
+  'no-tests': [0, 'empty baseline: no tests yet'],
+  exempt: [0, 'empty baseline: docs-only'],
+};
+
+/** `suite`: delegate to run-folder in the target tree, with childEnv; an empty baseline is green. */
+async function suite() {
+  const target = resolveTarget({ repoRoot: REPO_ROOT, env: process.env });
+  if (!target.folderExists) {
+    process.stdout.write('[tdd] suite → empty baseline: folder does not exist yet\n');
+    return 0;
+  }
+  const out = join(mkdtempSync(join(tmpdir(), 'fork-tdd-suite-')), 'result.json');
+  const argv = [process.execPath, RUN_FOLDER, '--path', target.folder, '--mode', 'strict', '--origin', 'fork', '--out', out];
+  await run(argv, { cwd: target.tree, env: childEnv(process.env) });
+  let result;
+  try {
+    result = JSON.parse(readFileSync(out, 'utf8'));
+  } catch {
+    process.stdout.write('[tdd] suite → setup: run-folder wrote no result\n');
+    return 1;
+  }
+  for (const rt of result.runtimes) process.stdout.write(`[tdd] suite ${rt.kind} ${rt.root}: ${rt.outcome} (${rt.reason})\n`);
+  if (result.outcome === 'sql-unverified') process.stdout.write('[tdd] sql unverified (advisory)\n');
+  const [exit, summary] = SUITE[result.outcome] ?? [1, `${result.outcome}: ${result.reason}`];
+  process.stdout.write(`[tdd] suite → ${summary}\n`);
+  return exit;
+}
+
 async function main(argv) {
   const [op, ...rest] = argv;
   try {
     if (op === 'where') return where();
     if (op === 'single') return await runTests('single', rest[0], rest[1]);
     if (op === 'file') return await runTests('file', rest[0]);
+    if (op === 'suite') return await suite();
     return 0;
   } catch (err) {
     if (err instanceof TargetError) {

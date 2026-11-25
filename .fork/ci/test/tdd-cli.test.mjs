@@ -106,3 +106,27 @@ test('U23 single/file end to end: pass 0, fail 1, zero-match 3, unsupported 4; f
   assert.equal(plainSingle.status, 4);
   assert.equal(plainSingle.stderr.trim(), 'tdd: single unsupported for plain-script: plain script, no named tests; use `file`');
 });
+
+test('U24 suite exit mapping, including the empty baseline (no-tests, exempt, missing folder)', () => {
+  const suite = files => tdd(cliRepo({}, files), ['suite']);
+  const pass = suite({ 'recipes/x/a.mjs': 'export const a = 1;\n', 'recipes/x/a.test.mjs': PASS });
+  assert.equal(pass.status, 0, pass.stdout + pass.stderr);
+  assert.match(pass.lastLine, /^\[tdd\] suite\b.*→ pass$/);
+  assert.ok(pass.stdout.includes('[tdd] suite node-plain recipes/x: pass'), pass.stdout);
+  const fail = suite({ 'recipes/x/a.mjs': 'export const a = 1;\n', 'recipes/x/a.test.mjs': FAIL });
+  assert.equal(fail.status, 1, fail.stdout + fail.stderr);
+  assert.match(fail.lastLine, /→ fail: tests failed \(exit 1\)$/);
+  const sql = suite({ 'recipes/x/schema.sql': 'select 1;\n' });
+  assert.equal(sql.status, 0, sql.stdout + sql.stderr);
+  assert.match(sql.lastLine, /→ sql-unverified$/);
+  assert.ok(sql.stdout.includes('sql unverified (advisory)'));
+  const noTests = suite({ 'recipes/x/a.mjs': 'export const a = 1;\n' });
+  assert.equal(noTests.status, 0, noTests.stdout + noTests.stderr);
+  assert.match(noTests.lastLine, /→ empty baseline: no tests yet$/);
+  const docs = suite({ 'recipes/x/README.md': '# docs\n' });
+  assert.equal(docs.status, 0, docs.stdout + docs.stderr);
+  assert.match(docs.lastLine, /→ empty baseline: docs-only$/);
+  const missing = tdd(cliRepo({ folder: '`recipes/not-yet`' }), ['suite']);
+  assert.equal(missing.status, 0, missing.stdout + missing.stderr);
+  assert.match(missing.lastLine, /→ empty baseline: folder does not exist yet$/);
+});
