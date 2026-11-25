@@ -80,6 +80,11 @@ plus a green at the PR head. Classify each behavior by these rules instead of th
 Fail closed: when the lane is staged and any S1 element (base SHA, command,
 decisive failure line, head green) is missing or cannot be checked, the behavior
 is `TEST_AFTER`, not `LIKELY`. Report which element is missing.
+
+Rule order: S4 takes precedence over S2. A behavior whose code the PR did not
+change can never fail at the base, so it always also fits S2's "head green, no
+base-red"; check S4 first (diff the behavior's source between the base and the
+head) and apply S2 only to behaviors whose code the PR changed.
 <!-- /fork -->
 
 Useful history checks, adapted to the repository's actual layout from the stack

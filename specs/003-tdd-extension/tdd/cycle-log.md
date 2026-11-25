@@ -497,3 +497,34 @@ Appended to `tdd/cycle-log.md` by the integrator in merge order (research R14).
 - green: no behavior change. `suiteCounts` moved verbatim from `bin/tdd.mjs` into `lib/tdd-commands.mjs` (exported) so it can be unit-tested; `SUITE_COUNT_PARSERS` is now module-private. Suite `node --test .fork/ci/test/` -> 148 passed, 0 failed
 - refactor: the move above
 - commit: (this commit)
+
+<!-- fork/tdd-calibration-fixes: T032 follow-up for the T031 calibration gap (fixture C3 classed S4, not S2) -->
+
+## Cycle: U38 rubric override: S4 takes precedence over S2
+
+- test: `.fork/ci/test/tdd-overrides.test.mjs::U38 rubric override: S4 (code the PR did not change) takes precedence over S2` (new)
+- red: `node --test --test-name-pattern="^U38 " .fork/ci/test/tdd-overrides.test.mjs`
+  -> `AssertionError [ERR_ASSERTION]: fork section must state that S4 wins over S2` (1 failed). The T031 fixture audit had to resolve the S2/S4 overlap itself, because the fork section gave no order.
+- green: `.specify/templates/overrides/tdd-test-quality-rubric.md` fork section adds the rule order (S4 first, by diffing the behavior's source base→head; S2 only for changed code). Only the fork section changed, so U35's byte check outside it still holds. Suite `node --test .fork/ci/test/` -> 149 passed, 0 failed
+- refactor: none needed
+- commit: (this commit)
+
+## Cycle: U39 python venv lives in the per-user cache, never in the shared temp dir
+
+- test: `.fork/ci/test/tdd-commands.test.mjs::U39 python venv lives in the per-user cache, never in the shared temp dir` (new)
+- red: `node --test --test-name-pattern="^U39 |^U18 " .fork/ci/test/tdd-commands.test.mjs`
+  -> `actual: { dir: '/var/folders/…/T/fork-tdd-venv-5a21115d…' …}` / `expected: { dir: '/Users/mfelker/.cache/fork-tdd/venv-5a21115d…' …}` (2 failed). Source: the post-merge security review (predictable venv path under the shared temp dir, reused without an ownership check).
+- green: `.fork/ci/lib/tdd-commands.mjs` `pythonVenv` puts the venv at `$XDG_CACHE_HOME/fork-tdd/venv-<sha1(cwd)>`, else `~/.cache/fork-tdd/venv-<sha1(cwd)>`. Suite `node --test .fork/ci/test/` -> 150 passed, 0 failed
+- refactor: none needed
+- commit: (this commit)
+- notes: deviation, behavior-driven: U18's expected venv path now follows the new location through an `expectedVenv` helper; its other assertions (argv, requirements hash, exit 5) are unchanged.
+
+## Cycle: U40 privateDir: reuse a cached venv only when it is privately owned
+
+- test: `.fork/ci/test/tdd-commands.test.mjs::U40 privateDir: reuse a cached venv dir only when it is a real dir owned by this user and not group/world-writable` (new)
+- red: `node --test --test-name-pattern="^U40 " .fork/ci/test/tdd-commands.test.mjs`
+  -> `AssertionError [ERR_ASSERTION]: group-writable` / `actual: true,` / `expected: false,` (1 failed). `privateDir` existed only as a stub returning `true` so the import resolved.
+- green: `.fork/ci/lib/tdd-commands.mjs` `privateDir` uses `lstatSync`: a directory, owned by `process.getuid()`, with no group/world write bit; anything else (symlink, file, missing, foreign or writable) is `false`. `.fork/ci/bin/tdd.mjs` `ensureVenv` reuses a cached venv only when `privateDir` holds and the stamp matches, otherwise removes and rebuilds it, and creates the cache parent with mode `0700`. Suite `node --test .fork/ci/test/` -> 151 passed, 0 failed
+- refactor: none needed
+- commit: (this commit)
+- notes: the `ensureVenv` wiring is not exercised by the automated suite; the python end-to-end path stays hand-run only, as recorded for U18 in Stream A.

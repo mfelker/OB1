@@ -92,7 +92,7 @@ own runtime detection.
   node-plain pass, sql unverified). Other folders differ widely, especially those that install dependencies.
 - **Per-runtime notes**:
   - Deno and Python must be installed locally for their folders. Python `single`/`file` use a cached venv at
-    `<os tmp>/fork-tdd-venv-<sha1(tree + root)>`, rebuilt when `requirements.txt` changes; the first run installs
+    `$XDG_CACHE_HOME/fork-tdd/venv-<sha1(tree + root)>` (else `~/.cache/fork-tdd/…`), rebuilt when `requirements.txt` changes or the cached dir is not privately owned; the first run installs
     pytest.
   - Deno `single` uses `--filter <name>`, a substring match, so it can select more than one test.
   - `single` is unsupported (exit 4) for plain `test-*.mjs` scripts, SQL verify scripts and node-script runners other

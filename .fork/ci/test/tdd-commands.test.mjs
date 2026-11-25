@@ -1,10 +1,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { mkdtempSync, mkdirSync, writeFileSync, realpathSync, symlinkSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { chmodSync, mkdtempSync, mkdirSync, writeFileSync, realpathSync, symlinkSync } from 'node:fs';
+import { homedir, tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
-import { buildCommand, resolveFile, runtimeFor, suiteCounts } from '../lib/tdd-commands.mjs';
+import { buildCommand, privateDir, resolveFile, runtimeFor, suiteCounts } from '../lib/tdd-commands.mjs';
 import { fixtureFiles } from './fixtures.mjs';
 import { TargetError } from '../lib/tdd-target.mjs';
 
@@ -143,12 +143,15 @@ test('U17 deno argv is runtime.command plus --filter; the 0 passed parser', () =
 
 const sha1 = s => createHash('sha1').update(s).digest('hex');
 
+/** The per-user venv cache location (U39): $XDG_CACHE_HOME/fork-tdd, else ~/.cache/fork-tdd. */
+const expectedVenv = cwd => join(process.env.XDG_CACHE_HOME || join(homedir(), '.cache'), 'fork-tdd', `venv-${sha1(cwd)}`);
+
 test('U18 python: cached venv keyed by tree + root and the requirements hash; argv -k; exit 5 is zero-match', () => {
   const tree = tempTree('fork-tdd-tree-', { ...fixtureFiles('python-tested', 'integrations/p'), 'integrations/p/requirements.txt': 'requests==2.32.3\n' });
   const file = join(tree, 'integrations/p/tests/test_imp.py');
   const runtime = runtimeFor(file, { repoRoot: tree, tree, folder: 'integrations/p' });
   const cwd = join(tree, 'integrations/p');
-  const venv = join(tmpdir(), `fork-tdd-venv-${sha1(cwd)}`);
+  const venv = expectedVenv(cwd);
   const single = buildCommand({ op: 'single', runtime, tree, file, name: 'test_double' });
   assert.equal(single.kind, 'python');
   assert.equal(single.cwd, cwd);
@@ -158,7 +161,7 @@ test('U18 python: cached venv keyed by tree + root and the requirements hash; ar
   const bare = tempTree('fork-tdd-tree-', fixtureFiles('python-tested', 'integrations/p'));
   const bareFile = join(bare, 'integrations/p/tests/test_imp.py');
   const bareCmd = buildCommand({ op: 'file', runtime: runtimeFor(bareFile, { repoRoot: bare, tree: bare, folder: 'integrations/p' }), tree: bare, file: bareFile });
-  assert.deepEqual(bareCmd.venv, { dir: join(tmpdir(), `fork-tdd-venv-${sha1(join(bare, 'integrations/p'))}`), requirements: null, requirementsHash: sha1('') });
+  assert.deepEqual(bareCmd.venv, { dir: expectedVenv(join(bare, 'integrations/p')), requirements: null, requirementsHash: sha1('') });
   const p = single.countParser;
   assert.deepEqual(p('1 deselected in 0.01s\n', 5), { tests: 0, passed: 0, failed: 0 });
   assert.deepEqual(p('.\n1 passed in 0.01s\n', 0), { tests: 1, passed: 1, failed: 0 });
@@ -234,4 +237,44 @@ test('U37 suiteCounts sums every runtime that ran, gives ? when any output is un
   assert.equal(suiteCounts([...ran, { kind: 'node-plain', outcome: 'pass', outputExcerpt: 'no summary here\n' }]), ': tests=? pass=? fail=?');
   assert.equal(suiteCounts([{ kind: 'node-script', outcome: 'pass', outputExcerpt: node(1, 1, 0) }]), ': tests=? pass=? fail=?');
   assert.equal(suiteCounts([{ kind: 'deno', outcome: 'no-tests' }, { kind: 'sql', outcome: 'sql-unverified' }]), '');
+});
+
+test('U39 python venv lives in the per-user cache, never in the shared temp dir', () => {
+  const tree = tempTree('fork-tdd-tree-', fixtureFiles('python-tested', 'integrations/p'));
+  const file = join(tree, 'integrations/p/tests/test_imp.py');
+  const runtime = runtimeFor(file, { repoRoot: tree, tree, folder: 'integrations/p' });
+  const cwd = join(tree, 'integrations/p');
+  const saved = process.env.XDG_CACHE_HOME;
+  try {
+    process.env.XDG_CACHE_HOME = '/home/someone/.xdg-cache';
+    assert.equal(buildCommand({ op: 'file', runtime, tree, file }).venv.dir, join('/home/someone/.xdg-cache', 'fork-tdd', `venv-${sha1(cwd)}`));
+    delete process.env.XDG_CACHE_HOME;
+    const dir = buildCommand({ op: 'file', runtime, tree, file }).venv.dir;
+    assert.equal(dir, join(homedir(), '.cache', 'fork-tdd', `venv-${sha1(cwd)}`));
+    assert.ok(!dir.startsWith(tmpdir()), dir);
+  } finally {
+    if (saved === undefined) delete process.env.XDG_CACHE_HOME; else process.env.XDG_CACHE_HOME = saved;
+  }
+});
+
+test('U40 privateDir: reuse a cached venv dir only when it is a real dir owned by this user and not group/world-writable', () => {
+  const root = realpathSync(mkdtempSync(join(tmpdir(), 'fork-tdd-private-')));
+  const own = join(root, 'own');
+  mkdirSync(own, { mode: 0o700 });
+  chmodSync(own, 0o700);
+  assert.equal(privateDir(own), true);
+  chmodSync(own, 0o755);
+  assert.equal(privateDir(own), true, 'read/execute for others is fine');
+  chmodSync(own, 0o775);
+  assert.equal(privateDir(own), false, 'group-writable');
+  chmodSync(own, 0o707);
+  assert.equal(privateDir(own), false, 'world-writable');
+  chmodSync(own, 0o700);
+  const link = join(root, 'link');
+  symlinkSync(own, link);
+  assert.equal(privateDir(link), false, 'symlink');
+  const file = join(root, 'file');
+  writeFileSync(file, 'x');
+  assert.equal(privateDir(file), false, 'not a directory');
+  assert.equal(privateDir(join(root, 'missing')), false, 'missing');
 });

@@ -91,7 +91,7 @@ node .fork/ci/bin/tdd.mjs suite                  # the contribution folder, as r
 - **Credential blanking**: every child (including the Python venv setup and `suite`) runs with `NODE_TEST_CONTEXT` removed and credential variables set to `""`: `OPENROUTER_API_KEY`, `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_ACCESS_TOKEN`, `GH_TOKEN`, `GITHUB_TOKEN`, and any name ending in `_API_KEY`, `_TOKEN`, `_SECRET` or `_SERVICE_ROLE_KEY`. Empty values also override `.env.local` files.
 - **Empty baseline**: `suite` treats `no-tests`, `exempt`, and a contribution folder that doesn't exist yet as green (exit 0) with an `empty baseline: …` notice, so the loop can start on a new folder. `single` and `file` on a missing folder exit 2.
 - `suite` runs `bin/run-folder.mjs --mode strict --origin fork` in the tree, and restores a lockfile (`package-lock.json`, `deno.lock`) it modified that was clean before.
-- Python `single`/`file` use a cached venv in the OS temp folder, rebuilt when `requirements.txt` changes.
+- Python `single`/`file` use a cached venv in the per-user cache (`$XDG_CACHE_HOME/fork-tdd/`, else `~/.cache/fork-tdd/`), rebuilt when `requirements.txt` changes, and also rebuilt when the cached directory is a symlink, not owned by you, or group/world-writable.
 
 ## TDD status (advisory)
 

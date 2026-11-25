@@ -38,3 +38,10 @@ for (const name of NAMES) {
     assert.equal(body.replace(SECTION, ''), base.toString('utf8'), 'override diverges from base outside the fork section');
   });
 }
+
+test('U38 rubric override: S4 (code the PR did not change) takes precedence over S2', () => {
+  const text = readFileSync(join(OVERRIDE_DIR, 'tdd-test-quality-rubric.md'), 'utf8');
+  const [section] = text.match(SECTION) ?? [];
+  assert.ok(section, 'fork section missing');
+  assert.match(section, /S4\s+takes\s+precedence\s+over\s+S2/, 'fork section must state that S4 wins over S2');
+});

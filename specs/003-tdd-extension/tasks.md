@@ -71,6 +71,9 @@ description: "Tasks for adopting the spec-kit-tdd extension (spec 003)"
 | U36 | `selfTestNeeded` also fires for `.specify/templates/overrides/`, `.specify/extensions/tdd/`, `.specify/memory/constitution.md` and `.fork/README.md`, so the drift and docs tests run in CI when those change | FR-010, FR-011, FR-012 | C, `self-test-needed.test.mjs` (extend) |
 | U35 | Overrides: the installed base hash equals `base_sha256`; stripping the header and fork section reproduces the base | `OverrideFile.base`, `OverrideFile.base_sha256`, `OverrideFile.name`, `OverrideFile` fork section | B, `tdd-overrides.test.mjs` |
 | U37 | `suite`'s summary line reports `tests=`/`pass=`/`fail=` summed over the runtimes that ran | US2 AS1, contract Summary line | A (integrator, T024 remediation H2), `tdd-cli.test.mjs` |
+| U38 | The rubric override states S4 takes precedence over S2 | FR-010, contract staged-evidence-override.md | fixes branch, `tdd-overrides.test.mjs` |
+| U39 | The python venv cache is per-user, not in the shared temp dir | FR-016, R5 | fixes branch, `tdd-commands.test.mjs` |
+| U40 | A cached venv is reused only when privately owned | FR-016, R5 | fixes branch, `tdd-commands.test.mjs` |
 | A1 | Installed extension byte-identical to tag `v2.0.1` | FR-001 | integrator, `evidence/r1-verify.md` |
 | A2 | Profile commands each run before recording (single, zero-match, file, suite) | FR-009 | A, the profile's `verified:` and a cycle entry |
 | A3 | US2 AS1: `suite` for a feature whose plan names a real git worktree runs that worktree's folder | US2, FR-004 | A, `tdd-cli.test.mjs` (acceptance) |
@@ -257,6 +260,7 @@ description: "Tasks for adopting the spec-kit-tdd extension (spec 003)"
   7. Restore `feature.json` to 003, remove the 002 worktree, and commit the reports.
 - [ ] T032 [US3] [A12] Re-audit 003 from `M` in a fresh subagent, now through the installed extension (verify, with remediation allowed). It is for the record, not a merge gate (Gate 1 bootstrap exemption, plan.md Complexity Tracking). With A7–A12 and A15 done, expect the remaining gaps to be the six `TEST_AFTER` behaviors and the document-evidenced A1/A2, with the fork section inert (base rules).
   - Fix any fork-integration gap found in T030–T032 through a follow-up `fork/tdd-calibration-fixes` branch, under the same TDD rules, then re-run the affected step.
+  - [X] T032a [U38] [U39] [U40] `fork/tdd-calibration-fixes`: T031's fixture audit classed the C3 control S4 → NOT_APPLICABLE, not the contract's S2 → TEST_AFTER (C3's code is unchanged by the PR). Add the rule order (U38), add a K2 control whose code the PR changed, and set C3 to the S4 control. Also fix the post-merge security review's venv finding (U39, U40). Re-audit the fixture after the merge.
   - Mark A7–A12, A15 and A16 `DONE`, set spec.md Status to `Implemented`, tick T028–T032, and commit to `main`.
 
 ---

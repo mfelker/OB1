@@ -1,7 +1,7 @@
 // Per-runtime commands for the TDD adapter (data-model RuntimeCommand; research R4, R5).
 import { createHash } from 'node:crypto';
-import { existsSync, readFileSync, realpathSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { existsSync, lstatSync, readFileSync, realpathSync } from 'node:fs';
+import { homedir } from 'node:os';
 import { isAbsolute, join, relative, sep } from 'node:path';
 import { scanRuntimes, SQL_VERIFY, TEST_PATTERNS } from './runtimes.mjs';
 import { TargetError } from './tdd-target.mjs';
@@ -132,12 +132,14 @@ function denoCounts(output) {
 
 const sha1 = text => createHash('sha1').update(text).digest('hex');
 
-/** The cached venv for a python runtime root: keyed by its path; rebuilt when the requirements hash changes (R5). */
+/** The cached venv for a python runtime root, in the per-user cache: keyed by its path; rebuilt when the requirements hash changes (R5). */
 function pythonVenv(cwd) {
   const reqPath = join(cwd, 'requirements.txt');
   const requirements = existsSync(reqPath) ? 'requirements.txt' : null;
   const requirementsHash = sha1(requirements ? readFileSync(reqPath, 'utf8') : '');
-  return { dir: join(tmpdir(), `fork-tdd-venv-${sha1(cwd)}`), requirements, requirementsHash };
+  // Per-user cache, never the shared temp dir: a predictable path there could be pre-created by another user.
+  const cache = process.env.XDG_CACHE_HOME || join(homedir(), '.cache');
+  return { dir: join(cache, 'fork-tdd', `venv-${sha1(cwd)}`), requirements, requirementsHash };
 }
 
 /** pytest -q: exit 5 is "no tests collected"; otherwise the last summary's passed / failed + error counts. */
@@ -168,4 +170,17 @@ export function suiteCounts(runtimes) {
   if (parsed.includes(null)) return ': tests=? pass=? fail=?';
   const sum = key => parsed.reduce((n, c) => n + c[key], 0);
   return `: tests=${sum('tests')} pass=${sum('passed')} fail=${sum('failed')}`;
+}
+
+/**
+ * True only for a real directory (not a symlink) owned by this user and not group- or world-writable,
+ * so a cached venv someone else could have planted or can modify is never reused (U40).
+ */
+export function privateDir(path) {
+  try {
+    const st = lstatSync(path);
+    return st.isDirectory() && st.uid === process.getuid() && (st.mode & 0o022) === 0;
+  } catch {
+    return false;
+  }
 }
