@@ -205,3 +205,20 @@ test('U19 node-script: vitest and jest support single with -t; other runners are
   assert.deepEqual(buildCommand({ op: 'file', ...o }).argv, ['npm', 'test', '--', 'src/a.test.mjs']);
   assert.equal(buildCommand({ op: 'file', ...o }).unsupported, null);
 });
+
+test('U20 sql: file gives the psql verify argv; single is unsupported', () => {
+  const tree = tempTree('fork-tdd-tree-', fixtureFiles('sql-verify', 'schemas/s'));
+  const file = join(tree, 'schemas/s/tests/verify.sql');
+  const runtime = runtimeFor(file, { repoRoot: tree, tree, folder: 'schemas/s' });
+  assert.equal(runtime.kind, 'sql');
+  const whole = buildCommand({ op: 'file', runtime, tree, file });
+  assert.equal(whole.kind, 'sql');
+  assert.equal(whole.unsupported, null);
+  assert.equal(whole.cwd, join(tree, 'schemas/s'));
+  assert.deepEqual(whole.argv, ['psql', '-v', 'ON_ERROR_STOP=1', '-X', '-q', '-f', 'tests/verify.sql']);
+  assert.deepEqual(whole.countParser('', 0), { tests: 1, passed: 1, failed: 0 });
+  assert.deepEqual(whole.countParser('ERROR:  demo missing\n', 3), { tests: 1, passed: 0, failed: 1 });
+  const single = buildCommand({ op: 'single', runtime, tree, file, name: 'demo' });
+  assert.equal(single.kind, 'sql');
+  assert.equal(single.unsupported, 'tests/verify.sql is one script, no named tests; use `file`');
+});

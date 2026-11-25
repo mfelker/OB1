@@ -41,6 +41,10 @@ export function buildCommand({ op, runtime, tree, file, name }) {
     const argv = [join(venv.dir, 'bin', 'python'), '-m', 'pytest', '-q', ...(op === 'single' ? ['-k', name] : []), rel];
     return { ...base, kind: 'python', argv, venv, countParser: pytestCounts };
   }
+  if (runtime.kind === 'sql') {
+    const unsupported = op === 'single' ? `${SQL_VERIFY} is one script, no named tests; use \`file\`` : null;
+    return { ...base, kind: 'sql', argv: runtime.command, countParser: sqlCounts, unsupported };
+  }
   if (runtime.kind === 'node-script') return nodeScriptCommand(base, cwd, rel, op, name);
   if (runtime.kind === 'deno') {
     const argv = [...runtime.command, ...(op === 'single' ? ['--filter', name] : []), rel];
@@ -111,6 +115,9 @@ function jestCounts(output) {
   const n = word => countOf(line, word);
   return { tests: n('passed') + n('failed'), passed: n('passed'), failed: n('failed') };
 }
+
+/** psql verify: one script, so exit 0 is one pass and anything else one failure. */
+const sqlCounts = (output, exitCode) => (exitCode === 0 ? { tests: 1, passed: 1, failed: 0 } : { tests: 1, passed: 0, failed: 1 });
 
 /** The number before `word` in a summary line (0 when absent). */
 const countOf = (line, word) => Number(new RegExp(`(\\d+) ${word}`).exec(line)?.[1] ?? 0);

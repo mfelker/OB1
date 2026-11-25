@@ -177,3 +177,13 @@
 - refactor: extracted `countOf(line, word)` from three copies of the same summary-count lambda (pytest, vitest, jest) and made `nodeScriptRunner` take the parsed package.json so it is read once; suite re-run -> 120 passed, 0 failed
 - notes: the other-runner `file` parser is `nodeCounts` (the `ℹ tests` summary), so a runner that prints no node summary gives null, which is a failure, never a pass.
 - commit: (this commit)
+
+## Cycle: U20 sql: file gives the psql verify argv; single is unsupported
+
+- test: `.fork/ci/test/tdd-commands.test.mjs::U20 sql: file gives the psql verify argv; single is unsupported` (new; fork-ci's `sql-verify` fixture)
+- red: `node --test --test-name-pattern="^U20 " .fork/ci/test/tdd-commands.test.mjs`
+  -> `AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:` / `actual: 'plain-script',` (1 failed)
+- green: `.fork/ci/lib/tdd-commands.mjs:44` sql argv is `runtime.command` (`psql -v ON_ERROR_STOP=1 -X -q -f tests/verify.sql`, scanRuntimes' own), `single` unsupported "tests/verify.sql is one script, no named tests; use `file`" (adapter A10); `:120` `sqlCounts` maps exit 0 to one pass, else one failure. Suite `node --test .fork/ci/test/` -> 121 passed, 0 failed
+- refactor: none needed
+- notes: the `file` op runs only the verify script, as R5 specifies; it does not run fork-ci's `bootstrap.sql` first (run-folder does that in `suite`).
+- commit: (this commit)
