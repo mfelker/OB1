@@ -13,7 +13,7 @@ One pure rule, `decide()`, says whether a change to a path in a checkout is allo
 **Lane**: fork feature
 **Branch / Base**: `fork/principle-v-guard` from fork `main`
 **Contribution folder**: `.fork/ci`
-**Worktree**: `/Users/mfelker/Projects/ob1/.worktrees/fork-principle-v-guard` — all source paths in this plan and in tasks.md are rooted here; spec-kit commands still run from the fork-`main` checkout
+**Worktree**: none (fork-`main` checkout). Merged in PR #19 (`bb41dd4`); the integration worktree `/Users/mfelker/Projects/ob1/.worktrees/fork-principle-v-guard` has been removed. Spec-kit commands run from the fork-`main` checkout
 
 Other paths this feature writes (all fork-only, FR-013): `.fork/githooks/pre-commit`, `.claude/settings.json`, `.fork/README.md`, `.fork/ci/README.md`, `.fork/ci/lib/self-test-needed.mjs` (so CI self-tests changes to the new paths).
 
