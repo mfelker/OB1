@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, realpathSync, symlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { makeRepo, git, writeFiles, commit } from './helpers/git-fixture.mjs';
+import { makeRepo, git, writeFiles, commit, branch, checkout } from './helpers/git-fixture.mjs';
 import { repoRelative, checkoutState } from '../lib/principle-v-paths.mjs';
 
 function tempRepo(files = { 'docs/a.md': '1' }) {
@@ -64,4 +64,20 @@ test('U17 checkoutState: branch is the branch name, or HEAD when detached', () =
   assert.equal(checkoutState(repo.dir).branch, 'contrib/x');
   git(repo, ['checkout', '-q', '--detach']);
   assert.equal(checkoutState(repo.dir).branch, 'HEAD');
+});
+
+test('U18 checkoutState: mergeInProgress is true while MERGE_HEAD exists', () => {
+  const repo = tempRepo();
+  branch(repo, 'side');
+  writeFiles(repo, { 'c.md': 'main' });
+  commit(repo, 'main moves');
+  checkout(repo, 'side');
+  writeFiles(repo, { 'b.md': 'side' });
+  commit(repo, 'side moves');
+  checkout(repo, 'main');
+  assert.equal(checkoutState(repo.dir).mergeInProgress, false);
+  git(repo, ['merge', '--no-commit', '--no-ff', 'side']);
+  assert.equal(checkoutState(repo.dir).mergeInProgress, true);
+  commit(repo, 'merge done');
+  assert.equal(checkoutState(repo.dir).mergeInProgress, false);
 });

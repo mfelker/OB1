@@ -51,3 +51,12 @@
 - green: `.fork/ci/lib/principle-v-paths.mjs:41-48` branch from `git symbolic-ref --short -q HEAD`, `HEAD` when that fails (detached). Suite `node --test .fork/ci/test/` -> 158 passed, 0 failed
 - refactor: none needed
 - commit: (this commit)
+
+## Cycle: U18 checkoutState: mergeInProgress is true while MERGE_HEAD exists
+
+- test: `.fork/ci/test/principle-v-paths.test.mjs::U18 checkoutState: mergeInProgress is true while MERGE_HEAD exists` (new)
+- red: `node --test --test-name-pattern="^U18 " .fork/ci/test/principle-v-paths.test.mjs`
+  -> `actual: false, expected: true` (1 failed; the stub-era `mergeInProgress: false` was hard-coded)
+- green: `.fork/ci/lib/principle-v-paths.mjs:49-54` `git rev-parse -q --verify MERGE_HEAD` succeeds only mid-merge. Suite `node --test .fork/ci/test/` -> 159 passed, 0 failed
+- refactor: none needed
+- commit: (this commit)

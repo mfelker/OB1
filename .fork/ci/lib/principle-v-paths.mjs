@@ -37,5 +37,11 @@ export function checkoutState(root) {
   } catch {
     branch = 'HEAD'; // detached
   }
-  return { branch, mergeInProgress: false };
+  let mergeInProgress = true;
+  try {
+    gitOut(root, ['rev-parse', '-q', '--verify', 'MERGE_HEAD']);
+  } catch {
+    mergeInProgress = false;
+  }
+  return { branch, mergeInProgress };
 }
