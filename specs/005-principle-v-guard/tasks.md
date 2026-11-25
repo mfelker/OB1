@@ -125,15 +125,15 @@ Wave 1 runs three agents at once (R, P, W). G needs the merged `decide()` and he
 
 - [X] T019 After R and P report: merge `fork/principle-v-guard-rule` then `fork/principle-v-guard-paths` into `fork/principle-v-guard` with `--no-ff`; append each fragment to `tdd/cycle-log.md` in merge order and delete the fragments; set reported behaviors `DONE` after checking each has a real red; run the full suite. Then create `WG` from `fork/principle-v-guard` and dispatch stream G (T010–T012, T014, T015).
 - [X] T020 After W reports: merge `fork/principle-v-guard-wiring` the same way. After G reports: merge `fork/principle-v-guard-guard` the same way. Tick marked tasks per the marker rule. Remove the four stream worktrees and branches.
-- [ ] T021 Gate checks in `W`: full `node --test .fork/ci/test/` passes; `npx --yes markdownlint-cli2 --config .github/.markdownlint.jsonc` on every changed Markdown file outside `.claude/skills/` and `.specify/extensions/` (pass paths as separate arguments) reports 0 issues; relative links resolve.
-- [ ] T022 Run quickstart §1, §2 and §5 in `W` (the guard targets `W`'s own checkout, branch `fork/principle-v-guard`, so expect allows there; use a temp repo on a `main` branch for the deny cases) and record results in the cycle log notes.
-- [ ] T023 TDD audit (Quality Gate 1, no exemption): from `M`, a fresh Sonnet-class subagent runs `/speckit-tdd-verify` on 005 against `W`'s artifacts and writes `W/specs/005-principle-v-guard/tdd/verification.md`. Required: PASS or PASS_WITH_GAPS. Fix any finding under the same TDD rules and re-audit.
-- [ ] T024 [P] `/speckit-analyze` on 005 from `M` in a fresh subagent; resolve any CRITICAL or HIGH finding.
-- [ ] T025 [P] Lane hygiene: `git -C W diff --stat main...HEAD` lists only fork-only paths (`.fork/`, `.claude/settings.json`, `specs/005-principle-v-guard/`); secret scan with gitleaks.
+- [X] T021 Gate checks in `W`: full `node --test .fork/ci/test/` passes; `npx --yes markdownlint-cli2 --config .github/.markdownlint.jsonc` on every changed Markdown file outside `.claude/skills/` and `.specify/extensions/` (pass paths as separate arguments) reports 0 issues; relative links resolve.
+- [X] T022 Run quickstart §1, §2 and §5 in `W` (the guard targets `W`'s own checkout, branch `fork/principle-v-guard`, so expect allows there; use a temp repo on a `main` branch for the deny cases) and record results in the cycle log notes.
+- [X] T023 TDD audit (Quality Gate 1, no exemption): from `M`, a fresh Sonnet-class subagent runs `/speckit-tdd-verify` on 005 against `W`'s artifacts and writes `W/specs/005-principle-v-guard/tdd/verification.md`. Required: PASS or PASS_WITH_GAPS. Fix any finding under the same TDD rules and re-audit.
+- [X] T024 [P] `/speckit-analyze` on 005 from `M` in a fresh subagent; resolve any CRITICAL or HIGH finding.
+- [X] T025 [P] Lane hygiene: `git -C W diff --stat main...HEAD` lists only fork-only paths (`.fork/`, `.claude/settings.json`, `specs/005-principle-v-guard/`); secret scan with gitleaks.
 - [ ] T026 Tick T001–T025 and T029, push `fork/principle-v-guard`, open the fork PR (`gh pr create -R mfelker/OB1 --base main --head fork/principle-v-guard --title "[fork] Principle V guard: agent and commit guards (spec 005)"`), wait for `fork-ci-verdict` and `self-test`. **Ask the owner before merging.**
 
 - [X] T030 [U31] [U32] [U33] [U34] [U35] Analyze remediation (T024 F1 HIGH case bypass, F3, F4): stream F (Sonnet) in `.worktrees/fork-pvg-fix`, test-first; merged into `fork/principle-v-guard`.
-- [ ] T031 [U36] [U37] [U38] Audit remediation (T023 HIGH 1–3, MED 5): stream H (Sonnet) in `.worktrees/fork-pvg-harden`, test strengthening with mutant reds; then merge and re-run T023. U25/U26 stay `TEST_AFTER` under the owner exception in plan.md Complexity Tracking.
+- [X] T031 [U36] [U37] [U38] Audit remediation (T023 HIGH 1–3, MED 5): stream H (Sonnet) in `.worktrees/fork-pvg-harden`, test strengthening with mutant reds; then merge and re-run T023. U25/U26 stay `TEST_AFTER` under the owner exception in plan.md Complexity Tracking.
 
 ## Phase 7: After merge (integrator, in `M`)
 

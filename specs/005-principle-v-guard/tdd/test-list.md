@@ -4,7 +4,7 @@ loop: outside-in # outside-in | inside-out
 profile: .specify/memory/tdd-profile.md # stack profile the commands must read
 spec_criteria: 11 # acceptance criteria found in spec.md
 planned_at: 92977db # short SHA the list was derived from
-updated_at: fb5a296 # short SHA of the last change to this file
+updated_at: 516f306 # short SHA of the last change to this file
 suite_baseline: green # green | red | unknown, at planning time
 ---
 
