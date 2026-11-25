@@ -1,6 +1,6 @@
 // Resolve the TDD adapter's target from the active feature's plan (data-model TddTarget; research R3).
 import { readFileSync } from 'node:fs';
-import { join, relative, resolve, sep } from 'node:path';
+import { isAbsolute, join, relative, resolve, sep } from 'node:path';
 
 /** A target-resolution error with a single-line message; the CLI exits 2. */
 export class TargetError extends Error {
@@ -39,11 +39,13 @@ function parseLane(value, planRel) {
   return hit[1];
 }
 
-/** The worktree path from the Worktree value: `none…` is the repo root, else the first backticked token. */
-function parseTree(value, repoRoot) {
+/** The worktree path from the Worktree value: `none…` is the repo root, else the first backticked token, which must be absolute. */
+function parseTree(value, repoRoot, planRel) {
+  if ((value ?? '').includes('[')) throw new TargetError(`plan Worktree is a placeholder (${planRel})`);
   if (/^none/i.test(value ?? '')) return repoRoot;
   const m = /`([^`]*)`/.exec(value ?? '');
-  return m ? m[1] : undefined;
+  if (!m || !isAbsolute(m[1])) throw new TargetError('plan Worktree must be an absolute path or "none"');
+  return m[1];
 }
 
 /** @returns {{repoRoot:string, featureDir:string, lane:string, tree:string, folder:string, folderExists:boolean}} */
@@ -59,6 +61,6 @@ export function resolveTarget({ repoRoot, env = process.env } = {}) {
     throw new TargetError(`plan not found: ${planRel}`);
   }
   const lane = parseLane(planField(planText, 'Lane'), planRel);
-  const tree = parseTree(planField(planText, 'Worktree'), repoRoot);
+  const tree = parseTree(planField(planText, 'Worktree'), repoRoot, planRel);
   return { repoRoot, featureDir, lane, tree };
 }

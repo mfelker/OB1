@@ -51,3 +51,12 @@
 - green: `.fork/ci/lib/tdd-target.mjs:44` a value starting `none` (case-insensitive) returns `repoRoot` before the backtick rule. Suite `node --test .fork/ci/test/` -> 107 passed, 0 failed
 - refactor: none needed
 - commit: (this commit)
+
+## Cycle: U7 a Worktree placeholder or a non-absolute token is an error
+
+- test: `.fork/ci/test/tdd-target.test.mjs::U7 a Worktree placeholder or a non-absolute token is an error` (new; includes the plan template's literal Worktree line with its `*(upstream-bound / staged)*` annotation)
+- red: `node --test --test-name-pattern="^U7 " .fork/ci/test/tdd-target.test.mjs`
+  -> `AssertionError [ERR_ASSERTION]: Missing expected exception.` / `actual: undefined,` (1 failed)
+- green: `.fork/ci/lib/tdd-target.mjs:44` a `[` in the value throws `plan Worktree is a placeholder (<plan>)` (checked first, R3 rule 1); `:47` no backticked token, or a non-absolute one, throws `plan Worktree must be an absolute path or "none"`. Suite `node --test .fork/ci/test/` -> 108 passed, 0 failed
+- refactor: none needed
+- commit: (this commit)

@@ -116,3 +116,16 @@ test('U6 Worktree none… gives repoRoot', () => {
     assert.equal(tree, root, value);
   }
 });
+
+test('U7 a Worktree placeholder or a non-absolute token is an error', () => {
+  const templateLine = '**Worktree** *(upstream-bound / staged)*: `[/absolute/path/to/worktree]` — all source paths in this plan and in tasks.md are rooted here; spec-kit commands still run from the fork-`main` checkout';
+  const fromTemplate = fixtureRepo({
+    '.specify/feature.json': featureJson('specs/001-a'),
+    'specs/001-a/plan.md': `${plan({ lane: 'staged upstream PR #1', worktree: null })}${templateLine}\n`,
+  });
+  throwsTarget(fromTemplate, {}, 'plan Worktree is a placeholder (specs/001-a/plan.md)');
+  const NOT_ABS = 'plan Worktree must be an absolute path or "none"';
+  throwsTarget(featureRepo({ worktree: '`relative/wt`' }), {}, NOT_ABS);
+  throwsTarget(featureRepo({ worktree: 'the sibling checkout' }), {}, NOT_ABS);
+  throwsTarget(featureRepo({ worktree: '' }), {}, NOT_ABS);
+});
