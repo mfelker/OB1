@@ -356,7 +356,7 @@ During the parallel streams, cycles are written first to `tdd/cycle-log.d/<strea
   -> `AssertionError [ERR_ASSERTION]: commit must be refused` (1 failed)
 - green: `.fork/ci/bin/principle-v-guard.mjs` new `staged()` mode (`--staged`): top level from `git rev-parse --show-toplevel`, paths from `git diff --cached --name-only -z --no-renames`, each through the shared `decideFor()`; any deny prints the header, one two-space-indented line per denied path and the `--no-verify` line to stderr and sets exit code 1. Suite `node --test .fork/ci/test/` -> 188 passed, 0 failed, 3 todo
 - refactor: extracted `decideFor(root, relPath)` (libs loaded by dynamic `import()`, state, upstream, `decide`) out of the `--hook` path so both modes share it; behavior unchanged (suite stays green).
-- note (contract wording): contracts/guards.md says each line is `<relPath>: <reason> <suggestion>`, but `decide()`'s reason already begins `<relPath>: constitution Principle V ...` (contracts/rule.md "Messages"). The line is therefore `  <reason> <suggestion>`, so the path appears once, not twice. A6's patterns (`CLAUDE\.md: .*file exists in upstream\/main`) hold either way.
+- note (contract wording): contracts/guards.md says each line is `<relPath>: <reason> <suggestion>`, but `decide()`'s reason already begins `<relPath>: constitution Principle V ...` (contracts/rule.md "Messages"). The line is therefore `<reason> <suggestion>` (indented two spaces), so the path appears once, not twice. A6's patterns (`CLAUDE\.md: .*file exists in upstream\/main`) hold either way.
 - commit: (this commit)
 
 ## Cycle: A7 --staged allows a fork-only commit
