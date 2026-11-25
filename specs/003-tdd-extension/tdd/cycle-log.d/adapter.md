@@ -256,3 +256,13 @@
 - refactor: none needed
 - notes: `suite` has no single kind, so its summary is `[tdd] suite feature=… folder=… → <outcome>`; the per-runtime lines above it name each kind and root.
 - commit: (this commit)
+
+## Cycle: A3 suite for a feature whose plan names a real git worktree runs that worktree's folder
+
+- test: `.fork/ci/test/tdd-cli.test.mjs::acceptance A3 suite for a feature whose plan names a real git worktree runs that worktree's folder` (new; `stagedLayout()`: committed repo R whose `recipes/x` test fails, plus a real `git worktree add` W whose `recipes/x` test passes, so routing to the wrong tree turns the suite red)
+- red: the test passed on its first run (`node --test --test-name-pattern="^A3 " .fork/ci/test/tdd-cli.test.mjs` -> 1 passed): the outer loop closes over units U5/U9/U24 that already exist (`loop: inside-out`). In place of a pre-implementation red, a deliberate mutant: `.fork/ci/lib/tdd-target.mjs:53` changed to `workTree(m[1]); return repoRoot;` (the Worktree is validated but ignored), then the same command
+  -> `AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:` / `actual: '/private/var/folders/…/fork-tdd-cli-VzSPz0',` (1 failed). Mutant reverted from a byte copy.
+- green: no production change. Suite `node --test .fork/ci/test/` -> 129 passed, 0 failed
+- refactor: none needed
+- notes: deviation: no red before implementation is possible for an acceptance behavior written after its units in an inside-out loop; the mutant red is the evidence the test can fail for the right reason (US2 AS1, FR-004).
+- commit: (this commit)

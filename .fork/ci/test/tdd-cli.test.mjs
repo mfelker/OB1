@@ -1,4 +1,4 @@
-import { test } from 'node:test';
+import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { cpSync, mkdtempSync, mkdirSync, readFileSync, writeFileSync, realpathSync } from 'node:fs';
@@ -8,8 +8,8 @@ import { fileURLToPath } from 'node:url';
 
 const CI_SRC = join(dirname(fileURLToPath(import.meta.url)), '..');
 
-const PASS = "import { test } from 'node:test';\nimport assert from 'node:assert/strict';\ntest('adds', () => assert.equal(1 + 1, 2));\n";
-const FAIL = "import { test } from 'node:test';\nimport assert from 'node:assert/strict';\ntest('breaks', () => assert.equal(1 + 1, 3, 'decisive failure marker'));\n";
+const PASS = "import { describe, test } from 'node:test';\nimport assert from 'node:assert/strict';\ntest('adds', () => assert.equal(1 + 1, 2));\n";
+const FAIL = "import { describe, test } from 'node:test';\nimport assert from 'node:assert/strict';\ntest('breaks', () => assert.equal(1 + 1, 3, 'decisive failure marker'));\n";
 const PLAIN = "console.log('plain script ran');\n";
 
 /** Plan text with the three R3 lines; pass null to omit a line. */
@@ -73,7 +73,7 @@ test('U22 where prints the JSON, including featureDir and folderExists', () => {
 });
 
 test('U23 single/file end to end: pass 0, fail 1, zero-match 3, unsupported 4; full child output streamed', () => {
-  const noisy = `import { test } from 'node:test';\nimport assert from 'node:assert/strict';\ntest('noisy', () => {\n  for (let i = 0; i < 3000; i++) console.log(\`noise line \${i}\`);\n  assert.equal(1, 2, 'decisive failure marker');\n});\n`;
+  const noisy = `import { describe, test } from 'node:test';\nimport assert from 'node:assert/strict';\ntest('noisy', () => {\n  for (let i = 0; i < 3000; i++) console.log(\`noise line \${i}\`);\n  assert.equal(1, 2, 'decisive failure marker');\n});\n`;
   const root = cliRepo({}, {
     'recipes/x/a.mjs': 'export const a = 1;\n',
     'recipes/x/pass.test.mjs': PASS,
@@ -143,7 +143,7 @@ function commitAll(dir) {
 
 test('U25 suite restores a lockfile it modified that was clean before', () => {
   // The passing test dirties both tracked lockfiles in its runtime root (cwd), as an install would.
-  const dirtying = "import { test } from 'node:test';\nimport { writeFileSync } from 'node:fs';\ntest('dirties', () => { writeFileSync('deno.lock', 'rewritten\\n'); writeFileSync('package-lock.json', 'rewritten\\n'); });\n";
+  const dirtying = "import { describe, test } from 'node:test';\nimport { writeFileSync } from 'node:fs';\ntest('dirties', () => { writeFileSync('deno.lock', 'rewritten\\n'); writeFileSync('package-lock.json', 'rewritten\\n'); });\n";
   const root = cliRepo({}, {
     'recipes/x/a.mjs': 'export const a = 1;\n',
     'recipes/x/a.test.mjs': dirtying,
@@ -193,4 +193,28 @@ test('U27 the summary line names feature= and folder=', () => {
   assert.equal(tdd(root, ['suite']).lastLine, '[tdd] suite feature=specs/001-a folder=recipes/x → pass');
   assert.equal(tdd(cliRepo({ folder: '`recipes/new`' }), ['suite']).lastLine,
     '[tdd] suite feature=specs/001-a folder=recipes/new → empty baseline: folder does not exist yet');
+});
+
+/**
+ * Acceptance layout: a committed repo R (adapter copy + feature plan) whose recipes/x test FAILS,
+ * plus a real linked worktree W where recipes/x's test PASSES. Routing to the wrong tree shows as a failure.
+ */
+function stagedLayout(planFor) {
+  const repo = cliRepo({}, { 'recipes/x/a.mjs': 'export const a = 1;\n', 'recipes/x/a.test.mjs': FAIL.replace("'breaks'", "'adds'") });
+  commitAll(repo);
+  const wt = join(realpathSync(mkdtempSync(join(tmpdir(), 'fork-tdd-accept-wt-'))), 'wt');
+  gitIn(repo, ['worktree', 'add', '-q', '-b', 'staged-x', wt]);
+  writeFileSync(join(wt, 'recipes/x/a.test.mjs'), PASS);
+  writeFileSync(join(repo, 'specs/001-a/plan.md'), plan(planFor(wt)));
+  return { repo, wt };
+}
+
+describe('acceptance', () => {
+  test('A3 suite for a feature whose plan names a real git worktree runs that worktree\'s folder', () => {
+    const { repo, wt } = stagedLayout(wt => ({ lane: 'staged upstream PR #1', worktree: `\`${wt}\`. Every source path is rooted here.` }));
+    assert.equal(JSON.parse(tdd(repo, ['where']).lastLine).tree, wt);
+    const r = tdd(repo, ['suite']);
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    assert.equal(r.lastLine, '[tdd] suite feature=specs/001-a folder=recipes/x → pass');
+  });
 });
