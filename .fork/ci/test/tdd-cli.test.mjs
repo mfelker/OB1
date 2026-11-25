@@ -71,3 +71,38 @@ test('U22 where prints the JSON, including featureDir and folderExists', () => {
   assert.equal(missing.folderExists, false);
   assert.deepEqual(missing.runtimes, []);
 });
+
+test('U23 single/file end to end: pass 0, fail 1, zero-match 3, unsupported 4; full child output streamed', () => {
+  const noisy = `import { test } from 'node:test';\nimport assert from 'node:assert/strict';\ntest('noisy', () => {\n  for (let i = 0; i < 3000; i++) console.log(\`noise line \${i}\`);\n  assert.equal(1, 2, 'decisive failure marker');\n});\n`;
+  const root = cliRepo({}, {
+    'recipes/x/a.mjs': 'export const a = 1;\n',
+    'recipes/x/pass.test.mjs': PASS,
+    'recipes/x/fail.test.mjs': FAIL,
+    'recipes/x/noisy.test.mjs': noisy,
+    'recipes/x/test-plain.mjs': PLAIN,
+  });
+  const pass = tdd(root, ['single', 'pass.test.mjs', 'adds']);
+  assert.equal(pass.status, 0, pass.stdout + pass.stderr);
+  assert.match(pass.lastLine, /tests=1 pass=1 fail=0 → pass$/);
+  const fail = tdd(root, ['single', 'recipes/x/fail.test.mjs', 'breaks']);
+  assert.equal(fail.status, 1, fail.stdout + fail.stderr);
+  assert.match(fail.lastLine, /tests=1 pass=0 fail=1 → fail$/);
+  assert.ok(fail.stdout.includes('decisive failure marker'));
+  const zero = tdd(root, ['single', 'pass.test.mjs', 'no such test']);
+  assert.equal(zero.status, 3, zero.stdout + zero.stderr);
+  assert.match(zero.lastLine, /tests=0 pass=0 fail=0 → no tests matched "no such test"$/);
+  const wholePass = tdd(root, ['file', 'pass.test.mjs']);
+  assert.equal(wholePass.status, 0);
+  assert.match(wholePass.lastLine, /tests=1 pass=1 fail=0 → pass$/);
+  assert.equal(tdd(root, ['file', 'fail.test.mjs']).status, 1);
+  const loud = tdd(root, ['file', 'noisy.test.mjs']);
+  assert.equal(loud.status, 1);
+  assert.ok(loud.stdout.includes('noise line 0\n') && loud.stdout.includes('noise line 2999\n'), 'the whole child output is passed through, untruncated');
+  assert.ok(loud.stdout.includes('decisive failure marker'));
+  const plainFile = tdd(root, ['file', 'test-plain.mjs']);
+  assert.equal(plainFile.status, 0, plainFile.stdout + plainFile.stderr);
+  assert.ok(plainFile.stdout.includes('plain script ran'));
+  const plainSingle = tdd(root, ['single', 'test-plain.mjs', 'x']);
+  assert.equal(plainSingle.status, 4);
+  assert.equal(plainSingle.stderr.trim(), 'tdd: single unsupported for plain-script: plain script, no named tests; use `file`');
+});

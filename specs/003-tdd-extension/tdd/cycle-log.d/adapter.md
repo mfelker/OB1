@@ -206,3 +206,13 @@
 - green: `.fork/ci/bin/tdd.mjs:10` `REPO_ROOT` is the realpath three levels above the script; `:12` `where` prints `resolveTarget()` plus `runtimes:[{kind, root, testFiles}]` from `scanRuntimes` (empty when the folder doesn't exist yet) as one JSON line (adapter A1). Suite `node --test .fork/ci/test/` -> 123 passed, 0 failed
 - refactor: none needed
 - commit: (this commit)
+
+## Cycle: U23 single/file end to end: pass 0, fail 1, zero-match 3, unsupported 4; full child output streamed
+
+- test: `.fork/ci/test/tdd-cli.test.mjs::U23 single/file end to end: pass 0, fail 1, zero-match 3, unsupported 4; full child output streamed` (new; tiny real passing, failing, 3000-line noisy failing, and plain-script files)
+- red: `node --test --test-name-pattern="^U23 " .fork/ci/test/tdd-cli.test.mjs`
+  -> `AssertionError [ERR_ASSERTION]: The input did not match the regular expression /tests=1 pass=1 fail=0 → pass$/. Input:` / `actual: '',` (1 failed). The CLI had only `where`; `single` printed nothing.
+- green: `.fork/ci/bin/tdd.mjs:17` `run()` spawns the RuntimeCommand, writing each stdout/stderr chunk through live and capturing all of it (exec.mjs's tail truncation is not used); `:56` `runTests()` = `requireFolder(resolveTarget())` → `resolveFile` → `runtimeFor` → `buildCommand`, `unsupported` exits 4 (adapter A10), child env from `childEnv()`; outcome: unreadable counts or failures exit 1, zero tests with a clean exit (or pytest 5, `:14`) exit 3, else 0; `:29` `ensureVenv()` creates or refreshes the cached pytest venv when its stamp differs from the requirements hash. Suite `node --test .fork/ci/test/` -> 124 passed, 0 failed
+- refactor: none needed
+- notes: deviation: the exit-4 path (adapter A10) has no Behavior Map id of its own; it is asserted here because U23 owns `single`/`file` end to end and T011 names the plain-script fixture. Zero tests with a non-zero exit is a failure (exit 1), never 3. The python and deno paths were also run by hand against scratchpad fixtures (pytest venv created; `single` pass 0, unmatched 3, `file` 0; deno `single` pass 0, unmatched 3); they are not in the automated suite because they need network/deno. The summary here omits `feature=`/`folder=`, which U27 drives.
+- commit: (this commit)
