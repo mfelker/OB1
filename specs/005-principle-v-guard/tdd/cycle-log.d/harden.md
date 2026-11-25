@@ -7,3 +7,13 @@
 - refactor: none needed
 - commit: (this commit)
 - notes: test strengthening against Gate 1 audit finding HIGH 1 / M13
+
+## Cycle: U37 D6 zones are narrow (other skills and workflows are upstream)
+
+- test: `.fork/ci/test/principle-v.test.mjs::U37 D6 zones are narrow: other files in .claude/skills and .github/workflows are denied with D8` (new)
+- red: mutant M06 (zone prefixes widened to `.claude/skills/` and `.github/workflows/`, `.fork/ci/lib/principle-v.mjs:5-6`), `node --test --test-name-pattern="^U37 " .fork/ci/test/principle-v.test.mjs`
+  -> `✖ U37 D6 zones are narrow ...` / `actual: true` / `expected: false` (1 failed); mutant reverted, `git status --short` clean except tests
+- green: no production change. Suite `node --test .fork/ci/test/` -> 200 passed, 0 failed
+- refactor: none needed
+- commit: (this commit)
+- notes: test strengthening against Gate 1 audit finding HIGH 2 / M06

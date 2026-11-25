@@ -138,3 +138,11 @@ test('U36 D4 before D5: a file under a fork-only root that exists upstream is de
     assert.equal(d.rule, 'D4', relPath);
   }
 });
+
+test('U37 D6 zones are narrow: other files in .claude/skills and .github/workflows are denied with D8', () => {
+  for (const relPath of ['.claude/skills/other/SKILL.md', '.github/workflows/ci2.yml']) {
+    const d = run({ relPath });
+    assert.equal(d.allowed, false, relPath);
+    assert.equal(d.rule, 'D8', relPath);
+  }
+});
