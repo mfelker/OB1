@@ -1,5 +1,7 @@
 // Per-runtime commands for the TDD adapter (data-model RuntimeCommand; research R4, R5).
+import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, realpathSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { isAbsolute, join, relative, sep } from 'node:path';
 import { scanRuntimes, SQL_VERIFY, TEST_PATTERNS } from './runtimes.mjs';
 import { TargetError } from './tdd-target.mjs';
@@ -34,6 +36,11 @@ export function buildCommand({ op, runtime, tree, file, name }) {
   const cwd = join(tree, runtime.root);
   const rel = relative(cwd, file).split(sep).join('/');
   const base = { op, cwd, unsupported: null };
+  if (runtime.kind === 'python') {
+    const venv = pythonVenv(cwd);
+    const argv = [join(venv.dir, 'bin', 'python'), '-m', 'pytest', '-q', ...(op === 'single' ? ['-k', name] : []), rel];
+    return { ...base, kind: 'python', argv, venv, countParser: pytestCounts };
+  }
   if (runtime.kind === 'deno') {
     const argv = [...runtime.command, ...(op === 'single' ? ['--filter', name] : []), rel];
     return { ...base, kind: 'deno', argv, countParser: denoCounts };
@@ -71,6 +78,27 @@ function denoCounts(output) {
   const all = [...text.matchAll(/(\d+) passed \| (\d+) failed/g)];
   if (!all.length) return null;
   const [passed, failed] = all.at(-1).slice(1).map(Number);
+  return { tests: passed + failed, passed, failed };
+}
+
+const sha1 = text => createHash('sha1').update(text).digest('hex');
+
+/** The cached venv for a python runtime root: keyed by its path; rebuilt when the requirements hash changes (R5). */
+function pythonVenv(cwd) {
+  const reqPath = join(cwd, 'requirements.txt');
+  const requirements = existsSync(reqPath) ? 'requirements.txt' : null;
+  const requirementsHash = sha1(requirements ? readFileSync(reqPath, 'utf8') : '');
+  return { dir: join(tmpdir(), `fork-tdd-venv-${sha1(cwd)}`), requirements, requirementsHash };
+}
+
+/** pytest -q: exit 5 is "no tests collected"; otherwise the last summary's passed / failed + error counts. */
+function pytestCounts(output, exitCode) {
+  if (exitCode === 5) return { tests: 0, passed: 0, failed: 0 };
+  const line = output.split('\n').reverse().find(l => / in [\d.]+s/.test(l) && /\d+ (passed|failed|error)/.test(l));
+  if (!line) return null;
+  const n = word => Number(new RegExp(`(\\d+) ${word}`).exec(line)?.[1] ?? 0);
+  const passed = n('passed');
+  const failed = n('failed') + n('error');
   return { tests: passed + failed, passed, failed };
 }
 

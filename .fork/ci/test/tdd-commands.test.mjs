@@ -1,5 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { mkdtempSync, mkdirSync, writeFileSync, realpathSync, symlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
@@ -138,4 +139,29 @@ test('U17 deno argv is runtime.command plus --filter; the 0 passed parser', () =
   assert.deepEqual(p('FAILED | 1 passed | 2 failed (4ms)\n', 1), { tests: 3, passed: 1, failed: 2 });
   assert.deepEqual(p('error: No test modules found\n', 1), { tests: 0, passed: 0, failed: 0 });
   assert.equal(p('error: Module not found "file:///x.ts".\n', 1), null);
+});
+
+const sha1 = s => createHash('sha1').update(s).digest('hex');
+
+test('U18 python: cached venv keyed by tree + root and the requirements hash; argv -k; exit 5 is zero-match', () => {
+  const tree = tempTree('fork-tdd-tree-', { ...fixtureFiles('python-tested', 'integrations/p'), 'integrations/p/requirements.txt': 'requests==2.32.3\n' });
+  const file = join(tree, 'integrations/p/tests/test_imp.py');
+  const runtime = runtimeFor(file, { repoRoot: tree, tree, folder: 'integrations/p' });
+  const cwd = join(tree, 'integrations/p');
+  const venv = join(tmpdir(), `fork-tdd-venv-${sha1(cwd)}`);
+  const single = buildCommand({ op: 'single', runtime, tree, file, name: 'test_double' });
+  assert.equal(single.kind, 'python');
+  assert.equal(single.cwd, cwd);
+  assert.deepEqual(single.venv, { dir: venv, requirements: 'requirements.txt', requirementsHash: sha1('requests==2.32.3\n') });
+  assert.deepEqual(single.argv, [join(venv, 'bin', 'python'), '-m', 'pytest', '-q', '-k', 'test_double', 'tests/test_imp.py']);
+  assert.deepEqual(buildCommand({ op: 'file', runtime, tree, file }).argv, [join(venv, 'bin', 'python'), '-m', 'pytest', '-q', 'tests/test_imp.py']);
+  const bare = tempTree('fork-tdd-tree-', fixtureFiles('python-tested', 'integrations/p'));
+  const bareFile = join(bare, 'integrations/p/tests/test_imp.py');
+  const bareCmd = buildCommand({ op: 'file', runtime: runtimeFor(bareFile, { repoRoot: bare, tree: bare, folder: 'integrations/p' }), tree: bare, file: bareFile });
+  assert.deepEqual(bareCmd.venv, { dir: join(tmpdir(), `fork-tdd-venv-${sha1(join(bare, 'integrations/p'))}`), requirements: null, requirementsHash: sha1('') });
+  const p = single.countParser;
+  assert.deepEqual(p('1 deselected in 0.01s\n', 5), { tests: 0, passed: 0, failed: 0 });
+  assert.deepEqual(p('.\n1 passed in 0.01s\n', 0), { tests: 1, passed: 1, failed: 0 });
+  assert.deepEqual(p('F.\nFAILED tests/test_imp.py::test_double - assert 3 == 4\n1 failed, 1 passed, 1 error in 0.03s\n', 1), { tests: 3, passed: 1, failed: 2 });
+  assert.equal(p('ERROR: usage: python -m pytest\n', 4), null);
 });

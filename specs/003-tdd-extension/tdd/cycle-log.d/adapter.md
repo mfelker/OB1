@@ -157,3 +157,13 @@
 - refactor: none needed
 - notes: `--filter <name>` is R5's argv verbatim; deno's string filter is a substring match, so a `single` name can select more than one deno test (recorded for the profile).
 - commit: (this commit)
+
+## Cycle: U18 python: cached venv keyed by tree + root and the requirements hash; argv -k; exit 5 is zero-match
+
+- test: `.fork/ci/test/tdd-commands.test.mjs::U18 python: cached venv keyed by tree + root and the requirements hash; argv -k; exit 5 is zero-match` (new; with and without `requirements.txt`)
+- red: `node --test --test-name-pattern="^U18 " .fork/ci/test/tdd-commands.test.mjs`
+  -> `AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:` / `actual: 'plain-script',` (1 failed)
+- green: `.fork/ci/lib/tdd-commands.mjs:39` python argv `<venv>/bin/python -m pytest -q [-k <name>] <f>`; `:87` `pythonVenv()` gives `{dir: <os tmp>/fork-tdd-venv-<sha1(tree + root)>, requirements, requirementsHash}`; `:95` `pytestCounts()` maps exit 5 to zero and reads the last `… in Ns` summary (errors count as failures), else null. Suite `node --test .fork/ci/test/` -> 119 passed, 0 failed
+- refactor: none needed
+- notes: `buildCommand` stays pure: it describes the venv (`venv` field, an addition to the data-model fields) and the CLI creates or refreshes it. "tree + root" is hashed as the joined cwd path.
+- commit: (this commit)
