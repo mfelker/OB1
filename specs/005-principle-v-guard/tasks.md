@@ -35,7 +35,7 @@ description: "Tasks for the Principle V guard (spec 005), structured for paralle
 | R (rule) | `WR` | wave 1 | `.fork/ci/lib/principle-v.mjs`, `.fork/ci/test/principle-v.test.mjs`, `tdd/cycle-log.d/rule.md` |
 | P (paths) | `WP` | wave 1 | `.fork/ci/lib/principle-v-paths.mjs`, `.fork/ci/test/principle-v-paths.test.mjs`, `tdd/cycle-log.d/paths.md` |
 | W (wiring, docs) | `WW` | wave 1 | `.fork/ci/lib/self-test-needed.mjs`, `.fork/ci/test/self-test-needed.test.mjs`, `.fork/ci/test/principle-v-docs.test.mjs`, `.claude/settings.json`, `.fork/githooks/pre-commit`, `.fork/README.md`, `.fork/ci/README.md`, `tdd/cycle-log.d/wiring.md` |
-| G (guard CLI) | `WG` | wave 2, after R and P are merged into `fork/principle-v-guard` | `.fork/ci/bin/principle-v-guard.mjs`, `.fork/ci/test/principle-v-guard.test.mjs`, `tdd/cycle-log.d/guard.md` |
+| G (guard CLI) | `WG` | wave 2, after R and P are merged into `fork/principle-v-guard` | `.fork/ci/bin/principle-v-guard.mjs`, `.fork/ci/test/principle-v-guard.test.mjs`, `.fork/ci/test/principle-v-guard.acceptance.test.mjs` (only to flip `todo` → `test`), `tdd/cycle-log.d/guard.md` |
 
 Wave 1 runs three agents at once (R, P, W). G needs the merged `decide()` and helper interfaces, so it runs alone in wave 2.
 
@@ -47,7 +47,9 @@ Wave 1 runs three agents at once (R, P, W). G needs the merged `decide()` and he
 - [ ] T002 Fast-forward `W` to fork `main` (`git -C W merge --ff-only main`) so the integration branch carries spec, plan, tasks and test list. From here on, 005's artifacts change only in `W` (single writer).
 - [ ] T003 In `W`, create `specs/005-principle-v-guard/tdd/cycle-log.d/.gitkeep` and commit. Then create the three wave-1 worktrees from `M`: `git worktree add .worktrees/fork-pvg-<s> -b fork/principle-v-guard-<s> fork/principle-v-guard` for `s` ∈ {rule, paths, wiring}.
 
-**Checkpoint**: test list committed, integration branch current, wave-1 worktrees exist.
+- [ ] T029 [A1] [A2] [A3] [A4] [A5] [A6] [A7] [A8] [A9] Outer loop first: in `W`, write `.fork/ci/test/principle-v-guard.acceptance.test.mjs` with A1–A9 as `node:test` `todo` tests (one per behavior, asserting the full observable result through the real entry points: the `.claude/settings.json` command string for A1–A5, a real `git commit` through a copy of `.fork/githooks/` for A6–A9, temp repos with an `upstream/main` ref via `git-fixture.mjs`). Run the file, record each red (`✖ … # TODO` with its failure line) in `tdd/cycle-log.md`, confirm the full suite still passes, and commit. Stream G flips each `todo` to `test` in the commit that turns it green.
+
+**Checkpoint**: test list committed, integration branch current, acceptance tests committed as recorded reds, wave-1 worktrees exist.
 
 ---
 
@@ -57,14 +59,14 @@ Wave 1 runs three agents at once (R, P, W). G needs the merged `decide()` and he
 
 ### Stream R: the rule (`WR`)
 
-- [ ] T004 [P] Tests first in `.fork/ci/test/principle-v.test.mjs`, then `decide()` in `.fork/ci/lib/principle-v.mjs`, one cycle per decision-table row of contracts/rule.md (D1–D9, first match wins), covering data-model.md `Decision.allowed` and `Decision.rule`. Include: an exact upstream file inside a fork-only zone is denied (D4 before D6); `upstream: null` still allows fork-only roots and zones (D5, D6 before D7); a new file at the top level that upstream does not have is allowed (D9).
-- [ ] T005 [P] Tests first in `.fork/ci/test/principle-v.test.mjs`, then the deny texts, covering data-model.md `Decision.reason` and `Decision.suggestion` with the exact strings in contracts/rule.md "Messages": the D4, D7 and D8 reasons, the `docs/domain_knowledge/` suggestion naming `.fork/domain-knowledge/`, and the default upstream-bound/staged suggestion.
+- [ ] T004 [P] [U1] [U2] [U3] [U4] [U5] [U6] [U7] [U8] [U9] Tests first in `.fork/ci/test/principle-v.test.mjs`, then `decide()` in `.fork/ci/lib/principle-v.mjs`, one cycle per decision-table row of contracts/rule.md (D1–D9, first match wins), covering data-model.md `Decision.allowed` and `Decision.rule`. Start from a stub `decide()` that returns a deny, and run the cycles in test-list order (U1→U9) so every test is red first. Include: an exact upstream file inside a fork-only zone is denied (D4 before D6); `upstream: null` still allows fork-only roots and zones (D5, D6 before D7); a new file at the top level that upstream does not have is allowed (D9).
+- [ ] T005 [P] [U10] [U11] Tests first in `.fork/ci/test/principle-v.test.mjs`, then the deny texts, covering data-model.md `Decision.reason` and `Decision.suggestion` with the exact strings in contracts/rule.md "Messages": the D4, D7 and D8 reasons, the `docs/domain_knowledge/` suggestion naming `.fork/domain-knowledge/`, and the default upstream-bound/staged suggestion.
 
 ### Stream P: path and checkout helpers (`WP`)
 
-- [ ] T006 [P] Tests first in `.fork/ci/test/principle-v-paths.test.mjs` (temp repos via `.fork/ci/test/helpers/git-fixture.mjs`), then `repoRelative(path, cwd)` in `.fork/ci/lib/principle-v-paths.mjs`, covering data-model.md `PathTarget.root` and `PathTarget.relPath`: relative, absolute, `..` and symlinked forms give the same result; a not-yet-created file resolves through its nearest existing ancestor; a path outside every checkout, or equal to the root, gives `relPath: null`; a path inside a linked worktree reports that worktree as `root`.
-- [ ] T007 [P] Tests first, then `checkoutState(root)` and `GuardError` in `.fork/ci/lib/principle-v-paths.mjs`, covering data-model.md `CheckoutState.branch` and `CheckoutState.mergeInProgress`: branch name on a branch, `HEAD` when detached, `mergeInProgress` true while `MERGE_HEAD` exists (make it with `git merge --no-commit --no-ff`), `GuardError` for a non-repository.
-- [ ] T008 [P] Tests first, then `upstreamPaths(root)` in `.fork/ci/lib/principle-v-paths.mjs`, covering data-model.md `UpstreamPaths.files` and `UpstreamPaths.dirs`: files from `upstream/main` (set the ref with `addRemoteRef`), every proper ancestor in `dirs`, and `null` when the ref is missing.
+- [ ] T006 [P] [U12] [U13] [U14] [U15] [U16] Tests first in `.fork/ci/test/principle-v-paths.test.mjs` (temp repos via `.fork/ci/test/helpers/git-fixture.mjs`), then `repoRelative(path, cwd)` in `.fork/ci/lib/principle-v-paths.mjs`, covering data-model.md `PathTarget.root` and `PathTarget.relPath`: relative, absolute, `..` and symlinked forms give the same result (cycle order U12→U16 per the test list; U12's minimal version may take the root from `cwd`, which U13 then corrects); a not-yet-created file resolves through its nearest existing ancestor; a path outside every checkout, or equal to the root, gives `relPath: null`; a path inside a linked worktree reports that worktree as `root`.
+- [ ] T007 [P] [U17] [U18] [U19] Tests first, then `checkoutState(root)` and `GuardError` in `.fork/ci/lib/principle-v-paths.mjs`, covering data-model.md `CheckoutState.branch` and `CheckoutState.mergeInProgress`: branch name on a branch, `HEAD` when detached, `mergeInProgress` true while `MERGE_HEAD` exists (make it with `git merge --no-commit --no-ff`), `GuardError` for a non-repository.
+- [ ] T008 [P] [U20] [U21] Tests first, then `upstreamPaths(root)` in `.fork/ci/lib/principle-v-paths.mjs`, covering data-model.md `UpstreamPaths.files` and `UpstreamPaths.dirs`: files from `upstream/main` (set the ref with `addRemoteRef`), every proper ancestor in `dirs`, and `null` when the ref is missing.
 
 ---
 
@@ -76,14 +78,13 @@ Wave 1 runs three agents at once (R, P, W). G needs the merged `decide()` and he
 
 ### Wave 1, stream W (`WW`): wiring for US1
 
-- [ ] T009 [P] [US1] Tests first in `.fork/ci/test/principle-v-docs.test.mjs`, then `.claude/settings.json`, per contracts/guards.md "Wiring": exactly one `hooks.PreToolUse` entry with matcher `Write|Edit|MultiEdit|NotebookEdit`, one `command` hook whose command is `node "$CLAUDE_PROJECT_DIR/.fork/ci/bin/principle-v-guard.mjs" --hook`, and `timeout: 30`. The test parses the JSON; it does not run Claude Code.
+- [ ] T009 [P] [US1] [U28] Tests first in `.fork/ci/test/principle-v-docs.test.mjs`, then `.claude/settings.json`, per contracts/guards.md "Wiring": exactly one `hooks.PreToolUse` entry with matcher `Write|Edit|MultiEdit|NotebookEdit`, one `command` hook whose command is `node "$CLAUDE_PROJECT_DIR/.fork/ci/bin/principle-v-guard.mjs" --hook`, and `timeout: 30`. The test parses the JSON; it does not run Claude Code.
 
 ### Wave 2, stream G (`WG`): the `--hook` mode
 
-- [ ] T010 [US1] Tests first in `.fork/ci/test/principle-v-guard.test.mjs` (spawn `process.execPath .fork/ci/bin/principle-v-guard.mjs --hook` with JSON on stdin against temp repos), then the `--hook` mode in `.fork/ci/bin/principle-v-guard.mjs`, per contracts/guards.md `--hook`: allowed → exit 0, no output; denied → exit 0 with the `hookSpecificOutput` deny JSON whose reason is `decide()`'s reason plus suggestion; target from `tool_input.file_path`, falling back to `tool_input.notebook_path`, resolved against `cwd`.
-- [ ] T011 [US1] Tests first, then fail-closed handling in `.fork/ci/bin/principle-v-guard.mjs` (FR-011, research R1): unparseable stdin, a matched tool with no target path, and a library that fails to load each produce the deny JSON with reason starting `principle-v-guard failed:` and exit 0, never a non-zero exit. Load `lib/principle-v.mjs` and `lib/principle-v-paths.mjs` with dynamic `import()` inside the top-level `try`; test the load failure by pointing the CLI at a temp copy whose lib file is broken.
-- [ ] T012 [US1] Acceptance cycles in a `describe('acceptance US1')` block of `.fork/ci/test/principle-v-guard.test.mjs`, one per spec US1 scenario (AS1–AS5): upstream file refused with the upstream-bound/staged route; `docs/domain_knowledge/CONTEXT.md` refused naming `.fork/domain-knowledge/`; fork-only roots and zones allowed; a write into a linked worktree on another branch allowed; a write during a merge allowed.
-
+- [ ] T012 [US1] [A1] [A2] [A3] [A4] [A5] Flip the A1–A5 `todo` tests in `.fork/ci/test/principle-v-guard.acceptance.test.mjs` to `test`, one cycle each, in the same commit as the `--hook` change that makes each pass (A1 first: it creates the `--hook` path), one per spec US1 scenario (AS1–AS5): upstream file refused with the upstream-bound/staged route; `docs/domain_knowledge/CONTEXT.md` refused naming `.fork/domain-knowledge/`; fork-only roots and zones allowed; a write into a linked worktree on another branch allowed; a write during a merge allowed.
+- [ ] T010 [US1] [U22] Tests first in `.fork/ci/test/principle-v-guard.test.mjs` (spawn `process.execPath .fork/ci/bin/principle-v-guard.mjs --hook` with JSON on stdin against temp repos), then the `--hook` mode in `.fork/ci/bin/principle-v-guard.mjs`, per contracts/guards.md `--hook`: allowed → exit 0, no output; denied → exit 0 with the `hookSpecificOutput` deny JSON whose reason is `decide()`'s reason plus suggestion; target from `tool_input.file_path`, falling back to `tool_input.notebook_path`, resolved against `cwd`.
+- [ ] T011 [US1] [U23] [U24] [U25] Tests first, then fail-closed handling in `.fork/ci/bin/principle-v-guard.mjs` (FR-011, research R1): unparseable stdin, a matched tool with no target path, and a library that fails to load each produce the deny JSON with reason starting `principle-v-guard failed:` and exit 0, never a non-zero exit. Load `lib/principle-v.mjs` and `lib/principle-v-paths.mjs` with dynamic `import()` inside the top-level `try`; test the load failure by pointing the CLI at a temp copy whose lib file is broken.
 **Checkpoint**: US1 complete once T009–T012 are merged into `fork/principle-v-guard`.
 
 ---
@@ -96,13 +97,12 @@ Wave 1 runs three agents at once (R, P, W). G needs the merged `decide()` and he
 
 ### Wave 1, stream W (`WW`): wiring for US2
 
-- [ ] T013 [P] [US2] Tests first in `.fork/ci/test/principle-v-docs.test.mjs`, then `.fork/githooks/pre-commit`, per contracts/guards.md "Wiring": executable, POSIX `sh`, and runs `node "$(git rev-parse --show-toplevel)/.fork/ci/bin/principle-v-guard.mjs" --staged` with `exec`.
+- [ ] T013 [P] [US2] [U29] Tests first in `.fork/ci/test/principle-v-docs.test.mjs`, then `.fork/githooks/pre-commit`, per contracts/guards.md "Wiring": executable, POSIX `sh`, and runs `node "$(git rev-parse --show-toplevel)/.fork/ci/bin/principle-v-guard.mjs" --staged` with `exec`.
 
 ### Wave 2, stream G (`WG`): the `--staged` mode
 
-- [ ] T014 [US2] Tests first in `.fork/ci/test/principle-v-guard.test.mjs`, then the `--staged` mode in `.fork/ci/bin/principle-v-guard.mjs`, per contracts/guards.md `--staged` and research R6: staged paths from `git diff --cached --name-only -z --no-renames` (additions, modifications, deletions, both sides of a rename); any denied path → exit 1 with the header, one line per path and the `--no-verify` note on stderr; all allowed → exit 0, no output; guard failure → exit 1 with `principle-v-guard failed:`.
-- [ ] T015 [US2] Acceptance cycles in `describe('acceptance US2')` of `.fork/ci/test/principle-v-guard.test.mjs`, one per spec US2 scenario (AS1–AS4), driving a real `git commit` in a temp repo whose `core.hooksPath` points at a copy of `.fork/githooks/`: refused with the listed paths; fork-only commit succeeds; merge commit succeeds; commit on another branch's worktree succeeds.
-
+- [ ] T015 [US2] [A6] [A7] [A8] [A9] Flip the A6–A9 `todo` tests in `.fork/ci/test/principle-v-guard.acceptance.test.mjs` to `test`, one cycle each, in the same commit as the `--staged` change that makes each pass (A6 first), one per spec US2 scenario (AS1–AS4), driving a real `git commit` in a temp repo whose `core.hooksPath` points at a copy of `.fork/githooks/`: refused with the listed paths; fork-only commit succeeds; merge commit succeeds; commit on another branch's worktree succeeds.
+- [ ] T014 [US2] [U26] [U27] Tests first in `.fork/ci/test/principle-v-guard.test.mjs`, then the `--staged` mode in `.fork/ci/bin/principle-v-guard.mjs`, per contracts/guards.md `--staged` and research R6: staged paths from `git diff --cached --name-only -z --no-renames` (additions, modifications, deletions, both sides of a rename); any denied path → exit 1 with the header, one line per path and the `--no-verify` note on stderr; all allowed → exit 0, no output; guard failure → exit 1 with `principle-v-guard failed:`.
 **Checkpoint**: US2 complete once T013–T015 are merged.
 
 ---
@@ -115,8 +115,8 @@ Wave 1 runs three agents at once (R, P, W). G needs the merged `decide()` and he
 
 ### Wave 1, stream W (`WW`)
 
-- [ ] T016 [P] [US3] Tests first in `.fork/ci/test/principle-v-docs.test.mjs`, then `.fork/README.md`: a section that names `.fork/domain-knowledge/` as the canonical knowledge root for `/speckit-grill-with-docs` with its layout (`CONTEXT.md`, topic documents, `adr/`); a "Principle V guard" section describing both guards, what they allow and refuse, the merge exception and `--no-verify`; and the enable command `git config core.hooksPath .fork/githooks` (US3 AS1, AS2). Do not create `.fork/domain-knowledge/` itself (grill creates it on its first recorded item).
-- [ ] T017 [P] Tests first in `.fork/ci/test/self-test-needed.test.mjs`, then `.fork/ci/lib/self-test-needed.mjs`, per contracts/guards.md "Self-test trigger": `true` for paths under `.fork/githooks/` and for `.claude/settings.json`; existing triggers unchanged.
+- [ ] T016 [P] [US3] [A10] [A11] Tests first in `.fork/ci/test/principle-v-docs.test.mjs`, then `.fork/README.md`: a section that names `.fork/domain-knowledge/` as the canonical knowledge root for `/speckit-grill-with-docs` with its layout (`CONTEXT.md`, topic documents, `adr/`); a "Principle V guard" section describing both guards, what they allow and refuse, the merge exception and `--no-verify`; and the enable command `git config core.hooksPath .fork/githooks` (US3 AS1, AS2). Do not create `.fork/domain-knowledge/` itself (grill creates it on its first recorded item).
+- [ ] T017 [P] [U30] Tests first in `.fork/ci/test/self-test-needed.test.mjs`, then `.fork/ci/lib/self-test-needed.mjs`, per contracts/guards.md "Self-test trigger": `true` for paths under `.fork/githooks/` and for `.claude/settings.json`; existing triggers unchanged.
 - [ ] T018 [P] Document `bin/principle-v-guard.mjs` (`--hook`, `--staged`, exit codes, fail-closed) in `.fork/ci/README.md`, from contracts/guards.md. No test; docs only.
 
 ---
@@ -130,7 +130,7 @@ Wave 1 runs three agents at once (R, P, W). G needs the merged `decide()` and he
 - [ ] T023 TDD audit (Quality Gate 1, no exemption): from `M`, a fresh Sonnet-class subagent runs `/speckit-tdd-verify` on 005 against `W`'s artifacts and writes `W/specs/005-principle-v-guard/tdd/verification.md`. Required: PASS or PASS_WITH_GAPS. Fix any finding under the same TDD rules and re-audit.
 - [ ] T024 [P] `/speckit-analyze` on 005 from `M` in a fresh subagent; resolve any CRITICAL or HIGH finding.
 - [ ] T025 [P] Lane hygiene: `git -C W diff --stat main...HEAD` lists only fork-only paths (`.fork/`, `.claude/settings.json`, `specs/005-principle-v-guard/`); secret scan with gitleaks.
-- [ ] T026 Tick T001–T025, push `fork/principle-v-guard`, open the fork PR (`gh pr create -R mfelker/OB1 --base main --head fork/principle-v-guard --title "[fork] Principle V guard: agent and commit guards (spec 005)"`), wait for `fork-ci-verdict` and `self-test`. **Ask the owner before merging.**
+- [ ] T026 Tick T001–T025 and T029, push `fork/principle-v-guard`, open the fork PR (`gh pr create -R mfelker/OB1 --base main --head fork/principle-v-guard --title "[fork] Principle V guard: agent and commit guards (spec 005)"`), wait for `fork-ci-verdict` and `self-test`. **Ask the owner before merging.**
 
 ## Phase 7: After merge (integrator, in `M`)
 
@@ -141,7 +141,7 @@ Wave 1 runs three agents at once (R, P, W). G needs the merged `decide()` and he
 
 ## Dependencies & Execution Order
 
-- Phase 1 (T001–T003) blocks everything.
+- Phase 1 (T001–T003, T029) blocks everything.
 - Wave 1: streams R (T004–T005), P (T006–T008) and W (T009, T013, T016–T018) run in parallel; their files are disjoint (see the ownership table).
 - Wave 2: stream G (T010–T012, T014–T015) starts after T019 merges R and P, because the CLI imports both modules.
 - Integration (T019–T026) is the integrator's alone; T024 and T025 can run in parallel.
