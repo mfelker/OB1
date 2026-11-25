@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 // TDD adapter: run the active feature's tests in its plan's worktree and folder (contracts/tdd-adapter-cli.md).
 import { execFileSync, spawn } from 'node:child_process';
-import { existsSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { delimiter, dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { requireFolder, resolveTarget, TargetError } from '../lib/tdd-target.mjs';
-import { buildCommand, resolveFile, runtimeFor, suiteCounts } from '../lib/tdd-commands.mjs';
+import { buildCommand, privateDir, resolveFile, runtimeFor, suiteCounts } from '../lib/tdd-commands.mjs';
 import { childEnv } from '../lib/tdd-env.mjs';
 import { scanRuntimes } from '../lib/runtimes.mjs';
 
@@ -31,8 +31,9 @@ function run(argv, { cwd, env }) {
 /** Create or refresh the cached pytest venv when its requirements stamp is stale (R5). */
 async function ensureVenv(venv, cwd, env) {
   const stamp = join(venv.dir, '.fork-tdd-stamp');
-  if (existsSync(stamp) && readFileSync(stamp, 'utf8') === venv.requirementsHash) return true;
+  if (privateDir(venv.dir) && existsSync(stamp) && readFileSync(stamp, 'utf8') === venv.requirementsHash) return true;
   rmSync(venv.dir, { recursive: true, force: true });
+  mkdirSync(dirname(venv.dir), { recursive: true, mode: 0o700 });
   if ((await run(['python3', '-m', 'venv', venv.dir], { cwd, env })).code !== 0) return false;
   const pip = [join(venv.dir, 'bin', 'python'), '-m', 'pip', 'install', '-q', 'pytest'];
   if (venv.requirements) pip.push('-r', venv.requirements);

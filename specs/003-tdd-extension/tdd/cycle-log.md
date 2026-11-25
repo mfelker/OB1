@@ -518,3 +518,13 @@ Appended to `tdd/cycle-log.md` by the integrator in merge order (research R14).
 - refactor: none needed
 - commit: (this commit)
 - notes: deviation, behavior-driven: U18's expected venv path now follows the new location through an `expectedVenv` helper; its other assertions (argv, requirements hash, exit 5) are unchanged.
+
+## Cycle: U40 privateDir: reuse a cached venv only when it is privately owned
+
+- test: `.fork/ci/test/tdd-commands.test.mjs::U40 privateDir: reuse a cached venv dir only when it is a real dir owned by this user and not group/world-writable` (new)
+- red: `node --test --test-name-pattern="^U40 " .fork/ci/test/tdd-commands.test.mjs`
+  -> `AssertionError [ERR_ASSERTION]: group-writable` / `actual: true,` / `expected: false,` (1 failed). `privateDir` existed only as a stub returning `true` so the import resolved.
+- green: `.fork/ci/lib/tdd-commands.mjs` `privateDir` uses `lstatSync`: a directory, owned by `process.getuid()`, with no group/world write bit; anything else (symlink, file, missing, foreign or writable) is `false`. `.fork/ci/bin/tdd.mjs` `ensureVenv` reuses a cached venv only when `privateDir` holds and the stamp matches, otherwise removes and rebuilds it, and creates the cache parent with mode `0700`. Suite `node --test .fork/ci/test/` -> 151 passed, 0 failed
+- refactor: none needed
+- commit: (this commit)
+- notes: the `ensureVenv` wiring is not exercised by the automated suite; the python end-to-end path stays hand-run only, as recorded for U18 in Stream A.

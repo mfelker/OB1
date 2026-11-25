@@ -1,10 +1,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { mkdtempSync, mkdirSync, writeFileSync, realpathSync, symlinkSync } from 'node:fs';
+import { chmodSync, mkdtempSync, mkdirSync, writeFileSync, realpathSync, symlinkSync } from 'node:fs';
 import { homedir, tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
-import { buildCommand, resolveFile, runtimeFor, suiteCounts } from '../lib/tdd-commands.mjs';
+import { buildCommand, privateDir, resolveFile, runtimeFor, suiteCounts } from '../lib/tdd-commands.mjs';
 import { fixtureFiles } from './fixtures.mjs';
 import { TargetError } from '../lib/tdd-target.mjs';
 
@@ -255,4 +255,26 @@ test('U39 python venv lives in the per-user cache, never in the shared temp dir'
   } finally {
     if (saved === undefined) delete process.env.XDG_CACHE_HOME; else process.env.XDG_CACHE_HOME = saved;
   }
+});
+
+test('U40 privateDir: reuse a cached venv dir only when it is a real dir owned by this user and not group/world-writable', () => {
+  const root = realpathSync(mkdtempSync(join(tmpdir(), 'fork-tdd-private-')));
+  const own = join(root, 'own');
+  mkdirSync(own, { mode: 0o700 });
+  chmodSync(own, 0o700);
+  assert.equal(privateDir(own), true);
+  chmodSync(own, 0o755);
+  assert.equal(privateDir(own), true, 'read/execute for others is fine');
+  chmodSync(own, 0o775);
+  assert.equal(privateDir(own), false, 'group-writable');
+  chmodSync(own, 0o707);
+  assert.equal(privateDir(own), false, 'world-writable');
+  chmodSync(own, 0o700);
+  const link = join(root, 'link');
+  symlinkSync(own, link);
+  assert.equal(privateDir(link), false, 'symlink');
+  const file = join(root, 'file');
+  writeFileSync(file, 'x');
+  assert.equal(privateDir(file), false, 'not a directory');
+  assert.equal(privateDir(join(root, 'missing')), false, 'missing');
 });

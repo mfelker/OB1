@@ -1,6 +1,6 @@
 // Per-runtime commands for the TDD adapter (data-model RuntimeCommand; research R4, R5).
 import { createHash } from 'node:crypto';
-import { existsSync, readFileSync, realpathSync } from 'node:fs';
+import { existsSync, lstatSync, readFileSync, realpathSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { isAbsolute, join, relative, sep } from 'node:path';
 import { scanRuntimes, SQL_VERIFY, TEST_PATTERNS } from './runtimes.mjs';
@@ -170,4 +170,17 @@ export function suiteCounts(runtimes) {
   if (parsed.includes(null)) return ': tests=? pass=? fail=?';
   const sum = key => parsed.reduce((n, c) => n + c[key], 0);
   return `: tests=${sum('tests')} pass=${sum('passed')} fail=${sum('failed')}`;
+}
+
+/**
+ * True only for a real directory (not a symlink) owned by this user and not group- or world-writable,
+ * so a cached venv someone else could have planted or can modify is never reused (U40).
+ */
+export function privateDir(path) {
+  try {
+    const st = lstatSync(path);
+    return st.isDirectory() && st.uid === process.getuid() && (st.mode & 0o022) === 0;
+  } catch {
+    return false;
+  }
 }
