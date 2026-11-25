@@ -60,3 +60,18 @@ test('U29 several specs naming the same branch give one entry each, sorted by di
   const s = tddStatus(root, 'fork/shared');
   assert.deepEqual(s.features.map(f => [f.dir, f.verdict]), [['specs/001-a', 'PASS'], ['specs/010-c', 'missing']]);
 });
+
+test('U32 the branch is compared literally: regex metacharacters and ../ are data', () => {
+  const root = tree({
+    'specs/001-a/spec.md': spec('fork/abc'),
+    'specs/002-b/spec.md': spec('fork/a.c'),
+    'specs/003-c/spec.md': spec('../001-a'),
+    'specs/004-d/spec.md': spec('fork/x+'),
+  });
+  const dirs = ref => tddStatus(root, ref).features.map(f => f.dir);
+  assert.deepEqual(dirs('fork/a.c'), ['specs/002-b']);
+  assert.deepEqual(dirs('fork/.*'), []);
+  assert.deepEqual(dirs('fork/x+'), ['specs/004-d']);
+  assert.deepEqual(dirs('../001-a'), ['specs/003-c']);
+  assert.deepEqual(dirs('../specs/001-a'), []);
+});

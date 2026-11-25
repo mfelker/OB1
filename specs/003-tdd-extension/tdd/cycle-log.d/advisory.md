@@ -38,3 +38,13 @@ Appended to `tdd/cycle-log.md` by the integrator in merge order (research R14).
 - refactor: none needed
 - commit: (this commit)
 - notes: test-after relative to U28's implementation; the mutant is the evidence that the test can fail.
+
+## Cycle: U32 the branch is compared literally
+
+- test: `.fork/ci/test/tdd-status.test.mjs::U32 the branch is compared literally: regex metacharacters and ../ are data` (new)
+- red: none natural. The test passed on first run because U28 compares with `===`. Deliberate-mutant check: `.fork/ci/lib/tdd-status.mjs:54` changed to match `` new RegExp(`^${headRef}$`) ``, then `node --test --test-name-pattern="U32" .fork/ci/test/tdd-status.test.mjs`
+  -> `actual: [ 'specs/001-a', 'specs/002-b' ],` / `expected: [ 'specs/002-b' ],` (1 failed). Mutant reverted exactly (`git status` shows only the test file).
+- green: no implementation change (covered by U28). Suite `node --test .fork/ci/test/` -> 106 passed, 0 failed
+- refactor: none needed
+- commit: (this commit)
+- notes: test-after relative to U28's implementation; the mutant is the evidence. Feature dirs come from `readdirSync`, never from `headRef`, so `../` in a branch can't select a path.
