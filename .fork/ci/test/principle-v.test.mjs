@@ -41,3 +41,14 @@ test('U5 D4: a file that exists upstream is denied', () => {
   assert.equal(d.allowed, false);
   assert.equal(d.rule, 'D4');
 });
+
+test('U6 D8: a new file inside an upstream folder is denied; a sibling top-level path is not', () => {
+  for (const relPath of ['docs/x.md', 'docs/a/b/c.md']) {
+    const d = run({ relPath });
+    assert.equal(d.allowed, false, relPath);
+    assert.equal(d.rule, 'D8', relPath);
+  }
+  const sibling = run({ relPath: 'docsx.md' });
+  assert.equal(sibling.allowed, true);
+  assert.equal(sibling.rule, 'D9');
+});

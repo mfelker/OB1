@@ -42,3 +42,12 @@
 - green: `.fork/ci/lib/principle-v.mjs:9` added the D4 deny when `upstream.files` has `relPath`, via a `deny(rule)` helper whose `reason` and `suggestion` are empty until U10/U11. Suite `node --test .fork/ci/test/` -> 157 passed, 0 failed
 - refactor: none needed
 - commit: (this commit)
+
+## Cycle: U6 D8: a new file inside an upstream folder is denied
+
+- test: `.fork/ci/test/principle-v.test.mjs::U6 D8: a new file inside an upstream folder is denied; a sibling top-level path is not` (new)
+- red: `node --test --test-name-pattern="^U6 " .fork/ci/test/principle-v.test.mjs`
+  -> `AssertionError [ERR_ASSERTION]: docs/x.md` with `actual: true, expected: false` (1 failed)
+- green: `.fork/ci/lib/principle-v.mjs:16` added an `ancestors()` helper and the D8 deny when any ancestor folder is in `upstream.dirs`. Suite `node --test .fork/ci/test/` -> 158 passed, 0 failed
+- refactor: none needed
+- commit: (this commit)
