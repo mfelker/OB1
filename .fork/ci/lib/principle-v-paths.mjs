@@ -1,6 +1,6 @@
 // I/O helpers for the Principle V guard (contracts/rule.md "Helpers").
 import { execFileSync } from 'node:child_process';
-import { realpathSync } from 'node:fs';
+import { existsSync, realpathSync, statSync } from 'node:fs';
 import { basename, dirname, join, relative, resolve } from 'node:path';
 
 function gitOut(dir, args) {
@@ -11,9 +11,16 @@ function gitOut(dir, args) {
 }
 
 export function repoRelative(path, cwd) {
-  const given = resolve(cwd, path);
-  const abs = join(realpathSync(dirname(given)), basename(given));
-  const root = gitOut(dirname(abs), ['rev-parse', '--show-toplevel']);
+  // Resolve through the nearest existing ancestor, then append the rest.
+  let existing = resolve(cwd, path);
+  const tail = [];
+  while (!existsSync(existing)) {
+    tail.unshift(basename(existing));
+    existing = dirname(existing);
+  }
+  const real = realpathSync(existing);
+  const abs = join(real, ...tail);
+  const root = gitOut(statSync(real).isDirectory() ? real : dirname(real), ['rev-parse', '--show-toplevel']);
   const relPath = relative(root, abs).split('\\').join('/');
   return { root, relPath };
 }

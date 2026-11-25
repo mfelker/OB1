@@ -24,3 +24,12 @@
 - green: `.fork/ci/lib/principle-v-paths.mjs:15-16` the resolved path's directory goes through `realpathSync` before the root and relative path are computed. Suite `node --test .fork/ci/test/` -> 155 passed, 0 failed
 - refactor: none needed
 - commit: (this commit)
+
+## Cycle: U15 repoRelative: a file not yet created resolves through its nearest existing ancestor
+
+- test: `.fork/ci/test/principle-v-paths.test.mjs::U15 repoRelative: a file not yet created resolves through its nearest existing ancestor` (new)
+- red: `node --test --test-name-pattern="^U15 " .fork/ci/test/principle-v-paths.test.mjs`
+  -> `Error: ENOENT: no such file or directory, lstat '<tmp>/fork-ci-ePcXfR/docs/new'` (1 failed; the call throws instead of returning the path)
+- green: `.fork/ci/lib/principle-v-paths.mjs:15-24` walk up to the nearest existing ancestor, realpath it, append the missing tail; git root is read from that directory. Suite `node --test .fork/ci/test/` -> 156 passed, 0 failed
+- refactor: none needed
+- commit: (this commit)

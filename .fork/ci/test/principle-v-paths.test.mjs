@@ -39,3 +39,11 @@ test('U14 repoRelative: a path through a symlinked directory matches the real pa
   assert.deepEqual(repoRelative(join(outside, 'viaLink/a.md'), repo.dir), real);
   assert.deepEqual(repoRelative('inRepoLink/a.md', repo.dir), real);
 });
+
+test('U15 repoRelative: a file not yet created resolves through its nearest existing ancestor', () => {
+  const repo = tempRepo();
+  const outside = realpathSync(mkdtempSync(join(tmpdir(), 'fork-ci-ln-')));
+  symlinkSync(join(repo.dir, 'docs'), join(outside, 'viaLink'));
+  assert.deepEqual(repoRelative('docs/new/deeper/x.md', repo.dir), { root: repo.dir, relPath: 'docs/new/deeper/x.md' });
+  assert.deepEqual(repoRelative(join(outside, 'viaLink/new/x.md'), repo.dir), { root: repo.dir, relPath: 'docs/new/x.md' });
+});
