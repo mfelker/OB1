@@ -78,3 +78,13 @@
 - green: no CLI change (behavior already present). Suite `node --test .fork/ci/test/` -> 187 passed, 0 failed, 4 todo
 - refactor: none needed
 - commit: (this commit)
+
+## Cycle: A6 commit guard refuses a commit that stages upstream paths
+
+- test: `.fork/ci/test/principle-v-guard.acceptance.test.mjs::A6 commit guard refuses a commit on main that stages upstream paths, listing each with its reason` (flipped from todo)
+- red: recorded at T029 (cycle-log.md 'Outer loop opened'); run before this commit's change (CLI treated every mode as `--hook`): `node --test --test-name-pattern="^A6 " .fork/ci/test/principle-v-guard.acceptance.test.mjs`
+  -> `AssertionError [ERR_ASSERTION]: commit must be refused` (1 failed)
+- green: `.fork/ci/bin/principle-v-guard.mjs` new `staged()` mode (`--staged`): top level from `git rev-parse --show-toplevel`, paths from `git diff --cached --name-only -z --no-renames`, each through the shared `decideFor()`; any deny prints the header, one two-space-indented line per denied path and the `--no-verify` line to stderr and sets exit code 1. Suite `node --test .fork/ci/test/` -> 188 passed, 0 failed, 3 todo
+- refactor: extracted `decideFor(root, relPath)` (libs loaded by dynamic `import()`, state, upstream, `decide`) out of the `--hook` path so both modes share it; behavior unchanged (suite stays green).
+- note (contract wording): contracts/guards.md says each line is `<relPath>: <reason> <suggestion>`, but `decide()`'s reason already begins `<relPath>: constitution Principle V ...` (contracts/rule.md "Messages"). The line is therefore `  <reason> <suggestion>`, so the path appears once, not twice. A6's patterns (`CLAUDE\.md: .*file exists in upstream\/main`) hold either way.
+- commit: (this commit)

@@ -142,7 +142,7 @@ test('A5 agent guard allows editing an upstream file while a merge is in progres
 
 // ── US2: the commit guard ───────────────────────────────────────────────────
 
-test('A6 commit guard refuses a commit on main that stages upstream paths, listing each with its reason', OUTER, () => {
+test('A6 commit guard refuses a commit on main that stages upstream paths, listing each with its reason', () => {
   const repo = guardRepo();
   enableCommitGuard(repo);
   writeFiles(repo, { 'CLAUDE.md': '# changed\n', 'docs/new.md': '# new\n', '.fork/ok.md': 'fine\n' });
