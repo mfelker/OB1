@@ -24,15 +24,29 @@ const ancestors = relPath => {
   return parts.map((_, i) => parts.slice(0, i + 1).join('/'));
 };
 
+// Case-insensitive views of the upstream sets (case-insensitive filesystems resolve case variants to the
+// upstream path), cached per upstream object. Dirs map lower-case -> upstream spelling for the message.
+const folded = new WeakMap();
+const foldedUpstream = upstream => {
+  if (!folded.has(upstream)) {
+    folded.set(upstream, {
+      files: new Set([...upstream.files].map(f => f.toLowerCase())),
+      dirs: new Map([...upstream.dirs].map(d => [d.toLowerCase(), d])),
+    });
+  }
+  return folded.get(upstream);
+};
+
 export function decide(input) {
   if (input.relPath === null) return allow('D1');
   if (input.branch !== 'main') return allow('D2');
   if (input.mergeInProgress) return allow('D3');
-  if (input.upstream?.files.has(input.relPath)) return deny('D4', input.relPath, 'file exists in upstream/main');
+  const lower = input.upstream ? foldedUpstream(input.upstream) : null;
+  if (lower?.files.has(input.relPath.toLowerCase())) return deny('D4', input.relPath, 'file exists in upstream/main');
   if (FORK_ROOTS.has(input.relPath.split('/')[0])) return allow('D5');
   if (isForkZone(input.relPath)) return allow('D6');
   if (input.upstream === null) return deny('D7', input.relPath, 'upstream/main is unavailable; run git fetch upstream');
-  const upstreamDir = ancestors(input.relPath).find(dir => input.upstream.dirs.has(dir));
+  const upstreamDir = ancestors(input.relPath.toLowerCase()).map(dir => lower.dirs.get(dir)).find(Boolean);
   if (upstreamDir) return deny('D8', input.relPath, `inside upstream folder ${upstreamDir}/`);
   return allow('D9');
 }

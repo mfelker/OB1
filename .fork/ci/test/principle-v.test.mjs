@@ -112,3 +112,20 @@ test('U11 messages: suggestion names .fork/domain-knowledge/ under docs/domain_k
   assert.equal(run({ relPath: 'CLAUDE.md' }).suggestion, generic);
   assert.equal(run({ relPath: 'docs/x.md' }).suggestion, generic);
 });
+
+test('U32 D4/D8: upstream matches are case-insensitive; D5 and D6 stay exact-case', () => {
+  const d4 = run({ relPath: 'claude.md' });
+  assert.equal(d4.allowed, false);
+  assert.equal(d4.rule, 'D4');
+  assert.match(d4.reason, /^claude\.md: constitution Principle V/);
+  const d8 = run({ relPath: 'Docs/x.md' });
+  assert.equal(d8.allowed, false);
+  assert.equal(d8.rule, 'D8');
+  assert.match(d8.reason, /^Docs\/x\.md: constitution Principle V/);
+  assert.equal(d8.suggestion, run({ relPath: 'docs/x.md' }).suggestion);
+  // Fork-only roots and zones are exact-case: a case variant is not a fork path (it reaches D9 or is denied).
+  assert.equal(run({ relPath: 'Specs/x.md' }).rule, 'D9');
+  assert.equal(run({ relPath: 'SPECS/x.md', upstream: null }).rule, 'D7');
+  assert.equal(run({ relPath: '.Claude/settings.json' }).allowed, false);
+  assert.equal(run({ relPath: '.claude/Settings.json' }).allowed, false);
+});
