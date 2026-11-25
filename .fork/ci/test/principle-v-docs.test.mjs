@@ -24,3 +24,13 @@ test('U28 .claude/settings.json registers the PreToolUse guard', () => {
   assert.equal(hook.command, 'node "$CLAUDE_PROJECT_DIR/.fork/ci/bin/principle-v-guard.mjs" --hook');
   assert.equal(hook.timeout, 30);
 });
+
+test('U29 .fork/githooks/pre-commit is an executable sh script that execs the staged guard', () => {
+  const text = readRequired('.fork', 'githooks', 'pre-commit');
+  assert.ok(statSync(path('.fork', 'githooks', 'pre-commit')).mode & 0o100, 'pre-commit must be executable');
+  assert.ok(text.startsWith('#!/bin/sh\n'), 'first line must be #!/bin/sh');
+  assert.ok(
+    text.split('\n').includes('exec node "$(git rev-parse --show-toplevel)/.fork/ci/bin/principle-v-guard.mjs" --staged'),
+    'must exec the guard with --staged from the top-level',
+  );
+});

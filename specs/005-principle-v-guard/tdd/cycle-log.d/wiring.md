@@ -6,3 +6,12 @@
 - green: `.claude/settings.json` created with the single PreToolUse entry. Suite `node --test .fork/ci/test/` -> 153 passed, 0 failed
 - refactor: none needed
 - commit: (this commit)
+
+## Cycle: U29 the pre-commit hook is executable sh and execs the staged guard
+
+- test: `.fork/ci/test/principle-v-docs.test.mjs::U29 .fork/githooks/pre-commit is an executable sh script that execs the staged guard` (new)
+- red: `node --test --test-name-pattern="^U29 " .fork/ci/test/principle-v-docs.test.mjs`
+  -> `AssertionError [ERR_ASSERTION]: .fork/githooks/pre-commit does not exist` (1 failed)
+- green: `.fork/githooks/pre-commit` created (`#!/bin/sh`, `exec node ... --staged`, chmod +x). Suite `node --test .fork/ci/test/` -> 154 passed, 0 failed
+- refactor: none needed
+- commit: (this commit)
