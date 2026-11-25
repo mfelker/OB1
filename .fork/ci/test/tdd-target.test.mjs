@@ -63,3 +63,24 @@ test('U3 neither env nor feature.json gives "no active feature"', () => {
   throwsTarget(fixtureRepo({ 'specs/001-a/plan.md': plan() }), {}, NO_FEATURE);
   throwsTarget(fixtureRepo({ '.specify/feature.json': '{}\n', 'specs/001-a/plan.md': plan() }), {}, NO_FEATURE);
 });
+
+/** A one-feature fixture repo whose plan is built from `planOpts`; extra files merged in. */
+function featureRepo(planOpts, extra = { '.fork/ci/x.mjs': 'export const x = 1;\n' }) {
+  return fixtureRepo({
+    '.specify/feature.json': featureJson('specs/001-a'),
+    'specs/001-a/plan.md': plan(planOpts),
+    ...extra,
+  });
+}
+
+test('U4 lane grammar: fork, upstream-bound, staged; placeholder and unknown are errors', () => {
+  const laneOf = value => resolveTarget({ repoRoot: featureRepo({ lane: value }), env: {} }).lane;
+  assert.equal(laneOf('fork feature'), 'fork');
+  assert.equal(laneOf('upstream-bound feature'), 'upstream-bound');
+  assert.equal(laneOf('staged upstream PR #532'), 'staged');
+  throwsTarget(featureRepo({ lane: '[fork feature / upstream-bound feature / staged upstream PR #N]' }), {},
+    'plan Lane is a placeholder (specs/001-a/plan.md)');
+  throwsTarget(featureRepo({ lane: 'experimental' }), {}, 'unknown lane: experimental (specs/001-a/plan.md)');
+  throwsTarget(featureRepo({ lane: null }), {}, 'plan has no Lane line (specs/001-a/plan.md)');
+  throwsTarget(fixtureRepo({ '.specify/feature.json': featureJson('specs/001-a') }), {}, 'plan not found: specs/001-a/plan.md');
+});

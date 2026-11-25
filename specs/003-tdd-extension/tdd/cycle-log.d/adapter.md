@@ -24,3 +24,12 @@
 - green: `.fork/ci/lib/tdd-target.mjs:27` throws `TargetError(NO_FEATURE)` when neither source gives a directory; `:16` `featureJsonDir` returns undefined for a missing or unreadable file. Suite `node --test .fork/ci/test/` -> 104 passed, 0 failed
 - refactor: none needed
 - commit: (this commit)
+
+## Cycle: U4 lane grammar: fork, upstream-bound, staged; placeholder and unknown are errors
+
+- test: `.fork/ci/test/tdd-target.test.mjs::U4 lane grammar: fork, upstream-bound, staged; placeholder and unknown are errors` (new; written by the previous session, red re-observed here)
+- red: `node --test --test-name-pattern="^U4 " .fork/ci/test/tdd-target.test.mjs`
+  -> `AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:` / `actual: undefined,` / `expected: 'fork',` (1 failed)
+- green: `.fork/ci/lib/tdd-target.mjs:25` `planField()` reads the text after the first `:` of a `**<field>**` line, `*(…)*` annotations removed; `:34` `parseLane()` maps the prefix to `staged` / `upstream-bound` / `fork` and throws on a missing line, `[` placeholder or unknown value; `:52` a missing plan is `plan not found`. Suite `node --test .fork/ci/test/` -> 105 passed, 0 failed
+- refactor: none needed
+- commit: (this commit)
