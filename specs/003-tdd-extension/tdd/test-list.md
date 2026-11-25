@@ -112,6 +112,7 @@ Written by hand, under the extension's format (research R11): the extension can'
 | U38 | The rubric override's fork section states that S4 takes precedence over S2 | FR-010, US5 AS1 | example | DONE | cycle-log.md `U38` (T032 calibration fix) |
 | U39 | The python venv cache lives in the per-user cache, never the shared temp dir | FR-016, R5 | example | DONE | cycle-log.md `U39` (security review fix) |
 | U40 | A cached venv is reused only when it is a real dir owned by the user and not group/world-writable | FR-016, R5 | example | DONE | cycle-log.md `U40` (security review fix) |
+| U41 | `single`, `file` and `suite` run the child with credentials blanked, end to end | FR-016 | example | DONE | `.fork/ci/test/tdd-cli.test.mjs::U41 single, file and suite run the child with credentials blanked (FR-016)` |
 
 ## Invariants and edge cases still to place
 

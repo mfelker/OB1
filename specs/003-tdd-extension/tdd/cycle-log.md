@@ -528,3 +528,16 @@ Appended to `tdd/cycle-log.md` by the integrator in merge order (research R14).
 - refactor: none needed
 - commit: (this commit)
 - notes: the `ensureVenv` wiring is not exercised by the automated suite; the python end-to-end path stays hand-run only, as recorded for U18 in Stream A.
+
+<!-- fork/tdd-env-wiring: closes known gaps M24 and M25 from the T032 re-audit (467a6e9) -->
+
+## Cycle: U41 single, file and suite run the child with credentials blanked (FR-016)
+
+- test: `.fork/ci/test/tdd-cli.test.mjs::U41 single, file and suite run the child with credentials blanked (FR-016)` (new). An end-to-end probe: a real child test asserts `OPENAI_API_KEY` and `MY_SERVICE_API_KEY` are `""`, run through the adapter with fake values for both plus `NODE_TEST_CONTEXT=child-v8` in the adapter's environment.
+- red: test strengthening for wiring that already exists, so the red is the two surviving mutants from `tdd/verification.md` (`467a6e9`), each applied to `.fork/ci/bin/tdd.mjs`, run with `node --test --test-name-pattern="^U41 " .fork/ci/test/tdd-cli.test.mjs`, then restored byte for byte:
+  - M24 (`suite` passes `process.env` instead of `childEnv(process.env)`) -> `AssertionError [ERR_ASSERTION]: suite: recipes/x: fail (tests failed (exit 1))` (1 failed).
+  - M25 (`single`/`file` start from `{ ...process.env }`) -> `ℹ fail 1`.
+- green: no source change; the wiring was already correct. Suite `node --test .fork/ci/test/` -> 152 passed, 0 failed
+- refactor: none needed
+- commit: (this commit)
+- notes: deviation in drafting, before commit. The first draft also asserted `NODE_TEST_CONTEXT` was absent in the child, and failed under `suite` on correct code: `node --test` sets `NODE_TEST_CONTEXT` itself for every isolated test file, so its presence there is not a leak. The probe now checks credentials only; `NODE_TEST_CONTEXT` stays in the adapter's environment, so a leak would still fail the `tests=1 pass=1` summary assertion.
