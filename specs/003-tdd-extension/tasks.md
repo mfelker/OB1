@@ -219,14 +219,14 @@ description: "Tasks for adopting the spec-kit-tdd extension (spec 003)"
   - Set each reported behavior `DONE` in `tdd/test-list.md`, after checking its cycle entry has a real red.
   - Tick T008–T021 per the marker rule.
   - Remove the four stream worktrees and branches.
-- [ ] T023 Run the gate checks:
+- [X] T023 Run the gate checks:
   - Full `node --test .fork/ci/test/`: all pass.
   - `npx --yes markdownlint-cli2 --config .github/.markdownlint.jsonc` on every changed Markdown file outside `.claude/skills/` and `.specify/extensions/`: 0 issues.
   - Check that every relative link in those files resolves (constitution docs gate).
-- [ ] T024 Run `/speckit-analyze` on 003 **from `M`** (fresh subagent; it reads `W`'s artifacts by absolute path). Resolve any CRITICAL or HIGH finding before continuing (SC-005).
-- [ ] T025 [P] Lane hygiene: `git -C W diff --stat main...HEAD` lists only fork-only paths per FR-015 (`.specify/`, `.fork/`, `specs/003-tdd-extension/`, `.claude/skills/speckit-tdd-*`, `.github/workflows/fork-ci.yml`). Also run a secret scan of the diff.
-- [ ] T026 [P] Confirm in the test list that U1–U37, A1–A6, A13 and A14 are `DONE`. A7–A12, A15 and A16 stay `PENDING` (post-merge or on-PR). The cycle log has one entry per cycle, each with a red.
-- [ ] T026a Pre-merge TDD audit (T024 finding C1: Gate 1 of constitution 1.3.0 requires it before merge). In a fresh subagent working from `M`, follow `W/.specify/extensions/tdd/commands/speckit.tdd.verify.md` by hand on `W`'s 003 artifacts (the extension isn't installed in `M` until T029) and write `W/specs/003-tdd-extension/tdd/verification.md`. Required verdict: PASS or PASS_WITH_GAPS, with the fork section inert (base rules). Behaviors whose test passed on its first run and whose red is a deliberate mutant (A3–A6, U29, U32) are marked covered in the test list, per the playbook's "test passes on first run" row. A FAIL blocks T027; fix it under the same TDD rules and re-audit. Commit the report.
+- [X] T024 Run `/speckit-analyze` on 003 **from `M`** (fresh subagent; it reads `W`'s artifacts by absolute path). Resolve any CRITICAL or HIGH finding before continuing (SC-005).
+- [X] T025 [P] Lane hygiene: `git -C W diff --stat main...HEAD` lists only fork-only paths per FR-015 (`.specify/`, `.fork/`, `specs/003-tdd-extension/`, `.claude/skills/speckit-tdd-*`, `.github/workflows/fork-ci.yml`). Also run a secret scan of the diff.
+- [X] T026 [P] Confirm in the test list that U1–U37, A1–A6, A13 and A14 are `DONE`. A7–A12, A15 and A16 stay `PENDING` (post-merge or on-PR). The cycle log has one entry per cycle, each with a red.
+- [X] T026a Pre-merge TDD audit (T024 finding C1: Gate 1 of constitution 1.3.0 requires it before merge). In a fresh subagent working from `M`, follow `W/.specify/extensions/tdd/commands/speckit.tdd.verify.md` by hand on `W`'s 003 artifacts (the extension isn't installed in `M` until T029) and write `W/specs/003-tdd-extension/tdd/verification.md`. The fork section must stay inert (base rules). Fix every finding that pre-merge work can fix, under the same TDD rules. Outcome (owner decision): the verdict is FAIL for reasons no pre-merge work can remove (post-merge acceptance scenarios, six permanent `TEST_AFTER` behaviors, document-evidenced A1/A2). 003 merges under the one-time Gate 1 bootstrap exemption recorded in plan.md Complexity Tracking and the constitution's Sync Impact Report. The surviving mutants were fixed in `1c2df30`. Commit the report.
 - [ ] T027 Tick T001–T026a. Push `fork/tdd-extension`.
 - [ ] T028 [A16] Open the fork PR: `gh pr create -R mfelker/OB1 --base main --head fork/tdd-extension --title "[fork] Adopt spec-kit-tdd for enforced TDD (spec 003)"`.
   - The body has the A1 table, the test counts, and the note that `OB1 Review` is expected to fail on a fork-only PR.
@@ -255,7 +255,7 @@ description: "Tasks for adopting the spec-kit-tdd extension (spec 003)"
   5. In fresh subagents, run the verify procedure on the fixture, expecting C1/K4 `PROVEN` and C3 `TEST_AFTER`, then on 002 (switch `feature.json`), expecting `BLOCKED` "no test list".
   6. Vet every cited line yourself.
   7. Restore `feature.json` to 003, remove the 002 worktree, and commit the reports.
-- [ ] T032 [US3] [A12] Re-audit 003 from `M` in a fresh subagent, now through the installed extension (verify, with remediation allowed). This confirms T026a's pre-merge verdict. Expect PASS or PASS_WITH_GAPS, with the fork section inert (base rules).
+- [ ] T032 [US3] [A12] Re-audit 003 from `M` in a fresh subagent, now through the installed extension (verify, with remediation allowed). It is for the record, not a merge gate (Gate 1 bootstrap exemption, plan.md Complexity Tracking). With A7–A12 and A15 done, expect the remaining gaps to be the six `TEST_AFTER` behaviors and the document-evidenced A1/A2, with the fork section inert (base rules).
   - Fix any fork-integration gap found in T030–T032 through a follow-up `fork/tdd-calibration-fixes` branch, under the same TDD rules, then re-run the affected step.
   - Mark A7–A12, A15 and A16 `DONE`, set spec.md Status to `Implemented`, tick T028–T032, and commit to `main`.
 

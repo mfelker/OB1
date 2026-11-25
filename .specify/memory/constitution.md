@@ -16,6 +16,8 @@ Sync Impact Report
   - Fork-only docs: .fork/README.md ✅ (TDD workflow section, staging steps 3–5, extension
     version record); .fork/ci/README.md ✅ (bin/tdd.mjs, TDD status advisory)
   - Follow-up: post-merge calibration and smoke run of the loop (spec 003 T030–T032)
+  - Exception: spec 003 itself merges under a one-time Gate 1 bootstrap exemption (audit FAIL
+    recorded in its tdd/verification.md; rationale in its plan.md Complexity Tracking)
 - Version: 1.1.0 → 1.2.0 (MINOR: every staged upstream PR is its own spec-kit feature)
   - Modified principles: IV. Test-First (staged-PR lane rule references its feature's tasks),
     VII. Sync Discipline (new staged-PR-as-feature rule; staged PRs land via fork PR, not --no-ff)

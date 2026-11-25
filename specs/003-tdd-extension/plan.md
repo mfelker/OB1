@@ -130,7 +130,15 @@ specs/003-tdd-extension/
 
 ## Complexity Tracking
 
-No constitution violations. Two deliberate trade-offs are recorded in research:
+One recorded constitution exception, plus deliberate trade-offs.
+
+| Violation | Why needed | Simpler alternative rejected because |
+|-----------|------------|--------------------------------------|
+| **Gate 1 bootstrap exemption**: 003 merges with its `speckit.tdd.verify` verdict FAIL (`tdd/verification.md`, T026a), although constitution 1.3.0 Gate 1 requires PASS or PASS_WITH_GAPS. | 003 is the feature that installs the audit. The extension could not drive its own installation (R11), so the loop was hand-followed. The FAIL has three causes no pre-merge work can remove: A7–A12 and A15 can only be tested after the merge, with the extension installed on `main`; A3–A6, U29 and U32 passed on their first run over existing units and carry deliberate-mutant reds, so they are permanently `TEST_AFTER`; A1 and A2 are evidenced by documents, not executable tests (owner decision: kept as-is). The T026a audit's surviving mutants were fixed (`1c2df30`). | Restructuring the test list to fit the rubric would drop US2's acceptance scenarios as rows. Merging with no recorded exception would leave the PR that introduces Gate 1 in silent violation of it. |
+
+Scope of the exemption: 003 only. Gate 1's audit applies in full to every feature planned after 1.3.0 is installed. T032 re-audits 003 after the merge for the record; its verdict is not a merge gate.
+
+Trade-offs recorded in research:
 
 - **R11**: the feature hand-follows the loop instead of letting the extension drive it.
 - **R12**: landing a fork-only PR uses the admin bypass for `OB1 Review`.
