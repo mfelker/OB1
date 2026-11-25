@@ -12,8 +12,8 @@ On every pull request into `main` and every push to `main`, the workflow [`.gith
 | `detect` | Finds changed contribution folders (`recipes/`, `schemas/`, `integrations/`, `dashboards/`, `skills/`, `extensions/`, `primitives/`, `server/`); skips fork-only paths and `_template/`; decides **strict** or **advisory** per folder |
 | `test` | One matrix job per folder: runs each runtime's tests |
 | `test-sql` | Folders with `tests/verify.sql`, against a throwaway Postgres + pgvector |
-| `self-test` | fork-ci's own tests plus `actionlint`, only when `.fork/ci/**` or the workflow changed |
-| `fork-ci-verdict` | Always runs; aggregates results into the job summary. **This is the only required check.** |
+| `self-test` | fork-ci's own tests plus `actionlint`, only when `.fork/ci/**` or the workflow changed (spec 003 also adds the TDD overrides, the installed extension, the constitution and `.fork/README.md`, which the drift and docs tests read) |
+| `fork-ci-verdict` | Always runs; aggregates results into the job summary, including the advisory TDD status. **This is the only required check.** |
 
 ## Runtimes and runners
 
@@ -57,6 +57,48 @@ end
 $$;
 ```
 
+## TDD adapter (`bin/tdd.mjs`)
+
+The command the spec-kit-tdd loop calls (the profile `.specify/memory/tdd-profile.md` names it for `single`, `file` and `suite`). It runs a test of the **active feature's** target with fork-ci's own runtime detection, so the loop and CI never disagree about which runner owns a file. Workflow: the "TDD workflow" section of [`.fork/README.md`](../README.md#tdd-workflow). Contract: `specs/003-tdd-extension/contracts/tdd-adapter-cli.md`.
+
+```bash
+node .fork/ci/bin/tdd.mjs where                  # print the resolved target as JSON
+node .fork/ci/bin/tdd.mjs single <file> <name>   # one named test
+node .fork/ci/bin/tdd.mjs file <file>            # one test file
+node .fork/ci/bin/tdd.mjs suite                  # the contribution folder, as run-folder would
+```
+
+| Exit | Meaning |
+|------|---------|
+| 0 | Pass (`suite`: `pass`, `sql-unverified`, or an empty baseline) |
+| 1 | Tests failed, or the suite is red |
+| 2 | Target, usage or Node-version error (Node ≥ 26 required); a single-line `tdd: …` message |
+| 3 | Zero tests matched the name or file (never a false green) |
+| 4 | The operation is unsupported for that runtime (`single` on SQL, a plain `test-*.mjs` script, or a node-script runner other than vitest/jest): use `file` |
+
+**Target resolution** (the repo root is the checkout the script runs from):
+
+1. **Feature**: `SPECIFY_FEATURE_DIRECTORY`, else `feature_directory` from the checkout's own `.specify/feature.json` (gitignored, per checkout), else exit 2 "no active feature".
+2. **Lane**, from the plan's `**Lane**` line: `fork feature` → fork, `upstream-bound` → upstream-bound, `staged upstream PR` → staged. A placeholder (contains `[`) or any other value is an error.
+3. **Worktree**, from the `**Worktree**` line (text after the first `:`, `*(…)*` annotations removed): a placeholder is an error; a value starting with `none` means the repo root; otherwise the first backticked token must be an absolute path to an existing git work tree. A missing line means the repo root for a fork feature and is an error for staged and upstream-bound features.
+4. **Contribution folder**, from the `**Contribution folder**` line: a placeholder or a value starting with `N/A` is an error (checked before backticks); otherwise the first backticked token without a trailing `/`, repo-relative (no leading `/`, no `..`).
+5. **File**: an absolute path is used as is; a relative one is tried against the folder, then the tree, then the repo root (first that exists). In every case it must be inside the tree and be a test file of a runtime that `scanRuntimes` finds in the folder.
+
+**Behavior**:
+
+- Child output is streamed live and captured in full (never truncated). One final summary line follows: `[tdd] <op> <kind> feature=<feature> folder=<folder>: tests=<n> pass=<n> fail=<n> → <result>`.
+- Node tests run with `--test-isolation=none --test-reporter=spec` and an anchored, escaped name, so a name that matches nothing reports `tests 0` and exits 3.
+- **Credential blanking**: every child (including the Python venv setup and `suite`) runs with `NODE_TEST_CONTEXT` removed and credential variables set to `""`: `OPENROUTER_API_KEY`, `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_ACCESS_TOKEN`, `GH_TOKEN`, `GITHUB_TOKEN`, and any name ending in `_API_KEY`, `_TOKEN`, `_SECRET` or `_SERVICE_ROLE_KEY`. Empty values also override `.env.local` files.
+- **Empty baseline**: `suite` treats `no-tests`, `exempt`, and a contribution folder that doesn't exist yet as green (exit 0) with an `empty baseline: …` notice, so the loop can start on a new folder. `single` and `file` on a missing folder exit 2.
+- `suite` runs `bin/run-folder.mjs --mode strict --origin fork` in the tree, and restores a lockfile (`package-lock.json`, `deno.lock`) it modified that was clean before.
+- Python `single`/`file` use a cached venv in the OS temp folder, rebuilt when `requirements.txt` changes.
+
+## TDD status (advisory)
+
+On `pull_request` runs, `bin/verdict.mjs` adds a "TDD status (advisory)" table to the job summary (`lib/tdd-status.mjs`, from the `HEAD_REF` env var). It has one row per spec whose plan names the PR's branch: cycle log present, audit report (`tdd/verification.md`) present, and the audit verdict (PASS, PASS_WITH_GAPS, FAIL, BLOCKED, `missing` or `unreadable`). With no linked spec it prints one line; on a push it shows nothing; if reading the specs fails it prints `TDD status unavailable: … (advisory)`.
+
+The section is **advisory**: it never changes `fork-ci-verdict`'s conclusion, its exit code or `verdict.json`. Contract: `specs/003-tdd-extension/contracts/fork-ci-tdd-status.md`.
+
 ## Run locally
 
 ```bash
@@ -74,8 +116,8 @@ SQL verification needs `psql` and `PG*` environment variables pointing at a Post
 
 | Path | Contents |
 |------|----------|
-| `lib/` | Logic: `paths`, `changes`, `runtimes`, `exec`, `origin`, `verdict`, `report`, `bypass`, `self-test-needed`, `args` |
-| `bin/` | CLIs called by the workflow: `detect`, `run-folder`, `verdict`, `self-test-needed` (contract: `specs/001-fork-ci/contracts/cli.md`) |
+| `lib/` | Logic: `paths`, `changes`, `runtimes`, `exec`, `origin`, `verdict`, `report`, `bypass`, `self-test-needed`, `args`; TDD: `tdd-target`, `tdd-commands`, `tdd-env`, `tdd-status` |
+| `bin/` | CLIs called by the workflow: `detect`, `run-folder`, `verdict`, `self-test-needed` (contract: `specs/001-fork-ci/contracts/cli.md`); `tdd` is called by the TDD loop, not by CI |
 | `sql/bootstrap.sql` | Postgres bootstrap, drift-checked against `docs/01-getting-started.md` |
 | `test/` | `node:test` suites; fixtures are in-memory file maps (`fixtures.mjs`) so their sample tests are never picked up by `node --test` |
 

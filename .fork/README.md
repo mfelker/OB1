@@ -14,13 +14,57 @@ Authoritative rules: `.specify/memory/constitution.md` (Principles IV, V, VII).
 
 | Lane | Branch | Cut from | Lands in | TDD rule |
 |------|--------|----------|----------|----------|
-| Fork feature | `fork/<desc>` | fork `main` | fork `main` | Red-green-refactor |
-| Upstream-bound feature | `contrib/mfelker/<desc>` | `upstream/main` | Upstream PR **and** fork `main` via a fork PR | Red-green-refactor; tests inside the contribution folder |
-| Staged upstream PR | `stage/pr-<N>-<desc>` | `upstream` `refs/pull/<N>/head` | Fork `main` **via a fork PR**, as **its own spec-kit feature** | Tests written and green before merge |
+| Fork feature | `fork/<desc>` | fork `main` | fork `main` | Red-green-refactor, red recorded in `tdd/cycle-log.md` |
+| Upstream-bound feature | `contrib/mfelker/<desc>` | `upstream/main` | Upstream PR **and** fork `main` via a fork PR | Red-green-refactor, red recorded in `tdd/cycle-log.md`; tests inside the contribution folder |
+| Staged upstream PR | `stage/pr-<N>-<desc>` | `upstream` `refs/pull/<N>/head` | Fork `main` **via a fork PR**, as **its own spec-kit feature** | Tests green before merge; red recorded at the PR base, green at the head (base-red rule) |
+
+Every lane follows the [TDD workflow](#tdd-workflow).
 
 ## Where spec-kit runs
 
 Run every `/speckit-*` command from the **fork-`main` checkout** (`~/Projects/ob1`). Worktrees cut from `upstream/main` or a PR head contain no `.specify/`, `specs/`, or speckit skills. The plan records the worktree's absolute path, and tasks write into it from there.
+
+## TDD workflow
+
+Every lane runs its tests through the spec-kit-tdd extension (installed in `.specify/extensions/tdd/`; record under [Extension version](#extension-version)). The rules are in constitution Principle IV (v1.3.0). Never edit `.specify/extensions/tdd/`; the fork tunes it only through `.specify/templates/overrides/`.
+
+| Step | Command | How it runs | Writes |
+|------|---------|-------------|--------|
+| 1. Test list | `/speckit-tdd-plan` (`speckit.tdd.plan`) | Offered by the `after_tasks` hook right after `/speckit-tasks` (optional: accept it). Offered again after `/speckit-converge` (`after_converge`) | `tdd/test-list.md`; adds the `[U#]`/`[A#]` behavior markers to `tasks.md` and reorders the test tasks first |
+| 2. Loop | `speckit.tdd.run` | Runs first inside `/speckit-implement` through the mandatory `before_implement` hook (`optional: false`). With no test list it stops | One red-green-refactor cycle per behavior, each recorded in `tdd/cycle-log.md`; ticks the marked tasks it completed |
+| 3. Audit | `/speckit-tdd-verify` (`speckit.tdd.verify`) | Offered by the `after_implement` hook; run tdd.verify before merge in every lane | `tdd/verification.md` with a verdict; merge needs PASS or PASS_WITH_GAPS (Quality Gate 1) |
+
+- **Never tick a marked task by hand.** The loop ticks `[U#]`/`[A#]` tasks when their behaviors are done; `/speckit-implement` then covers only the unmarked work.
+- **Profile**: `.specify/memory/tdd-profile.md` holds the loop's single-test, file and suite commands. They all call the adapter `node .fork/ci/bin/tdd.mjs`, which resolves the active feature's plan **Worktree** and **Contribution folder** and picks fork-ci's runner for the file (see `.fork/ci/README.md`).
+- **Staged PRs (base-red rule)**: the PR's code already exists, so a new test usually passes at once. Record the red at the PR base instead: `BASE=$(git merge-base HEAD upstream/main)`, check out the base copy of only the PR-changed source files, run the profile's single-test command and record the base SHA and failure line, restore with `git checkout HEAD -- <files>`, confirm `git status --short --untracked-files=no` is empty, then record the green at the PR head. A green at the head alone counts as test-after. The procedure lives in `.specify/templates/overrides/tdd-loop-playbook.md` and the evidence rules in `.specify/templates/overrides/tdd-test-quality-rubric.md`; both apply only when the plan's Lane is "staged upstream PR". Never commit a base checkout.
+- **CI status is advisory**: on a pull request, fork-ci's job summary adds a "TDD status (advisory)" table with each linked feature's cycle log, audit report and verdict. It never changes `fork-ci-verdict`; checking the audit verdict before merge is the owner's job.
+
+### The active feature, per checkout
+
+- `.specify/feature.json` is gitignored, per-checkout state, and the adapter reads it (unless `SPECIFY_FEATURE_DIRECTORY` is set). Every checkout or worktree that runs the loop needs its own local `.specify/feature.json`, for example `{"feature_directory": "specs/003-tdd-extension"}`.
+- Before running against a feature that isn't the active one, switch `.specify/feature.json` to it and confirm with `node .fork/ci/bin/tdd.mjs where` (it prints `featureDir`, `lane`, `tree` and `folder`). Switch back afterwards. Every adapter summary line also names `feature=` and `folder=`.
+- The adapter blanks credential variables (known provider keys and any name ending in `_API_KEY`, `_TOKEN`, `_SECRET` or `_SERVICE_ROLE_KEY`) for every test it starts, so a live sanity script takes its skip path and the loop never makes a live call.
+
+### Disabling the mandatory hook
+
+Only with a stated reason. In `.specify/extensions.yml`, set `enabled: false` on the `before_implement` entry of extension `tdd`, and state the reason in the feature's `plan.md` (Complexity Tracking). A disabled hook without a reason violates Principle IV. Set it back to `enabled: true` when the feature is done.
+
+### Extension version
+
+| Field | Value |
+|-------|-------|
+| Extension | `tdd` (spec-kit-tdd by d0whc3r), version **2.0.1** |
+| Tag | `v2.0.1` → commit `55221d4` (`55221d428c7f135d8884df57a49108a59541a698`) |
+| Release asset | `tdd-2.0.1.zip`, SHA-256 `bdae2f8d6582767c47c1758ed3204d23d41b83e666e0165830720b97b7212726` |
+| Evidence | [`specs/003-tdd-extension/evidence/r1-verify.md`](../specs/003-tdd-extension/evidence/r1-verify.md) |
+
+To verify a future upgrade, as a fork feature of its own:
+
+1. Download the new release zip into a fresh empty scratch folder and record its SHA-256. Unzip it into a second empty folder; never execute anything from either.
+2. Compare every unzipped file's `git hash-object` with its blob from `gh api 'repos/d0whc3r/spec-kit-tdd/git/trees/<tag>?recursive=1'`, and record the tag's commit. Stop on any difference, or on any file outside `extension.yml`, `README.md`, `LICENSE`, `commands/` and `templates/`.
+3. Install with `specify extension add --dev <unzipped folder>`, re-hash the installed copies, and confirm the four hooks in `.specify/extensions.yml` (`before_implement` still `optional: false`).
+4. Rebase the overrides on the new templates: their header records the base template's SHA-256, and the drift test (`.fork/ci/test/tdd-overrides.test.mjs`) fails until they are updated.
+5. Update this table and write a new evidence file.
 
 ## One-time setup (per clone or worktree)
 
@@ -134,11 +178,13 @@ The worktree has no `.specify/`, `specs/` or `.fork/` (it is upstream code).
 
 ### 3. Plan and tasks (fork-`main` checkout)
 
-Run `/speckit-plan`, then `/speckit-tasks`. The plan's **Worktree** field is the absolute path of `.worktrees/stage-pr-<N>-<desc>`, and every task path is rooted there. The tasks MUST include the tests for the PR's changed behavior (Principle IV: written and green before merge). The existing code is not rewritten; tests are added in separate commits.
+Run `/speckit-plan`, then `/speckit-tasks`. The plan's **Lane** is "staged upstream PR #N", its **Worktree** is the absolute path of `.worktrees/stage-pr-<N>-<desc>`, and its **Contribution folder** is the folder the PR touches; the adapter reads all three. Every task path is rooted at the worktree. The tasks MUST include the tests for the PR's changed behavior (Principle IV: written and green before merge). The existing code is not rewritten; tests are added in separate commits.
 
-### 4. Implement
+Accept the `after_tasks` offer to run `/speckit-tdd-plan`: it writes the feature's `tdd/test-list.md` and adds the `[U#]`/`[A#]` markers to `tasks.md`. Without a test list, step 4 stops.
 
-Run `/speckit-implement`. It writes tests into the worktree; commit them there separately (`[category] Tests for #N`). Run them with the folder's own runner (`deno test`, `npm test`, `node --test`, `pytest`); `.fork/ci/` is not on the staging branch. Before pushing, preview fork-ci's verdict by running the fork-`main` copy of `run-folder` from inside the worktree (it treats the current directory as the repo root):
+### 4. Implement (the loop)
+
+In the fork-`main` checkout, with `.specify/feature.json` pointing at this feature (`node .fork/ci/bin/tdd.mjs where` shows the staging worktree as `tree`), run `/speckit-implement`. Its mandatory `before_implement` hook drives each behavior through the loop first, writing the tests into the worktree and recording each cycle in the feature's `tdd/cycle-log.md`. Because the PR's code already exists, each red is recorded **at the PR base** (the base-red rule in [TDD workflow](#tdd-workflow)), and the green at the head. Commit the tests in the worktree separately (`[category] Tests for #N`). The profile's commands run the folder's own runner (`deno test`, `npm test`, `node --test`, `pytest`) through the adapter; `.fork/ci/` itself is not on the staging branch. Before pushing, preview fork-ci's verdict by running the fork-`main` copy of `run-folder` from inside the worktree (it treats the current directory as the repo root):
 
 ```bash
 cd ".worktrees/stage-pr-$N-$DESC"
@@ -146,7 +192,9 @@ node ../../.fork/ci/bin/run-folder.mjs --path <folder> --mode strict --origin fo
 git status --short   # npm installs may leave a package-lock.json; don't commit it
 ```
 
-### 5. Land through a fork PR
+### 5. Audit, then land through a fork PR
+
+From the fork-`main` checkout, run `/speckit-tdd-verify` on the feature. It writes `tdd/verification.md`; the merge needs the verdict PASS or PASS_WITH_GAPS (Quality Gate 1). A behavior with only a head-green is classified test-after, so go back to step 4 for it. Commit the feature's `tdd/` files on fork `main`. The fork PR's "TDD status (advisory)" summary shows this verdict but doesn't block.
 
 ```bash
 cd ".worktrees/stage-pr-$N-$DESC"
@@ -155,7 +203,8 @@ git push -u origin "stage/pr-$N-$DESC"
 # (the gate is authoritative for stage/ -> main PRs; constitution Fork CI policy):
 gh pr create -R mfelker/OB1 --base main --head "stage/pr-$N-$DESC" \
   --title "$(gh pr view $N -R NateBJones-Projects/OB1 --json title -q .title) (staged #$N)"
-# When fork-ci-verdict AND "OB1 Review" are green and the feature's pre-merge tasks are all [X]
+# When fork-ci-verdict AND "OB1 Review" are green, tdd.verify is PASS or PASS_WITH_GAPS,
+# and the feature's pre-merge tasks are all [X]
 # (only post-merge recording -- ledger row, upstream comment, worktree removal -- may follow the merge):
 gh pr merge <fork-PR-number> -R mfelker/OB1 --merge
 cd - && git worktree remove ".worktrees/stage-pr-$N-$DESC"
