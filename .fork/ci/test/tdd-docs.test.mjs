@@ -37,3 +37,19 @@ test('A13 constitution Principle IV names the cycle log, the staged base-red rul
   assert.match(iv, /enabled: false/, 'Principle IV must say disabling the hook needs enabled: false');
   assert.match(iv, /reason[^.]*plan|plan[^.]*reason/i, 'Principle IV must require a stated reason in the plan');
 });
+
+test('A14 runbook TDD workflow covers the test list, the loop, the audit before merge, the advisory and disabling the hook', () => {
+  const wf = section(read('.fork', 'README.md'), '## TDD workflow');
+  assert.ok(wf, '.fork/README.md must have a "## TDD workflow" section');
+  assert.match(wf, /tdd[.-]plan/, 'TDD workflow must name tdd.plan (the test list)');
+  assert.match(wf, /after_tasks/, 'TDD workflow must say tdd.plan runs from the after_tasks hook');
+  assert.match(wf, /\[U#\]/, 'TDD workflow must name the [U#]/[A#] task markers');
+  assert.match(wf, /\[A#\]/, 'TDD workflow must name the [U#]/[A#] task markers');
+  assert.match(wf, /mandatory[^.]*before_implement|before_implement[^.]*mandatory/i,
+    'TDD workflow must say the loop runs through the mandatory before_implement hook');
+  assert.match(wf, /tdd[.-]verify[^.]*before (the )?merg|before (the )?merg[^.]*tdd[.-]verify/i,
+    'TDD workflow must run tdd.verify before merge');
+  assert.match(wf, /advisory/i, 'TDD workflow must say the fork-ci TDD status is advisory');
+  assert.match(wf, /enabled: false/, 'TDD workflow must say how to disable the hook (enabled: false)');
+  assert.match(wf, /reason/i, 'TDD workflow must require a stated reason for disabling the hook');
+});
