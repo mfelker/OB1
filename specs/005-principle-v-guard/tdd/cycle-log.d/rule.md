@@ -24,3 +24,12 @@
 - green: `.fork/ci/lib/principle-v.mjs:6` added the D3 return when `mergeInProgress`. Suite `node --test .fork/ci/test/` -> 155 passed, 0 failed
 - refactor: none needed
 - commit: (this commit)
+
+## Cycle: U4 D9: a new top-level path upstream does not have is allowed
+
+- test: `.fork/ci/test/principle-v.test.mjs::U4 D9: a new top-level path upstream does not have is allowed` (new)
+- red: `node --test --test-name-pattern="^U4 " .fork/ci/test/principle-v.test.mjs`
+  -> `AssertionError [ERR_ASSERTION]: Expected values to be strictly equal: actual: false, expected: true` (1 failed)
+- green: `.fork/ci/lib/principle-v.mjs:8` replaced the stub deny with the D9 fallthrough allow (`allow('D9')`). Suite `node --test .fork/ci/test/` -> 156 passed, 0 failed
+- refactor: none needed
+- commit: (this commit)

@@ -29,3 +29,9 @@ test('U3 D3: mergeInProgress on main is allowed', () => {
   assert.equal(d.allowed, true);
   assert.equal(d.rule, 'D3');
 });
+
+test('U4 D9: a new top-level path upstream does not have is allowed', () => {
+  const d = run({ relPath: 'NOTES.md' });
+  assert.equal(d.allowed, true);
+  assert.equal(d.rule, 'D9');
+});
