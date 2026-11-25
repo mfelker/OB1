@@ -1,6 +1,6 @@
 // I/O helpers for the Principle V guard (contracts/rule.md "Helpers").
 import { execFileSync } from 'node:child_process';
-import { relative, resolve } from 'node:path';
+import { dirname, relative, resolve } from 'node:path';
 
 function gitOut(dir, args) {
   return execFileSync('git', ['-C', dir, ...args], {
@@ -10,7 +10,8 @@ function gitOut(dir, args) {
 }
 
 export function repoRelative(path, cwd) {
-  const root = gitOut(cwd, ['rev-parse', '--show-toplevel']);
-  const relPath = relative(root, resolve(cwd, path)).split('\\').join('/');
+  const abs = resolve(cwd, path);
+  const root = gitOut(dirname(abs), ['rev-parse', '--show-toplevel']);
+  const relPath = relative(root, abs).split('\\').join('/');
   return { root, relPath };
 }
