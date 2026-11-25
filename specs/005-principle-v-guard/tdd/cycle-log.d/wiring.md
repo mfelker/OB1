@@ -24,3 +24,12 @@
 - green: `.fork/ci/lib/self-test-needed.mjs` added the `.fork/githooks/` prefix and `.claude/settings.json` exact path. Suite `node --test .fork/ci/test/` -> 155 passed, 0 failed
 - refactor: none needed
 - commit: (this commit)
+
+## Cycle: A10 runbook names .fork/domain-knowledge/ as the grill knowledge root
+
+- test: `.fork/ci/test/principle-v-docs.test.mjs::A10 .fork/README.md names .fork/domain-knowledge/ as the grill knowledge root with its layout` (new)
+- red: `node --test --test-name-pattern="^A10 " .fork/ci/test/principle-v-docs.test.mjs`
+  -> `AssertionError [ERR_ASSERTION]: a "## Domain knowledge" section is required in .fork/README.md` (1 failed)
+- green: `.fork/README.md` new "Domain knowledge" section (root, `CONTEXT.md`, topic documents, `adr/`). Suite `node --test .fork/ci/test/` -> 156 passed, 0 failed
+- refactor: none needed
+- commit: (this commit)

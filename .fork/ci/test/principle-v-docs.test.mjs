@@ -34,3 +34,25 @@ test('U29 .fork/githooks/pre-commit is an executable sh script that execs the st
     'must exec the guard with --staged from the top-level',
   );
 });
+
+/** Whitespace-collapsed text of the section whose heading starts with `heading`, up to the next heading of the same or higher level. */
+function section(text, heading) {
+  const level = /^#+/.exec(heading)[0].length;
+  const lines = text.split('\n');
+  const start = lines.findIndex(l => l.startsWith(heading));
+  if (start < 0) return null;
+  const rest = lines.slice(start);
+  const next = rest.findIndex((l, i) => i > 0 && /^#+ /.test(l) && /^#+/.exec(l)[0].length <= level);
+  return (next < 0 ? rest : rest.slice(0, next)).join('\n').replace(/\s+/g, ' ');
+}
+
+test('A10 .fork/README.md names .fork/domain-knowledge/ as the grill knowledge root with its layout', () => {
+  const sec = section(readRequired('.fork', 'README.md'), '## Domain knowledge');
+  assert.ok(sec, 'a "## Domain knowledge" section is required in .fork/README.md');
+  assert.match(sec, /\.fork\/domain-knowledge\//, 'must name .fork/domain-knowledge/');
+  assert.match(sec, /\/speckit-grill-with-docs/, 'must name /speckit-grill-with-docs');
+  assert.match(sec, /canonical/i, 'must call it the canonical knowledge root');
+  assert.match(sec, /CONTEXT\.md/, 'layout must list CONTEXT.md');
+  assert.match(sec, /topic documents?/i, 'layout must list topic documents');
+  assert.match(sec, /adr\//, 'layout must list adr/');
+});

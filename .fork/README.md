@@ -66,6 +66,19 @@ To verify a future upgrade, as a fork feature of its own:
 4. Rebase the overrides on the new templates: their header records the base template's SHA-256, and the drift test (`.fork/ci/test/tdd-overrides.test.mjs`) fails until they are updated.
 5. Update this table and write a new evidence file.
 
+## Domain knowledge
+
+`.fork/domain-knowledge/` is the canonical knowledge root for `/speckit-grill-with-docs` on the fork. Upstream owns `docs/`, so the grill's glossary and decisions live here, where the fork owns the path:
+
+```text
+.fork/domain-knowledge/
+├── CONTEXT.md        # the glossary and domain overview
+├── <topic>.md        # topic documents, one per area
+└── adr/              # architecture decision records
+```
+
+The folder does not exist until the grill records its first item. Do not create it by hand.
+
 ## One-time setup (per clone or worktree)
 
 ```bash
