@@ -117,3 +117,13 @@
 
 - refactor: deleted the now-unused `OUTER` constant from `.fork/ci/test/principle-v-guard.acceptance.test.mjs` and changed the header comment's tense ("flips" -> "flipped"). No assertion touched. Suite `node --test .fork/ci/test/` -> 191 passed, 0 failed, 0 todo
 - commit: (this commit)
+
+## Cycle: U26 --staged lists staged deletions and both sides of a rename
+
+- test: `.fork/ci/test/principle-v-guard.test.mjs::U26 --staged lists staged deletions and both sides of a rename` (new; stages `git rm docs/extra.md` and `git mv CLAUDE.md docs/moved.md`, expects exit 1 with `docs/extra.md` and `CLAUDE.md` as D4 denies and `docs/moved.md` as a D8 deny)
+- red: not observed. The test passed on its first run because A6 already built `--staged` on `git diff --cached --name-only -z --no-renames` (research R6). Deviation: no invented red; deliberate mutant checks instead.
+- mutant checks: (1) removed `--no-renames` from the diff command: `node --test --test-name-pattern="^U26 " .fork/ci/test/principle-v-guard.test.mjs`
+  -> `AssertionError [ERR_ASSERTION]: The input did not match the regular expression /CLAUDE\.md: .*file exists in upstream\/main/` (1 failed: only the rename's new path is listed). (2) added `--diff-filter=AM`: -> `AssertionError [ERR_ASSERTION]: The input did not match the regular expression /docs\/extra\.md: .*file exists in upstream\/main/` (1 failed: deletions dropped). Both mutants reverted; test then passes.
+- green: no CLI change (behavior already present). Suite `node --test .fork/ci/test/` -> 192 passed, 0 failed, 0 todo
+- refactor: none needed
+- commit: (this commit)

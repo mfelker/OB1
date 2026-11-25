@@ -5,7 +5,7 @@ import { spawnSync } from 'node:child_process';
 import { cpSync, realpathSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { addRemoteRef, commit, makeRepo, writeFiles } from './helpers/git-fixture.mjs';
+import { addRemoteRef, commit, git, makeRepo, writeFiles } from './helpers/git-fixture.mjs';
 
 const CI = join(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -13,7 +13,7 @@ const CI = join(dirname(fileURLToPath(import.meta.url)), '..');
 function guardRepo() {
   const repo = makeRepo();
   repo.dir = realpathSync(repo.dir);
-  writeFiles(repo, { 'CLAUDE.md': '# upstream\n', 'docs/guide.md': '# guide\n' });
+  writeFiles(repo, { 'CLAUDE.md': '# upstream\n', 'docs/guide.md': '# guide\n', 'docs/extra.md': '# extra\n' });
   addRemoteRef(repo, 'upstream/main', commit(repo, 'upstream content'));
   for (const sub of ['bin', 'lib']) cpSync(join(CI, sub), join(repo.dir, '.fork/ci', sub), { recursive: true });
   commit(repo, 'fork tooling');
@@ -69,4 +69,17 @@ test('U25 --hook whose rule library fails to load prints the principle-v-guard f
     hook_event_name: 'PreToolUse', tool_name: 'Write', cwd: repo.dir, tool_input: { file_path: join(repo.dir, 'CLAUDE.md') },
   }));
   assert.match(reason, /Unexpected token/);
+});
+
+// ── --staged ────────────────────────────────────────────────────────────────
+
+test('U26 --staged lists staged deletions and both sides of a rename', () => {
+  const repo = guardRepo();
+  git(repo, ['rm', '-q', 'docs/extra.md']);
+  git(repo, ['mv', 'CLAUDE.md', 'docs/moved.md']);
+  const r = guard(repo, '--staged', '');
+  assert.equal(r.status, 1, r.stderr);
+  assert.match(r.stderr, /docs\/extra\.md: .*file exists in upstream\/main/);
+  assert.match(r.stderr, /CLAUDE\.md: .*file exists in upstream\/main/);
+  assert.match(r.stderr, /docs\/moved\.md: .*inside upstream folder docs\//);
 });
