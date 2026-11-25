@@ -118,3 +118,24 @@ test('U16 a test-*.mjs script without node:test is kind plain-script: single uns
   assert.equal(whole.cwd, join(tree, 'recipes/x'));
   assert.deepEqual(whole.argv, [process.execPath, '--test', '--test-reporter=spec', 'test-live.mjs']);
 });
+
+test('U17 deno argv is runtime.command plus --filter; the 0 passed parser', () => {
+  const tree = tempTree('fork-tdd-tree-', fixtureFiles('deno-tested', 'integrations/d'));
+  const file = join(tree, 'integrations/d/index_test.ts');
+  const runtime = runtimeFor(file, { repoRoot: tree, tree, folder: 'integrations/d' });
+  assert.equal(runtime.kind, 'deno');
+  const single = buildCommand({ op: 'single', runtime, tree, file, name: 'add (x)' });
+  assert.equal(single.kind, 'deno');
+  assert.equal(single.unsupported, null);
+  assert.equal(single.cwd, join(tree, 'integrations/d'));
+  assert.deepEqual(single.argv, [...runtime.command, '--filter', 'add (x)', 'index_test.ts']);
+  const whole = buildCommand({ op: 'file', runtime, tree, file });
+  assert.deepEqual(whole.argv, [...runtime.command, 'index_test.ts']);
+  const p = single.countParser;
+  // Real deno 2.9 summary lines, with their ANSI colour codes.
+  assert.deepEqual(p('\u001b[0m\u001b[32mok\u001b[0m | 0 passed | 0 failed | 2 filtered out \u001b[0m\u001b[38;5;245m(1ms)\u001b[0m\n', 0), { tests: 0, passed: 0, failed: 0 });
+  assert.deepEqual(p('ok | 1 passed | 0 failed | 1 filtered out (1ms)\n', 0), { tests: 1, passed: 1, failed: 0 });
+  assert.deepEqual(p('FAILED | 1 passed | 2 failed (4ms)\n', 1), { tests: 3, passed: 1, failed: 2 });
+  assert.deepEqual(p('error: No test modules found\n', 1), { tests: 0, passed: 0, failed: 0 });
+  assert.equal(p('error: Module not found "file:///x.ts".\n', 1), null);
+});

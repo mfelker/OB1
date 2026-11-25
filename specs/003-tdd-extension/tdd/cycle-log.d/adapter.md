@@ -147,3 +147,13 @@
 - green: `.fork/ci/lib/tdd-commands.mjs:37` a node-plain file whose source has no `node:test` import/require (`:47` `USES_NODE_TEST`) is `plain-script`: `single` sets `unsupported` to "plain script, no named tests; use `file`", `file` runs `node --test --test-reporter=spec <f>` without `--test-isolation=none` (adapter A10, R5). Suite `node --test .fork/ci/test/` -> 117 passed, 0 failed
 - refactor: `buildCommand` reshaped around a shared `base` (`op`, `cwd`, `unsupported`) ahead of the other runtimes; suite re-run -> 117 passed
 - commit: (this commit)
+
+## Cycle: U17 deno argv is runtime.command plus --filter; the 0 passed parser
+
+- test: `.fork/ci/test/tdd-commands.test.mjs::U17 deno argv is runtime.command plus --filter; the 0 passed parser` (new; parser fed real deno 2.9.8 summary lines, ANSI codes included, captured from a probe in the scratchpad)
+- red: `node --test --test-name-pattern="^U17 " .fork/ci/test/tdd-commands.test.mjs`
+  -> `AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:` / `actual: 'plain-script',` (1 failed). Every runtime still fell into the node-plain branch.
+- green: `.fork/ci/lib/tdd-commands.mjs:37` deno argv is `runtime.command` (scanRuntimes' own argv, not a copy) plus `--filter <name>` for `single`, then the file; `:68` `denoCounts()` strips ANSI, maps "No test modules found" to zero and otherwise reads the last `N passed | M failed`, else null. Suite `node --test .fork/ci/test/` -> 118 passed, 0 failed
+- refactor: none needed
+- notes: `--filter <name>` is R5's argv verbatim; deno's string filter is a substring match, so a `single` name can select more than one deno test (recorded for the profile).
+- commit: (this commit)

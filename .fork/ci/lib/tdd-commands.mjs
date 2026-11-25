@@ -34,6 +34,10 @@ export function buildCommand({ op, runtime, tree, file, name }) {
   const cwd = join(tree, runtime.root);
   const rel = relative(cwd, file).split(sep).join('/');
   const base = { op, cwd, unsupported: null };
+  if (runtime.kind === 'deno') {
+    const argv = [...runtime.command, ...(op === 'single' ? ['--filter', name] : []), rel];
+    return { ...base, kind: 'deno', argv, countParser: denoCounts };
+  }
   if (!USES_NODE_TEST.test(readFileSync(file, 'utf8'))) {
     const argv = [process.execPath, '--test', '--test-reporter=spec', rel];
     return { ...base, kind: 'plain-script', argv, countParser: nodeCounts, unsupported: op === 'single' ? 'plain script, no named tests; use `file`' : null };
@@ -56,6 +60,18 @@ const lastCount = (output, label) => {
 function nodeCounts(output) {
   const [tests, passed, failed] = ['tests', 'pass', 'fail'].map(l => lastCount(output, l));
   return [tests, passed, failed].includes(undefined) ? null : { tests, passed, failed };
+}
+
+const ANSI = /\u001b\[[0-9;]*m/g;
+
+/** deno test: the last `N passed | M failed` summary; "No test modules found" is zero. */
+function denoCounts(output) {
+  const text = output.replace(ANSI, '');
+  if (/No test modules found/.test(text)) return { tests: 0, passed: 0, failed: 0 };
+  const all = [...text.matchAll(/(\d+) passed \| (\d+) failed/g)];
+  if (!all.length) return null;
+  const [passed, failed] = all.at(-1).slice(1).map(Number);
+  return { tests: passed + failed, passed, failed };
 }
 
 /** Escape the regex metacharacters \\ ^ $ . * + ? ( ) [ ] { } | so the name matches literally. */
