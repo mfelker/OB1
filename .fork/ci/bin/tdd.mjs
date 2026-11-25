@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import { delimiter, dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { requireFolder, resolveTarget, TargetError } from '../lib/tdd-target.mjs';
-import { buildCommand, resolveFile, runtimeFor, SUITE_COUNT_PARSERS } from '../lib/tdd-commands.mjs';
+import { buildCommand, resolveFile, runtimeFor, suiteCounts } from '../lib/tdd-commands.mjs';
 import { childEnv } from '../lib/tdd-env.mjs';
 import { scanRuntimes } from '../lib/runtimes.mjs';
 
@@ -122,19 +122,6 @@ function restoreLockfiles(tree, wereClean) {
       process.stdout.write(`[tdd] restored ${file}\n`);
     }
   }
-}
-
-/**
- * `: tests=N pass=N fail=N` summed over the runtimes whose tests ran (pass or fail), parsed from
- * run-folder's output excerpts; `?` when any of them can't be parsed; '' when none ran.
- */
-function suiteCounts(runtimes) {
-  const ran = runtimes.filter(rt => rt.outcome === 'pass' || rt.outcome === 'fail');
-  if (!ran.length) return '';
-  const parsed = ran.map(rt => SUITE_COUNT_PARSERS[rt.kind]?.(rt.outputExcerpt ?? '', rt.outcome === 'pass' ? 0 : 1) ?? null);
-  if (parsed.includes(null)) return ': tests=? pass=? fail=?';
-  const sum = key => parsed.reduce((n, c) => n + c[key], 0);
-  return `: tests=${sum('tests')} pass=${sum('passed')} fail=${sum('failed')}`;
 }
 
 /** `suite`: delegate to run-folder in the target tree, with childEnv; an empty baseline is green. */

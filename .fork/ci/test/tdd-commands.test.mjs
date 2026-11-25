@@ -4,7 +4,7 @@ import { createHash } from 'node:crypto';
 import { mkdtempSync, mkdirSync, writeFileSync, realpathSync, symlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
-import { buildCommand, resolveFile, runtimeFor } from '../lib/tdd-commands.mjs';
+import { buildCommand, resolveFile, runtimeFor, suiteCounts } from '../lib/tdd-commands.mjs';
 import { fixtureFiles } from './fixtures.mjs';
 import { TargetError } from '../lib/tdd-target.mjs';
 
@@ -221,4 +221,17 @@ test('U20 sql: file gives the psql verify argv; single is unsupported', () => {
   const single = buildCommand({ op: 'single', runtime, tree, file, name: 'demo' });
   assert.equal(single.kind, 'sql');
   assert.equal(single.unsupported, 'tests/verify.sql is one script, no named tests; use `file`');
+});
+
+test('U37 suiteCounts sums every runtime that ran, gives ? when any output is unparseable, and nothing when none ran', () => {
+  const node = (tests, pass, fail) => `ℹ tests ${tests}\nℹ pass ${pass}\nℹ fail ${fail}\n`;
+  const ran = [
+    { kind: 'node-plain', outcome: 'pass', outputExcerpt: node(3, 3, 0) },
+    { kind: 'deno', outcome: 'fail', outputExcerpt: 'ok | 2 passed | 1 failed (12ms)\n' },
+    { kind: 'node-plain', outcome: 'no-tests' },
+  ];
+  assert.equal(suiteCounts(ran), ': tests=6 pass=5 fail=1');
+  assert.equal(suiteCounts([...ran, { kind: 'node-plain', outcome: 'pass', outputExcerpt: 'no summary here\n' }]), ': tests=? pass=? fail=?');
+  assert.equal(suiteCounts([{ kind: 'node-script', outcome: 'pass', outputExcerpt: node(1, 1, 0) }]), ': tests=? pass=? fail=?');
+  assert.equal(suiteCounts([{ kind: 'deno', outcome: 'no-tests' }, { kind: 'sql', outcome: 'sql-unverified' }]), '');
 });

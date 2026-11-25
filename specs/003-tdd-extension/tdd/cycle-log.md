@@ -487,3 +487,13 @@ Appended to `tdd/cycle-log.md` by the integrator in merge order (research R14).
 - refactor: none needed
 - commit: (this commit)
 - notes: deviation, contract-driven: U27 and A3 asserted the literal pre-count `suite` line; both expected strings now carry `: tests=1 pass=1 fail=0`. No assertion was removed, and A3 still proves routing (the wrong tree's test fails). Contract row A12 updated to the counted line.
+
+<!-- integrator: T026a audit remediation (surviving mutants) -->
+
+## Cycle: U21, U37 strengthen tests against the T026a audit's surviving mutants
+
+- test: `.fork/ci/test/tdd-env.test.mjs::U21` adds kept names with a credential suffix mid-name (`GH_TOKEN_PATH`, `MY_API_KEY_FILE`, `WEBHOOK_SECRET_NAME`); `.fork/ci/test/tdd-commands.test.mjs::U37 suiteCounts sums every runtime that ran, gives ? when any output is unparseable, and nothing when none ran` (new unit test).
+- red: test strengthening for behaviors already DONE, so the red is each surviving mutant from `tdd/verification.md`, re-run against the new tests: dropping the `$` anchor in `lib/tdd-env.mjs` CREDENTIAL_SUFFIX -> `ℹ fail 1`; `?` branch returning zeros -> `ℹ fail 1`; summing only the first runtime -> `ℹ fail 1`. All three survived the previous suite.
+- green: no behavior change. `suiteCounts` moved verbatim from `bin/tdd.mjs` into `lib/tdd-commands.mjs` (exported) so it can be unit-tested; `SUITE_COUNT_PARSERS` is now module-private. Suite `node --test .fork/ci/test/` -> 148 passed, 0 failed
+- refactor: the move above
+- commit: (this commit)
