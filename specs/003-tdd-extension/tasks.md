@@ -84,7 +84,7 @@ description: "Tasks for adopting the spec-kit-tdd extension (spec 003)"
 | A8 | US1 AS2: with no test list, `/speckit-implement` stops | US1 | 〃 |
 | A9 | US1 AS3: the cycle log records the test, red command, failure line, green and commit | US1 | 〃 |
 | A10 | US3 AS1: fixture C1/K4 with real base-red classify `PROVEN` | US3, FR-010 | post-merge, fixture `tdd/verification.md` |
-| A11 | US3 AS2: fixture C3 without base-red classifies `TEST_AFTER` | US3 | 〃 |
+| A11 | US3 AS2: a calibration control without base-red classifies by the staged rules (K2 → S2 `TEST_AFTER`; C3 → S4 `NOT_APPLICABLE`, after U38) | US3 | 〃 |
 | A12 | US3 AS3: the fork-lane audit of 003 applies the base rules (the fork section stays inert) | US3 | post-merge, `specs/003-…/tdd/verification.md` |
 | A13 | US4 AS1: Principle IV names the cycle log as red evidence, the staged base-red rule and the hook | US4, FR-011 | D, `tdd-docs.test.mjs` |
 | A14 | US4 AS2: the runbook TDD workflow covers test list, loop, audit before merge, and disabling the hook | US4, FR-012 | D, 〃 |
@@ -231,11 +231,11 @@ description: "Tasks for adopting the spec-kit-tdd extension (spec 003)"
 - [X] T026 [P] Confirm in the test list that U1–U37, A1–A6, A13 and A14 are `DONE`. A7–A12, A15 and A16 stay `PENDING` (post-merge or on-PR). The cycle log has one entry per cycle, each with a red.
 - [X] T026a Pre-merge TDD audit (T024 finding C1: Gate 1 of constitution 1.3.0 requires it before merge). In a fresh subagent working from `M`, follow `W/.specify/extensions/tdd/commands/speckit.tdd.verify.md` by hand on `W`'s 003 artifacts (the extension isn't installed in `M` until T029) and write `W/specs/003-tdd-extension/tdd/verification.md`. The fork section must stay inert (base rules). Fix every finding that pre-merge work can fix, under the same TDD rules. Outcome (owner decision): the verdict is FAIL for reasons no pre-merge work can remove (post-merge acceptance scenarios, six permanent `TEST_AFTER` behaviors, document-evidenced A1/A2). 003 merges under the one-time Gate 1 bootstrap exemption recorded in plan.md Complexity Tracking and the constitution's Sync Impact Report. The surviving mutants were fixed in `1c2df30`. Commit the report.
 - [X] T027 Tick T001–T026a. Push `fork/tdd-extension`.
-- [ ] T028 [A16] Open the fork PR: `gh pr create -R mfelker/OB1 --base main --head fork/tdd-extension --title "[fork] Adopt spec-kit-tdd for enforced TDD (spec 003)"`.
+- [X] T028 [A16] Open the fork PR: `gh pr create -R mfelker/OB1 --base main --head fork/tdd-extension --title "[fork] Adopt spec-kit-tdd for enforced TDD (spec 003)"`.
   - The body has the A1 table, the test counts, and the note that `OB1 Review` is expected to fail on a fork-only PR.
   - Wait with an `until` loop for `fork-ci-verdict` and `self-test`.
   - Confirm the summary's `TDD status (advisory)` shows `specs/003-tdd-extension`, with the conclusion unchanged.
-- [ ] T029 **Ask the owner first.** Then:
+- [X] T029 **Ask the owner first.** Then:
   1. Merge with `gh pr merge <N> -R mfelker/OB1 --merge --admin` (R12).
   2. In `M`, run `git pull --ff-only origin main`.
   3. Update `specs/003-tdd-extension/plan.md`'s Worktree line to "none (fork-`main` checkout)" (R12) and commit.
@@ -244,13 +244,13 @@ description: "Tasks for adopting the spec-kit-tdd extension (spec 003)"
 
 ## Phase 5: Post-merge calibration and smoke (from `M`; US1, US3, US5)
 
-- [ ] T030 [US1] [A7] [A8] [A9] Run the smoke check in `M` (R11):
+- [X] T030 [US1] [A7] [A8] [A9] Run the smoke check in `M` (R11):
   1. Create a throwaway fork feature `specs/990-tdd-smoke/`: a spec with one behavior ("`sum(a, b)` returns `a + b`"), a plan with Lane fork, Worktree `.worktrees/tdd-smoke` (branch `fork/tdd-smoke` from `main`), Contribution folder `.fork/smoke-sandbox` (a new folder, which exercises the FR-017 empty baseline), and a tasks.md with one test task and one implementation task.
   2. Point `feature.json` at it, and run `/speckit-implement` **with no test list**. Expect it to stop (A8).
   3. Run `/speckit-tdd-plan`, then `/speckit-implement`. Expect the mandatory hook to drive one recorded cycle and tick the marked task (A7, A9). If the `speckit-tdd-*` skills aren't loaded in the session, follow `.specify/extensions/tdd/commands/*.md` as written and say so.
   4. Record the outcome in `specs/003-tdd-extension/evidence/smoke.md`.
   5. Delete the throwaway spec, worktree and branch, and restore `feature.json` to 003.
-- [ ] T031 [US3] [US5] [A10] [A11] [A15] Calibrate (R11):
+- [X] T031 [US3] [US5] [A10] [A11] [A15] Calibrate (R11):
   1. Recreate `.worktrees/stage-pr-532-atomizer-default` from `stage/pr-532-atomizer-default`.
   2. Create `specs/003-tdd-extension/calibration/staged-fixture/`: spec, plan (Lane staged, Worktree = that worktree, folder `recipes/atomizer/`) and a test list with C1, K4 and C3.
   3. Switch `feature.json` to the fixture and confirm with `tdd.mjs where`.
@@ -258,7 +258,7 @@ description: "Tasks for adopting the spec-kit-tdd extension (spec 003)"
   5. In fresh subagents, run the verify procedure on the fixture, expecting C1/K4 `PROVEN` and C3 `TEST_AFTER`, then on 002 (switch `feature.json`), expecting `BLOCKED` "no test list".
   6. Vet every cited line yourself.
   7. Restore `feature.json` to 003, remove the 002 worktree, and commit the reports.
-- [ ] T032 [US3] [A12] Re-audit 003 from `M` in a fresh subagent, now through the installed extension (verify, with remediation allowed). It is for the record, not a merge gate (Gate 1 bootstrap exemption, plan.md Complexity Tracking). With A7–A12 and A15 done, expect the remaining gaps to be the six `TEST_AFTER` behaviors and the document-evidenced A1/A2, with the fork section inert (base rules).
+- [X] T032 [US3] [A12] Re-audit 003 from `M` in a fresh subagent, now through the installed extension (verify, with remediation allowed). It is for the record, not a merge gate (Gate 1 bootstrap exemption, plan.md Complexity Tracking). With A7–A12 and A15 done, expect the remaining gaps to be the six `TEST_AFTER` behaviors and the document-evidenced A1/A2, with the fork section inert (base rules).
   - Fix any fork-integration gap found in T030–T032 through a follow-up `fork/tdd-calibration-fixes` branch, under the same TDD rules, then re-run the affected step.
   - [X] T032a [U38] [U39] [U40] `fork/tdd-calibration-fixes`: T031's fixture audit classed the C3 control S4 → NOT_APPLICABLE, not the contract's S2 → TEST_AFTER (C3's code is unchanged by the PR). Add the rule order (U38), add a K2 control whose code the PR changed, and set C3 to the S4 control. Also fix the post-merge security review's venv finding (U39, U40). Re-audit the fixture after the merge.
   - Mark A7–A12, A15 and A16 `DONE`, set spec.md Status to `Implemented`, tick T028–T032, and commit to `main`.

@@ -4,7 +4,7 @@ loop: inside-out
 profile: .specify/memory/tdd-profile.md
 spec_criteria: 13
 planned_at: d83711a
-updated_at: b4227e1
+updated_at: 467a6e9
 suite_baseline: green
 ---
 
@@ -25,16 +25,16 @@ Written by hand, under the extension's format (research R11): the extension can'
 | A4  | The profile's `single` command run as written exits 3 for a name that matches nothing | US2 AS2, FR-006 | example | DONE | covered by U14, U15, U23; passed on first run, verified with a deliberate mutant (playbook); cycle-log.md `A4`, commit `1009717` |
 | A5  | A fork feature with Worktree `none` uses the repo-root checkout | US2 AS3 | example | DONE | covered by U6; passed on first run, verified with a deliberate mutant (playbook); cycle-log.md `A5`, commit `dcaf663` |
 | A6  | A missing folder or no detectable runtime fails explicitly | US2 AS4, FR-007 | example | DONE | covered by U11, U13; passed on first run, verified with a deliberate mutant (playbook); cycle-log.md `A6`, commit `2962db5` |
-| A7  | `/speckit-implement` drives the behavior through the loop before anything else | US1 AS1, FR-002 | example | PENDING | |
-| A8  | With no test list, `/speckit-implement` stops | US1 AS2 | example | PENDING | |
-| A9  | The cycle log records the test, red command, failure line, green and commit | US1 AS3 | example | PENDING | |
-| A10 | Calibration fixture C1/K4 with a real base-red classify `PROVEN` | US3 AS1, FR-010 | example | PENDING | |
-| A11 | Calibration fixture C3 without a base-red classifies `TEST_AFTER` | US3 AS2 | example | PENDING | |
-| A12 | The fork-lane audit of 003 applies the base rules (the fork section stays inert) | US3 AS3 | example | PENDING | |
+| A7  | `/speckit-implement` drives the behavior through the loop before anything else | US1 AS1, FR-002 | example | DONE | `evidence/smoke.md` §A7–A9 (manual evidence, not an executable test (owner decision, T032)) |
+| A8  | With no test list, `/speckit-implement` stops | US1 AS2 | example | DONE | `evidence/smoke.md` §A8 (manual evidence, not an executable test (owner decision, T032)) |
+| A9  | The cycle log records the test, red command, failure line, green and commit | US1 AS3 | example | DONE | `evidence/smoke.md` §A7–A9 (manual evidence, not an executable test (owner decision, T032)) |
+| A10 | Calibration fixture C1/K4 with a real base-red classify `PROVEN` | US3 AS1, FR-010 | example | DONE | `calibration/staged-fixture/tdd/verification.md` (`3e9562b`: U1, U2 `PROVEN` by S1) (manual evidence, not an executable test (owner decision, T032)) |
+| A11 | A calibration control without a base-red classifies by the staged rules: K2 (code the PR changed) `TEST_AFTER` by S2; C3 (code unchanged) `NOT_APPLICABLE` by S4 | US3 AS2 | example | DONE | `calibration/staged-fixture/tdd/verification.md` (`3e9562b`: U4 `TEST_AFTER` by S2, U3 `NOT_APPLICABLE` by S4) (manual evidence, not an executable test (owner decision, T032)) |
+| A12 | The fork-lane audit of 003 applies the base rules (the fork section stays inert) | US3 AS3 | example | DONE | `tdd/verification.md` (`467a6e9`: fork section inert, base table only) (manual evidence, not an executable test (owner decision, T032)) |
 | A13 | Principle IV names the cycle log as red evidence, the staged base-red rule and the mandatory hook | US4 AS1, FR-011 | example | DONE | cycle-log.md `A13`, commit `1d4ff90` |
 | A14 | The runbook TDD workflow covers the test list, the loop, the audit before merge, and disabling the hook | US4 AS2, FR-012 | example | DONE | cycle-log.md `A14`, commit `d7478f1` |
-| A15 | Calibration reports exist for 002 (`BLOCKED`, with reason) and for the fixture | US5 AS1, FR-013 | example | PENDING | |
-| A16 | The fork PR's verdict summary shows the 003 TDD status row with the verdict unchanged | FR-014, SC-007 | example | PENDING | |
+| A15 | Calibration reports exist for 002 (`BLOCKED`, with reason) and for the fixture | US5 AS1, FR-013 | example | DONE | `specs/002-stage-pr-532-atomizer-default/tdd/verification.md` (`BLOCKED`: no test list) and the fixture report (manual evidence, not an executable test (owner decision, T032)) |
+| A16 | The fork PR's verdict summary shows the 003 TDD status row with the verdict unchanged | FR-014, SC-007 | example | DONE | `evidence/a16-ci.md` (PR #16 run `45631585606`) (manual evidence, not an executable test (owner decision, T032)) |
 
 ## Inner loop: unit behaviors
 

@@ -138,6 +138,20 @@ One recorded constitution exception, plus deliberate trade-offs.
 
 Scope of the exemption: 003 only. Gate 1's audit applies in full to every feature planned after 1.3.0 is installed. T032 re-audits 003 after the merge for the record; its verdict is not a merge gate.
 
+**T032 outcome (owner decisions)**: the post-merge re-audit (`tdd/verification.md`, `467a6e9`) is FAIL. A7–A12, A15 and A16 are recorded `DONE` as manual evidence, not executable tests, so the audit still grades them `NO_TEST`. Seven HIGH surviving mutants are **known gaps, not fixed**:
+
+| Mutant | Location | Unpinned behavior |
+|--------|----------|-------------------|
+| M24 | `.fork/ci/bin/tdd.mjs` `suite` | the child gets the raw environment, so credential blanking (FR-016) is not checked end to end |
+| M25 | `.fork/ci/bin/tdd.mjs` `single`/`file` | same as M24, for `single` and `file` |
+| M19 | `.fork/ci/bin/tdd.mjs` exit mapping | a nonzero exit with passing counts would report a pass |
+| M13 | `.fork/ci/lib/tdd-commands.mjs` `privateDir` | the uid owner check (U40) |
+| M21 | `.fork/ci/bin/tdd.mjs` `ensureVenv` | reuse without the `privateDir` check (U40) |
+| M34 | `.fork/ci/lib/tdd-status.mjs` | an exact branch match (U32) |
+| M3 | `.fork/ci/lib/tdd-target.mjs` | a subdirectory of a work tree accepted as Worktree (U9) |
+
+The report's findings 4–8 give the test that would pin each one.
+
 Trade-offs recorded in research:
 
 - **R11**: the feature hand-follows the loop instead of letting the extension drive it.

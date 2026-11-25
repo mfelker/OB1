@@ -4,7 +4,7 @@
 
 **Created**: 2026-11-25
 
-**Status**: Draft
+**Status**: Implemented
 
 **Input**: User description: "Adopt the spec-kit-tdd extension (d0whc3r/spec-kit-tdd v2.0.1) to enforce TDD discipline in the fork: install it from the vetted release zip, add a fork-only adapter so its profile commands run tests in the active feature's worktree and contribution folder via fork-ci runtime detection, add template overrides so staged upstream PRs count red-against-PR-base as test-first evidence, amend constitution Principle IV so the cycle log is the red evidence, update runbook and tasks template, and calibrate by running tdd.verify on spec 002"
 
