@@ -88,3 +88,19 @@ test('U14 node-test single/file argv (isolation none, spec reporter, anchored es
   assert.equal(whole.cwd, join(tree, 'recipes/x'));
   assert.deepEqual(whole.argv, [process.execPath, '--test', '--test-isolation=none', '--test-reporter=spec', 'lib/__tests__/x.test.mjs']);
 });
+
+test('U15 node count parser: tests 0 is zero-match; unparseable output gives null', () => {
+  const tree = tempTree('fork-tdd-tree-', { 'recipes/x/a.test.mjs': NODE_TEST });
+  const file = join(tree, 'recipes/x/a.test.mjs');
+  const runtime = runtimeFor(file, { repoRoot: tree, tree, folder: 'recipes/x' });
+  const { countParser } = buildCommand({ op: 'single', runtime, tree, file, name: 'ok' });
+  const summary = (t, p, f) => `✔ ok (0.2ms)\nℹ tests ${t}\nℹ suites 0\nℹ pass ${p}\nℹ fail ${f}\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 40\n`;
+  assert.deepEqual(countParser(summary(0, 0, 0), 0), { tests: 0, passed: 0, failed: 0 });
+  assert.deepEqual(countParser(summary(1, 1, 0), 0), { tests: 1, passed: 1, failed: 0 });
+  assert.deepEqual(countParser(summary(1, 0, 1), 1), { tests: 1, passed: 0, failed: 1 });
+  // The last summary wins (a nested run's summary may appear earlier in the output).
+  assert.deepEqual(countParser(`${summary(9, 9, 0)}${summary(2, 1, 1)}`, 1), { tests: 2, passed: 1, failed: 1 });
+  assert.equal(countParser('SyntaxError: Unexpected token\n', 1), null);
+  assert.equal(countParser('', 0), null);
+  assert.equal(countParser('ℹ tests 1\n', 0), null);
+});

@@ -129,3 +129,12 @@
 - refactor: none needed
 - notes: argv[0] is `process.execPath` rather than a bare `node`, so the child runs on the same Node the adapter's version check accepted. Probe (Node 26.13, `--test-isolation=none`): an anchored pattern matches a test inside `describe` by its leaf name and by "<suite> <leaf>"; a suite name selects all its tests.
 - commit: (this commit)
+
+## Cycle: U15 node count parser: tests 0 is zero-match; unparseable output gives null
+
+- test: `.fork/ci/test/tdd-commands.test.mjs::U15 node count parser: tests 0 is zero-match; unparseable output gives null` (new)
+- red: `node --test --test-name-pattern="^U15 " .fork/ci/test/tdd-commands.test.mjs`
+  -> `TypeError [Error]: countParser is not a function` (1 failed)
+- green: `.fork/ci/lib/tdd-commands.mjs:48` `nodeCounts()` reads the last `ℹ tests/pass/fail N` lines and returns null unless all three are present; `buildCommand` returns it as `countParser`. Suite `node --test .fork/ci/test/` -> 116 passed, 0 failed
+- refactor: `lastCount`'s line regex tightened from `^\S* ?<label>` to `^ℹ <label>`; suite re-run -> 116 passed, 0 failed
+- commit: (this commit)

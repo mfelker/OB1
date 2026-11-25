@@ -36,7 +36,19 @@ export function buildCommand({ op, runtime, tree, file, name }) {
   const argv = [process.execPath, '--test', '--test-isolation=none', '--test-reporter=spec'];
   if (op === 'single') argv.push(`--test-name-pattern=^${escapeRegex(name)}$`);
   argv.push(rel);
-  return { op, kind: 'node-test', argv, cwd, unsupported: null };
+  return { op, kind: 'node-test', argv, cwd, countParser: nodeCounts, unsupported: null };
+}
+
+/** The last value of a `ℹ <label> N` summary line, or undefined. */
+const lastCount = (output, label) => {
+  const all = [...output.matchAll(new RegExp(`^ℹ ${label} (\\d+)\\s*$`, 'gm'))];
+  return all.length ? Number(all.at(-1)[1]) : undefined;
+};
+
+/** node --test spec reporter: the last `ℹ tests/pass/fail N` lines; null when any is missing. */
+function nodeCounts(output) {
+  const [tests, passed, failed] = ['tests', 'pass', 'fail'].map(l => lastCount(output, l));
+  return [tests, passed, failed].includes(undefined) ? null : { tests, passed, failed };
 }
 
 /** Escape the regex metacharacters \\ ^ $ . * + ? ( ) [ ] { } | so the name matches literally. */
