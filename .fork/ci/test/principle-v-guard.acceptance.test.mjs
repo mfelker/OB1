@@ -37,10 +37,10 @@ function hookCommand() {
  * A temp repo on `main`: upstream content committed and pointed to by `upstream/main`,
  * plus a copy of this worktree's guard (bin, lib) and git hooks, committed as fork tooling.
  */
-function guardRepo() {
+function guardRepo(extraUpstream = {}) {
   const repo = makeRepo();
   repo.dir = realpathSync(repo.dir);
-  writeFiles(repo, UPSTREAM);
+  writeFiles(repo, { ...UPSTREAM, ...extraUpstream });
   addRemoteRef(repo, 'upstream/main', commit(repo, 'upstream content'));
   for (const sub of ['bin', 'lib']) cpSync(join(CI, sub), join(repo.dir, '.fork/ci', sub), { recursive: true });
   if (existsSync(join(ROOT, '.fork/githooks'))) {
@@ -75,12 +75,39 @@ function assertAllowed(r, label) {
   assert.equal(r.stdout, '', `${label}: an allowed write prints no decision`);
 }
 
-/** `git commit` with the repo's own hooks; returns the spawn result. */
-function gitCommit(repo, dir, message, extra = []) {
+/**
+ * A preload for the test fixture only (NODE_OPTIONS --require): when the commit guard CLI runs, it logs every
+ * child process the guard spawns, then runs it unchanged. The guard's own output is untouched, and a guard that
+ * really ran is observable: it asks git for the staged paths.
+ */
+function gitTrace() {
+  const dir = realpathSync(mkdtempSync(join(tmpdir(), 'fork-pvg-trace-')));
+  const log = join(dir, 'guard-calls.log');
+  const preload = join(dir, 'trace.cjs');
+  writeFileSync(preload, `const cp = require('node:child_process');
+if (/principle-v-guard\\.mjs$/.test(process.argv[1] ?? '')) {
+  const real = cp.execFileSync;
+  cp.execFileSync = (file, args, ...rest) => {
+    require('node:fs').appendFileSync(${JSON.stringify(log)}, [file, ...(args ?? [])].join(' ') + '\\n');
+    return real(file, args, ...rest);
+  };
+}
+`);
+  return { dir, log, preload };
+}
+
+/** The guard ran and read the staged paths: git was asked for the cached diff. */
+function assertGuardRan(trace, label) {
+  const calls = existsSync(trace.log) ? readFileSync(trace.log, 'utf8') : '';
+  assert.match(calls, /diff --cached --name-only/, `${label}: the commit guard never queried the staged paths, so it did not run`);
+}
+
+/** `git commit` with the repo's own hooks; returns the spawn result. `trace` (from gitTrace) is a test-only observation. */
+function gitCommit(repo, dir, message, extra = [], trace = null) {
   const { NODE_TEST_CONTEXT: _n, ...env } = process.env;
   return spawnSync('git', ['commit', '-q', ...extra, '-m', message], {
     cwd: dir, encoding: 'utf8',
-    env: { ...env, HOME: repo.dir, GIT_CONFIG_NOSYSTEM: '1', GIT_AUTHOR_NAME: 'Fork Owner', GIT_AUTHOR_EMAIL: 'owner@example.test', GIT_COMMITTER_NAME: 'Fork Owner', GIT_COMMITTER_EMAIL: 'owner@example.test' },
+    env: { ...env, ...(trace ? { NODE_OPTIONS: `--require ${trace.preload}` } : {}), HOME: repo.dir, GIT_CONFIG_NOSYSTEM: '1', GIT_AUTHOR_NAME: 'Fork Owner', GIT_AUTHOR_EMAIL: 'owner@example.test', GIT_COMMITTER_NAME: 'Fork Owner', GIT_COMMITTER_EMAIL: 'owner@example.test' },
   });
 }
 
@@ -156,12 +183,15 @@ test('A6 commit guard refuses a commit on main that stages upstream paths, listi
 });
 
 test('A7 commit guard allows a commit on main that stages only fork-only paths', () => {
-  const repo = guardRepo();
+  // Upstream owns `.fork/` and `specs/` folders here, so only D5 (fork-only roots) lets these paths through.
+  const repo = guardRepo({ '.fork/README.md': '# upstream\n', 'specs/README.md': '# upstream\n' });
   enableCommitGuard(repo);
   writeFiles(repo, { '.fork/notes.md': 'n\n', 'specs/006-x/spec.md': '# s\n' });
   git(repo, ['add', '-A']);
-  const r = gitCommit(repo, repo.dir, 'fork-only work');
+  const trace = gitTrace();
+  const r = gitCommit(repo, repo.dir, 'fork-only work', [], trace);
   assert.equal(r.status, 0, r.stderr);
+  assertGuardRan(trace, 'A7');
 });
 
 test('A8 commit guard allows committing a conflicted merge that touches upstream files', () => {
@@ -178,8 +208,10 @@ test('A8 commit guard allows committing a conflicted merge that touches upstream
   assert.notEqual(m.status, 0, 'fixture: the merge must conflict');
   writeFiles(repo, { 'CLAUDE.md': '# resolved\n' });
   git(repo, ['add', 'CLAUDE.md']);
-  const r = gitCommit(repo, repo.dir, 'merge incoming', ['--no-edit']);
+  const trace = gitTrace();
+  const r = gitCommit(repo, repo.dir, 'merge incoming', ['--no-edit'], trace);
   assert.equal(r.status, 0, r.stderr);
+  assertGuardRan(trace, 'A8');
 });
 
 test('A9 commit guard allows a commit staging upstream files in a linked worktree on another branch', () => {
@@ -188,6 +220,8 @@ test('A9 commit guard allows a commit staging upstream files in a linked worktre
   const wt = linkedWorktree(repo, 'contrib/owner/y');
   writeFileSync(join(wt, 'CLAUDE.md'), '# upstream-bound change\n');
   spawnSync('git', ['add', 'CLAUDE.md'], { cwd: wt });
-  const r = gitCommit(repo, wt, 'upstream-bound edit');
+  const trace = gitTrace();
+  const r = gitCommit(repo, wt, 'upstream-bound edit', [], trace);
   assert.equal(r.status, 0, r.stderr);
+  assertGuardRan(trace, 'A9');
 });
