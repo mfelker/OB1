@@ -62,10 +62,15 @@ export function checkoutState(root) {
 
 export function upstreamPaths(root) {
   // Not trimmed: -z output is NUL-separated and names may carry spaces.
-  const out = execFileSync('git', ['-C', root, 'ls-tree', '-r', '-z', '--name-only', 'upstream/main'], {
-    encoding: 'utf8',
-    stdio: ['ignore', 'pipe', 'pipe'],
-  });
+  let out;
+  try {
+    out = execFileSync('git', ['-C', root, 'ls-tree', '-r', '-z', '--name-only', 'upstream/main'], {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+  } catch {
+    return null; // ref missing or git failed: the rule fails closed (D7)
+  }
   const files = new Set(out.split('\0').filter(Boolean));
   const dirs = new Set();
   for (const file of files) {

@@ -109,3 +109,11 @@ test('U20 upstreamPaths: files from upstream/main, dirs hold every proper ancest
   );
   assert.deepEqual([...got.dirs].sort(), ['docs', 'docs/assets', 'docs/assets/img']);
 });
+
+test('U21 upstreamPaths: null when upstream/main does not exist', () => {
+  const repo = tempRepo();
+  assert.equal(upstreamPaths(repo.dir), null);
+  addRemoteRef(repo, 'origin/main', git(repo, ['rev-parse', 'HEAD']));
+  assert.equal(upstreamPaths(repo.dir), null);
+  assert.equal(upstreamPaths(realpathSync(mkdtempSync(join(tmpdir(), 'fork-ci-plain-')))), null);
+});

@@ -78,3 +78,12 @@
 - green: `.fork/ci/lib/principle-v-paths.mjs:62-75` `git ls-tree -r -z --name-only upstream/main` split on NUL into `files`; every proper ancestor of every file added to `dirs`. The first green attempt failed on a wrong expected list in my own uncommitted test (listed a file the fixture never creates); corrected the expectation, not the behavior. Suite `node --test .fork/ci/test/` -> 161 passed, 0 failed
 - refactor: none needed
 - commit: (this commit)
+
+## Cycle: U21 upstreamPaths: null when upstream/main does not exist
+
+- test: `.fork/ci/test/principle-v-paths.test.mjs::U21 upstreamPaths: null when upstream/main does not exist` (new)
+- red: `node --test --test-name-pattern="^U21 " .fork/ci/test/principle-v-paths.test.mjs`
+  -> `fatal: Not a valid object name upstream/main` (1 failed; the call throws instead of returning null)
+- green: `.fork/ci/lib/principle-v-paths.mjs:63-71` a failing `git ls-tree` returns `null`. Suite `node --test .fork/ci/test/` -> 162 passed, 0 failed
+- refactor: none needed
+- commit: (this commit)
