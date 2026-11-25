@@ -22,7 +22,7 @@ Install spec-kit-tdd v2.0.1, which adds four commands: setup, plan, run and veri
 **Lane**: fork feature
 **Branch / Base**: `fork/tdd-extension` from fork `main` (`43e898a`; it contains `upstream/main` `238df6c`)
 **Contribution folder**: `.fork/ci` (the adapter and fork-ci code and tests). The feature also edits other fork-only paths, listed under Project Structure.
-**Worktree**: `/Users/mfelker/Projects/ob1/.worktrees/fork-tdd-extension`. Every source path in this plan and in tasks.md is rooted here. Spec-kit commands still run from the fork-`main` checkout (`/Users/mfelker/Projects/ob1`).
+**Worktree**: none (fork-`main` checkout). Merged in PR #16 (`6a4e195`); the integration worktree `/Users/mfelker/Projects/ob1/.worktrees/fork-tdd-extension` has been removed (R12). Spec-kit commands run from the fork-`main` checkout (`/Users/mfelker/Projects/ob1`).
 
 ## Technical Context
 
