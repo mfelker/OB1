@@ -497,3 +497,14 @@ Appended to `tdd/cycle-log.md` by the integrator in merge order (research R14).
 - green: no behavior change. `suiteCounts` moved verbatim from `bin/tdd.mjs` into `lib/tdd-commands.mjs` (exported) so it can be unit-tested; `SUITE_COUNT_PARSERS` is now module-private. Suite `node --test .fork/ci/test/` -> 148 passed, 0 failed
 - refactor: the move above
 - commit: (this commit)
+
+<!-- fork/tdd-calibration-fixes: T032 follow-up for the T031 calibration gap (fixture C3 classed S4, not S2) -->
+
+## Cycle: U38 rubric override: S4 takes precedence over S2
+
+- test: `.fork/ci/test/tdd-overrides.test.mjs::U38 rubric override: S4 (code the PR did not change) takes precedence over S2` (new)
+- red: `node --test --test-name-pattern="^U38 " .fork/ci/test/tdd-overrides.test.mjs`
+  -> `AssertionError [ERR_ASSERTION]: fork section must state that S4 wins over S2` (1 failed). The T031 fixture audit had to resolve the S2/S4 overlap itself, because the fork section gave no order.
+- green: `.specify/templates/overrides/tdd-test-quality-rubric.md` fork section adds the rule order (S4 first, by diffing the behavior's source base→head; S2 only for changed code). Only the fork section changed, so U35's byte check outside it still holds. Suite `node --test .fork/ci/test/` -> 149 passed, 0 failed
+- refactor: none needed
+- commit: (this commit)
