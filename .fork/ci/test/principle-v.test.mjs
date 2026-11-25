@@ -92,3 +92,12 @@ test('U9 D6: fork-only zones are allowed inside upstream folders; look-alikes an
   assert.equal(inZoneUpstream.allowed, false);
   assert.equal(inZoneUpstream.rule, 'D4');
 });
+
+test('U10 messages: D4, D8 and D7 reasons match the contract', () => {
+  const d4 = run({ relPath: 'CLAUDE.md' });
+  assert.equal(d4.reason, 'CLAUDE.md: constitution Principle V reserves this path for upstream (file exists in upstream/main).');
+  const d8 = run({ relPath: 'docs/a/b/c.md' });
+  assert.equal(d8.reason, 'docs/a/b/c.md: constitution Principle V reserves this path for upstream (inside upstream folder docs/).');
+  const d7 = run({ relPath: 'NOTES.md', upstream: null });
+  assert.equal(d7.reason, 'NOTES.md: constitution Principle V reserves this path for upstream (upstream/main is unavailable; run git fetch upstream).');
+});

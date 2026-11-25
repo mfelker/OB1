@@ -78,3 +78,12 @@
 - green: `.fork/ci/lib/principle-v.mjs:23` added the D6 allow via `isForkZone()` after D5 and before D7 (so D4 still wins for an upstream file in a zone, and `upstream: null` still allows zones). Suite `node --test .fork/ci/test/` -> 161 passed, 0 failed
 - refactor: none needed
 - commit: (this commit)
+
+## Cycle: U10 deny reasons match the contract
+
+- test: `.fork/ci/test/principle-v.test.mjs::U10 messages: D4, D8 and D7 reasons match the contract` (new)
+- red: `node --test --test-name-pattern="^U10 " .fork/ci/test/principle-v.test.mjs`
+  -> `AssertionError [ERR_ASSERTION]: ... actual: '', expected: 'CLAUDE.md: constitution Principle V reserves this path for upstream (file exists in upstream/main).'` (1 failed)
+- green: `.fork/ci/lib/principle-v.mjs:9` `deny(rule, relPath, why)` now builds the contract reason; D4, D7 and D8 (`:26`, `:29`, `:30-31`) pass their `why`, D8 naming the outermost matching upstream folder. Suite `node --test .fork/ci/test/` -> 162 passed, 0 failed
+- refactor: none needed
+- commit: (this commit)
