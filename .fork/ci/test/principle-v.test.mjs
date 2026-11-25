@@ -146,3 +146,10 @@ test('U37 D6 zones are narrow: other files in .claude/skills and .github/workflo
     assert.equal(d.rule, 'D8', relPath);
   }
 });
+
+test('U38 D8 names the outermost upstream folder when several enclose the path', () => {
+  const d = run({ relPath: 'docs/a/new.md', upstream: { files: new Set(), dirs: new Set(['docs', 'docs/a']) } });
+  assert.equal(d.allowed, false);
+  assert.equal(d.rule, 'D8');
+  assert.ok(d.reason.includes('(inside upstream folder docs/)'), d.reason);
+});

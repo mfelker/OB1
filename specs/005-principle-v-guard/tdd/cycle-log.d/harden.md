@@ -17,3 +17,13 @@
 - refactor: none needed
 - commit: (this commit)
 - notes: test strengthening against Gate 1 audit finding HIGH 2 / M06
+
+## Cycle: U38 D8 names the outermost upstream folder
+
+- test: `.fork/ci/test/principle-v.test.mjs::U38 D8 names the outermost upstream folder when several enclose the path` (new)
+- red: mutant M10 (D8 picks the innermost enclosing folder: `.find(Boolean)` -> `.findLast(Boolean)`, `.fork/ci/lib/principle-v.mjs:49`), `node --test --test-name-pattern="^U38 " .fork/ci/test/principle-v.test.mjs`
+  -> `✖ U38 D8 names the outermost upstream folder ...` / `actual: false` / `expected: true` (1 failed); mutant reverted, `git status --short` clean except tests
+- green: no production change. Suite `node --test .fork/ci/test/` -> 201 passed, 0 failed
+- refactor: none needed
+- commit: (this commit)
+- notes: test strengthening against Gate 1 audit finding HIGH 3 / M10
