@@ -68,3 +68,13 @@
 - green: `.fork/ci/bin/principle-v-guard.mjs:19-20` a missing or empty target throws `no target path in tool_input (file_path or notebook_path)`, which the catch turns into the deny; `tool_input?.` tolerates a missing object. Suite `node --test .fork/ci/test/` -> 186 passed, 0 failed, 4 todo
 - refactor: none needed
 - commit: (this commit)
+
+## Cycle: U25 --hook fails closed when the rule library fails to load
+
+- test: `.fork/ci/test/principle-v-guard.test.mjs::U25 --hook whose rule library fails to load prints the principle-v-guard failed deny and exits 0` (new; the fixture is a temp copy of `.fork/ci/{bin,lib}` whose `lib/principle-v.mjs` is replaced by `export const decide = ;`)
+- red: not observed. The test passed on its first run because the A1 cycle already loads both libs with dynamic `import()` inside the top-level `try` (a design choice made up front from contracts/guards.md). Deviation: no invented red; a deliberate mutant check instead.
+- mutant check: temporarily added a static `import { decide as _d } from '../lib/principle-v.mjs';` to the CLI. `node --test --test-name-pattern="^U25 " .fork/ci/test/principle-v-guard.test.mjs`
+  -> `AssertionError [ERR_ASSERTION]: hook must exit 0; stderr: file:///…/.fork/ci/lib/principle-v.mjs:1` (1 failed: the crash exits non-zero, the fail-open case). Mutant reverted; test then passes.
+- green: no CLI change (behavior already present). Suite `node --test .fork/ci/test/` -> 187 passed, 0 failed, 4 todo
+- refactor: none needed
+- commit: (this commit)

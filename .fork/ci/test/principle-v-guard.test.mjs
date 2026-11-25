@@ -61,3 +61,12 @@ test('U24 --hook for a matched tool with no target path prints the principle-v-g
   const reason = failedReason(guard(repo, '--hook', { hook_event_name: 'PreToolUse', tool_name: 'Write', cwd: repo.dir, tool_input: { content: 'x' } }));
   assert.match(reason, /no target path/);
 });
+
+test('U25 --hook whose rule library fails to load prints the principle-v-guard failed deny and exits 0', () => {
+  const repo = guardRepo();
+  writeFileSync(join(repo.dir, '.fork/ci/lib/principle-v.mjs'), 'export const decide = ;\n');
+  const reason = failedReason(guard(repo, '--hook', {
+    hook_event_name: 'PreToolUse', tool_name: 'Write', cwd: repo.dir, tool_input: { file_path: join(repo.dir, 'CLAUDE.md') },
+  }));
+  assert.match(reason, /Unexpected token/);
+});
