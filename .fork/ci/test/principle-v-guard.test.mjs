@@ -1,8 +1,9 @@
 // Unit behaviors of the Principle V guard CLI (spec 005, U22-U27): spawn the CLI like the hook runner does.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { spawnSync } from 'node:child_process';
-import { cpSync, existsSync, realpathSync, writeFileSync } from 'node:fs';
+import { execFileSync, spawnSync } from 'node:child_process';
+import { chmodSync, cpSync, existsSync, mkdtempSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { addRemoteRef, commit, git, makeRepo, writeFiles } from './helpers/git-fixture.mjs';
@@ -21,8 +22,8 @@ function guardRepo() {
 }
 
 /** Run `principle-v-guard.mjs <mode>` from the repo copy with `input` (string or object) on stdin. */
-function guard(repo, mode, input, cwd = repo.dir) {
-  const { NODE_TEST_CONTEXT: _n, ...env } = process.env;
+function guard(repo, mode, input, cwd = repo.dir, extraEnv = {}) {
+  const { NODE_TEST_CONTEXT: _n, ...env } = { ...process.env, ...extraEnv };
   return spawnSync(process.execPath, [join(repo.dir, '.fork/ci/bin/principle-v-guard.mjs'), mode], {
     cwd, env, encoding: 'utf8', input: typeof input === 'string' ? input : JSON.stringify(input),
   });
@@ -106,4 +107,22 @@ test('U33 --hook denies case variants of upstream paths on a case-insensitive fi
     assert.match(reason, /constitution Principle V/);
     assert.match(reason, rel);
   }
+});
+
+// ── --staged cost (finding F3) ──────────────────────────────────────────────
+
+test('U34 --staged lists upstream/main once per commit, however many paths are staged', () => {
+  const repo = guardRepo();
+  const realGit = execFileSync('which', ['git'], { encoding: 'utf8' }).trim();
+  // A `git` shim first on PATH: logs every ls-tree call, then runs the real git.
+  const shimDir = realpathSync(mkdtempSync(join(tmpdir(), 'fork-ci-shim-')));
+  const log = join(shimDir, 'ls-tree.log');
+  writeFileSync(join(shimDir, 'git'), `#!/bin/sh\ncase " $* " in *" ls-tree "*) echo ls-tree >> '${log}';; esac\nexec '${realGit}' "$@"\n`);
+  chmodSync(join(shimDir, 'git'), 0o755);
+  writeFiles(repo, { 'docs/a.md': 'a\n', 'docs/b.md': 'b\n', 'docs/c.md': 'c\n' });
+  git(repo, ['add', 'docs']);
+  const r = guard(repo, '--staged', '', repo.dir, { PATH: `${shimDir}:${process.env.PATH}` });
+  assert.equal(r.status, 1, r.stderr);
+  for (const f of ['a', 'b', 'c']) assert.match(r.stderr, new RegExp(`docs/${f}\\.md: .*inside upstream folder docs/`));
+  assert.equal(readFileSync(log, 'utf8').trim().split('\n').length, 1, 'git ls-tree upstream/main ran once');
 });

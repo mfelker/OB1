@@ -10,13 +10,16 @@ const REFUSED = 'The write was refused; fix the guard or run it by hand: node .f
 const denyJson = reason =>
   JSON.stringify({ hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'deny', permissionDecisionReason: reason } });
 
-/** Decide one repo-relative path against the checkout at `root` (null relPath: outside every checkout). */
-async function decideFor(root, relPath) {
-  const { decide } = await lib('principle-v.mjs');
+/** Checkout state and upstream sets for the checkout at `root`: once per hook call or commit, not per path. */
+async function checkoutContext(root) {
   const { checkoutState, upstreamPaths } = await lib('principle-v-paths.mjs');
-  const state = relPath === null ? { branch: 'HEAD', mergeInProgress: false } : checkoutState(root);
-  const upstream = relPath === null ? null : upstreamPaths(root);
-  return decide({ relPath, ...state, upstream });
+  return { ...checkoutState(root), upstream: upstreamPaths(root) };
+}
+
+/** Decide one repo-relative path (null relPath: outside every checkout) against a checkoutContext. */
+async function decideWith(relPath, context) {
+  const { decide } = await lib('principle-v.mjs');
+  return decide({ relPath, ...context });
 }
 
 async function hook() {
@@ -26,7 +29,7 @@ async function hook() {
     const target = input.tool_input?.file_path ?? input.tool_input?.notebook_path;
     if (typeof target !== 'string' || target === '') throw new Error('no target path in tool_input (file_path or notebook_path)');
     const { root, relPath } = repoRelative(target, input.cwd);
-    const d = await decideFor(root, relPath);
+    const d = await decideWith(relPath, relPath === null ? { branch: 'HEAD', mergeInProgress: false, upstream: null } : await checkoutContext(root));
     if (!d.allowed) console.log(denyJson(`${d.reason} ${d.suggestion}`));
   } catch (e) {
     console.log(denyJson(`principle-v-guard failed: ${e.message}. ${REFUSED}`));
@@ -38,8 +41,9 @@ async function staged() {
   const root = git(['rev-parse', '--show-toplevel']).trim();
   const paths = git(['diff', '--cached', '--name-only', '-z', '--no-renames']).split('\0').filter(Boolean);
   const lines = [];
+  const context = paths.length === 0 ? null : await checkoutContext(root);
   for (const relPath of paths) {
-    const d = await decideFor(root, relPath);
+    const d = await decideWith(relPath, context);
     if (!d.allowed) lines.push(`  ${d.reason} ${d.suggestion}`);
   }
   if (lines.length === 0) return;

@@ -27,3 +27,12 @@
 - green: no production change. Suite `node --test .fork/ci/test/` -> 196 passed, 0 failed
 - refactor: none needed
 - commit: (this commit)
+
+## Cycle: U34 --staged computes the upstream set once per commit
+
+- test: `.fork/ci/test/principle-v-guard.test.mjs::U34 --staged lists upstream/main once per commit, however many paths are staged` (new). Approach: a `git` shim script first on PATH in the spawned guard's environment appends a line to a log for each `ls-tree` call and then execs the real git; three staged `docs/*.md` paths must produce three deny lines and exactly one log line. Chosen over injectable dependencies because it checks the real CLI end to end without changing its shape, and counts a git call rather than time.
+- red: `node --test --test-name-pattern="^U34 " .fork/ci/test/principle-v-guard.test.mjs`
+  -> `AssertionError [ERR_ASSERTION]: git ls-tree upstream/main ran once` with `actual: 3, expected: 1` (1 failed)
+- green: `.fork/ci/bin/principle-v-guard.mjs` `decideFor` split into `checkoutContext(root)` (state + upstream sets) and `decideWith(relPath, context)`; `staged()` builds the context once (skipped when nothing is staged) and `hook()` builds it once for its one path. Suite `node --test .fork/ci/test/` -> 197 passed, 0 failed
+- refactor: none needed (the split is the change)
+- commit: (this commit)
