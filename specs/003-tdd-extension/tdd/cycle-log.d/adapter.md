@@ -119,3 +119,13 @@
 - refactor: none needed
 - notes: `<file>` in the A6 message is the tree-relative posix path.
 - commit: (this commit)
+
+## Cycle: U14 node-test single/file argv and cwd = tree + root
+
+- test: `.fork/ci/test/tdd-commands.test.mjs::U14 node-test single/file argv (isolation none, spec reporter, anchored escaped name as one element) and cwd = tree + root` (new; the name carries every metacharacter `\ ^ $ . * + ? ( ) [ ] { } |`, and the built pattern is checked to match it literally)
+- red: `node --test --test-name-pattern="^U14 " .fork/ci/test/tdd-commands.test.mjs`
+  -> `TypeError [Error]: Cannot read properties of undefined (reading 'op')` (1 failed). `buildCommand` existed only as an empty exported stub.
+- green: `.fork/ci/lib/tdd-commands.mjs:35` `buildCommand()` returns `{op, kind:'node-test', argv, cwd, unsupported:null}` with `cwd = tree + runtime.root`, argv `--test --test-isolation=none --test-reporter=spec [--test-name-pattern=^<escaped>$] <file rel to cwd>`; `:45` `escapeRegex`. Suite `node --test .fork/ci/test/` -> 115 passed, 0 failed
+- refactor: none needed
+- notes: argv[0] is `process.execPath` rather than a bare `node`, so the child runs on the same Node the adapter's version check accepted. Probe (Node 26.13, `--test-isolation=none`): an anchored pattern matches a test inside `describe` by its leaf name and by "<suite> <leaf>"; a suite name selects all its tests.
+- commit: (this commit)

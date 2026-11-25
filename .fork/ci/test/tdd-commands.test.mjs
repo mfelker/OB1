@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, mkdirSync, writeFileSync, realpathSync, symlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
-import { resolveFile, runtimeFor } from '../lib/tdd-commands.mjs';
+import { buildCommand, resolveFile, runtimeFor } from '../lib/tdd-commands.mjs';
 import { fixtureFiles } from './fixtures.mjs';
 import { TargetError } from '../lib/tdd-target.mjs';
 
@@ -64,4 +64,27 @@ test('U13 a file no runtime owns is rejected, naming the patterns', () => {
       return true;
     });
   }
+});
+
+const NODE_TEST = "import { test } from 'node:test';\ntest('ok', () => {});\n";
+
+test('U14 node-test single/file argv (isolation none, spec reporter, anchored escaped name as one element) and cwd = tree + root', () => {
+  const tree = tempTree('fork-tdd-tree-', { 'recipes/x/lib/__tests__/x.test.mjs': NODE_TEST, 'recipes/x/lib/x.js': 'module.exports = 1;\n' });
+  const target = { repoRoot: tree, tree, folder: 'recipes/x' };
+  const file = join(tree, 'recipes/x/lib/__tests__/x.test.mjs');
+  const runtime = runtimeFor(file, target);
+  const name = 'a.b (c) [d] {1} $x^ | * + ? \\ end';
+  const single = buildCommand({ op: 'single', runtime, tree, file, name });
+  assert.equal(single.op, 'single');
+  assert.equal(single.kind, 'node-test');
+  assert.equal(single.unsupported, null);
+  assert.equal(single.cwd, join(tree, 'recipes/x'));
+  assert.deepEqual(single.argv, [process.execPath, '--test', '--test-isolation=none', '--test-reporter=spec',
+    '--test-name-pattern=^a\\.b \\(c\\) \\[d\\] \\{1\\} \\$x\\^ \\| \\* \\+ \\? \\\\ end$', 'lib/__tests__/x.test.mjs']);
+  assert.ok(new RegExp(single.argv[4].slice('--test-name-pattern='.length)).test(name));
+  const whole = buildCommand({ op: 'file', runtime, tree, file });
+  assert.equal(whole.op, 'file');
+  assert.equal(whole.kind, 'node-test');
+  assert.equal(whole.cwd, join(tree, 'recipes/x'));
+  assert.deepEqual(whole.argv, [process.execPath, '--test', '--test-isolation=none', '--test-reporter=spec', 'lib/__tests__/x.test.mjs']);
 });

@@ -28,3 +28,16 @@ export function runtimeFor(fileAbs, target) {
   const patterns = [...Object.entries(TEST_PATTERNS).map(([kind, rx]) => `${kind} ${rx.source}`), `sql ${SQL_VERIFY}`].join('; ');
   throw new TargetError(`${rel} is not a test file of any runtime in ${target.folder} (patterns: ${patterns})`);
 }
+
+/** The RuntimeCommand for `single`/`file` on one test file (data-model RuntimeCommand; R5). */
+export function buildCommand({ op, runtime, tree, file, name }) {
+  const cwd = join(tree, runtime.root);
+  const rel = relative(cwd, file).split(sep).join('/');
+  const argv = [process.execPath, '--test', '--test-isolation=none', '--test-reporter=spec'];
+  if (op === 'single') argv.push(`--test-name-pattern=^${escapeRegex(name)}$`);
+  argv.push(rel);
+  return { op, kind: 'node-test', argv, cwd, unsupported: null };
+}
+
+/** Escape the regex metacharacters \\ ^ $ . * + ? ( ) [ ] { } | so the name matches literally. */
+export const escapeRegex = s => s.replace(/[\\^$.*+?()[\]{}|]/g, '\\$&');
