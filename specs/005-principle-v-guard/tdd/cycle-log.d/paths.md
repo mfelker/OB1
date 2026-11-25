@@ -33,3 +33,12 @@
 - green: `.fork/ci/lib/principle-v-paths.mjs:15-24` walk up to the nearest existing ancestor, realpath it, append the missing tail; git root is read from that directory. Suite `node --test .fork/ci/test/` -> 156 passed, 0 failed
 - refactor: none needed
 - commit: (this commit)
+
+## Cycle: U16 repoRelative: outside every checkout, or the root itself, gives relPath null
+
+- test: `.fork/ci/test/principle-v-paths.test.mjs::U16 repoRelative: outside every checkout, or the root itself, gives relPath null` (new)
+- red: `node --test --test-name-pattern="^U16 " .fork/ci/test/principle-v-paths.test.mjs`
+  -> `fatal: not a git repository (or any of the parent directories): .git` (1 failed; the call throws instead of returning `relPath: null`)
+- green: `.fork/ci/lib/principle-v-paths.mjs:26-33` a failing `git rev-parse` returns `{ root: null, relPath: null }`; an empty relative path (the root itself) becomes `null`. Suite `node --test .fork/ci/test/` -> 157 passed, 0 failed
+- refactor: dropped an unneeded outside-the-root branch before committing (realpath of both sides makes it unreachable)
+- commit: (this commit)

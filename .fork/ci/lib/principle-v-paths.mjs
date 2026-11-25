@@ -20,7 +20,12 @@ export function repoRelative(path, cwd) {
   }
   const real = realpathSync(existing);
   const abs = join(real, ...tail);
-  const root = gitOut(statSync(real).isDirectory() ? real : dirname(real), ['rev-parse', '--show-toplevel']);
-  const relPath = relative(root, abs).split('\\').join('/');
-  return { root, relPath };
+  let root;
+  try {
+    root = gitOut(statSync(real).isDirectory() ? real : dirname(real), ['rev-parse', '--show-toplevel']);
+  } catch {
+    return { root: null, relPath: null };
+  }
+  const rel = relative(root, abs).split('\\').join('/');
+  return { root, relPath: rel === '' ? null : rel };
 }

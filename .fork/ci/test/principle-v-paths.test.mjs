@@ -47,3 +47,12 @@ test('U15 repoRelative: a file not yet created resolves through its nearest exis
   assert.deepEqual(repoRelative('docs/new/deeper/x.md', repo.dir), { root: repo.dir, relPath: 'docs/new/deeper/x.md' });
   assert.deepEqual(repoRelative(join(outside, 'viaLink/new/x.md'), repo.dir), { root: repo.dir, relPath: 'docs/new/x.md' });
 });
+
+test('U16 repoRelative: outside every checkout, or the root itself, gives relPath null', () => {
+  const repo = tempRepo();
+  const outside = realpathSync(mkdtempSync(join(tmpdir(), 'fork-ci-out-')));
+  assert.equal(repoRelative(join(outside, 'x.md'), repo.dir).relPath, null);
+  assert.equal(repoRelative(join(outside, 'missing/dir/x.md'), repo.dir).relPath, null);
+  assert.equal(repoRelative(repo.dir, outside).relPath, null);
+  assert.equal(repoRelative('.', repo.dir).relPath, null);
+});
