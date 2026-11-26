@@ -13,7 +13,7 @@
  * The stand-ins are written here, never copied from Supabase's files. No test
  * uses the network or a real key.
  */
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, cpSync, existsSync, symlinkSync, chmodSync, rmSync } from "node:fs";
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, cpSync, existsSync, symlinkSync, chmodSync, rmSync, realpathSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { spawnSync } from "node:child_process";
@@ -145,7 +145,8 @@ esac
  * @param {{ withIntegration?: boolean, hide?: string[] }} [opts] hide: tools left off PATH ("docker", "git", "openssl")
  */
 export function makeCheckout({ withIntegration = true, hide = [] } = {}) {
-  const root = mkdtempSync(join(tmpdir(), "ob1-006-"));
+  // Resolved path (macOS temp folders are symlinks under /private), so paths the scripts print compare equal.
+  const root = realpathSync(mkdtempSync(join(tmpdir(), "ob1-006-")));
   const recipe = join(root, RECIPE_REL);
   cpSync(RECIPE_DIR, recipe, {
     recursive: true,
