@@ -32,3 +32,10 @@ DO $$ BEGIN
     RAISE EXCEPTION 'U43 service_role has no INSERT on public.thoughts';
   END IF;
 END $$;
+
+-- U44: row level security is on for thoughts.
+DO $$ BEGIN
+  IF NOT (SELECT relrowsecurity FROM pg_class WHERE oid = 'public.thoughts'::regclass) THEN
+    RAISE EXCEPTION 'U44 row level security is off on thoughts';
+  END IF;
+END $$;
