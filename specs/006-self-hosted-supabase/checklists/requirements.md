@@ -13,7 +13,7 @@
 
 ## Requirement Completeness
 
-- [ ] No [NEEDS CLARIFICATION] markers remain
+- [x] No [NEEDS CLARIFICATION] markers remain
 - [x] Requirements are testable and unambiguous
 - [x] Success criteria are measurable
 - [x] Success criteria are technology-agnostic (no implementation details)
@@ -31,6 +31,6 @@
 
 ## Notes
 
-- Three markers remain: Q1 (FR-017, where the model server runs), Q2 (FR-009, the bucket), Q3 (FR-018, how clients reach the stack). They are put to the owner before `/speckit-clarify` or `/speckit-plan`.
+- All three markers resolved with the owner on 2026-11-26, one question at a time: Q1 model server on the host plus an optional container (FR-017), Q2 one private bucket `ob1-files` (FR-009), Q3 local and LAN access only, remote access a later feature (FR-018, OS-007).
 - "No implementation details": this is an infrastructure recipe, so the product itself is a Docker Compose stack, and names like Compose, `psql`, Storage and the 004 setting names are the user-facing surface the README must document, not design choices. As in spec 004, the specific mechanism (overlay file, service selection, test runner) is left to the plan. FR-004 and FR-005 state outcomes (which services run), not how they are selected.
 - SC-002 (half the full stack's idle memory) is measured in the live acceptance run.

@@ -27,6 +27,9 @@
 - Q: Which Supabase services does the stack run? → A: Lean plus Storage: the database, the REST API, the gateway, the Edge Functions runtime and Storage always run; the Studio web UI (with the metadata service it needs) is an optional add-on started only on request. No user-login service, realtime or connection pooler.
 - Q: What is in 006's scope? → A: The stack only, starting from a new, empty brain. Moving an existing brain over and re-embedding are a later feature (planned 008). Keeping files linked to thoughts, the MCP tools for them, and making manuals and photos searchable are a later feature (planned 007); 006 only makes sure Storage works.
 - Q: Does a lean stack still meet upstream's contribution expectations? → A: Yes. No upstream rule requires particular Supabase services; the only architectural rule (remote MCP through Edge Functions) is met; upstream already accepted `recipes/local-brain-no-mcp` and `integrations/kubernetes-deployment`, which depart further from the canonical setup (VP-004). The README must state the trade-offs.
+- Q: Where does the model server run? → A: On the host by default (any OpenAI-compatible server the owner runs, as T046 proved), plus an optional bundled model-server container for owners who want one command to start everything, for example on a Linux box; it is opt-in and not part of the always-on set (FR-017).
+- Q: Does 006 create a storage bucket? → A: Yes, one private bucket, `ob1-files`, so the storage check has a real target and planned 007 builds on it (FR-009).
+- Q: How do the owner's AI clients reach the stack? → A: In 006, from the same machine and the local network only. A secure route for cloud-hosted clients (claude.ai custom connectors, a phone), such as the Caddy plus Tailscale Funnel setup proven in spec 004's Cloud run, is its own later feature (FR-018, OS-007).
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -105,7 +108,7 @@ Most of the time the owner wants the stack as light as possible, but sometimes t
 - **FR-006**: On first start of an empty database, the stack MUST create the `thoughts` table, `match_thoughts` and `upsert_thought` exactly as `docs/01-getting-started.md` defines them, at 1536 dimensions, including the GRANT step `CONTRIBUTING.md` requires (VP-007), with no change to the canonical definitions.
 - **FR-007**: The recipe MUST deploy spec 004's `integrations/self-hosted-llm-mcp` into the stack as the MCP server by reference to that folder, without copying or modifying it, following spec 004's self-hosted deployment steps (spec 004 FR-022).
 - **FR-008**: The owner MUST configure the model server only through spec 004's settings (`EMBEDDING_API_BASE`, `EMBEDDING_MODEL`, `CHAT_MODEL` and the rest); the recipe adds no model settings of its own.
-- **FR-009**: The setup step MUST create one private storage bucket for the owner's files [NEEDS CLARIFICATION: Q2 — bucket name, and whether 006 creates it or leaves bucket creation to 007].
+- **FR-009**: The stack MUST have one private storage bucket named `ob1-files` for the owner's files, created on first setup and left untouched if it already exists; files in it are reachable only with the stack's service credentials. Later features (planned 007) may add buckets but do not rename this one.
 - **FR-010**: Data in the database and in Storage MUST survive stopping and restarting the stack and the machine.
 - **FR-011**: The recipe MUST provide an executable verification that checks the schema objects (FR-006) exist with 1536 dimensions, and a documented storage check (upload, download, compare, refused without credentials).
 - **FR-012**: Research MUST settle, on the pinned version, whether Storage runs and authorizes requests with the user-login service absent, and whether it runs without the image service; the always-on set and the README follow the result.
@@ -113,8 +116,8 @@ Most of the time the owner wants the stack as light as possible, but sometimes t
 - **FR-014**: The README MUST state the services the lean stack leaves out and what that costs: `dashboards/open-brain-dashboard` does not work (it needs user login), and Studio is opt-in (VP-006).
 - **FR-015**: The README MUST position the recipe against `recipes/local-brain-no-mcp` (for networks where MCP is blocked; full stack; 768 dimensions by default) and `integrations/kubernetes-deployment` (Kubernetes, no Supabase), and link to both.
 - **FR-016**: The README MUST carry spec 004's R2 warning: on this stack, JWT verification is one setting for all functions (VP-003).
-- **FR-017**: The model server MUST be any OpenAI-compatible server the owner runs [NEEDS CLARIFICATION: Q1 — host-run server only, an optional bundled model-server container, or both].
-- **FR-018**: How the owner's AI clients reach the stack [NEEDS CLARIFICATION: Q3 — this machine and the local network only, or also a documented secure route for cloud-hosted clients such as claude.ai custom connectors].
+- **FR-017**: By default the model server MUST be any OpenAI-compatible server the owner runs on the host (or elsewhere on their network), reached from the containers at a documented address. The recipe MUST also offer an optional bundled model-server container, started only on request like the UI add-on (FR-005) and not part of the always-on set (FR-004); the README MUST state that on macOS this container runs without GPU acceleration and recommend the host route there.
+- **FR-018**: The README MUST document connecting MCP clients that run on the same machine or the local network (for example Claude Code and Claude Desktop) with the access key, and MUST state that cloud-hosted clients such as claude.ai custom connectors cannot reach the stack in this version, pointing to the planned remote-access feature (OS-007). The recipe MUST NOT expose the stack's gateway beyond the local network by default.
 - **FR-019**: The contribution folder MUST meet `CONTRIBUTING.md` and the upstream gate rules (README sections, metadata, no secrets, no binaries, scope, internal links resolving once #533 is upstream).
 - **FR-020**: The README MUST document how to stop the stack, how to remove it with or without its data, and where the data lives on disk.
 
@@ -124,11 +127,12 @@ Most of the time the owner wants the stack as light as possible, but sometimes t
 - **Local secrets file**: the untracked file holding the generated secrets and the owner's model settings.
 - **Always-on service set**: database, REST API, gateway, functions runtime, Storage (plus the image service if required).
 - **UI add-on**: the web UI and its metadata service, started on request.
-- **Owner bucket**: the private Storage bucket that later features use for files (FR-009).
+- **Model-server add-on**: an optional bundled OpenAI-compatible model-server container, started on request; the default is the owner's own server on the host (FR-017).
+- **Owner bucket**: the private Storage bucket `ob1-files` that later features use for files (FR-009).
 
 ### Data & Schema Changes
 
-- **New objects**: none beyond `docs/01`'s canonical `thoughts`, `match_thoughts`, `upsert_thought` (created in a new, empty database) and, depending on Q2, one private storage bucket.
+- **New objects**: none beyond `docs/01`'s canonical `thoughts`, `match_thoughts`, `upsert_thought` (created in a new, empty database) and one private storage bucket, `ob1-files`.
 - **Touches `thoughts`?**: No. It is created exactly as `docs/01` defines it.
 - **RLS**: as in `docs/01`; the bucket is private (service credentials only).
 - **Verification**: the executable schema check and the storage check (FR-011).
@@ -143,7 +147,7 @@ Most of the time the owner wants the stack as light as possible, but sometimes t
 ### Testing Requirements
 
 - **Runner**: decided in the plan. Candidates: tests for the setup step's logic (secret generation, no-overwrite, version check, service selection) in a runner from the constitution's Testing Standards table; the schema check as `tests/verify.sql`, which fork-ci runs against a throwaway Postgres with pgvector.
-- **Behaviors that MUST have tests**: FR-002 (fresh secrets, never the example defaults), FR-003 (no overwrite on re-run), FR-004 (exact service set), FR-005 (UI add-on separate), FR-006 (schema at 1536 with the GRANT), the Compose-version check (edge case), FR-019 (no secrets written into tracked files).
+- **Behaviors that MUST have tests**: FR-002 (fresh secrets, never the example defaults), FR-003 (no overwrite on re-run), FR-004 (exact service set), FR-005 (UI add-on separate), FR-017 (model-server add-on separate and opt-in), FR-006 (schema at 1536 with the GRANT), the Compose-version check (edge case), FR-019 (no secrets written into tracked files).
 - **Live acceptance**: like spec 004's T046, a recorded end-to-end run on a real machine covering Stories 1–3, with evidence in `specs/006-self-hosted-supabase/evidence/`.
 
 ## Success Criteria *(mandatory)*
@@ -178,6 +182,7 @@ Most of the time the owner wants the stack as light as possible, but sometimes t
 - **OS-004**: User login, `dashboards/open-brain-dashboard`, realtime features and connection pooling.
 - **OS-005**: Backups beyond documenting where the data lives and a one-line database dump command.
 - **OS-006**: Supporting Supabase stack versions other than the pinned one.
+- **OS-007**: Reaching the stack from cloud-hosted clients (claude.ai custom connectors, a phone off the local network) through a secure public HTTPS route: a planned later feature, which can reuse the Caddy plus Tailscale Funnel pattern from spec 004's Cloud run (`specs/004-self-hosted-llm/evidence/t046-cloud/`).
 
 ## Assumptions
 
