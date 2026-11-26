@@ -1,0 +1,21 @@
+{
+  "name": "Self-Hosted Supabase for Open Brain (Lean, with MCP)",
+  "description": "Run Open Brain on your own machine with a lean self-hosted Supabase stack (database, REST, gateway, Edge Functions, Storage) and the self-hosted LLM MCP server, using Docker Compose and no Kubernetes.",
+  "category": "recipes",
+  "author": {
+    "name": "Marcus Felker",
+    "github": "mfelker"
+  },
+  "version": "1.0.0",
+  "requires": {
+    "open_brain": true,
+    "services": ["OpenAI-compatible model server (for example Ollama or Docker Model Runner)"],
+    "tools": ["Docker with Docker Compose", "git", "openssl"]
+  },
+  "requires_skills": [],
+  "tags": ["self-hosted", "supabase", "docker-compose", "mcp", "local-llm", "storage"],
+  "difficulty": "advanced",
+  "estimated_time": "45 minutes",
+  "created": "2026-11-26",
+  "updated": "2026-11-26"
+}

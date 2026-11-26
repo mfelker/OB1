@@ -1,0 +1,71 @@
+# Test fixture: a stand-in for the official Supabase self-hosting compose file.
+# It has the same 11 service names and dependency links as supabase/supabase
+# `self-hosted/v0.8.5` (spec 006 research R1, R2), plus the few settings the
+# recipe's override changes, and nothing else. It is written for the tests;
+# it is not a copy of Supabase's file. `docker compose config` reads it; no
+# container is ever started from it.
+name: supabase
+
+services:
+  studio:
+    image: busybox:1.37
+  api-gw:
+    image: busybox:1.37
+    depends_on:
+      studio:
+        condition: service_healthy
+  auth:
+    image: busybox:1.37
+    depends_on:
+      db:
+        condition: service_healthy
+  rest:
+    image: busybox:1.37
+    depends_on:
+      db:
+        condition: service_healthy
+  realtime:
+    image: busybox:1.37
+    depends_on:
+      db:
+        condition: service_healthy
+  storage:
+    image: busybox:1.37
+    depends_on:
+      db:
+        condition: service_healthy
+      rest:
+        condition: service_started
+      imgproxy:
+        condition: service_started
+    environment:
+      ENABLE_IMAGE_TRANSFORMATION: "true"
+      IMGPROXY_URL: http://imgproxy:5001
+    volumes:
+      - ./volumes/storage:/var/lib/storage:z
+  imgproxy:
+    image: busybox:1.37
+  meta:
+    image: busybox:1.37
+    depends_on:
+      db:
+        condition: service_healthy
+  functions:
+    image: busybox:1.37
+    depends_on:
+      api-gw:
+        condition: service_healthy
+    environment:
+      SUPABASE_URL: http://api-gw:8000
+    volumes:
+      - ./volumes/functions:/home/deno/functions:Z
+  db:
+    image: busybox:1.37
+    volumes:
+      - ./volumes/db/roles.sql:/docker-entrypoint-initdb.d/init-scripts/99-roles.sql:Z
+      - ./volumes/db/data:/var/lib/postgresql/data:Z
+  supavisor:
+    image: busybox:1.37
+    depends_on:
+      db:
+        condition: service_healthy

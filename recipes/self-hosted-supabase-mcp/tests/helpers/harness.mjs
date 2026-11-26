@@ -1,0 +1,214 @@
+/**
+ * harness.mjs: test harness for recipes/self-hosted-supabase-mcp.
+ *
+ * Everything the recipe talks to from the outside is replaced at test time:
+ * - a temporary git checkout holding a copy of this recipe folder and a marker
+ *   for integrations/self-hosted-llm-mcp;
+ * - a PATH made of a small set of POSIX tools plus stub `git`, `docker` and
+ *   (for the bucket script) `curl`;
+ * - a stand-in for the Supabase clone: a `.env.example` with placeholder
+ *   values and a stub `utils/generate-keys.sh` that edits `.env` in its working
+ *   directory the way Supabase's script does.
+ *
+ * The stand-ins are written here, never copied from Supabase's files. No test
+ * uses the network or a real key.
+ */
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, cpSync, existsSync, symlinkSync, chmodSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join, dirname } from "node:path";
+import { spawnSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
+
+export const RECIPE_DIR = fileURLToPath(new URL("../..", import.meta.url));
+export const RECIPE_REL = "recipes/self-hosted-supabase-mcp";
+export const PIN = "self-hosted/v0.8.5";
+export const TESTED_COMPOSE = "v5.6.1";
+
+/** Keys Supabase's generate-keys.sh writes (research R6). */
+export const SUPABASE_KEYS = [
+  "JWT_SECRET", "ANON_KEY", "SERVICE_ROLE_KEY", "SECRET_KEY_BASE", "REALTIME_DB_ENC_KEY",
+  "VAULT_ENC_KEY", "PG_META_CRYPTO_KEY", "LOGFLARE_PUBLIC_ACCESS_TOKEN",
+  "LOGFLARE_PRIVATE_ACCESS_TOKEN", "S3_PROTOCOL_ACCESS_KEY_ID", "S3_PROTOCOL_ACCESS_KEY_SECRET",
+  "MINIO_ROOT_PASSWORD", "POSTGRES_PASSWORD", "DASHBOARD_PASSWORD",
+];
+export const MODEL_SETTINGS = [
+  "EMBEDDING_API_BASE", "EMBEDDING_API_KEY", "EMBEDDING_MODEL",
+  "CHAT_API_BASE", "CHAT_API_KEY", "CHAT_MODEL", "FETCH_TIMEOUT_MS",
+];
+
+/** Placeholder value a stand-in `.env.example` holds for a key. */
+export const examplePlaceholder = (key) => `example-placeholder-${key.toLowerCase()}`;
+
+/** Contents of the stand-in `.env.example`. */
+export function fixtureEnvExample() {
+  const lines = ["# stand-in for Supabase's .env.example (test fixture)", "DASHBOARD_USERNAME=supabase"];
+  for (const k of SUPABASE_KEYS) lines.push(`${k}=${examplePlaceholder(k)}`);
+  lines.push("SUPABASE_PUBLISHABLE_KEY=", "KONG_HTTP_PORT=8000", "");
+  return lines.join("\n");
+}
+
+/**
+ * Stand-in generate-keys.sh. With --update-env it replaces every Supabase key
+ * in ./.env (its working directory) with fresh hex from openssl. When
+ * STUB_GENKEYS_FAIL=1 it writes one key and then fails, like an interrupted run.
+ */
+function fixtureGenerateKeys() {
+  const keys = SUPABASE_KEYS.join(" ");
+  return `#!/bin/sh
+set -e
+[ "$1" = "--update-env" ] || { echo "stub: expected --update-env" >&2; exit 2; }
+[ -f .env ] || { echo "stub: no .env in $(pwd)" >&2; exit 2; }
+cp .env .env.old
+for k in ${keys}; do
+  v=$(openssl rand -hex 16)
+  sed "s|^$k=.*|$k=$v|" .env > .env.tmp && mv .env.tmp .env
+  if [ "\${STUB_GENKEYS_FAIL:-0}" = 1 ]; then echo "stub: generate-keys failed" >&2; exit 1; fi
+done
+echo "Updating .env..."
+`;
+}
+
+/** Build the stand-in clone at `<dest>`: supabase/docker with .env.example and utils/generate-keys.sh. */
+export function writeFixtureClone(dest, { composeFile } = {}) {
+  const docker = join(dest, "docker");
+  mkdirSync(join(docker, "utils"), { recursive: true });
+  writeFileSync(join(docker, ".env.example"), fixtureEnvExample());
+  writeFileSync(join(docker, "utils", "generate-keys.sh"), fixtureGenerateKeys());
+  chmodSync(join(docker, "utils", "generate-keys.sh"), 0o755);
+  const compose = composeFile ?? fileURLToPath(new URL("../fixtures/compose/docker-compose.yml", import.meta.url));
+  cpSync(compose, join(docker, "docker-compose.yml"));
+  mkdirSync(join(dest, ".git"), { recursive: true });
+}
+
+const POSIX_TOOLS = [
+  "sh", "cat", "sed", "grep", "mkdir", "cp", "mv", "rm", "mktemp", "printf", "tr", "head", "tail",
+  "cut", "awk", "date", "od", "chmod", "ls", "dirname", "basename", "env", "uname", "tee", "wc",
+  "test", "[", "expr", "sort", "uniq", "touch", "cmp", "find", "xargs", "sleep", "true", "false", "rmdir",
+];
+
+function which(cmd) {
+  for (const d of ["/bin", "/usr/bin", "/usr/local/bin", "/opt/homebrew/bin"]) {
+    const p = join(d, cmd);
+    if (existsSync(p)) return p;
+  }
+  return null;
+}
+
+/**
+ * Stub `git`. Logs every call to $STUB_LOG. On `clone ... --branch <tag> <url> <dest>` it builds the
+ * stand-in clone at <dest> and remembers <tag>. `-C <dir> describe --tags --exact-match` prints the
+ * remembered tag (from <dir>/.git/stub-tag).
+ */
+function stubGit(fixtureCloneModule) {
+  return `#!/bin/sh
+echo "git $*" >> "$STUB_LOG"
+if [ "$1" = "-C" ]; then dir="$2"; shift 2; else dir=.; fi
+case "$1" in
+  clone)
+    tag=""; dest=""; prev=""
+    for a in "$@"; do
+      [ "$prev" = "--branch" ] && tag="$a"
+      prev="$a"; dest="$a"
+    done
+    STUB_TAG="$tag" STUB_DEST="$dest" node "${fixtureCloneModule}" || exit 1
+    ;;
+  describe)
+    [ -f "$dir/.git/stub-tag" ] || { echo "fatal: no tag" >&2; exit 128; }
+    cat "$dir/.git/stub-tag"
+    ;;
+  status|rev-parse|init|add|commit|config)
+    exec "${which("git")}" -C "$dir" "$@"
+    ;;
+  *) echo "stub git: unexpected $*" >&2; exit 2 ;;
+esac
+`;
+}
+
+/** Stub `docker`: `compose version --short` prints $STUB_COMPOSE_VERSION; `compose ... config -q` exits $STUB_COMPOSE_CONFIG_EXIT. */
+function stubDocker() {
+  return `#!/bin/sh
+echo "docker $*" >> "$STUB_LOG"
+[ "$1" = "compose" ] || { echo "stub docker: unexpected $*" >&2; exit 2; }
+case " $* " in
+  *" version "*) echo "\${STUB_COMPOSE_VERSION:-${TESTED_COMPOSE.slice(1)}}" ;;
+  *" config "*) exit "\${STUB_COMPOSE_CONFIG_EXIT:-0}" ;;
+  *) echo "stub docker: unexpected $*" >&2; exit 2 ;;
+esac
+`;
+}
+
+/**
+ * Make a temporary checkout: <root>/recipes/self-hosted-supabase-mcp (a copy of this folder without
+ * its tests and any local clone), <root>/integrations/self-hosted-llm-mcp/ (unless withIntegration is
+ * false), committed in a fresh git repo, plus a bin directory for PATH.
+ *
+ * @param {{ withIntegration?: boolean, hide?: string[] }} [opts] hide: tools left off PATH ("docker", "git", "openssl")
+ */
+export function makeCheckout({ withIntegration = true, hide = [] } = {}) {
+  const root = mkdtempSync(join(tmpdir(), "ob1-006-"));
+  const recipe = join(root, RECIPE_REL);
+  cpSync(RECIPE_DIR, recipe, {
+    recursive: true,
+    filter: (src) => !src.includes(`${RECIPE_REL}/tests`) && !src.includes(`${RECIPE_REL}/supabase`),
+  });
+  if (withIntegration) {
+    mkdirSync(join(root, "integrations", "self-hosted-llm-mcp"), { recursive: true });
+    writeFileSync(join(root, "integrations", "self-hosted-llm-mcp", "index.ts"), "// marker\n");
+  }
+  const git = which("git");
+  const run = (...args) => spawnSync(git, args, { cwd: root, encoding: "utf8" });
+  run("init", "-q");
+  writeFileSync(join(root, ".git", "info", "exclude"), ".bin/\n.fixture-clone.mjs\n.stub.log\n");
+  run("-c", "user.email=t@example.invalid", "-c", "user.name=t", "add", "-A");
+  run("-c", "user.email=t@example.invalid", "-c", "user.name=t", "commit", "-q", "-m", "fixture");
+
+  const bin = join(root, ".bin");
+  mkdirSync(bin);
+  for (const t of POSIX_TOOLS) {
+    const p = which(t);
+    if (p) symlinkSync(p, join(bin, t));
+  }
+  const nodeDir = dirname(process.execPath);
+  symlinkSync(process.execPath, join(bin, "node"));
+  if (!hide.includes("openssl")) symlinkSync(which("openssl"), join(bin, "openssl"));
+  const cloneModule = join(root, ".fixture-clone.mjs");
+  writeFileSync(cloneModule, `import { writeFixtureClone } from ${JSON.stringify(fileURLToPath(import.meta.url))};
+import { writeFileSync } from "node:fs";
+import { join } from "node:path";
+writeFixtureClone(process.env.STUB_DEST);
+writeFileSync(join(process.env.STUB_DEST, ".git", "stub-tag"), process.env.STUB_TAG + "\\n");
+`);
+  if (!hide.includes("git")) { writeFileSync(join(bin, "git"), stubGit(cloneModule)); chmodSync(join(bin, "git"), 0o755); }
+  if (!hide.includes("docker")) { writeFileSync(join(bin, "docker"), stubDocker()); chmodSync(join(bin, "docker"), 0o755); }
+  const log = join(root, ".stub.log");
+  writeFileSync(log, "");
+  void nodeDir;
+  return { root, recipe, bin, log, cleanup: () => rmSync(root, { recursive: true, force: true }) };
+}
+
+/** Run `sh setup.sh` in the checkout's recipe folder with only the checkout's bin on PATH. */
+export function runSetup(co, env = {}) {
+  const r = spawnSync("/bin/sh", ["setup.sh"], {
+    cwd: co.recipe,
+    encoding: "utf8",
+    env: { PATH: co.bin, HOME: co.root, STUB_LOG: co.log, ...env },
+  });
+  return { code: r.status, stdout: r.stdout, stderr: r.stderr, out: `${r.stdout}${r.stderr}` };
+}
+
+/** Parse a .env file into a Map of key → value (ignores comments and blank lines). */
+export function readEnv(path) {
+  const m = new Map();
+  for (const line of readFileSync(path, "utf8").split("\n")) {
+    if (!line || line.startsWith("#") || !line.includes("=")) continue;
+    const i = line.indexOf("=");
+    m.set(line.slice(0, i), line.slice(i + 1));
+  }
+  return m;
+}
+
+/** Path of the generated .env inside a checkout. */
+export const envPath = (co) => join(co.recipe, "supabase", "docker", ".env");
+
+/** Stub log lines. */
+export const stubCalls = (co) => readFileSync(co.log, "utf8").split("\n").filter(Boolean);
