@@ -7,9 +7,6 @@
  * Supabase clone is a stand-in (tests/helpers/harness.mjs). A running stack is
  * the live acceptance run, not these tests. A5 is tests/verify.sql.
  *
- * Tests still waiting for their units are `todo` (reported, not failing the
- * run) until the commit that makes them pass; RUN_TODO=1 runs them for real.
- *
  * Run: node --test tests/   (from recipes/self-hosted-supabase-mcp/)
  */
 import { test } from "node:test";
@@ -22,7 +19,6 @@ import {
   SUPABASE_KEYS, MODEL_SETTINGS, examplePlaceholder,
 } from "./helpers/harness.mjs";
 
-const todo = process.env.RUN_TODO !== "1";
 const DOCKER = realDocker();
 const noDocker = DOCKER ? false : "docker is not on PATH";
 const ALWAYS_ON = ["api-gw", "db", "functions", "ob1-init", "rest", "storage"];
