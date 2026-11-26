@@ -286,3 +286,16 @@ test("U22 after a fresh run git status in the checkout is empty", () => {
     assert.equal(st.stdout, "");
   } finally { co.cleanup(); }
 });
+
+test("U53 an empty .env left by an interrupted Compose check is completed by the next run", () => {
+  const co = makeCheckout();
+  try {
+    runSetup(co);
+    writeFileSync(envPath(co), "");
+    const r = runSetup(co);
+    assert.equal(r.code, 0, r.out);
+    assert.match(r.out, /secrets: completed/);
+    const env = readEnv(envPath(co));
+    for (const k of SUPABASE_KEYS) assert.notEqual(env.get(k), examplePlaceholder(k), `${k} generated`);
+  } finally { co.cleanup(); }
+});

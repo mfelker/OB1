@@ -37,19 +37,20 @@ fi
 
 # Can this Docker Compose read the recipe? (include: with !reset/!override overrides.)
 # The include needs its env file, so a placeholder stands in until the real one exists.
+# An empty .env holds no keys (an interrupted earlier check can leave one); treat it as absent.
 placeholder=""
-if [ ! -f "$ENV_FILE" ]; then placeholder=1; : > "$ENV_FILE"; fi
+if [ ! -s "$ENV_FILE" ]; then placeholder=1; : > "$ENV_FILE"; trap 'rm -f "$ENV_FILE"' INT TERM; fi
 if ! (cd "$RECIPE_DIR" && docker compose config -q >/dev/null 2>&1); then
   [ -n "$placeholder" ] && rm -f "$ENV_FILE"
   found=$(docker compose version --short 2>/dev/null || echo "unknown")
   die "Docker Compose $found cannot read this recipe's compose files. Update Docker Compose; this recipe was tested with Compose $TESTED_COMPOSE."
 fi
-[ -n "$placeholder" ] && rm -f "$ENV_FILE"
+[ -n "$placeholder" ] && { rm -f "$ENV_FILE"; trap - INT TERM; }
 
 # Secrets. A new .env is built in a temporary folder by Supabase's own generator and moved into
 # place only when complete, so an interrupted run leaves no .env. An existing .env keeps every
 # Supabase key as it is; only the OB1 key is added if it is missing.
-if [ ! -f "$ENV_FILE" ]; then
+if [ ! -s "$ENV_FILE" ]; then
   build=$(mktemp -d)
   trap 'rm -rf "$build"' EXIT
   cp "$CLONE/docker/.env.example" "$build/.env"
