@@ -29,7 +29,7 @@ Test file: `recipes/self-hosted-supabase-mcp/tests/acceptance.test.mjs`, except 
 | A2 | Running `setup.sh` a second time exits 0, reports every piece already present, and leaves `supabase/docker/.env` byte-identical | US1.4, FR-003, SC-007 | example | PENDING | `tests/acceptance.test.mjs::A2` |
 | A3 | A setup run interrupted after the secrets were written (model-setting lines removed afterwards) is completed by the next run: the missing lines are added, every key line keeps its value, and that piece is reported completed while the secrets are reported already present | US1.6, FR-003, SC-007 | example | PENDING | `tests/acceptance.test.mjs::A3` |
 | A4 | After a fresh `setup.sh`: no generated key equals its `.env.example` value, `MCP_ACCESS_KEY` is set, no key value was printed, and `git status --porcelain` in the checkout is empty | FR-002, FR-019, edge case "Secrets" | example | PENDING | `tests/acceptance.test.mjs::A4` |
-| A5 | Applying `db/ob1-schema.sql` to an empty scratch database gives `thoughts` with `embedding vector(1536)`, `match_thoughts`, `upsert_thought`, INSERT for `service_role`, RLS on, all owned by `postgres` | FR-006, FR-011, US1.3 (stored 1536 embedding) | example | PENDING | `tests/verify.sql` |
+| A5 | Applying `db/ob1-schema.sql` to an empty scratch database gives `thoughts` with `embedding vector(1536)`, `match_thoughts`, `upsert_thought`, INSERT for `service_role`, RLS on, all owned by `postgres` | FR-006, FR-011, US1.3 (stored 1536 embedding) | example | DONE | `tests/verify.sql (no whole-file red; U41–U45 mutants)` |
 | A6 | Running `create-bucket.sh` twice against a storage stand-in that remembers buckets exits 0 both times, and leaves exactly one bucket `ob1-files`, private | US2.1, FR-009 | example | PENDING | `tests/acceptance.test.mjs::A6` |
 | A7 | After `setup.sh`, the recipe's service set with `--profile ui` is the default set plus exactly `studio` and `meta` | US3.1, US3.2, FR-005, SC-006 | example | PENDING | `tests/acceptance.test.mjs::A7` |
 | A8 | After `setup.sh`, the composed `functions` service mounts the checkout's `integrations/self-hosted-llm-mcp` read-only and receives `MCP_ACCESS_KEY` and the model settings from `.env` | FR-007, FR-008, SC-003 (config prerequisite) | example | PENDING | `tests/acceptance.test.mjs::A8` |
@@ -94,15 +94,15 @@ Test files: `tests/schema-drift.test.mjs` (U38–U40) and `tests/verify.sql` (U4
 
 | id  | behavior | traces | kind | state | test |
 | --- | -------- | ------ | ---- | ----- | ---- |
-| U38 | The file contains `docs/01-getting-started.md`'s five ```` ```sql ```` blocks verbatim and in order | FR-006, R7 | example | PENDING | `tests/schema-drift.test.mjs::U38` |
-| U39 | The file's first two statements are `create extension if not exists vector;` and `set role postgres;` | R7 | example | PENDING | `tests/schema-drift.test.mjs::U39` |
-| U40 | The file's last statement is `reset role;` | R7 | example | PENDING | `tests/schema-drift.test.mjs::U40` |
-| U41 | In a scratch database, `thoughts.embedding` is `vector(1536)` | FR-006 | example | PENDING | `tests/verify.sql` (assertion U41) |
-| U42 | `match_thoughts` and `upsert_thought` exist | FR-006 | example | PENDING | `tests/verify.sql` (assertion U42) |
-| U43 | `service_role` has INSERT on `public.thoughts` | FR-006, VP-007 | example | PENDING | `tests/verify.sql` (assertion U43) |
-| U44 | Row level security is enabled on `thoughts` | FR-006 | example | PENDING | `tests/verify.sql` (assertion U44) |
-| U45 | `thoughts`, `match_thoughts` and `upsert_thought` are owned by `postgres` | R7, FR-021 | example | PENDING | `tests/verify.sql` (assertion U45) |
-| U46 | Running `tests/verify.sql` twice against the same Postgres succeeds both times, with no DROP statement in the file (unique scratch database per run) | R7, guard rails | example | PENDING | `tests/verify.sql` (run twice) |
+| U38 | The file contains `docs/01-getting-started.md`'s five ```` ```sql ```` blocks verbatim and in order | FR-006, R7 | example | DONE | `tests/schema-drift.test.mjs::U38` |
+| U39 | The file's first two statements are `create extension if not exists vector;` and `set role postgres;` | R7 | example | DONE | `tests/schema-drift.test.mjs::U39` |
+| U40 | The file's last statement is `reset role;` | R7 | example | DONE | `tests/schema-drift.test.mjs::U40` |
+| U41 | In a scratch database, `thoughts.embedding` is `vector(1536)` | FR-006 | example | DONE | `tests/verify.sql (assertion U41; mutant-proven)` |
+| U42 | `match_thoughts` and `upsert_thought` exist | FR-006 | example | DONE | `tests/verify.sql (assertion U42; mutant-proven)` |
+| U43 | `service_role` has INSERT on `public.thoughts` | FR-006, VP-007 | example | DONE | `tests/verify.sql (assertion U43; mutant-proven)` |
+| U44 | Row level security is enabled on `thoughts` | FR-006 | example | DONE | `tests/verify.sql (assertion U44; mutant-proven)` |
+| U45 | `thoughts`, `match_thoughts` and `upsert_thought` are owned by `postgres` | R7, FR-021 | example | DONE | `tests/verify.sql (assertion U45; mutant-proven)` |
+| U46 | Running `tests/verify.sql` twice against the same Postgres succeeds both times, with no DROP statement in the file (unique scratch database per run) | R7, guard rails | example | DONE | `tests/verify-rerun.test.mjs::U46 (mutant-proven)` |
 
 ### `recipes/self-hosted-supabase-mcp/init/create-bucket.sh` (R9; data-model.md Storage.Bucket)
 

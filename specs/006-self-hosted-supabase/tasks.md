@@ -57,10 +57,10 @@ description: "Task list for spec 006: lean self-hosted Supabase recipe"
 
 **⚠️ CRITICAL**: no user story work starts before this phase is complete.
 
-- [ ] T005 [P] [U38] [U39] [U40] Test `F/tests/schema-drift.test.mjs`. It extracts the five ```` ```sql ```` blocks from `W/docs/01-getting-started.md` and asserts that `F/db/ob1-schema.sql` contains them verbatim and in order. It also asserts the file:
+- [X] T005 [P] [U38] [U39] [U40] Test `F/tests/schema-drift.test.mjs`. It extracts the five ```` ```sql ```` blocks from `W/docs/01-getting-started.md` and asserts that `F/db/ob1-schema.sql` contains them verbatim and in order. It also asserts the file:
   - starts with `create extension if not exists vector;` then `set role postgres;`;
   - ends with `reset role;` (research R7; data-model.md Schema objects).
-- [ ] T006 [P] [U41] [U42] [U43] [U44] [U45] [U46] Test `F/tests/verify.sql` (fork-ci SQL runtime): create a scratch database with a **unique name per run** and **no DROP**; in it, create `auth.role()` as fork-ci's bootstrap does; apply `../db/ob1-schema.sql`; then `RAISE EXCEPTION` unless:
+- [X] T006 [P] [U41] [U42] [U43] [U44] [U45] [U46] Test `F/tests/verify.sql` (fork-ci SQL runtime): create a scratch database with a **unique name per run** and **no DROP**; in it, create `auth.role()` as fork-ci's bootstrap does; apply `../db/ob1-schema.sql`; then `RAISE EXCEPTION` unless:
   - `thoughts.embedding` is `vector(1536)`;
   - `match_thoughts` and `upsert_thought` exist;
   - `service_role` has INSERT on `thoughts`;
@@ -68,10 +68,10 @@ description: "Task list for spec 006: lean self-hosted Supabase recipe"
   - `thoughts` is owned by `postgres`.
 
   (research R7; FR-006, FR-011; data-model.md Schema objects)
-- [ ] T007 [U38] [U39] [U40] [U41] [U42] [U43] [U44] [U45] [U46] Create `F/db/ob1-schema.sql` so that T005 and T006 pass (research R7; FR-006).
-- [ ] T008 Early gate run (plan Notes): run the OB1 gate's review checks locally over `F` with the upstream title `[recipes] Lean self-hosted Supabase for Open Brain`. Confirm "No credentials" and "SQL safety" pass (README and metadata may still fail at this point). Record the result in the T008 line in `M`.
+- [X] T007 [U38] [U39] [U40] [U41] [U42] [U43] [U44] [U45] [U46] Create `F/db/ob1-schema.sql` so that T005 and T006 pass (research R7; FR-006).
+- [X] T008 Early gate run (plan Notes): run the OB1 gate's review checks locally over `F` with the upstream title `[recipes] Lean self-hosted Supabase for Open Brain`. Confirm "No credentials" and "SQL safety" pass (README and metadata may still fail at this point). Record the result in the T008 line in `M`. **Done 2026-11-26 at `92d04ce`** (13 files changed against the 004 merge `062b573`): 14 of 15 rules pass, including "No credentials" and "SQL safety" on the schema, `verify.sql` and the tests' stand-in placeholder keys. The only failure is "README completeness", expected for the skeleton README.
 
-- [ ] T051 [A5] Outer loop: A5 green. `tests/verify.sql` passes as a whole against a fresh Postgres (FR-006, FR-011).
+- [X] T051 [A5] Outer loop: A5 green. `tests/verify.sql` passes as a whole against a fresh Postgres (FR-006, FR-011).
 
 **Checkpoint**: schema ready and verified.
 
