@@ -4,7 +4,7 @@ loop: outside-in # outside-in | inside-out
 profile: .specify/memory/tdd-profile.md # stack profile the commands must read
 spec_criteria: 24 # acceptance behaviors derived from US1–US3 scenarios and SC-002–SC-016 (automatable ones)
 planned_at: 974ca30 # short SHA the list was derived from (fork main)
-updated_at: 974ca30 # short SHA of the last change to this file
+updated_at: 5ee082e # short SHA of the last change to this file
 suite_baseline: green # empty: integrations/self-hosted-llm-mcp does not exist yet (0 tests)
 ---
 
@@ -32,30 +32,30 @@ Test file: `integrations/self-hosted-llm-mcp/tests/acceptance_test.ts`.
 
 | id  | behavior | traces | kind | state | test |
 | --- | -------- | ------ | ---- | ----- | ---- |
-| A1 | With only `EMBEDDING_API_BASE`, `EMBEDDING_MODEL` and `CHAT_MODEL` set to a self-hosted base and no cloud key, `capture_thought` stores one row carrying a 1536-length embedding and extracted metadata | US1.1, FR-001, FR-004 | example | PENDING | |
-| A2 | After a capture, `search_thoughts` with the thought's exact text returns that thought as the top result | US1.2, SC-004 | example | PENDING | |
-| A3 | After a capture, `search_thoughts` with a paraphrase (scripted to embed near the original) returns that thought | US1.2, SC-004 | example | PENDING | |
-| A4 | Under the self-hosted configuration, `list_thoughts` and `thought_stats` return core's output text for the same rows | US1.3 | example | PENDING | |
-| A5 | Capture, search, list and stats all succeed, and every model request in the fetch log goes to the configured base | SC-002, FR-004 | example | PENDING | |
-| A6 | With the embedding base unreachable, `capture_thought` returns an error naming the base as unreachable and the store gains no row | US2.1, FR-005, SC-003 | example | PENDING | |
-| A7 | With an embedding model the server does not know, `capture_thought` returns an error naming the model and stores nothing | SC-003, FR-005 | example | PENDING | |
-| A8 | With a 768-dimension embedding model, `capture_thought` returns an error naming 768 and 1536 and stores nothing | US2.2, FR-007, SC-003 | example | PENDING | |
-| A9 | With a 768-dimension embedding model, `GET …/setup-check` answers 503 with `embedding_dimension` failed naming 768 and 1536 | US2.2, SC-009, FR-007 | example | PENDING | |
-| A10 | With the chat model returning unusable output, `capture_thought` saves the thought with its embedding and default metadata, and the reply says extraction was skipped | US2.3, FR-006 | example | PENDING | |
-| A11 | With `EMBEDDING_API_BASE` unset, `capture_thought` fails naming `EMBEDDING_API_BASE` and the fetch log is empty | SC-008, FR-011 | example | PENDING | |
-| A12 | With a correctly configured fake server, `GET …/setup-check` with the key answers 200 with every check passed | SC-009, FR-008 | example | PENDING | |
-| A13 | `GET …/setup-check` without the key answers 401 | SC-009, FR-023 | example | PENDING | |
-| A14 | A brain holding 3 thoughts without `metadata.embedding_model` plus 2 captured through the server reports `thoughts.other_model: 3`, and both new rows name the configured model | US3.1, SC-010, FR-015, FR-016 | example | PENDING | |
-| A15 | With a model server that never answers and a few-ms `FETCH_TIMEOUT_MS`, `capture_thought` fails with a timeout message naming `FETCH_TIMEOUT_MS` and stores nothing | SC-011, FR-009 | example | PENDING | |
-| A16 | With `FETCH_TIMEOUT_MS` larger than the server's (scaled) delay, the same capture succeeds | SC-011, FR-009 | example | PENDING | |
-| A17 | With only `EMBEDDING_API_BASE`, `EMBEDDING_MODEL` and `CHAT_MODEL` set, the capture's chat request goes to the embedding base | SC-012, FR-011 | example | PENDING | |
-| A18 | With `CHAT_MODEL` unset, every one of the six tools fails naming `CHAT_MODEL` and the fetch log is empty | SC-012, FR-011 | example | PENDING | |
-| A19 | `EMBEDDING_API_BASE=http://ollama:11434/v1` with no key passes the setup check with no warning | SC-014, FR-020 | example | PENDING | |
-| A20 | The same base with `EMBEDDING_API_KEY` set passes the setup check with a `key_over_http` warning naming the embedding role | SC-014, FR-020 | example | PENDING | |
-| A21 | An MCP client using only `?key=<MCP_ACCESS_KEY>` lists exactly the six tools | SC-015, FR-023 | example | PENDING | |
-| A22 | An MCP request with a wrong key receives the JSON-RPC unauthorized error | SC-015, FR-023 | example | PENDING | |
-| A23 | With both roles pointed at a cloud-style `https` base, capture and search succeed with every model request to that base | US3.2 | example | PENDING | |
-| A24 | A capture with chat working stores `enrichment_status: "complete"`; new text captured with chat failing stores `"fallback"`; recapturing that text with chat working restores `"complete"` | SC-016, FR-024 | example | PENDING | |
+| A1 | With only `EMBEDDING_API_BASE`, `EMBEDDING_MODEL` and `CHAT_MODEL` set to a self-hosted base and no cloud key, `capture_thought` stores one row carrying a 1536-length embedding and extracted metadata | US1.1, FR-001, FR-004 | example | DONE | `tests/acceptance_test.ts::A1` |
+| A2 | After a capture, `search_thoughts` with the thought's exact text returns that thought as the top result | US1.2, SC-004 | example | DONE | `tests/acceptance_test.ts::A2` |
+| A3 | After a capture, `search_thoughts` with a paraphrase (scripted to embed near the original) returns that thought | US1.2, SC-004 | example | DONE | `tests/acceptance_test.ts::A3` |
+| A4 | Under the self-hosted configuration, `list_thoughts` and `thought_stats` return core's output text for the same rows | US1.3 | example | DONE | `tests/acceptance_test.ts::A4` |
+| A5 | Capture, search, list and stats all succeed, and every model request in the fetch log goes to the configured base | SC-002, FR-004 | example | DONE | `tests/acceptance_test.ts::A5` |
+| A6 | With the embedding base unreachable, `capture_thought` returns an error naming the base as unreachable and the store gains no row | US2.1, FR-005, SC-003 | example | DONE | `tests/acceptance_test.ts::A6` |
+| A7 | With an embedding model the server does not know, `capture_thought` returns an error naming the model and stores nothing | SC-003, FR-005 | example | DONE | `tests/acceptance_test.ts::A7` |
+| A8 | With a 768-dimension embedding model, `capture_thought` returns an error naming 768 and 1536 and stores nothing | US2.2, FR-007, SC-003 | example | DONE | `tests/acceptance_test.ts::A8` |
+| A9 | With a 768-dimension embedding model, `GET …/setup-check` answers 503 with `embedding_dimension` failed naming 768 and 1536 | US2.2, SC-009, FR-007 | example | DONE | `tests/acceptance_test.ts::A9` |
+| A10 | With the chat model returning unusable output, `capture_thought` saves the thought with its embedding and default metadata, and the reply says extraction was skipped | US2.3, FR-006 | example | DONE | `tests/acceptance_test.ts::A10` |
+| A11 | With `EMBEDDING_API_BASE` unset, `capture_thought` fails naming `EMBEDDING_API_BASE` and the fetch log is empty | SC-008, FR-011 | example | DONE | `tests/acceptance_test.ts::A11` |
+| A12 | With a correctly configured fake server, `GET …/setup-check` with the key answers 200 with every check passed | SC-009, FR-008 | example | DONE | `tests/acceptance_test.ts::A12` |
+| A13 | `GET …/setup-check` without the key answers 401 | SC-009, FR-023 | example | DONE | `tests/acceptance_test.ts::A13` |
+| A14 | A brain holding 3 thoughts without `metadata.embedding_model` plus 2 captured through the server reports `thoughts.other_model: 3`, and both new rows name the configured model | US3.1, SC-010, FR-015, FR-016 | example | DONE | `tests/acceptance_test.ts::A14` |
+| A15 | With a model server that never answers and a few-ms `FETCH_TIMEOUT_MS`, `capture_thought` fails with a timeout message naming `FETCH_TIMEOUT_MS` and stores nothing | SC-011, FR-009 | example | DONE | `tests/acceptance_test.ts::A15` |
+| A16 | With `FETCH_TIMEOUT_MS` larger than the server's (scaled) delay, the same capture succeeds | SC-011, FR-009 | example | DONE | `tests/acceptance_test.ts::A16` |
+| A17 | With only `EMBEDDING_API_BASE`, `EMBEDDING_MODEL` and `CHAT_MODEL` set, the capture's chat request goes to the embedding base | SC-012, FR-011 | example | DONE | `tests/acceptance_test.ts::A17` |
+| A18 | With `CHAT_MODEL` unset, every one of the six tools fails naming `CHAT_MODEL` and the fetch log is empty | SC-012, FR-011 | example | DONE | `tests/acceptance_test.ts::A18` |
+| A19 | `EMBEDDING_API_BASE=http://ollama:11434/v1` with no key passes the setup check with no warning | SC-014, FR-020 | example | DONE | `tests/acceptance_test.ts::A19` |
+| A20 | The same base with `EMBEDDING_API_KEY` set passes the setup check with a `key_over_http` warning naming the embedding role | SC-014, FR-020 | example | DONE | `tests/acceptance_test.ts::A20` |
+| A21 | An MCP client using only `?key=<MCP_ACCESS_KEY>` lists exactly the six tools | SC-015, FR-023 | example | DONE | `tests/acceptance_test.ts::A21` |
+| A22 | An MCP request with a wrong key receives the JSON-RPC unauthorized error | SC-015, FR-023 | example | DONE | `tests/acceptance_test.ts::A22` |
+| A23 | With both roles pointed at a cloud-style `https` base, capture and search succeed with every model request to that base | US3.2 | example | DONE | `tests/acceptance_test.ts::A23` |
+| A24 | A capture with chat working stores `enrichment_status: "complete"`; new text captured with chat failing stores `"fallback"`; recapturing that text with chat working restores `"complete"` | SC-016, FR-024 | example | DONE | `tests/acceptance_test.ts::A24` |
 
 ## Inner loop: unit behaviors
 
@@ -274,32 +274,32 @@ All paths are under `integrations/self-hosted-llm-mcp/`. The test file is `tests
 
 | id | behavior | traces | kind | task | state | test |
 | --- | -------- | ------ | ---- | ---- | ----- | ---- |
-| U180 | `OPTIONS` on any path, with no key, answers 200 `ok` with core's CORS headers | contracts/mcp-tools.md, core parity | contract | T022 | PENDING | |
-| U181 | A `POST` with no key answers HTTP 200 with the JSON-RPC `-32001` `Unauthorized: missing or invalid authentication.` envelope | FR-023, core parity | contract | T022 | PENDING | |
-| U182 | The envelope echoes a string or number request `id`, and gives `null` for a null, missing, non-scalar or unparseable id | core parity | contract | T022 | PENDING | |
-| U183 | A `GET` with a wrong key gets the envelope with `id: null` | core parity | contract | T022 | PENDING | |
-| U184 | The unauthorized response's status, body, `Content-Type` and CORS headers equal core's golden response at `238df6c` | contracts/mcp-tools.md, VP-010 | contract | T022 | PENDING | |
-| U185 | A wrong `x-brain-key` and a wrong `?key=` are each refused | FR-023, SC-015 | example | T022 | PENDING | |
-| U186 | A correct `x-brain-key`, and a correct `?key=` alone, each reach the MCP route | FR-023, SC-015 | example | T022 | PENDING | |
-| U187 | A non-empty header wins over the query: wrong header + right query is refused, right header + wrong query is accepted, an empty header falls through to the query | contracts/mcp-tools.md, core parity | contract | T022 | PENDING | |
-| U188 | With `MCP_ACCESS_KEY` unset or empty, every request is refused, whatever key it presents | contracts/mcp-tools.md | example | T022 | PENDING | |
-| U189 | Supabase `Authorization: Bearer` or `apikey` headers without the access key are refused | FR-023, VP-010 | example | T022 | PENDING | |
-| U190 | An authorized `tools/list` succeeds with no `Accept` header, with `application/json` only, and with both types | core parity (issue #33) | contract | T022 | PENDING | |
-| U191 | An authorized response has no `mcp-session-id` header and carries the CORS headers | core parity | contract | T022 | PENDING | |
-| U192 | The MCP route serves the tools built from the injected `deps` | plan.md seams | example | T022 | PENDING | |
-| U193 | `productionDeps()` reads `Deno.env`, uses `globalThis.fetch` and builds the store from `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` | R4, R10 | example | T023 | PENDING | |
-| U194 | `index.ts` holds one statement serving `createApp(productionDeps()).fetch` | R4 | example | T023 | PENDING | |
-| U195 | No source file outside `tests/` uses a bare import specifier, and a planted bare import is flagged | R10, FR-014 | example | T023 | PENDING | |
-| U196 | `GET …/setup-check` with the key answers 200 for an ok report and 503 otherwise, with the same JSON body, `Content-Type: application/json` and CORS headers | FR-008, Q 2026-11-26 #7 | example, both sides | T034 | PENDING | |
-| U197 | `GET …/setup-check` with no or a wrong key (header or query) answers 401 with the exact error body and CORS headers | contracts/setup-check.md, SC-009 | example | T034 | PENDING | |
-| U198 | `GET …/setup-check` accepts a correct `?key=` and applies the same header precedence as the MCP route | contracts/setup-check.md | example | T034 | PENDING | |
-| U199 | With `MCP_ACCESS_KEY` unset, `GET …/setup-check` answers 401 | contracts/mcp-tools.md | example | T034 | PENDING | |
-| U200 | An unauthorized setup-check request runs no check and sends no model request | SC-009, FR-010 | example | T034 | PENDING | |
-| U201 | `/fn/setup-check`, `/setup-check`, `/other/setup-check`, `/fn/setup-check/` and `/fn/setup-check?x=1` all reach the setup check | R8, FR-014, Q 2026-11-26 #8 | example, sampled | T034 | PENDING | |
-| U202 | `/fn/setup-check/extra`, `/fn/setup-checker`, `/fn/xsetup-check` and `/setup-check/fn` reach the MCP route | contracts/setup-check.md | example, sampled | T034 | PENDING | |
-| U203 | `POST …/setup-check` goes to the MCP route (no key gives the 200 envelope, not 401) | contracts/setup-check.md | example | T034 | PENDING | |
-| U204 | A wrong key on any non-setup-check path gets the 200 envelope, never 401 | contracts/mcp-tools.md | example | T034 | PENDING | |
-| U205 | A crashing setup check answers 500 with `{"error":"Setup check failed unexpectedly."}` and CORS headers, with no stack trace or key | Q 2026-11-26 #10, FR-010 | example | T034 | PENDING | |
+| U180 | `OPTIONS` on any path, with no key, answers 200 `ok` with core's CORS headers | contracts/mcp-tools.md, core parity | contract | T022 | DONE | `tests/app_test.ts::U180` |
+| U181 | A `POST` with no key answers HTTP 200 with the JSON-RPC `-32001` `Unauthorized: missing or invalid authentication.` envelope | FR-023, core parity | contract | T022 | DONE | `tests/app_test.ts::U181` |
+| U182 | The envelope echoes a string or number request `id`, and gives `null` for a null, missing, non-scalar or unparseable id | core parity | contract | T022 | DONE | `tests/app_test.ts::U182` |
+| U183 | A `GET` with a wrong key gets the envelope with `id: null` | core parity | contract | T022 | DONE | `tests/app_test.ts::U183` |
+| U184 | The unauthorized response's status, body, `Content-Type` and CORS headers equal core's golden response at `238df6c` | contracts/mcp-tools.md, VP-010 | contract | T022 | DONE | `tests/app_test.ts::U184` |
+| U185 | A wrong `x-brain-key` and a wrong `?key=` are each refused | FR-023, SC-015 | example | T022 | DONE | `tests/app_test.ts::U185` |
+| U186 | A correct `x-brain-key`, and a correct `?key=` alone, each reach the MCP route | FR-023, SC-015 | example | T022 | DONE | `tests/app_test.ts::U186` |
+| U187 | A non-empty header wins over the query: wrong header + right query is refused, right header + wrong query is accepted, an empty header falls through to the query | contracts/mcp-tools.md, core parity | contract | T022 | DONE | `tests/app_test.ts::U187` |
+| U188 | With `MCP_ACCESS_KEY` unset or empty, every request is refused, whatever key it presents | contracts/mcp-tools.md | example | T022 | DONE | `tests/app_test.ts::U188` |
+| U189 | Supabase `Authorization: Bearer` or `apikey` headers without the access key are refused | FR-023, VP-010 | example | T022 | DONE | `tests/app_test.ts::U189` |
+| U190 | An authorized `tools/list` succeeds with no `Accept` header, with `application/json` only, and with both types | core parity (issue #33) | contract | T022 | DONE | `tests/app_test.ts::U190` |
+| U191 | An authorized response has no `mcp-session-id` header and carries the CORS headers | core parity | contract | T022 | DONE | `tests/app_test.ts::U191` |
+| U192 | The MCP route serves the tools built from the injected `deps` | plan.md seams | example | T022 | DONE | `tests/app_test.ts::U192` |
+| U193 | `productionDeps()` reads `Deno.env`, uses `globalThis.fetch` and builds the store from `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` | R4, R10 | example | T023 | DONE | `tests/app_test.ts::U193` |
+| U194 | `index.ts` holds one statement serving `createApp(productionDeps()).fetch` | R4 | example | T023 | DONE | `tests/app_test.ts::U194` |
+| U195 | No source file outside `tests/` uses a bare import specifier, and a planted bare import is flagged | R10, FR-014 | example | T023 | DONE | `tests/imports_test.ts::U195` |
+| U196 | `GET …/setup-check` with the key answers 200 for an ok report and 503 otherwise, with the same JSON body, `Content-Type: application/json` and CORS headers | FR-008, Q 2026-11-26 #7 | example, both sides | T034 | DONE | `tests/app_test.ts::U196` |
+| U197 | `GET …/setup-check` with no or a wrong key (header or query) answers 401 with the exact error body and CORS headers | contracts/setup-check.md, SC-009 | example | T034 | DONE | `tests/app_test.ts::U197` |
+| U198 | `GET …/setup-check` accepts a correct `?key=` and applies the same header precedence as the MCP route | contracts/setup-check.md | example | T034 | DONE | `tests/app_test.ts::U198` |
+| U199 | With `MCP_ACCESS_KEY` unset, `GET …/setup-check` answers 401 | contracts/mcp-tools.md | example | T034 | DONE | `tests/app_test.ts::U199` |
+| U200 | An unauthorized setup-check request runs no check and sends no model request | SC-009, FR-010 | example | T034 | DONE | `tests/app_test.ts::U200` |
+| U201 | `/fn/setup-check`, `/setup-check`, `/other/setup-check`, `/fn/setup-check/` and `/fn/setup-check?x=1` all reach the setup check | R8, FR-014, Q 2026-11-26 #8 | example, sampled | T034 | DONE | `tests/app_test.ts::U201` |
+| U202 | `/fn/setup-check/extra`, `/fn/setup-checker`, `/fn/xsetup-check` and `/setup-check/fn` reach the MCP route | contracts/setup-check.md | example, sampled | T034 | DONE | `tests/app_test.ts::U202` |
+| U203 | `POST …/setup-check` goes to the MCP route (no key gives the 200 envelope, not 401) | contracts/setup-check.md | example | T034 | DONE | `tests/app_test.ts::U203` |
+| U204 | A wrong key on any non-setup-check path gets the 200 envelope, never 401 | contracts/mcp-tools.md | example | T034 | DONE | `tests/app_test.ts::U204` |
+| U205 | A crashing setup check answers 500 with `{"error":"Setup check failed unexpectedly."}` and CORS headers, with no stack trace or key | Q 2026-11-26 #10, FR-010 | example | T034 | DONE | `tests/app_test.ts::U205` |
 
 ## Invariants and edge cases still to place
 

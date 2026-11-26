@@ -140,7 +140,7 @@ Streams code against these. Signatures are the only shared contract. Behavior co
   - `--filter "/^<name> /"` on this file runs exactly one test
 
   Commit.
-- [ ] T006 [A1] [A2] [A3] [A4] [A5] [A6] [A7] [A8] [A9] [A10] [A11] [A12] [A13] [A14] [A15] [A16] [A17] [A18] [A19] [A20] [A21] [A22] [A23] [A24] Outer loop first: write `F/tests/acceptance_test.ts` with every `[A#]` behavior from the test list as a `todo(...)` test through `createApp(fakeDeps).fetch(new Request(...))`. Each test asserts the full observable result: the JSON-RPC response, `/setup-check` status and body, fake-store rows, and fake-fetch request log.
+- [X] T006 [A1] [A2] [A3] [A4] [A5] [A6] [A7] [A8] [A9] [A10] [A11] [A12] [A13] [A14] [A15] [A16] [A17] [A18] [A19] [A20] [A21] [A22] [A23] [A24] Outer loop first: write `F/tests/acceptance_test.ts` with every `[A#]` behavior from the test list as a `todo(...)` test through `createApp(fakeDeps).fetch(new Request(...))`. Each test asserts the full observable result: the JSON-RPC response, `/setup-check` status and body, fake-store rows, and fake-fetch request log.
   - Run with `RUN_TODO=1` and record each red (test name + decisive failure line) in `M/specs/004-self-hosted-llm/tdd/cycle-log.md`.
   - Confirm the default run is green (all ignored).
   - Commit in `W` (`[integrations] Acceptance tests as todo`) and in `M` (`[fork] Spec 004: acceptance reds`).
@@ -233,17 +233,17 @@ Streams code against these. Signatures are the only shared contract. Behavior co
 
 ### Stream A: app and entry (`shl-app`, wave 3)
 
-- [ ] T022 [U180] [U181] [U182] [U183] [U184] [U185] [U186] [U187] [U188] [U189] [U190] [U191] [U192] [US1] Tests first in `tests/app_test.ts`, then `createApp(deps)` in `lib/app.ts` (contracts/mcp-tools.md "Authentication"):
+- [X] T022 [U180] [U181] [U182] [U183] [U184] [U185] [U186] [U187] [U188] [U189] [U190] [U191] [U192] [US1] Tests first in `tests/app_test.ts`, then `createApp(deps)` in `lib/app.ts` (contracts/mcp-tools.md "Authentication"):
   - The MCP route accepts the key from `x-brain-key` or `?key=`. A missing or wrong key gets core's HTTP-200 JSON-RPC `-32001` envelope echoing the request `id`, byte for byte.
   - An unset `MCP_ACCESS_KEY` refuses everything.
   - `OPTIONS` answers with core's CORS headers.
   - Core's Accept-header patch is applied.
   - `mcp-session-id` is stripped and CORS headers are added to responses.
-- [ ] T023 [U193] [U194] [U195] [US1] Tests first in `tests/imports_test.ts`, then `productionDeps()` in `lib/app.ts`:
+- [X] T023 [U193] [U194] [U195] [US1] Tests first in `tests/imports_test.ts`, then `productionDeps()` in `lib/app.ts`:
   - `Deno.env.get`, `globalThis.fetch`, and `createSupabaseThoughtStore(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, fetch)`.
   - `index.ts` stays the one-line entry.
   - The test reads every `.ts` file under the folder (not `tests/`) and fails on any bare import specifier (research R10, FR-014).
-- [ ] T024 [A1] [A2] [A3] [A4] [A5] [A21] [A22] [A23] [US1] Flip the US1 acceptance tests in `tests/acceptance_test.ts` from `todo` to `Deno.test`, one per commit, each in the commit that turns it green. That includes SC-015's six-tools-with-key and wrong-key cases, and US3 scenario 2 (all settings pointed at a cloud-style `https` base behaves the same).
+- [X] T024 [A1] [A2] [A3] [A4] [A5] [A21] [A22] [A23] [US1] Flip the US1 acceptance tests in `tests/acceptance_test.ts` from `todo` to `Deno.test`, one per commit, each in the commit that turns it green. That includes SC-015's six-tools-with-key and wrong-key cases, and US3 scenario 2 (all settings pointed at a cloud-style `https` base behaves the same).
 
 ### Stream D: docs (`shl-docs`, wave 1)
 
@@ -304,12 +304,12 @@ Streams code against these. Signatures are the only shared contract. Behavior co
 
 ### Stream A: app (`shl-app`, wave 3)
 
-- [ ] T034 [U196] [U197] [U198] [U199] [U200] [U201] [U202] [U203] [U204] [U205] [US2] Tests first in `tests/app_test.ts`, then the `/setup-check` route in `lib/app.ts`:
+- [X] T034 [U196] [U197] [U198] [U199] [U200] [U201] [U202] [U203] [U204] [U205] [US2] Tests first in `tests/app_test.ts`, then the `/setup-check` route in `lib/app.ts`:
   - matched on `GET` with a **last path segment** of `setup-check` (`/<any-name>/setup-check`; research R8)
   - a missing or wrong key gets **HTTP 401** with `{"error":"Unauthorized: missing or invalid authentication."}` and CORS headers
   - success is **200**, any failed check **503**, with the same JSON body either way (FR-008 as amended)
   - other methods on that path go to the MCP route
-- [ ] T035 [A6] [A7] [A8] [A9] [A10] [A11] [A12] [A13] [A15] [A16] [A17] [A18] [A19] [A20] [A24] [US2] Flip the US2 acceptance tests (SC-003, SC-008, SC-009, SC-011 with a few-ms `FETCH_TIMEOUT_MS`, SC-012, SC-014, SC-016) from `todo` to `Deno.test`, one per green commit.
+- [X] T035 [A6] [A7] [A8] [A9] [A10] [A11] [A12] [A13] [A15] [A16] [A17] [A18] [A19] [A20] [A24] [US2] Flip the US2 acceptance tests (SC-003, SC-008, SC-009, SC-011 with a few-ms `FETCH_TIMEOUT_MS`, SC-012, SC-014, SC-016) from `todo` to `Deno.test`, one per green commit.
 
 ### Stream D: docs (`shl-docs`, wave 1)
 
@@ -331,7 +331,7 @@ Streams code against these. Signatures are the only shared contract. Behavior co
 
 ### Stream A: app (`shl-app`, wave 3)
 
-- [ ] T038 [A14] [US3] Flip the US3 acceptance test (SC-010 through `GET …/setup-check` on a fake store seeded with 3 rows without `embedding_model` plus 2 captures) from `todo` to `Deno.test`.
+- [X] T038 [A14] [US3] Flip the US3 acceptance test (SC-010 through `GET …/setup-check` on a fake store seeded with 3 rows without `embedding_model` plus 2 captures) from `todo` to `Deno.test`.
 
 ### Stream D: docs (`shl-docs`, wave 1)
 
