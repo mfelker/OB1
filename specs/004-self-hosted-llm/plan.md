@@ -111,4 +111,6 @@ integrations/self-hosted-llm-mcp/
 
 ## Complexity Tracking
 
-No constitution violations to justify.
+| Violation | Why Needed | Simpler Alternative Rejected Because |
+|-----------|------------|-------------------------------------|
+| 99 behaviors graded `TEST_AFTER` by the TDD audit (`tdd/verification.md`, `8fcda29`): their tests passed on the first run, because an earlier cycle in the same stream had already implemented the behavior. Principle IV requires each behavior's red before its implementation. | Owner decision 2026-11-26 (task T057): accept as a recorded exception, as spec 005 did for its six. Each of the 99 carries a recorded deliberate-mutant check showing the test fails when its behavior is broken (`tdd/cycle-log.md`). The integrator re-ran three of those checks (U156, U160, U161) at merge. The cause is a process pattern (cycles implementing more than their own test required), not missing tests. | Re-driving them is impossible: a behavior that already exists cannot produce a pre-implementation red again. Deleting and re-implementing code to manufacture a red would be theater, and strengthened tests still grade `TEST_AFTER` (spec 005). The HIGH findings that do weaken the safety net are remediated separately (T050–T056). |
