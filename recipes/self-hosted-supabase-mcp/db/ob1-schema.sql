@@ -122,3 +122,6 @@ BEGIN
   RETURN v_result;
 END;
 $$ LANGUAGE plpgsql;
+
+-- Back to the init runner's own role.
+reset role;

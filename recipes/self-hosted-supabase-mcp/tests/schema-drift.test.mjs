@@ -34,3 +34,7 @@ test("U39 the schema file's first two statements enable vector and switch to the
   assert.equal(first, "create extension if not exists vector");
   assert.equal(second, "set role postgres");
 });
+
+test("U40 the schema file's last statement switches back from the postgres role", () => {
+  assert.equal(statements().at(-1), "reset role");
+});
