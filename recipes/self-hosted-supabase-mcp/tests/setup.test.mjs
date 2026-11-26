@@ -54,3 +54,14 @@ test("U4 on a fresh folder setup makes a shallow clone of the pinned tag into su
     assert.equal(args.at(-1), join(co.recipe, "supabase"));
   } finally { co.cleanup(); }
 });
+
+test("U5 with the clone already present at the pin setup makes no clone call and reports it present", () => {
+  const co = makeCheckout();
+  try {
+    runSetup(co);
+    const before = stubCalls(co).filter((l) => l.startsWith("git clone")).length;
+    const r = runSetup(co);
+    assert.equal(stubCalls(co).filter((l) => l.startsWith("git clone")).length, before);
+    assert.match(r.out, /clone: already present/);
+  } finally { co.cleanup(); }
+});
