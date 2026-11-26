@@ -1,0 +1,23 @@
+services:
+  studio:
+    profiles: [ui]
+  api-gw:
+    depends_on: !reset {}
+  meta:
+    profiles: [ui]
+  storage:
+    depends_on: !override
+      db:
+        condition: service_healthy
+      rest:
+        condition: service_started
+  imgproxy:
+    profiles: [images]
+  auth:
+    profiles: [never]
+  realtime:
+    profiles: [never]
+  supavisor:
+    profiles: [never]
+  ob1-init:
+    image: busybox:1.37
