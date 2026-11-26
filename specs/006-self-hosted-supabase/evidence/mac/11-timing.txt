@@ -1,0 +1,11 @@
+# SC-001 timing
+- V1 start to V4's reworded search: 112 s, with every image and both models already downloaded (they were present from earlier runs on this Mac).
+- Images the default stack pulls on a fresh machine (sizes as stored by Docker, uncompressed; the download is smaller):
+  - curlimages/curl:8.11.1: 34 MB
+  - envoyproxy/envoy:v1.39.6: 267 MB
+  - postgrest/postgrest:v14.18: 707 MB
+  - supabase/edge-runtime:v1.79.2: 1066 MB
+  - supabase/postgres:17.6.1.136: 1746 MB
+  - supabase/storage-api:v1.98.6: 1447 MB
+  - total: about 5269 MB
+- Models (Ollama, host): qwen3-embedding:4b and llama3.1:8b, 7.4 GB together; the README lists the model server as a prerequisite, so these are already in place for a reader.

@@ -174,7 +174,7 @@ Stack configuration, in `F/tests/compose.test.mjs`. Each test runs `docker compo
 ### Implementation for User Story 3
 
 - [X] T033 [US3] [U25] [U26] Profiles in `F/lean.override.yml`, driven by T032 (R2).
-- [X] T034 [US3] README UI section in `F/README.md`: start and stop commands (contract C2), the dashboard user and password from `.env`, the Studio URL `http://localhost:8000`. Add what starting the UI does while the stack is stopped once T037 records it (OS-009). **Done at `f578677`, except the OS-009 sentence, which waits for T037.**
+- [X] T034 [US3] README UI section in `F/README.md`: start and stop commands (contract C2), the dashboard user and password from `.env`, the Studio URL `http://localhost:8000`. Add what starting the UI does while the stack is stopped once T037 records it (OS-009). **Done at `f578677`; the OS-009 sentence was added at `11285c0` after T037.**
 
 - [X] T059 [US3] [A7] Outer loop: A7 green (US3.1, FR-005).
 
@@ -200,11 +200,11 @@ Stack configuration, in `F/tests/compose.test.mjs`. Each test runs `docker compo
 
 ## Phase 7: Live acceptance (SC-010)
 
-- [ ] T037 **Mac run** in scratch checkout `S`. Follow quickstart V1–V12, including V10 (DMR) per T035 and V8's reboot (the owner reboots). Evidence goes in `M/specs/006-self-hosted-supabase/evidence/mac/`, with no key values. Record:
+- [X] T037 **Mac run** in scratch checkout `S`. Follow quickstart V1–V12, including V10 (DMR) per T035 and V8's reboot (the owner reboots). Evidence goes in `M/specs/006-self-hosted-supabase/evidence/mac/`, with no key values. Record:
   - elapsed setup time (SC-001), which then goes into `F/metadata.json` `estimated_time` and the README;
   - OS-009's result, which then goes into T034's README text.
 
-  Remove `S` afterwards.
+  Remove `S` afterwards. **Done 2026-11-26 (`evidence/mac/`)**: every step passed except V10 (SC-011, Docker Model Runner), after which the owner dropped DMR. V8 used a Docker Desktop restart instead of a full reboot (owner's choice). README updated: `85866d6`, `69b88a2`, `11285c0`.
 - [ ] T038 **Linux run** (SC-010) on a Linux machine the owner provides: V1–V9, V11, V12, plus V10 if DMR is installed there. Record the Compose version (R2) and whether `host-gateway` works (R12). Evidence goes in `M/specs/006-self-hosted-supabase/evidence/linux/`. Update the README's "Tested with" table for both runs.
 
 ---

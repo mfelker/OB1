@@ -3,3 +3,15 @@ before: thoughts=1, pdf=200/identical
 7 removed
 after down + up: thoughts=1, pdf=200/identical
 search after restart: --- Result 1 (76.0% match) ---
+
+# V8 part 2: Docker Desktop restart (owner's choice instead of a full Mac reboot; it restarts the Docker VM and every container)
+before: thoughts=3
+$ docker desktop restart
+✓ Starting Docker Desktop
+docker back after ~2 s
+running without any compose command (restart: unless-stopped): api-gw db functions rest storage 
+after: thoughts=3
+pdf after: 200/identical
+photo after: 200/identical
+setup check after: ok
+reworded search after: --- Result 1 (75.1% match) ---

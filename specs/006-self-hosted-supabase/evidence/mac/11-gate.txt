@@ -1,0 +1,17 @@
+# V11 OB1 gate review checks (local, upstream title, at 85866d6)
+failed=false
+✅ **Folder structure**
+✅ **Required files**
+✅ **Metadata valid**
+✅ **No credentials**
+✅ **SQL safety**
+✅ **Category artifacts**
+✅ **PR format**
+✅ **No binary blobs**
+✅ **README completeness**
+✅ **Contribution dependencies**
+✅ **LLM clarity review**
+✅ **Remote MCP pattern**
+✅ **Tool audit link**
+✅ **Scope check**
+✅ **Internal links**
