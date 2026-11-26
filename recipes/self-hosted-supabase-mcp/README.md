@@ -111,6 +111,29 @@ YOU FILL IN (model server, spec 004 names)
 
 7. **Optional: check file storage** (see [File storage](#file-storage)).
 
+### Optional: chat on Docker Model Runner (GPU on a Mac)
+
+Docker Desktop's [Model Runner](https://docs.docker.com/ai/model-runner/) runs models outside the container VM, so on Apple Silicon it uses the GPU (Metal). It can serve the **chat** role. It can't serve the embedding role: it returns an embedding model's native size (for example 2560 numbers for Qwen3-Embedding-4B) and ignores the request for 1536, which the MCP server requires. Keep embeddings on your own model server (for example Ollama with `qwen3-embedding:4b`).
+
+1. Turn it on and pull a chat model. This downloads several GB; nothing is pulled automatically:
+
+   ```bash
+   docker desktop enable model-runner
+   docker model pull hf.co/bartowski/Meta-Llama-3.1-8B-Instruct-GGUF:Q4_K_M
+   docker model ls
+   ```
+
+2. In `supabase/docker/.env`, point the chat role at it, using the model name `docker model ls` shows:
+
+   ```text
+   CHAT_API_BASE=http://model-runner.docker.internal/engines/v1
+   CHAT_MODEL=huggingface.co/bartowski/meta-llama-3.1-8b-instruct-gguf:Q4_K_M
+   ```
+
+3. Apply it with `docker compose up -d --force-recreate functions`, then run the setup check again.
+
+Model Runner listens only on your own machine (`127.0.0.1:12434`), and the stack's containers reach it at `model-runner.docker.internal`. On Linux, Model Runner is a separate Docker Engine plugin; this recipe has tested it only on macOS.
+
 ### File storage
 
 The stack keeps files in Supabase Storage, in the private bucket `ob1-files`. Open Brain's MCP tools don't attach files yet; this check shows the storage works:
