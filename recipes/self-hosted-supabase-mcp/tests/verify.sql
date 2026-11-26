@@ -9,7 +9,16 @@ CREATE EXTENSION IF NOT EXISTS vector;
 CREATE SCHEMA IF NOT EXISTS auth;
 CREATE OR REPLACE FUNCTION auth.role() RETURNS text LANGUAGE sql STABLE
   AS $$ SELECT coalesce(nullif(current_setting('request.jwt.claim.role', true), ''), 'anon') $$;
+-- Supabase runs first-boot SQL as its own superuser (supabase_admin), not as postgres.
+-- Apply the file the same way, so the ownership check below means something.
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'ob1_init_runner') THEN
+    CREATE ROLE ob1_init_runner SUPERUSER NOLOGIN;
+  END IF;
+END $$;
+SET ROLE ob1_init_runner;
 \ir ../db/ob1-schema.sql
+RESET ROLE;
 
 -- U41: the embedding column is vector(1536).
 DO $$ BEGIN
@@ -37,5 +46,14 @@ END $$;
 DO $$ BEGIN
   IF NOT (SELECT relrowsecurity FROM pg_class WHERE oid = 'public.thoughts'::regclass) THEN
     RAISE EXCEPTION 'U44 row level security is off on thoughts';
+  END IF;
+END $$;
+
+-- U45: thoughts and both RPCs are owned by postgres, as on Supabase Cloud.
+DO $$ BEGIN
+  IF (SELECT relowner::regrole::text FROM pg_class WHERE oid = 'public.thoughts'::regclass) <> 'postgres'
+     OR (SELECT count(*) FROM pg_proc WHERE proname IN ('match_thoughts', 'upsert_thought')
+         AND proowner::regrole::text <> 'postgres') > 0 THEN
+    RAISE EXCEPTION 'U45 thoughts or its RPCs are not owned by postgres';
   END IF;
 END $$;
