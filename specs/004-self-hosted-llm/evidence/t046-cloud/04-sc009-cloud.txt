@@ -1,0 +1,10 @@
+### SC-009 on Cloud: EMBEDDING_MODEL=nomic-embed-text (768)
+setup-check HTTP 503 ok=False
+  FAIL embedding_model: Embedding model "nomic-embed-text" returned 768-dimension vectors; this brain stores 1536. Choose a model that can output 1536 dimensions (see README).
+  FAIL embedding_dimension: Embedding model "nomic-embed-text" returned 768-dimension vectors; this brain stores 1536. Choose a model that can output 1536 dimensions (see README).
+  other_model=2
+capture -> isError | Error: Embedding model "nomic-embed-text" returned 768-dimension vectors; this brain stores 1536. Choose a model that can output 1536 dimensions (see README).
+rows after refused capture -> Total thoughts: 2
+### restore EMBEDDING_MODEL=qwen3-embedding:4b
+setup-check HTTP 200 ok=True
+  other_model=0

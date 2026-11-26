@@ -361,7 +361,7 @@ Streams code against these. Signatures are the only shared contract. Behavior co
   - self-check the 16 upstream gate rules in `CONTRIBUTING.md`
 - [X] T044 [P] Fork-ci preview from `W`'s root: `node ../../.fork/ci/bin/run-folder.mjs --path integrations/self-hosted-llm-mcp --mode strict --origin fork --out "$TMPDIR/r.json"`. Green under the no-network profile.
 - [X] T045 Real-Postgres check of research R6's premise, if Docker is available: run `docs/01`'s `thoughts` DDL, trigger and `upsert_thought` in a `pgvector/pgvector:pg17` container. Show `created_at = updated_at` after a first insert and `created_at < updated_at` after a duplicate. Record the commands and output in `M/specs/004-self-hosted-llm/tdd/r6-premise.md`. Without Docker, the owner runs the same SQL on the self-hosted stack in T046.
-- [ ] T046 **Owner-run manual verification**, recorded in `M/specs/004-self-hosted-llm/evidence/`:
+- [X] T046 **Owner-run manual verification**, recorded in `M/specs/004-self-hosted-llm/evidence/`:
   - quickstart §3 (Supabase Cloud: SC-001, SC-002, SC-004, SC-007, SC-009, SC-013, SC-015)
   - §4 (self-hosted: SC-007, SC-014, SC-015)
   - §5 (failure modes)

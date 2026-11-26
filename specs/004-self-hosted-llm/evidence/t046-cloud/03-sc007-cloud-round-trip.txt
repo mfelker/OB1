@@ -1,0 +1,9 @@
+tools/list ?key= -> 200 ['capture_thought', 'fetch', 'list_thoughts', 'search', 'search_thoughts', 'thought_stats']
+wrong key -> 200 {'code': -32001, 'message': 'Unauthorized: missing or invalid authentication.'}
+tools/list x-brain-key header -> 200 6 tools
+capture -> ok | Captured as reference | People: Ollama
+capture 2 -> ok | Captured as reference — mystery, novel
+exact search -> Found 1 thought(s): | ['--- Result 1 (100.0% match) ---']
+paraphrase search -> Found 1 thought(s): | found: True
+list -> 2 recent thought(s):
+stats -> Total thoughts: 2

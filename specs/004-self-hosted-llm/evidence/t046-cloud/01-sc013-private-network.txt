@@ -1,0 +1,13 @@
+### SC-013 part 1: Ollama only on the private LAN (EMBEDDING_API_BASE=http://10.0.20.58:11434/v1)
+no key:
+  HTTP 401
+with key:
+setup-check HTTP 503 ok=False
+  FAIL embedding_reachable: The embedding model server at http://10.0.20.58:11434/v1 gave no complete response within 60000 ms. Raise FETCH_TIMEOUT_MS if the server is slow.
+  FAIL embedding_model: The embedding model server at http://10.0.20.58:11434/v1 gave no complete response within 60000 ms. Raise FETCH_TIMEOUT_MS if the server is slow.
+  FAIL embedding_dimension: The embedding model server at http://10.0.20.58:11434/v1 gave no complete response within 60000 ms. Raise FETCH_TIMEOUT_MS if the server is slow.
+  FAIL chat_reachable: The chat model server at http://10.0.20.58:11434/v1 gave no complete response within 60000 ms. Raise FETCH_TIMEOUT_MS if the server is slow.
+  FAIL chat_model: The chat model server at http://10.0.20.58:11434/v1 gave no complete response within 60000 ms. Raise FETCH_TIMEOUT_MS if the server is slow.
+  FAIL chat_metadata: The chat model server at http://10.0.20.58:11434/v1 gave no complete response within 60000 ms. Raise FETCH_TIMEOUT_MS if the server is slow.
+  other_model=0
+  took 60s

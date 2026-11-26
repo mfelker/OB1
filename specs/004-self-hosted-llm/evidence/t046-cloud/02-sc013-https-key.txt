@@ -1,0 +1,4 @@
+### SC-013 part 2 / FR-019: Ollama behind Caddy (Bearer key) + Tailscale Funnel HTTPS; EMBEDDING_API_BASE=https://marcuss-macbook-pro-2.tail76eb51.ts.net/v1, EMBEDDING_API_KEY=<proxy key>; chat inherits base and key
+setup-check HTTP 200 ok=True
+  other_model=0
+  took 8s
