@@ -14,6 +14,8 @@ for tool in docker git openssl; do
 done
 
 if [ -f "$CLONE/docker/docker-compose.yml" ]; then
+  tag=$(git -C "$CLONE" describe --tags --exact-match 2>/dev/null || echo "an unknown version")
+  [ "$tag" = "$PIN" ] || die "supabase/ is at $tag, but this recipe is pinned to $PIN. To change the pin, see \"Changing the Supabase version\" in README.md; nothing was changed."
   echo "clone: already present"
 else
   git clone --quiet --depth 1 --branch "$PIN" "$SUPABASE_REPO" "$CLONE"

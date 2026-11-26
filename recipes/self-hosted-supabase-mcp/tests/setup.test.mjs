@@ -8,7 +8,7 @@
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { existsSync } from "node:fs";
+import { existsSync, writeFileSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { makeCheckout, runSetup, stubCalls, PIN } from "./helpers/harness.mjs";
 
@@ -63,5 +63,33 @@ test("U5 with the clone already present at the pin setup makes no clone call and
     const r = runSetup(co);
     assert.equal(stubCalls(co).filter((l) => l.startsWith("git clone")).length, before);
     assert.match(r.out, /clone: already present/);
+  } finally { co.cleanup(); }
+});
+
+/** Every file under dir with its contents, for "nothing changed" checks. */
+function snapshot(dir) {
+  const out = {};
+  const walk = (d) => {
+    for (const name of readdirSync(d)) {
+      const p = join(d, name);
+      if (statSync(p).isDirectory()) walk(p); else out[p] = readFileSync(p, "utf8");
+    }
+  };
+  walk(dir);
+  return out;
+}
+
+test("U6 with the clone at another tag setup fails naming both tags and changes nothing", () => {
+  const co = makeCheckout();
+  try {
+    runSetup(co);
+    const clone = join(co.recipe, "supabase");
+    writeFileSync(join(clone, ".git", "stub-tag"), "self-hosted/v0.8.4\n");
+    const before = snapshot(clone);
+    const r = runSetup(co);
+    assert.notEqual(r.code, 0);
+    assert.ok(r.out.includes("self-hosted/v0.8.4"), "names the clone's tag");
+    assert.ok(r.out.includes(PIN), "names the pinned tag");
+    assert.deepEqual(snapshot(clone), before);
   } finally { co.cleanup(); }
 });
