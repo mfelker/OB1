@@ -21,3 +21,13 @@ test("U1 without docker on PATH setup fails naming docker and creates nothing", 
     assert.equal(existsSync(join(co.recipe, "supabase")), false);
   } finally { co.cleanup(); }
 });
+
+test("U2 without git on PATH setup fails naming git and creates nothing", () => {
+  const co = makeCheckout({ hide: ["git"] });
+  try {
+    const r = runSetup(co);
+    assert.notEqual(r.code, 0);
+    assert.match(r.out, /\bgit\b/);
+    assert.equal(existsSync(join(co.recipe, "supabase")), false);
+  } finally { co.cleanup(); }
+});
