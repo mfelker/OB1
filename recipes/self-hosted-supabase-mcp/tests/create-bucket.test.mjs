@@ -19,3 +19,13 @@ test("U47 storage answers 200: exit 0 and the output says the bucket is ready", 
     assert.match(r.out, /ob1-files.*ready/i);
   } finally { env.cleanup(); }
 });
+
+test("U48 storage answers 400 BucketAlreadyExists: exit 0, bucket left as is", () => {
+  const env = makeBucketEnv();
+  try {
+    const body = '{"statusCode":"409","error":"Duplicate","message":"The resource already exists","code":"BucketAlreadyExists"}';
+    const r = env.run({ SERVICE_ROLE_KEY: KEY, STUB_CURL_MODE: "fixed", STUB_CURL_STATUS: "400", STUB_CURL_BODY: body });
+    assert.equal(r.code, 0);
+    assert.match(r.out, /ob1-files.*already/i);
+  } finally { env.cleanup(); }
+});
