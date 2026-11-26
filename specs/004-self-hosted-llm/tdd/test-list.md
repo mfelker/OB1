@@ -235,40 +235,40 @@ All paths are under `integrations/self-hosted-llm-mcp/`. The test file is `tests
 
 | id | behavior | traces | kind | task | state | test |
 | --- | -------- | ------ | ---- | ---- | ----- | ---- |
-| U146 | A healthy configuration and server give `ok: true` | FR-008, SC-009 | example | T031 | PENDING | |
-| U147 | The report lists the seven checks in the contract's order, role checks carrying `role` | contracts/setup-check.md, data-model §4 | example | T031 | PENDING | |
-| U148 | `config` shows each role's base, model and `key_set`, chat `inherits`, and `timeout_ms` | contracts/setup-check.md, data-model §4 | example | T031 | PENDING | |
-| U149 | No key value appears anywhere in the report | FR-010 | example | T031 | PENDING | |
-| U150 | A missing setting fails `config` with a reason naming each missing setting | FR-018, FR-011 | example | T031 | PENDING | |
-| U151 | An invalid setting fails `config` naming it with its reason | FR-011, FR-018, Q 2026-11-26 #6 | example | T031 | PENDING | |
-| U152 | With `config` failed, every other check reads `skipped: configuration incomplete` | FR-018 | example | T031 | PENDING | |
-| U153 | With `config` failed, no model request is sent | FR-018, SC-012 | example | T031 | PENDING | |
-| U154 | With `config` failed, `ok` is false and `thoughts.other_model` is `null` with no store call | FR-008, Q 2026-11-26 #9 | example | T031 | PENDING | |
-| U155 | Any single failed check makes `ok` false | FR-008, data-model §4 | example | T031 | PENDING | |
-| U156 | `<role>_reachable` passes on a 200 and on a 404 from `/models` | contracts/setup-check.md | example, both sides | T032 | PENDING | |
-| U157 | `<role>_reachable` fails with `auth_rejected` on a 401 or 403 | contracts/setup-check.md | example | T032 | PENDING | |
-| U158 | `<role>_reachable` fails with `unreachable` naming the base on a network error | contracts/setup-check.md | example | T032 | PENDING | |
-| U159 | `<role>_reachable` fails with `timeout` when `/models` hangs | contracts/setup-check.md | example | T032 | PENDING | |
-| U160 | `<role>_model` passes when the model is listed | contracts/setup-check.md | example | T032 | PENDING | |
-| U161 | `<role>_model` passes when the model is not listed but the real call succeeded | contracts/setup-check.md | example | T032 | PENDING | |
-| U162 | `<role>_model` fails with `model_not_found` naming the model when unlisted and the real call reports it unknown | contracts/setup-check.md | example | T032 | PENDING | |
-| U163 | With a non-JSON `/models` body, `<role>_model` follows the real call's outcome | contracts/setup-check.md | example | T032 | PENDING | |
-| U164 | `embedding_dimension` passes for a 1536-number vector | contracts/setup-check.md, SC-009 | example | T032 | PENDING | |
-| U165 | `embedding_dimension` fails for 768 numbers with a reason naming 768 and 1536 | FR-007, SC-009 | example | T032 | PENDING | |
-| U166 | `embedding_dimension` carries the embedding call's outcome when the call fails | contracts/setup-check.md | example | T032 | PENDING | |
-| U167 | `chat_metadata` passes for a JSON-object reply | contracts/setup-check.md | example | T032 | PENDING | |
-| U168 | `chat_metadata` fails with `unusable output` and the first 120 characters (no more) of an unusable reply | contracts/setup-check.md | example, boundary 120 | T032 | PENDING | |
-| U169 | `chat_metadata` carries the chat call's outcome when the call fails | contracts/setup-check.md | example | T032 | PENDING | |
-| U170 | When chat inherits the embedding base, both roles' checks are reported separately and the chat requests go to the embedding base | contracts/setup-check.md, SC-012 | example | T032 | PENDING | |
-| U171 | One run sends one embedding call, one chat call and one `/models` request per role | contracts/setup-check.md, R8 | example | T032 | PENDING | |
-| U172 | A `key_over_http` warning is reported and leaves `ok` true | FR-020, SC-014 | example | T033 | PENDING | |
-| U173 | An unkeyed `http://` base and a keyed `https://` base produce no warning | FR-020, SC-014, OS-005 | example | T033 | PENDING | |
-| U174 | Every model request starts before any reply is released | R8, contracts/setup-check.md | example | T033 | PENDING | |
-| U175 | With every model route hanging, the run finishes in about one `timeoutMs`, not several | R8 | example | T033 | PENDING | |
-| U176 | 5 thoughts, 2 matching `EMBEDDING_MODEL`, give `thoughts.other_model: 3` | SC-010, FR-016, data-model §5 | example | T037 | PENDING | |
-| U177 | All thoughts matching, and an empty brain, each give `other_model: 0` | FR-016 | example | T037 | PENDING | |
-| U178 | A failing count gives `other_model: null` with a `thoughts_count` warning carrying the database message | contracts/setup-check.md | example | T037 | PENDING | |
-| U179 | With a failing count, the model checks still run and decide `ok` | contracts/setup-check.md | example | T037 | PENDING | |
+| U146 | A healthy configuration and server give `ok: true` | FR-008, SC-009 | example | T031 | DONE | `tests/setup_check_test.ts::U146` |
+| U147 | The report lists the seven checks in the contract's order, role checks carrying `role` | contracts/setup-check.md, data-model §4 | example | T031 | DONE | `tests/setup_check_test.ts::U147` |
+| U148 | `config` shows each role's base, model and `key_set`, chat `inherits`, and `timeout_ms` | contracts/setup-check.md, data-model §4 | example | T031 | DONE | `tests/setup_check_test.ts::U148` |
+| U149 | No key value appears anywhere in the report | FR-010 | example | T031 | DONE | `tests/setup_check_test.ts::U149` |
+| U150 | A missing setting fails `config` with a reason naming each missing setting | FR-018, FR-011 | example | T031 | DONE | `tests/setup_check_test.ts::U150` |
+| U151 | An invalid setting fails `config` naming it with its reason | FR-011, FR-018, Q 2026-11-26 #6 | example | T031 | DONE | `tests/setup_check_test.ts::U151` |
+| U152 | With `config` failed, every other check reads `skipped: configuration incomplete` | FR-018 | example | T031 | DONE | `tests/setup_check_test.ts::U152` |
+| U153 | With `config` failed, no model request is sent | FR-018, SC-012 | example | T031 | DONE | `tests/setup_check_test.ts::U153` |
+| U154 | With `config` failed, `ok` is false and `thoughts.other_model` is `null` with no store call | FR-008, Q 2026-11-26 #9 | example | T031 | DONE | `tests/setup_check_test.ts::U154` |
+| U155 | Any single failed check makes `ok` false | FR-008, data-model §4 | example | T031 | DONE | `tests/setup_check_test.ts::U155` |
+| U156 | `<role>_reachable` passes on a 200 and on a 404 from `/models` | contracts/setup-check.md | example, both sides | T032 | DONE | `tests/setup_check_test.ts::U156` |
+| U157 | `<role>_reachable` fails with `auth_rejected` on a 401 or 403 | contracts/setup-check.md | example | T032 | DONE | `tests/setup_check_test.ts::U157` |
+| U158 | `<role>_reachable` fails with `unreachable` naming the base on a network error | contracts/setup-check.md | example | T032 | DONE | `tests/setup_check_test.ts::U158` |
+| U159 | `<role>_reachable` fails with `timeout` when `/models` hangs | contracts/setup-check.md | example | T032 | DONE | `tests/setup_check_test.ts::U159` |
+| U160 | `<role>_model` passes when the model is listed | contracts/setup-check.md | example | T032 | DONE | `tests/setup_check_test.ts::U160` |
+| U161 | `<role>_model` passes when the model is not listed but the real call succeeded | contracts/setup-check.md | example | T032 | DONE | `tests/setup_check_test.ts::U161` |
+| U162 | `<role>_model` fails with `model_not_found` naming the model when unlisted and the real call reports it unknown | contracts/setup-check.md | example | T032 | DONE | `tests/setup_check_test.ts::U162` |
+| U163 | With a non-JSON `/models` body, `<role>_model` follows the real call's outcome | contracts/setup-check.md | example | T032 | DONE | `tests/setup_check_test.ts::U163` |
+| U164 | `embedding_dimension` passes for a 1536-number vector | contracts/setup-check.md, SC-009 | example | T032 | DONE | `tests/setup_check_test.ts::U164` |
+| U165 | `embedding_dimension` fails for 768 numbers with a reason naming 768 and 1536 | FR-007, SC-009 | example | T032 | DONE | `tests/setup_check_test.ts::U165` |
+| U166 | `embedding_dimension` carries the embedding call's outcome when the call fails | contracts/setup-check.md | example | T032 | DONE | `tests/setup_check_test.ts::U166` |
+| U167 | `chat_metadata` passes for a JSON-object reply | contracts/setup-check.md | example | T032 | DONE | `tests/setup_check_test.ts::U167` |
+| U168 | `chat_metadata` fails with `unusable output` and the first 120 characters (no more) of an unusable reply | contracts/setup-check.md | example, boundary 120 | T032 | DONE | `tests/setup_check_test.ts::U168` |
+| U169 | `chat_metadata` carries the chat call's outcome when the call fails | contracts/setup-check.md | example | T032 | DONE | `tests/setup_check_test.ts::U169` |
+| U170 | When chat inherits the embedding base, both roles' checks are reported separately and the chat requests go to the embedding base | contracts/setup-check.md, SC-012 | example | T032 | DONE | `tests/setup_check_test.ts::U170` |
+| U171 | One run sends one embedding call, one chat call and one `/models` request per role | contracts/setup-check.md, R8 | example | T032 | DONE | `tests/setup_check_test.ts::U171` |
+| U172 | A `key_over_http` warning is reported and leaves `ok` true | FR-020, SC-014 | example | T033 | DONE | `tests/setup_check_test.ts::U172` |
+| U173 | An unkeyed `http://` base and a keyed `https://` base produce no warning | FR-020, SC-014, OS-005 | example | T033 | DONE | `tests/setup_check_test.ts::U173` |
+| U174 | Every model request starts before any reply is released | R8, contracts/setup-check.md | example | T033 | DONE | `tests/setup_check_test.ts::U174` |
+| U175 | With every model route hanging, the run finishes in about one `timeoutMs`, not several | R8 | example | T033 | DONE | `tests/setup_check_test.ts::U175` |
+| U176 | 5 thoughts, 2 matching `EMBEDDING_MODEL`, give `thoughts.other_model: 3` | SC-010, FR-016, data-model §5 | example | T037 | DONE | `tests/setup_check_test.ts::U176` |
+| U177 | All thoughts matching, and an empty brain, each give `other_model: 0` | FR-016 | example | T037 | DONE | `tests/setup_check_test.ts::U177` |
+| U178 | A failing count gives `other_model: null` with a `thoughts_count` warning carrying the database message | contracts/setup-check.md | example | T037 | DONE | `tests/setup_check_test.ts::U178` |
+| U179 | With a failing count, the model checks still run and decide `ok` | contracts/setup-check.md | example | T037 | DONE | `tests/setup_check_test.ts::U179` |
 
 ### `lib/app.ts` and `index.ts` (stream A)
 

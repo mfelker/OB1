@@ -288,16 +288,16 @@ Streams code against these. Signatures are the only shared contract. Behavior co
 
 ### Stream K: setup check (`shl-check`, wave 2)
 
-- [ ] T031 [U146] [U147] [U148] [U149] [U150] [U151] [U152] [U153] [U154] [U155] [US2] Tests first in `tests/setup_check_test.ts`, then `runSetupCheck(deps)` in `lib/setup_check.ts`: the report shape and fixed check order of contracts/setup-check.md (`data-model.md` §4 `Setup check report.ok`, `.checks`, `.warnings`, `.config`).
+- [X] T031 [U146] [U147] [U148] [U149] [U150] [U151] [U152] [U153] [U154] [U155] [US2] Tests first in `tests/setup_check_test.ts`, then `runSetupCheck(deps)` in `lib/setup_check.ts`: the report shape and fixed check order of contracts/setup-check.md (`data-model.md` §4 `Setup check report.ok`, `.checks`, `.warnings`, `.config`).
   - With configuration not `ok`, `config` fails naming each setting, every other check reads `skipped: configuration incomplete`, and the fake fetch records **zero** requests (FR-018).
   - `.config` shows each role's base, model and `key_set` boolean plus `timeout_ms`, and never a key value (FR-010).
-- [ ] T032 [U156] [U157] [U158] [U159] [U160] [U161] [U162] [U163] [U164] [U165] [U166] [U167] [U168] [U169] [U170] [U171] [US2] Tests first, then the check semantics table of contracts/setup-check.md:
+- [X] T032 [U156] [U157] [U158] [U159] [U160] [U161] [U162] [U163] [U164] [U165] [U166] [U167] [U168] [U169] [U170] [U171] [US2] Tests first, then the check semantics table of contracts/setup-check.md:
   - `<role>_reachable`: any non-401/403 response passes; `unreachable`, `timeout` and `auth_rejected` fail with their reasons.
   - `<role>_model`: listed, **or** the real call succeeded.
   - `embedding_dimension`: 1536, otherwise both sizes are named (SC-009).
   - `chat_metadata`: usable, otherwise the first 120 chars of the reply.
   - When the chat role inherits the embedding base, both roles are still reported.
-- [ ] T033 [U172] [U173] [U174] [U175] [US2] Tests first, then:
+- [X] T033 [U172] [U173] [U174] [U175] [US2] Tests first, then:
   - `key_over_http` warnings via `keyOverHttpWarnings`, which never change `ok` (SC-014)
   - **all model requests start before any completes**, proved with fake-fetch hold mode (research R8)
   - each request bounded by `timeoutMs`, so the total is about one timeout
@@ -327,7 +327,7 @@ Streams code against these. Signatures are the only shared contract. Behavior co
 
 ### Stream K: setup check (`shl-check`, wave 2)
 
-- [ ] T037 [U176] [U177] [U178] [U179] [US3] Tests first, then `thoughts.other_model = countAll() − countWithModel(EMBEDDING_MODEL)` in `lib/setup_check.ts` (`data-model.md` §5 `Mixed-model count.other_model`; FR-016, SC-010). If either count fails, it reports `null` with a `thoughts_count` warning carrying the database message, and the model checks still run.
+- [X] T037 [U176] [U177] [U178] [U179] [US3] Tests first, then `thoughts.other_model = countAll() − countWithModel(EMBEDDING_MODEL)` in `lib/setup_check.ts` (`data-model.md` §5 `Mixed-model count.other_model`; FR-016, SC-010). If either count fails, it reports `null` with a `thoughts_count` warning carrying the database message, and the model checks still run.
 
 ### Stream A: app (`shl-app`, wave 3)
 
