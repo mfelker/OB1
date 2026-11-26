@@ -112,6 +112,7 @@ Stack configuration, in `F/tests/compose.test.mjs`. Each test runs `docker compo
 
 - [X] T024 [US1] [U1] [U2] [U3] [U4] [U5] [U6] [U7] [U8] [U9] [U10] [U11] [U12] [U13] [U14] [U15] [U16] [U17] [U18] [U19] [U20] [U21] [U22] `F/setup.sh` (POSIX `sh`), driven by T009–T019 (contract C1; data-model.md Setup piece, Secrets file).
 - [X] T025 [US1] [U24] [U27] [U28] [U29] [U30] [U32] [U33] [U34] [U35] `F/docker-compose.yml` (`include:` with path list and `env_file`) and `F/lean.override.yml`, driven by T020–T023 (R2, R3, R7, R8, R12).
+- [X] T060 [US1] [U53] Added mid-loop after the advisor review: an empty `.env` left by an interrupted Compose check is treated as absent and completed (`F/setup.sh`, `F/tests/setup.test.mjs`).
 - [X] T026 [US1] README for Story 1 in `F/README.md`. It must cover:
   - **What it does**, with positioning against `recipes/local-brain-no-mcp` and `integrations/kubernetes-deployment` (FR-015) and the services left out and their costs (FR-014).
   - **Prerequisites**: Docker with a recent Compose (tested v5.6.1), `git`, `openssl`, a model server meeting spec 004's requirements (link `../../integrations/self-hosted-llm-mcp/`).

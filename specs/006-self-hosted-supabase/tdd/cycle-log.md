@@ -371,3 +371,27 @@ Test file: recipes/self-hosted-supabase-mcp/tests/compose.test.mjs. Run: `node -
 - greens: `RUN_TODO=1 node --test tests/acceptance.test.mjs` → `✔` for A1, A2, A3, A4, A6, A7, A8, A9 (A1, A7 and A8 through real `docker compose config` on the merged overlay after a real `setup.sh` run). Then each was flipped from `todo` to a plain `test` (A1, A7, A8 keep `skip: noDocker`) in its own commit, with single and suite runs green: A1 `e1d8cec`, A2 `95ad94d`, A3 `6800132`, A4 `c13bee4`, A7 `d85ecbf`, A8 `c6cc7bf`, A9 `5a3afd4`.
 - refactor: the now-unused `todo` switch and its comment removed (`f1ba495`).
 - suite: `node .fork/ci/bin/tdd.mjs suite` → `tests=57 pass=57 fail=0 → pass`. Plain `node --test tests/` without Postgres → `tests 56, pass 55, skipped 1` (U46 skipped, not passed).
+
+## Review after the loop (advisor): stream diffs, dash, U53, real smoke run
+
+- Stream commits checked: stream B's 6 commits touch only `init/create-bucket.sh` and `tests/create-bucket.test.mjs`; stream C's 13 touch only `docker-compose.yml`, `lean.override.yml` and `tests/compose.test.mjs`. Stream C's log records the U34 amend (`extra_hosts` is a list in `config --format json`).
+- dash: under `/bin/dash` (the shell of the Linux run and the `curl` image), with the same harness, two `setup.sh` runs gave `clone/secrets/model-settings: completed, function-link: present`, then all `already present` (exit 0, valid MCP key); `create-bucket.sh` ran twice against the stateful stub with `ready` then `already exists` (exit 0).
+
+## U53 an empty .env left by an interrupted Compose check is completed by the next run (added mid-loop)
+
+- why: U7's placeholder empty `.env` sat at the real path with no cleanup on interrupt. A Ctrl-C in that window would leave an empty `.env`, and the next run would refuse it ("has no JWT_SECRET"), breaking FR-003 and US1.6.
+- test: `tests/setup.test.mjs::U53 …` (new)
+- red: `… single … "U53 …"` → `AssertionError [ERR_ASSERTION]: clone: already present` / `actual: 1, expected: 0`
+- green: an empty `.env` (`! -s`) counts as absent, both for the placeholder and for the secrets branch; the placeholder is removed by a `trap … INT TERM`. Suite → `tests=58 pass=58 fail=0 → pass`.
+- refactor: none needed.
+- commit: `23a226c`
+
+## Real smoke run (not the live acceptance run T037)
+
+Run in a scratch checkout of the branch at `23a226c` (`/Users/mfelker/Projects/ob1-006-live`, removed afterwards), on the owner's Mac, with real `git`, Docker Compose v5.6.1, Supabase's real `generate-keys.sh`, and Ollama on the host:
+- `sh setup.sh` → `clone: completed`, `secrets: completed`, `model-settings: completed`, `function-link: present`, exit 0. The empty-placeholder Compose check is accepted by real Compose. Git printed its detached-HEAD advice despite `--quiet`; that's cosmetic, kept to avoid changing U4's test. A second run → all `already present`, exit 0; `git describe --tags --exact-match` → `self-hosted/v0.8.5`; checkout `git status` clean.
+- `docker compose up -d` → `db`, `rest`, `api-gw`, `functions`, `storage` healthy, `ob1-init` exited 0 (`create-bucket.sh: bucket ob1-files is ready`, mounted script in `curlimages/curl:8.11.1`).
+- setup-check `ok: true`; `tools/list` 6 tools; `capture_thought` succeeded; `search_thoughts` ("where do I keep replacement air filters") returned it as result 1 (66.5%); `thoughts` owned by `postgres`, embeddings 1536.
+- README storage check: upload 200, download identical ("storage works"), no credentials → 400.
+- torn down with `docker compose --profile ui --profile images down -v`.
+- Also: the README's unmeasured "about 2 GB of free memory" line was removed (`8c7ab08`).

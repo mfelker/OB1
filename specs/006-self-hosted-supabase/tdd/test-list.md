@@ -4,7 +4,7 @@ loop: outside-in # outside-in | inside-out
 profile: .specify/memory/tdd-profile.md # stack profile the commands must read
 spec_criteria: 20 # Story 1 scenarios 1–6, Story 2 scenarios 1–3, Story 3 scenarios 1–3, SC-001 to SC-011 (overlapping); 9 automatable, the rest live (see "Live acceptance")
 planned_at: e86a3d4 # short SHA the list was derived from (fork main)
-updated_at: f1ba495 # short SHA of the last change to this file
+updated_at: 8c7ab08 # short SHA of the last change to this file
 suite_baseline: green # empty: recipes/self-hosted-supabase-mcp and its worktree don't exist yet (T001), 0 tests
 ---
 
@@ -67,6 +67,7 @@ Test file: `tests/setup.test.mjs`.
 | U20 | Without `integrations/self-hosted-llm-mcp/` in the checkout: non-zero exit saying 004's folder is missing; with it: `function-link: present` (both sides) | FR-007, data-model.md Setup piece.function-link | example | DONE | `tests/setup.test.mjs::U20` |
 | U21 | A fresh run reports `clone: completed`, `secrets: completed`, `model-settings: completed`, `function-link: present` and exits 0 | C1, US1.1 | example | DONE | `tests/setup.test.mjs::U21` |
 | U22 | After a fresh run, `git status --porcelain` in the checkout is empty (everything written is under the ignored `supabase/`) | FR-019 | example | DONE | `tests/setup.test.mjs::U22` (mutant-proven) |
+| U53 | An empty `supabase/docker/.env` (left when a run is interrupted during the Compose check's placeholder) is treated as absent: the next run generates the secrets, reports `secrets: completed` and exits 0 | US1.6, FR-003 (added mid-loop: advisor review found the U7 placeholder could be left behind) | example | DONE | `tests/setup.test.mjs::U53` |
 
 ### `recipes/self-hosted-supabase-mcp/docker-compose.yml` + `lean.override.yml` (contract C2; R2, R3, R7, R8, R12)
 

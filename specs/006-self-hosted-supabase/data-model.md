@@ -8,7 +8,7 @@ One unit of setup state, checked and completed on its own (FR-003).
 
 | Piece | Present when | Completed by | Report line |
 |-------|--------------|--------------|-------------|
-| `compose-check` | `docker compose config -q` on the recipe succeeds (needs `clone`) | nothing to create: on failure, setup stops naming the Compose version found and the tested versions (R2) | `compose-check: ok` / error |
+| `compose-check` | `docker compose config -q` on the recipe succeeds (needs `clone`) | nothing to create: on failure, setup stops naming the Compose version found and the tested versions (R2). The check runs against a placeholder empty `.env` that's removed afterwards (also on interrupt); an empty `.env` counts as absent (U53) | no line on success / error |
 | `clone` | `supabase/docker/docker-compose.yml` exists and the clone is at the pinned tag | shallow clone of the pin (R1) | `clone: completed` / `clone: already present` |
 | `secrets` | `supabase/docker/.env` exists with generated Supabase keys and `MCP_ACCESS_KEY` | **if `.env` is absent**: build it in a temporary folder (copy `.env.example`, `generate-keys.sh --update-env`, append `MCP_ACCESS_KEY`), check it, move it into place, so it's all-or-nothing (R6). **If `.env` exists**: add `MCP_ACCESS_KEY` only if it's missing; never regenerate a Supabase key, and stop with an error if one is missing or still at its example value | `secrets: completed` / `secrets: already present` / error |
 | `model-settings` | `.env` has the model setting names (values may be blank) | append the blank names (`EMBEDDING_API_BASE`, `EMBEDDING_API_KEY`, `EMBEDDING_MODEL`, `CHAT_API_BASE`, `CHAT_API_KEY`, `CHAT_MODEL`, `FETCH_TIMEOUT_MS`) | `model-settings: completed` / `model-settings: already present` |
