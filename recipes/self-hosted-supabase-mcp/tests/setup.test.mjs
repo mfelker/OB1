@@ -10,6 +10,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { existsSync, writeFileSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
+import { spawnSync } from "node:child_process";
 import { makeCheckout, runSetup, stubCalls, PIN, readEnv, envPath, SUPABASE_KEYS, MODEL_SETTINGS, examplePlaceholder } from "./helpers/harness.mjs";
 
 test("U1 without docker on PATH setup fails naming docker and creates nothing", () => {
@@ -274,5 +275,14 @@ test("U21 a fresh run exits 0 and reports clone, secrets and model settings comp
     for (const line of ["clone: completed", "secrets: completed", "model-settings: completed", "function-link: present"]) {
       assert.ok(r.out.includes(line), `reports "${line}"`);
     }
+  } finally { co.cleanup(); }
+});
+
+test("U22 after a fresh run git status in the checkout is empty", () => {
+  const co = makeCheckout();
+  try {
+    assert.equal(runSetup(co).code, 0);
+    const st = spawnSync("git", ["status", "--porcelain"], { cwd: co.root, encoding: "utf8" });
+    assert.equal(st.stdout, "");
   } finally { co.cleanup(); }
 });
