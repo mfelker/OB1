@@ -47,7 +47,7 @@ description: "Task list for spec 006: lean self-hosted Supabase recipe"
 
   The fixture is a minimal stand-in, never a copy of Supabase's files (FR-001).
 - [X] T004 [P] Fixture compose file `F/tests/fixtures/compose/docker-compose.yml`: the 11 service names and the dependency links of the official `v0.8.5` file (research R1, R2; spec VP-001), each with a tiny public image and no other settings. Not a copy of Supabase's file.
-- [ ] T050 [A1] [A2] [A3] [A4] [A6] [A7] [A8] [A9] Open the outer loop: write A1–A4 and A6–A9 from `tdd/test-list.md` **first**, in `F/tests/acceptance.test.mjs` as `node:test` todo tests, driving the real `setup.sh`, `docker compose config` on the real compose files, and `init/create-bucket.sh`, with only external programs stubbed (T003) and the fixture clone (T004). Docker-dependent ones (A1, A7, A8) are skipped with `node:test`'s skip when `docker` is absent. Record each red (todo flag removed) in `tdd/cycle-log.md` before committing the todo form. A5 is opened by T006 (`tests/verify.sql`).
+- [X] T050 [A1] [A2] [A3] [A4] [A6] [A7] [A8] [A9] Open the outer loop: write A1–A4 and A6–A9 from `tdd/test-list.md` **first**, in `F/tests/acceptance.test.mjs` as `node:test` todo tests, driving the real `setup.sh`, `docker compose config` on the real compose files, and `init/create-bucket.sh`, with only external programs stubbed (T003) and the fixture clone (T004). Docker-dependent ones (A1, A7, A8) are skipped with `node:test`'s skip when `docker` is absent. Record each red (todo flag removed) in `tdd/cycle-log.md` before committing the todo form. A5 is opened by T006 (`tests/verify.sql`).
 
 ---
 
@@ -90,28 +90,28 @@ description: "Task list for spec 006: lean self-hosted Supabase recipe"
 `setup.sh` behaviors, in `F/tests/setup.test.mjs`, one test per contract row (contracts/setup-and-stack.md C1; data-model.md Setup piece):
 
 - [ ] T009 [P] [US1] [U1] [U2] [U3] Missing `docker`, `git` or `openssl` → non-zero exit naming the tool; nothing created.
-- [ ] T010 [P] [US1] [U4] [U5] [U21] Fresh folder → the stub `git` sees a shallow clone of tag `self-hosted/v0.8.5` (R1). The output reports `clone`, `secrets` and `model-settings` completed and `function-link` present (data-model.md Setup piece).
-- [ ] T011 [P] [US1] [U8] [U9] [U10] [U11] [U19] Fresh folder → `supabase/docker/.env` holds the generated keys and none equals its `.env.example` value; `MCP_ACCESS_KEY` is 64 hex characters; the blank model-setting names are present; no key value appears in stdout or stderr (FR-002; data-model.md Secrets file.MCP_ACCESS_KEY, Secrets file.EMBEDDING_*/CHAT_*).
-- [ ] T012 [P] [US1] [U12] [U13] Generation fails partway (the stub `generate-keys.sh` exits non-zero) → non-zero exit and **no** `.env` left behind; the next run completes `secrets` (R6; Story 1, scenario 6).
-- [ ] T013 [P] [US1] [U16] Second run with nothing changed → every piece "already present", exit 0, and `.env` byte-identical (Story 1, scenario 4; SC-007).
-- [ ] T014 [P] [US1] [U14] [U15] `.env` without `MCP_ACCESS_KEY` or without the model-setting names → only those are added; every other line is unchanged (C1).
-- [ ] T015 [P] [US1] [U17] [U18] `.env` missing a Supabase key, or one at its example value → non-zero exit naming the key; `.env` unchanged (R6; C1).
-- [ ] T016 [P] [US1] [U6] Clone at another tag → non-zero exit naming both tags; nothing changed (spec edge case; C1).
-- [ ] T017 [P] [US1] [U7] `docker compose config -q` fails (stub `docker`) → non-zero exit naming the version found and the tested versions (R2; C1).
-- [ ] T018 [P] [US1] [U20] Checkout without `integrations/self-hosted-llm-mcp/` → non-zero exit saying 004's folder is missing (data-model.md Setup piece.function-link).
-- [ ] T019 [P] [US1] [U22] After a fresh run, `git status --porcelain` in the temporary repo shows nothing: everything setup wrote is under the ignored `supabase/` (FR-019; contract C1 invariants).
+- [X] T010 [P] [US1] [U4] [U5] [U21] Fresh folder → the stub `git` sees a shallow clone of tag `self-hosted/v0.8.5` (R1). The output reports `clone`, `secrets` and `model-settings` completed and `function-link` present (data-model.md Setup piece).
+- [X] T011 [P] [US1] [U8] [U9] [U10] [U11] [U19] Fresh folder → `supabase/docker/.env` holds the generated keys and none equals its `.env.example` value; `MCP_ACCESS_KEY` is 64 hex characters; the blank model-setting names are present; no key value appears in stdout or stderr (FR-002; data-model.md Secrets file.MCP_ACCESS_KEY, Secrets file.EMBEDDING_*/CHAT_*).
+- [X] T012 [P] [US1] [U12] [U13] Generation fails partway (the stub `generate-keys.sh` exits non-zero) → non-zero exit and **no** `.env` left behind; the next run completes `secrets` (R6; Story 1, scenario 6).
+- [X] T013 [P] [US1] [U16] Second run with nothing changed → every piece "already present", exit 0, and `.env` byte-identical (Story 1, scenario 4; SC-007).
+- [X] T014 [P] [US1] [U14] [U15] `.env` without `MCP_ACCESS_KEY` or without the model-setting names → only those are added; every other line is unchanged (C1).
+- [X] T015 [P] [US1] [U17] [U18] `.env` missing a Supabase key, or one at its example value → non-zero exit naming the key; `.env` unchanged (R6; C1).
+- [X] T016 [P] [US1] [U6] Clone at another tag → non-zero exit naming both tags; nothing changed (spec edge case; C1).
+- [X] T017 [P] [US1] [U7] `docker compose config -q` fails (stub `docker`) → non-zero exit naming the version found and the tested versions (R2; C1).
+- [X] T018 [P] [US1] [U20] Checkout without `integrations/self-hosted-llm-mcp/` → non-zero exit saying 004's folder is missing (data-model.md Setup piece.function-link).
+- [X] T019 [P] [US1] [U22] After a fresh run, `git status --porcelain` in the temporary repo shows nothing: everything setup wrote is under the ignored `supabase/` (FR-019; contract C1 invariants).
 
 Stack configuration, in `F/tests/compose.test.mjs`. Each test runs `docker compose config` on the real `F/docker-compose.yml` with the clone replaced by the T004 fixture. With no `docker`, each test is **skipped with `node:test`'s skip**, never passed (R10):
 
-- [ ] T020 [P] [US1] [U24] [U27] The default service set is exactly `api-gw db functions ob1-init rest storage`. `auth`, `realtime`, `supavisor`, `studio`, `meta` and `imgproxy` are absent (FR-004; data-model.md Service sets.always-on).
-- [ ] T021 [P] [US1] [U28] [U29] [U30] `api-gw` has no dependency on `studio`; `storage` depends only on `db` (healthy) and `rest`, and has `ENABLE_IMAGE_TRANSFORMATION` `"false"` (R2, R3).
-- [ ] T022 [P] [US1] [U32] [U33] [U34] `functions` mounts the repo's `integrations/self-hosted-llm-mcp` read-only at `/home/deno/functions/self-hosted-llm-mcp`, resolved from the relative path. It passes `MCP_ACCESS_KEY`, `EMBEDDING_*`, `CHAT_*` and `FETCH_TIMEOUT_MS`, and maps `host.docker.internal` to `host-gateway` (R8, R12; FR-007, FR-008).
-- [ ] T023 [P] [US1] [U35] `db` mounts `F/db/ob1-schema.sql` read-only at `/docker-entrypoint-initdb.d/migrations/99-ob1-schema.sql`, and the official mounts are still present (R7).
+- [X] T020 [P] [US1] [U24] [U27] The default service set is exactly `api-gw db functions ob1-init rest storage`. `auth`, `realtime`, `supavisor`, `studio`, `meta` and `imgproxy` are absent (FR-004; data-model.md Service sets.always-on).
+- [X] T021 [P] [US1] [U28] [U29] [U30] `api-gw` has no dependency on `studio`; `storage` depends only on `db` (healthy) and `rest`, and has `ENABLE_IMAGE_TRANSFORMATION` `"false"` (R2, R3).
+- [X] T022 [P] [US1] [U32] [U33] [U34] `functions` mounts the repo's `integrations/self-hosted-llm-mcp` read-only at `/home/deno/functions/self-hosted-llm-mcp`, resolved from the relative path. It passes `MCP_ACCESS_KEY`, `EMBEDDING_*`, `CHAT_*` and `FETCH_TIMEOUT_MS`, and maps `host.docker.internal` to `host-gateway` (R8, R12; FR-007, FR-008).
+- [X] T023 [P] [US1] [U35] `db` mounts `F/db/ob1-schema.sql` read-only at `/docker-entrypoint-initdb.d/migrations/99-ob1-schema.sql`, and the official mounts are still present (R7).
 
 ### Implementation for User Story 1
 
-- [ ] T024 [US1] [U1] [U2] [U3] [U4] [U5] [U6] [U7] [U8] [U9] [U10] [U11] [U12] [U13] [U14] [U15] [U16] [U17] [U18] [U19] [U20] [U21] [U22] `F/setup.sh` (POSIX `sh`), driven by T009–T019 (contract C1; data-model.md Setup piece, Secrets file).
-- [ ] T025 [US1] [U24] [U27] [U28] [U29] [U30] [U32] [U33] [U34] [U35] `F/docker-compose.yml` (`include:` with path list and `env_file`) and `F/lean.override.yml`, driven by T020–T023 (R2, R3, R7, R8, R12).
+- [X] T024 [US1] [U1] [U2] [U3] [U4] [U5] [U6] [U7] [U8] [U9] [U10] [U11] [U12] [U13] [U14] [U15] [U16] [U17] [U18] [U19] [U20] [U21] [U22] `F/setup.sh` (POSIX `sh`), driven by T009–T019 (contract C1; data-model.md Setup piece, Secrets file).
+- [X] T025 [US1] [U24] [U27] [U28] [U29] [U30] [U32] [U33] [U34] [U35] `F/docker-compose.yml` (`include:` with path list and `env_file`) and `F/lean.override.yml`, driven by T020–T023 (R2, R3, R7, R8, R12).
 - [ ] T026 [US1] README for Story 1 in `F/README.md`. It must cover:
   - **What it does**, with positioning against `recipes/local-brain-no-mcp` and `integrations/kubernetes-deployment` (FR-015) and the services left out and their costs (FR-014).
   - **Prerequisites**: Docker with a recent Compose (tested v5.6.1), `git`, `openssl`, a model server meeting spec 004's requirements (link `../../integrations/self-hosted-llm-mcp/`).
@@ -124,12 +124,12 @@ Stack configuration, in `F/tests/compose.test.mjs`. Each test runs `docker compo
   - **Expected outcome**; a link to `docs/05-tool-audit.md`.
 - [ ] T027 [US1] `F/metadata.json` complete: category `recipes`; requires Docker, git, openssl; `estimated_time` is a placeholder until T037 (SC-001).
 
-- [ ] T052 [US1] [A1] Outer loop: A1 green, flipped from todo in the commit that makes it pass (US1.1, FR-004).
-- [ ] T053 [US1] [A2] Outer loop: A2 green (US1.4).
-- [ ] T054 [US1] [A3] Outer loop: A3 green (US1.6).
-- [ ] T055 [US1] [A4] Outer loop: A4 green (FR-002, FR-019).
-- [ ] T056 [US1] [A8] Outer loop: A8 green (FR-007, FR-008).
-- [ ] T057 [US1] [A9] Outer loop: A9 green (SC-002).
+- [X] T052 [US1] [A1] Outer loop: A1 green, flipped from todo in the commit that makes it pass (US1.1, FR-004).
+- [X] T053 [US1] [A2] Outer loop: A2 green (US1.4).
+- [X] T054 [US1] [A3] Outer loop: A3 green (US1.6).
+- [X] T055 [US1] [A4] Outer loop: A4 green (FR-002, FR-019).
+- [X] T056 [US1] [A8] Outer loop: A8 green (FR-007, FR-008).
+- [X] T057 [US1] [A9] Outer loop: A9 green (SC-002).
 
 **Checkpoint**: Story 1 is complete in code and docs; it's proven live in T037.
 
@@ -143,18 +143,18 @@ Stack configuration, in `F/tests/compose.test.mjs`. Each test runs `docker compo
 
 ### Tests for User Story 2 (MANDATORY) ⚠️
 
-- [ ] T028 [P] [US2] [U31] [U36] In `F/tests/compose.test.mjs`: `storage` uses the named volume `ob1-storage` at `/var/lib/storage`, with no bind mount there. `ob1-init` depends on `storage` being healthy, never restarts, and gets the service-role key (R3, R9; data-model.md Storage.Files, Storage.Bucket).
-- [ ] T029 [P] [US2] [U47] [U48] [U49] [U50] [U51] [U52] In `F/tests/create-bucket.test.mjs`: run `F/init/create-bucket.sh` with a stub `curl` on `PATH`. Create answers 200 → exit 0 and "ready". Create answers 400 with `BucketAlreadyExists` → exit 0. Any other failure → non-zero, with the status in the output. The request asks for a **private** bucket named `ob1-files`. The key is never printed (FR-009; data-model.md Storage.Bucket).
+- [X] T028 [P] [US2] [U31] [U36] In `F/tests/compose.test.mjs`: `storage` uses the named volume `ob1-storage` at `/var/lib/storage`, with no bind mount there. `ob1-init` depends on `storage` being healthy, never restarts, and gets the service-role key (R3, R9; data-model.md Storage.Files, Storage.Bucket).
+- [X] T029 [P] [US2] [U47] [U48] [U49] [U50] [U51] [U52] In `F/tests/create-bucket.test.mjs`: run `F/init/create-bucket.sh` with a stub `curl` on `PATH`. Create answers 200 → exit 0 and "ready". Create answers 400 with `BucketAlreadyExists` → exit 0. Any other failure → non-zero, with the status in the output. The request asks for a **private** bucket named `ob1-files`. The key is never printed (FR-009; data-model.md Storage.Bucket).
 
 ### Implementation for User Story 2
 
-- [ ] T030 [US2] [U31] [U36] [U47] [U48] [U49] [U50] [U51] [U52] `F/init/create-bucket.sh`, mounted into `ob1-init` by `F/lean.override.yml`, driven by T028 and T029 (R9).
+- [X] T030 [US2] [U31] [U36] [U47] [U48] [U49] [U50] [U51] [U52] `F/init/create-bucket.sh`, mounted into `ob1-init` by `F/lean.override.yml`, driven by T028 and T029 (R9).
 - [ ] T031 [US2] README storage section in `F/README.md`:
   - the storage check (upload a file to `ob1-files` with the service-role key, download it, `cmp`, then show a request without credentials refused) (FR-011; Story 2);
   - files live in the Docker volume `ob1-storage`, and **`docker compose down -v` deletes them** (R3; FR-020);
   - the `images` profile exists for later image transformations and enables nothing by itself (plan Notes).
 
-- [ ] T058 [US2] [A6] Outer loop: A6 green (US2.1, FR-009).
+- [X] T058 [US2] [A6] Outer loop: A6 green (US2.1, FR-009).
 
 **Checkpoint**: Story 2 is complete in code and docs; it's proven live in T037.
 
@@ -168,14 +168,14 @@ Stack configuration, in `F/tests/compose.test.mjs`. Each test runs `docker compo
 
 ### Tests for User Story 3 (MANDATORY) ⚠️
 
-- [ ] T032 [P] [US3] [U25] [U26] In `F/tests/compose.test.mjs`: with `--profile ui` the set adds exactly `studio` and `meta`. With `--profile images` it adds exactly `imgproxy` (FR-005; data-model.md Service sets.ui, Service sets.images).
+- [X] T032 [P] [US3] [U25] [U26] In `F/tests/compose.test.mjs`: with `--profile ui` the set adds exactly `studio` and `meta`. With `--profile images` it adds exactly `imgproxy` (FR-005; data-model.md Service sets.ui, Service sets.images).
 
 ### Implementation for User Story 3
 
-- [ ] T033 [US3] [U25] [U26] Profiles in `F/lean.override.yml`, driven by T032 (R2).
+- [X] T033 [US3] [U25] [U26] Profiles in `F/lean.override.yml`, driven by T032 (R2).
 - [ ] T034 [US3] README UI section in `F/README.md`: start and stop commands (contract C2), the dashboard user and password from `.env`, the Studio URL `http://localhost:8000`. Add what starting the UI does while the stack is stopped once T036 records it (OS-009).
 
-- [ ] T059 [US3] [A7] Outer loop: A7 green (US3.1, FR-005).
+- [X] T059 [US3] [A7] Outer loop: A7 green (US3.1, FR-005).
 
 **Checkpoint**: all three stories are complete in code and docs.
 
