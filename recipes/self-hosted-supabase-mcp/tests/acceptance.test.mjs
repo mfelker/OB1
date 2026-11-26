@@ -88,7 +88,7 @@ test("A4 a fresh setup generates every key, prints none, and leaves the checkout
   } finally { co.cleanup(); }
 });
 
-test("A6 creating the bucket twice leaves exactly one private ob1-files bucket", { todo }, () => {
+test("A6 creating the bucket twice leaves exactly one private ob1-files bucket", () => {
   const b = makeBucketEnv();
   try {
     const env = { STUB_CURL_MODE: "stateful", SERVICE_ROLE_KEY: "test-service-role-not-real" };
