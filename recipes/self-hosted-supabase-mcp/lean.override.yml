@@ -1,0 +1,56 @@
+services:
+  studio:
+    profiles: [ui]
+  api-gw:
+    depends_on: !reset {}
+  meta:
+    profiles: [ui]
+  storage:
+    environment:
+      ENABLE_IMAGE_TRANSFORMATION: "false"
+    volumes:
+      - ob1-storage:/var/lib/storage
+    depends_on: !override
+      db:
+        condition: service_healthy
+      rest:
+        condition: service_started
+  imgproxy:
+    profiles: [images]
+  auth:
+    profiles: [never]
+  realtime:
+    profiles: [never]
+  supavisor:
+    profiles: [never]
+  db:
+    volumes:
+      - ../../db/ob1-schema.sql:/docker-entrypoint-initdb.d/migrations/99-ob1-schema.sql:ro
+  functions:
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    environment:
+      MCP_ACCESS_KEY: ${MCP_ACCESS_KEY}
+      EMBEDDING_API_BASE: ${EMBEDDING_API_BASE}
+      EMBEDDING_API_KEY: ${EMBEDDING_API_KEY}
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL}
+      CHAT_API_BASE: ${CHAT_API_BASE}
+      CHAT_API_KEY: ${CHAT_API_KEY}
+      CHAT_MODEL: ${CHAT_MODEL}
+      FETCH_TIMEOUT_MS: ${FETCH_TIMEOUT_MS}
+    volumes:
+      - ../../../../integrations/self-hosted-llm-mcp:/home/deno/functions/self-hosted-llm-mcp:ro
+  ob1-init:
+    image: curlimages/curl:8.11.1
+    entrypoint: [sh, /init/create-bucket.sh]
+    restart: "no"
+    depends_on:
+      storage:
+        condition: service_healthy
+    environment:
+      SERVICE_ROLE_KEY: ${SERVICE_ROLE_KEY}
+    volumes:
+      - ../../init/create-bucket.sh:/init/create-bucket.sh:ro
+
+volumes:
+  ob1-storage:
