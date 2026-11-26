@@ -253,3 +253,15 @@ test("U19 a fresh run prints no value of any key it wrote to .env", () => {
     }
   } finally { co.cleanup(); }
 });
+
+test("U20 setup fails without the checkout's integrations/self-hosted-llm-mcp and reports the function link present with it", () => {
+  const without = makeCheckout({ withIntegration: false });
+  const withIt = makeCheckout();
+  try {
+    const r1 = runSetup(without);
+    assert.notEqual(r1.code, 0);
+    assert.match(r1.out, /integrations\/self-hosted-llm-mcp/);
+    const r2 = runSetup(withIt);
+    assert.match(r2.out, /function-link: present/);
+  } finally { without.cleanup(); withIt.cleanup(); }
+});

@@ -6,6 +6,7 @@ PIN="self-hosted/v0.8.5"
 SUPABASE_REPO="https://github.com/supabase/supabase"
 RECIPE_DIR=$(cd "$(dirname "$0")" && pwd)
 CLONE="$RECIPE_DIR/supabase"
+FUNCTION_DIR="$RECIPE_DIR/../../integrations/self-hosted-llm-mcp"
 ENV_FILE="$CLONE/docker/.env"
 TESTED_COMPOSE="v5.6.1"
 # Keys Supabase's utils/generate-keys.sh writes. They are never regenerated in an existing .env:
@@ -21,6 +22,9 @@ add_mcp_key() { printf '\n# Open Brain MCP access key (spec 004)\nMCP_ACCESS_KEY
 for tool in docker git openssl; do
   command -v "$tool" >/dev/null 2>&1 || die "$tool not found on PATH"
 done
+
+# The stack mounts spec 004's MCP server from this checkout; fail before changing anything if it is absent.
+[ -d "$FUNCTION_DIR" ] || die "this checkout has no integrations/self-hosted-llm-mcp, the MCP server the stack runs. Clone the full OB1 repository and run setup.sh from recipes/self-hosted-supabase-mcp."
 
 if [ -f "$CLONE/docker/docker-compose.yml" ]; then
   tag=$(git -C "$CLONE" describe --tags --exact-match 2>/dev/null || echo "an unknown version")
@@ -74,6 +78,8 @@ for k in $MODEL_SETTINGS; do
   grep -q "^$k=" "$ENV_FILE" || { printf '%s=\n' "$k" >> "$ENV_FILE"; added=1; }
 done
 if [ -n "$added" ]; then echo "model-settings: completed"; else echo "model-settings: already present"; fi
+
+echo "function-link: present"
 
 echo "setup.sh: not implemented" >&2
 exit 1
