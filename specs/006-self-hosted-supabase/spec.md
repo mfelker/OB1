@@ -36,6 +36,8 @@
 - Q: How do models get into the optional bundled model-server container? → A: In 006 the container is Ollama and the README documents a manual pull command per model (`EMBEDDING_MODEL`, `CHAT_MODEL`); nothing is pulled automatically. A later feature will publish a Docker image able to serve through vLLM, SGLang, llama.cpp or Ollama (FR-017, OS-008). → Superseded by the GPU-on-Mac question: the bundled option is Docker Model Runner instead of an Ollama container; the manual pull per model stays.
 - Q: Given that this stack will become the owner's real brain, how much backup does 006 provide? → A: Minimal: the README documents where the database and Storage files live and one database dump command; a backup and restore procedure proven by a restore test arrives with planned spec 008, before the real brain moves over (OS-005).
 - Q: The owner wants the bundled model server to use the Mac's GPU, which an Ollama container cannot; which bundled option? → A: Docker Model Runner, with a manual `docker model pull` per model: it runs models with Metal on Apple Silicon (and NVIDIA, AMD or Vulkan on Linux), and containers reach its OpenAI-compatible API without a key. Research must confirm it returns 1536-number embeddings; if not, the embedding role uses the host route (FR-017, FR-012, VP-011).
+- Q: Should setup have a time target? → A: No numeric target; the Mac live run measures the real time, and the README and `metadata.json`'s `estimated_time` report it (SC-001).
+- Q: What does re-running setup do after an interrupted run? → A: It completes whatever is missing and keeps whatever exists, checking each piece on its own, and reports which pieces it completed and which were already there (FR-003).
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -52,8 +54,9 @@ An owner who already runs (or is willing to run) their own model server wants Op
 1. **Given** a machine with Docker and a reachable model server and no previous stack, **When** the owner runs the setup step and then the start step, **Then** exactly the always-on services are running and healthy, and no user-login, realtime, pooler or web UI service is running.
 2. **Given** the running stack, **When** the owner runs spec 004's setup check against it, **Then** every check passes.
 3. **Given** the running stack and an MCP client connected with the access key, **When** the owner lists tools, captures a thought and searches with different wording, **Then** all six tools are listed, the capture is stored with a 1536-number embedding, and the search returns it first.
-4. **Given** the setup step has already been run, **When** the owner runs it again, **Then** it does not overwrite the existing secrets or data and says so.
+4. **Given** the setup step has already been run, **When** the owner runs it again, **Then** it does not overwrite the existing secrets or data and reports every piece as already present.
 5. **Given** a running stack with thoughts in it, **When** the owner stops and restarts the stack (or the machine), **Then** every thought is still there and the tools work again without re-running setup.
+6. **Given** a setup run that stopped after writing the secrets file but before linking 004's function, **When** the owner runs setup again, **Then** the same secrets are kept, the function is linked, and setup reports the link as completed and the secrets as already present (Round 5, Q1).
 
 ---
 
@@ -108,7 +111,7 @@ Most of the time the owner wants the stack as light as possible, but sometimes t
 
 - **FR-001**: The recipe MUST provide a setup step that obtains the official Supabase self-hosting stack at one pinned version, without copying Supabase's own stack files into the contribution folder (VP-004).
 - **FR-002**: The setup step MUST generate fresh values for every secret the stack needs, including 004's `MCP_ACCESS_KEY` (derived from FR-007 and spec 004 FR-023), write them only to an untracked local file, and never reuse the example defaults.
-- **FR-003**: Re-running the setup step MUST NOT overwrite existing secrets or data; it MUST report that setup was already done.
+- **FR-003**: Re-running the setup step MUST NOT overwrite existing secrets or data. It MUST check each setup piece on its own (the stack clone at the pin, the secrets file, the link to 004's function, the bucket), complete any piece that is missing, including after an interrupted run, and report which pieces it completed and which already existed (Round 5, Q1).
 - **FR-004**: The documented start command MUST start exactly the always-on services — the database, the REST API, the gateway, the Edge Functions runtime and Storage, plus the image service only if Storage requires it (FR-012) — and no user-login, realtime, pooler, web UI or metadata service, despite the official file's dependency links (VP-001).
 - **FR-005**: The web UI and its metadata service MUST be startable and stoppable as one optional add-on with one documented command each, without restarting the always-on services.
 - **FR-006**: On first start of an empty database, the stack MUST create the `thoughts` table, `match_thoughts` and `upsert_thought` exactly as `docs/01-getting-started.md` defines them, at 1536 dimensions, including the GRANT step `CONTRIBUTING.md` requires (VP-007), with no change to the canonical definitions.
@@ -161,16 +164,17 @@ Most of the time the owner wants the stack as light as possible, but sometimes t
 
 ### Measurable Outcomes
 
-- **SC-001**: A first-time reader who already has Docker and a model server reaches a working brain (a capture found again by a reworded search) in 30 minutes or less by following the README alone.
+- **SC-001**: A first-time reader who already has Docker and a model server reaches a working brain (a capture found again by a reworded search) by following the README alone, with no step outside it. There is no time target: the Mac run records the elapsed time, and the README and `metadata.json`'s `estimated_time` report that measured figure (Round 4, Q1).
 - **SC-002**: The whole brain runs on one machine with only Docker and Docker Compose: no Kubernetes, cluster, or orchestration tooling is installed or used at any step of the README (Round 1, Q2).
 - **SC-003**: All six MCP tools work from a real MCP client against the stack, and spec 004's setup check passes, on the first start after setup.
 - **SC-004**: 100% of thoughts and stored files are still present after stopping and restarting the stack and after rebooting the machine.
 - **SC-005**: A file uploaded to the owner's bucket downloads byte-for-byte identical, and an unauthenticated request for it is refused.
 - **SC-006**: Exactly the always-on services are running after the documented start command; the web UI appears only after the add-on command and disappears after its stop command, with the tools working throughout.
-- **SC-007**: Re-running setup changes no secret and loses no data.
+- **SC-007**: Re-running setup, after a complete or an interrupted run, changes no secret and loses no data, and leaves every setup piece present (Round 5, Q1).
 - **SC-008**: The contribution folder passes the upstream gate's review checks (all rules) in the upstream PR's context.
 - **SC-009**: With 004's server running, a second Edge Function placed next to it in the stack's functions directory answers on its own path while 004's six tools keep working, without re-running setup (verifies FR-021; Round 1, Q1).
 - **SC-010**: Stories 1–3 pass in a recorded live run on macOS (the owner's Mac) and in a second recorded run on Linux; the upstream PR is not opened until both runs pass, and the README names both as tested (Round 1, Q3).
+- **SC-011**: On the owner's Mac with Docker Model Runner enabled and the chat model pulled by hand, pointing `CHAT_API_BASE` at it makes 004's setup check pass, and a capture's metadata extraction runs on the GPU; the embedding role does the same if research shows 1536-number embeddings, otherwise the README's host-route fallback is followed (verifies FR-017; Round 3, Q1).
 
 ## Verified Premises
 
