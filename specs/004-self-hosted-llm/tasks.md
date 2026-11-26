@@ -352,14 +352,14 @@ Streams code against these. Signatures are the only shared contract. Behavior co
 
   Merge with `git -C W merge --no-ff contrib/mfelker/self-hosted-llm-<s>`. Wave 1 (C, M, S, D) before launching wave 2; wave 2 (T, K) before launching wave 3 (A).
 - [X] T041 Fold `M/specs/004-self-hosted-llm/tdd/cycle-log.d/*.md` into `tdd/cycle-log.md` in behavior order. Tick tasks whose behaviors are all `DONE`. Commit on fork `main`.
-- [ ] T042 Refactor with the full suite green in `W`: `deno check`, `deno lint` on `F`, and remove any remaining stub `not implemented` throws (`grep -rn "not implemented" F` is empty). Confirm `RUN_TODO=1` runs no ignored acceptance tests, because every `todo` has been flipped.
-- [ ] T043 [P] Gates in `W`:
+- [X] T042 Refactor with the full suite green in `W`: `deno check`, `deno lint` on `F`, and remove any remaining stub `not implemented` throws (`grep -rn "not implemented" F` is empty). Confirm `RUN_TODO=1` runs no ignored acceptance tests, because every `todo` has been flipped.
+- [X] T043 [P] Gates in `W`:
   - `metadata.json` validates against `.github/metadata.schema.json`
   - `npx markdownlint-cli2 --config .github/.markdownlint.jsonc "integrations/self-hosted-llm-mcp/**/*.md"`
   - README has Prerequisites, numbered steps and Expected Outcome; relative links resolve; the `docs/05-tool-audit.md` link is present
   - scan for secrets, binaries and profanity (no real keys in examples)
   - self-check the 16 upstream gate rules in `CONTRIBUTING.md`
-- [ ] T044 [P] Fork-ci preview from `W`'s root: `node ../../.fork/ci/bin/run-folder.mjs --path integrations/self-hosted-llm-mcp --mode strict --origin fork --out "$TMPDIR/r.json"`. Green under the no-network profile.
+- [X] T044 [P] Fork-ci preview from `W`'s root: `node ../../.fork/ci/bin/run-folder.mjs --path integrations/self-hosted-llm-mcp --mode strict --origin fork --out "$TMPDIR/r.json"`. Green under the no-network profile.
 - [ ] T045 Real-Postgres check of research R6's premise, if Docker is available: run `docs/01`'s `thoughts` DDL, trigger and `upsert_thought` in a `pgvector/pgvector:pg17` container. Show `created_at = updated_at` after a first insert and `created_at < updated_at` after a duplicate. Record the commands and output in `M/specs/004-self-hosted-llm/tdd/r6-premise.md`. Without Docker, the owner runs the same SQL on the self-hosted stack in T046.
 - [ ] T046 **Owner-run manual verification**, recorded in `M/specs/004-self-hosted-llm/evidence/`:
   - quickstart §3 (Supabase Cloud: SC-001, SC-002, SC-004, SC-007, SC-009, SC-013, SC-015)
@@ -369,7 +369,7 @@ Streams code against these. Signatures are the only shared contract. Behavior co
 
   The integrator then replaces the README's `pending verification` cells with the recorded values in `W` (FR-017, FR-021).
 - [ ] T047 TDD audit: run `/speckit-tdd-verify` in `M`. It writes `tdd/verification.md` with verdict PASS or PASS_WITH_GAPS (Quality Gate 1).
-- [ ] T048 Scope check: `git -C W diff --stat upstream/main...HEAD` lists only `integrations/self-hosted-llm-mcp/`, with no `specs/`, `.specify/` or `.fork/` (Principle V).
+- [X] T048 Scope check: `git -C W diff --stat upstream/main...HEAD` lists only `integrations/self-hosted-llm-mcp/`, with no `specs/`, `.specify/` or `.fork/` (Principle V).
 - [ ] T049 Land, **asking the owner before each push or PR**:
   1. `git -C W push -u origin contrib/mfelker/self-hosted-llm`
   2. Upstream PR: `gh pr create -R NateBJones-Projects/OB1 --head mfelker:contrib/mfelker/self-hosted-llm --title "[integrations] Self-hosted LLM MCP server (any OpenAI-compatible model server)"`, with the body from `.github/PULL_REQUEST_TEMPLATE.md`.

@@ -2089,3 +2089,11 @@ Each test is therefore load-bearing. Its red evidence is a mutant, not a pre-imp
 - refactor: none needed
 - commit: `aa4f940`
 - notes: a real FR-014 defect. The self-hosted router applies one shared import map and ignores the function's `deno.json` (research R10), so stream S's bare import would have failed to resolve on self-hosted Supabase while every unit test passed under the local `deno.json`.
+
+## Polish and gates (T042–T044, T048), no behavior change
+
+- T042 (Sonnet agent, verified by integrator): `94e6cbc` `deno.json` lint excludes `no-import-prefix` (the rule forbids the full `npm:`/`jsr:` specifiers that R10/U195 require); `9395fe1` README `dimensions` retry paragraph (R3); `a70736e` README exact message shapes (gate formats checked against `lib/tools.ts:36-39`, `lib/config.ts:4,38`). Merged `8fcda29`. `deno lint` -> `Checked 23 files` (0 problems); suite -> `ok | 238 passed | 0 failed`.
+- T043: upstream gate self-check on the folder: credentials, local-MCP pattern, README completeness (prerequisites, numbered steps, expected outcome), tool-audit link, internal links, binaries/SQL, profanity all pass; `metadata.json` valid against the schema; PR format checked at PR time.
+- T044: `run-folder.mjs --mode strict --origin fork` -> `integrations/self-hosted-llm-mcp: pass (all tests passed)`.
+- T048: `git diff --name-only upstream/main...HEAD` -> 26 files, all under `integrations/self-hosted-llm-mcp/`, none fork-only.
+- T045: not run. Docker daemon unavailable on this machine (2026-11-26); per the task, the R6 premise SQL moves to the owner's self-hosted run in T046.
