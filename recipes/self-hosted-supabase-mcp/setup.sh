@@ -53,6 +53,9 @@ if [ ! -f "$ENV_FILE" ]; then
 fi
 for k in $SUPABASE_KEYS; do
   grep -q "^$k=" "$ENV_FILE" || die "supabase/docker/.env has no $k. Setup does not regenerate Supabase keys in an existing .env; see \"Starting over\" in README.md. Nothing was changed."
+  value=$(sed -n "s/^$k=//p" "$ENV_FILE" | head -n 1)
+  example=$(sed -n "s/^$k=//p" "$CLONE/docker/.env.example" | head -n 1)
+  [ "$value" != "$example" ] || die "$k in supabase/docker/.env still has its .env.example value. Setup does not regenerate Supabase keys in an existing .env; see \"Starting over\" in README.md. Nothing was changed."
 done
 if [ -n "${build:-}" ]; then
   :

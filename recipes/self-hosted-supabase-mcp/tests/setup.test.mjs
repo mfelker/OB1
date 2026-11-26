@@ -229,3 +229,17 @@ test("U17 an .env missing a Supabase key makes setup fail naming it and leave .e
     assert.equal(readFileSync(envPath(co), "utf8"), before);
   } finally { co.cleanup(); }
 });
+
+test("U18 an .env with a Supabase key still at its example value makes setup fail naming it and leave .env unchanged", () => {
+  const co = makeCheckout();
+  try {
+    runSetup(co);
+    const text = readFileSync(envPath(co), "utf8")
+      .replace(/^SERVICE_ROLE_KEY=.*$/m, `SERVICE_ROLE_KEY=${examplePlaceholder("SERVICE_ROLE_KEY")}`);
+    writeFileSync(envPath(co), text);
+    const r = runSetup(co);
+    assert.notEqual(r.code, 0);
+    assert.match(r.out, /\bSERVICE_ROLE_KEY\b/);
+    assert.equal(readFileSync(envPath(co), "utf8"), text);
+  } finally { co.cleanup(); }
+});
