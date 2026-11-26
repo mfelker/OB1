@@ -40,3 +40,15 @@ test("U49 storage answers 400 with another error: non-zero exit, status and erro
     assert.match(r.out, /InvalidRequest/);
   } finally { env.cleanup(); }
 });
+
+test("U50 storage answers 500 or cannot be reached: non-zero exit naming the failure", () => {
+  const env = makeBucketEnv();
+  try {
+    const r500 = env.run({ SERVICE_ROLE_KEY: KEY, STUB_CURL_MODE: "fixed", STUB_CURL_STATUS: "500", STUB_CURL_BODY: "internal error" });
+    assert.notEqual(r500.code, 0);
+    assert.match(r500.out, /500/);
+    const down = env.run({ SERVICE_ROLE_KEY: KEY, STUB_CURL_MODE: "unreachable" });
+    assert.notEqual(down.code, 0);
+    assert.match(down.out, /could not reach storage/i);
+  } finally { env.cleanup(); }
+});
