@@ -54,7 +54,7 @@ Test file: `integrations/self-hosted-llm-mcp/tests/acceptance_test.ts`.
 | A20 | The same base with `EMBEDDING_API_KEY` set passes the setup check with a `key_over_http` warning naming the embedding role | SC-014, FR-020 | example | DONE | `tests/acceptance_test.ts::A20` |
 | A21 | An MCP client using only `?key=<MCP_ACCESS_KEY>` lists exactly the six tools | SC-015, FR-023 | example | DONE | `tests/acceptance_test.ts::A21` |
 | A22 | An MCP request with a wrong key receives the JSON-RPC unauthorized error | SC-015, FR-023 | example | DONE | `tests/acceptance_test.ts::A22` |
-| A23 | With both roles pointed at a cloud-style `https` base, capture and search succeed with every model request to that base | US3.2 | example | DONE | `tests/acceptance_test.ts::A23` |
+| A23 | With both roles pointed at a cloud-style `https` base, capture and search succeed with every model request to that base | FR-002, US3.2 | example | DONE | `tests/acceptance_test.ts::A23` |
 | A24 | A capture with chat working stores `enrichment_status: "complete"`; new text captured with chat failing stores `"fallback"`; recapturing that text with chat working restores `"complete"` | SC-016, FR-024 | example | DONE | `tests/acceptance_test.ts::A24` |
 
 ## Inner loop: unit behaviors
@@ -107,11 +107,11 @@ All paths are under `integrations/self-hosted-llm-mcp/`. The test file is `tests
 
 | id | behavior | traces | kind | task | state | test |
 | --- | -------- | ------ | ---- | ---- | ----- | ---- |
-| U33 | `embed(text)` sends one `POST <embedding base>/embeddings` with `{ model, input, dimensions: 1536 }` and `Content-Type: application/json` | contracts/model-server-requests.md, R3 | contract | T011 | DONE | `tests/model_client_test.ts::U33` |
+| U33 | `embed(text)` sends one `POST <embedding base>/embeddings` with `{ model, input, dimensions: 1536 }` and `Content-Type: application/json` | FR-002, contracts/model-server-requests.md, R3 | contract | T011 | DONE | `tests/model_client_test.ts::U33` |
 | U34 | `embed` returns `ok` with the vector for a 2xx reply holding a 1536-number `data[0].embedding` | contracts/model-server-requests.md | example | T011 | DONE | `tests/model_client_test.ts::U34` |
-| U35 | `chat(text)` sends one `POST <chat base>/chat/completions` with `CHAT_MODEL`, `response_format: { type: "json_object" }` and messages `[system: EXTRACTION_PROMPT, user: text]` | contracts/model-server-requests.md | contract | T011 | DONE | `tests/model_client_test.ts::U35` |
+| U35 | `chat(text)` sends one `POST <chat base>/chat/completions` with `CHAT_MODEL`, `response_format: { type: "json_object" }` and messages `[system: EXTRACTION_PROMPT, user: text]` | FR-002, contracts/model-server-requests.md | contract | T011 | DONE | `tests/model_client_test.ts::U35` |
 | U36 | `chat` returns `ok` with `choices[0].message.content` for a 2xx reply | contracts/model-server-requests.md | example | T011 | DONE | `tests/model_client_test.ts::U36` |
-| U37 | `listModels(role)` sends one `GET <role base>/models` | contracts/model-server-requests.md | contract | T011 | DONE | `tests/model_client_test.ts::U37` |
+| U37 | `listModels(role)` sends one `GET <role base>/models` | FR-002, contracts/model-server-requests.md | contract | T011 | DONE | `tests/model_client_test.ts::U37` |
 | U38 | A role with a key sends `Authorization: Bearer <key>` on embed, chat and listModels | data-model §1 key | example | T011 | DONE | `tests/model_client_test.ts::U38` |
 | U39 | A role with no key sends no `Authorization` header at all | data-model §1 key | example | T011 | DONE | `tests/model_client_test.ts::U39` |
 | U40 | Each role sends its own key when the two keys differ | FR-003 | example | T011 | DONE | `tests/model_client_test.ts::U40` |
