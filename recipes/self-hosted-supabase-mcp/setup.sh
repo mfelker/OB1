@@ -47,6 +47,9 @@ if [ ! -f "$ENV_FILE" ]; then
     printf '%s=\n' "$k" >> "$build/.env"
   done
   mv "$build/.env" "$ENV_FILE"
+elif ! grep -q '^MCP_ACCESS_KEY=' "$ENV_FILE"; then
+  printf '\n# Open Brain MCP access key (spec 004)\nMCP_ACCESS_KEY=%s\n' "$(openssl rand -hex 32)" >> "$ENV_FILE"
+  echo "secrets: completed"
 fi
 
 echo "setup.sh: not implemented" >&2

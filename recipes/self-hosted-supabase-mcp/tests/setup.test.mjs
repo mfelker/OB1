@@ -169,3 +169,25 @@ test("U13 after a failed key generation the next run completes the secrets", () 
     assert.match(env.get("MCP_ACCESS_KEY") ?? "", /^[0-9a-f]{64}$/);
   } finally { co.cleanup(); }
 });
+
+/** Run setup once, then remove the lines starting with `KEY=` for each key given; returns the trimmed text. */
+function removeLines(co, keys) {
+  runSetup(co);
+  const text = readFileSync(envPath(co), "utf8").split("\n").filter((l) => !keys.some((k) => l.startsWith(`${k}=`))).join("\n");
+  writeFileSync(envPath(co), text);
+  return text;
+}
+
+test("U14 an .env without MCP_ACCESS_KEY gets only that line added, every other line unchanged", () => {
+  const co = makeCheckout();
+  try {
+    const before = removeLines(co, ["MCP_ACCESS_KEY"]);
+    const r = runSetup(co);
+    const after = readFileSync(envPath(co), "utf8");
+    const added = after.split("\n").filter((l) => !before.split("\n").includes(l) && l !== "");
+    assert.equal(added.length, 1, `added: ${JSON.stringify(added)}`);
+    assert.match(added[0], /^MCP_ACCESS_KEY=[0-9a-f]{64}$/);
+    assert.ok(after.startsWith(before.replace(/\n*$/, "")), "existing lines kept in place");
+    assert.match(r.out, /secrets: completed/);
+  } finally { co.cleanup(); }
+});
