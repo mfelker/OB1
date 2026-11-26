@@ -18,3 +18,10 @@ DO $$ BEGIN
     RAISE EXCEPTION 'U41 thoughts.embedding is not vector(1536)';
   END IF;
 END $$;
+
+-- U42: both RPCs exist.
+DO $$ BEGIN
+  IF to_regproc('public.match_thoughts') IS NULL OR to_regproc('public.upsert_thought') IS NULL THEN
+    RAISE EXCEPTION 'U42 match_thoughts or upsert_thought is missing';
+  END IF;
+END $$;
