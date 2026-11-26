@@ -38,7 +38,6 @@ This recipe reuses Supabase's official stack rather than copying it: `setup.sh` 
 - **`git`** and **`openssl`** (both come with macOS and most Linux distributions).
 - A full checkout of this repository: the stack runs the MCP server straight from [`integrations/self-hosted-llm-mcp/`](../../integrations/self-hosted-llm-mcp/).
 - **An OpenAI-compatible model server** with one embedding model and one chat model, meeting the [self-hosted LLM MCP server's model requirements](../../integrations/self-hosted-llm-mcp/#choosing-an-embedding-model): the embedding model must return 1536 numbers. The tested pair is Ollama on the host with `qwen3-embedding:4b` and `llama3.1:8b`.
-- About 2 GB of free memory for the stack, plus what your models need.
 
 ## Credential Tracker
 
