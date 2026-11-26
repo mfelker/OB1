@@ -206,3 +206,15 @@ test("U15 an .env missing model setting names gets only the missing names added 
     } finally { co.cleanup(); }
   }
 });
+
+test("U16 a complete .env is left byte-identical and secrets and model settings report already present", () => {
+  const co = makeCheckout();
+  try {
+    runSetup(co);
+    const before = readFileSync(envPath(co));
+    const r = runSetup(co);
+    assert.deepEqual(readFileSync(envPath(co)), before);
+    assert.match(r.out, /secrets: already present/);
+    assert.match(r.out, /model-settings: already present/);
+  } finally { co.cleanup(); }
+});

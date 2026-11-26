@@ -50,6 +50,8 @@ if [ ! -f "$ENV_FILE" ]; then
 elif ! grep -q '^MCP_ACCESS_KEY=' "$ENV_FILE"; then
   printf '\n# Open Brain MCP access key (spec 004)\nMCP_ACCESS_KEY=%s\n' "$(openssl rand -hex 32)" >> "$ENV_FILE"
   echo "secrets: completed"
+else
+  echo "secrets: already present"
 fi
 
 # Model server settings (spec 004 names): add any name that is missing, blank.
@@ -57,7 +59,7 @@ added=""
 for k in EMBEDDING_API_BASE EMBEDDING_API_KEY EMBEDDING_MODEL CHAT_API_BASE CHAT_API_KEY CHAT_MODEL FETCH_TIMEOUT_MS; do
   grep -q "^$k=" "$ENV_FILE" || { printf '%s=\n' "$k" >> "$ENV_FILE"; added=1; }
 done
-if [ -n "$added" ]; then echo "model-settings: completed"; fi
+if [ -n "$added" ]; then echo "model-settings: completed"; else echo "model-settings: already present"; fi
 
 echo "setup.sh: not implemented" >&2
 exit 1
