@@ -69,3 +69,8 @@ test("U26 with --profile images the set adds exactly imgproxy", { skip }, () => 
   assert.deepEqual(images.filter((s) => !base.includes(s)), ["imgproxy"]);
   assert.deepEqual(base.filter((s) => !images.includes(s)), []);
 });
+
+test("U27 auth, realtime and supavisor are in none of the default, ui or images sets", { skip }, () => {
+  const all = [...services(), ...services(["--profile", "ui"]), ...services(["--profile", "images"])];
+  for (const never of ["auth", "realtime", "supavisor"]) assert.ok(!all.includes(never), `${never} must not start`);
+});
