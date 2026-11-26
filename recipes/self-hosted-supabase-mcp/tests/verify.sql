@@ -4,6 +4,8 @@
 SELECT 'ob1_verify_' || to_char(clock_timestamp(), 'YYYYMMDDHH24MISSUS') || '_' || (random() * 1000000)::int AS verify_db \gset
 CREATE DATABASE :"verify_db";
 \c :"verify_db"
+-- docs/01 enables pgvector in the dashboard before any SQL runs; do the same here.
+CREATE EXTENSION IF NOT EXISTS vector;
 CREATE SCHEMA IF NOT EXISTS auth;
 CREATE OR REPLACE FUNCTION auth.role() RETURNS text LANGUAGE sql STABLE
   AS $$ SELECT coalesce(nullif(current_setting('request.jwt.claim.role', true), ''), 'anon') $$;
