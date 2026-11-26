@@ -10,7 +10,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { existsSync, writeFileSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
-import { makeCheckout, runSetup, stubCalls, PIN, readEnv, envPath, SUPABASE_KEYS, examplePlaceholder } from "./helpers/harness.mjs";
+import { makeCheckout, runSetup, stubCalls, PIN, readEnv, envPath, SUPABASE_KEYS, MODEL_SETTINGS, examplePlaceholder } from "./helpers/harness.mjs";
 
 test("U1 without docker on PATH setup fails naming docker and creates nothing", () => {
   const co = makeCheckout({ hide: ["docker"] });
@@ -137,4 +137,13 @@ test("U10 two fresh setups produce two different MCP access keys", () => {
     assert.ok(ka && kb, "both keys generated");
     assert.notEqual(ka, kb);
   } finally { a.cleanup(); b.cleanup(); }
+});
+
+test("U11 on a fresh folder .env holds every model setting name, blank", () => {
+  const co = makeCheckout();
+  try {
+    runSetup(co);
+    const env = readEnv(envPath(co));
+    for (const k of MODEL_SETTINGS) assert.equal(env.get(k), "", `${k} present and blank`);
+  } finally { co.cleanup(); }
 });
