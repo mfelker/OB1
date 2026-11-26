@@ -62,3 +62,10 @@ test("U25 with --profile ui the set adds exactly studio and meta", { skip }, () 
   assert.deepEqual(ui.filter((s) => !base.includes(s)), ["meta", "studio"]);
   assert.deepEqual(base.filter((s) => !ui.includes(s)), []);
 });
+
+test("U26 with --profile images the set adds exactly imgproxy", { skip }, () => {
+  const base = services();
+  const images = services(["--profile", "images"]);
+  assert.deepEqual(images.filter((s) => !base.includes(s)), ["imgproxy"]);
+  assert.deepEqual(base.filter((s) => !images.includes(s)), []);
+});
