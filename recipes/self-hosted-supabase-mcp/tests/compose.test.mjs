@@ -55,3 +55,10 @@ const services = (args = []) => run([...args, "config", "--services"]).stdout.sp
 test("U24 the default service set is exactly api-gw db functions ob1-init rest storage", { skip }, () => {
   assert.deepEqual(services(), ["api-gw", "db", "functions", "ob1-init", "rest", "storage"]);
 });
+
+test("U25 with --profile ui the set adds exactly studio and meta", { skip }, () => {
+  const base = services();
+  const ui = services(["--profile", "ui"]);
+  assert.deepEqual(ui.filter((s) => !base.includes(s)), ["meta", "studio"]);
+  assert.deepEqual(base.filter((s) => !ui.includes(s)), []);
+});
