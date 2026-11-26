@@ -31,3 +31,13 @@ test("U2 without git on PATH setup fails naming git and creates nothing", () => 
     assert.equal(existsSync(join(co.recipe, "supabase")), false);
   } finally { co.cleanup(); }
 });
+
+test("U3 without openssl on PATH setup fails naming openssl and creates nothing", () => {
+  const co = makeCheckout({ hide: ["openssl"] });
+  try {
+    const r = runSetup(co);
+    assert.notEqual(r.code, 0);
+    assert.match(r.out, /\bopenssl\b/);
+    assert.equal(existsSync(join(co.recipe, "supabase")), false);
+  } finally { co.cleanup(); }
+});
