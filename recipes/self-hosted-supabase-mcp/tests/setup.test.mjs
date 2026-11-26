@@ -93,3 +93,14 @@ test("U6 with the clone at another tag setup fails naming both tags and changes 
     assert.deepEqual(snapshot(clone), before);
   } finally { co.cleanup(); }
 });
+
+test("U7 when Compose cannot read the recipe setup fails naming the versions and creates no .env", () => {
+  const co = makeCheckout();
+  try {
+    const r = runSetup(co, { STUB_COMPOSE_CONFIG_EXIT: "1", STUB_COMPOSE_VERSION: "2.19.0" });
+    assert.notEqual(r.code, 0);
+    assert.ok(r.out.includes("2.19.0"), "names the version found");
+    assert.ok(r.out.includes("5.6.1"), "names the tested version");
+    assert.equal(existsSync(join(co.recipe, "supabase", "docker", ".env")), false);
+  } finally { co.cleanup(); }
+});
