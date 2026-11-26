@@ -221,6 +221,17 @@ description: "Tasks for staging upstream PR #532 (atomizer Anthropic default mod
 
 ---
 
+## Phase 8: Follow-up upstream PR with the tests (requested by #532's author)
+
+On 2026-11-26 the author of #532 replied to T028's comment ([comment 7179170276](https://github.com/NateBJones-Projects/OB1/pull/532#issuecomment-7179170276)): open the stubbed-fetch tests as a separate PR under the owner's name, with `58b0567` if the maintainers want `test-atomize.mjs` under `node --test`. Owner decisions, 2026-11-26, asked one at a time: (1) include `58b0567` and K1/K2, stating the spec 003 T031 vacuous-pass caveat in the PR body; (2) open now, stacked on #532's head, because C1 asserts #532's new default and the old model retires 2026-11-30; (3) track it here, not as a new spec.
+
+- [X] T030 Cut `contrib/mfelker/atomizer-tests` at `58b0567`, which is `8bebd77` (#532's head, on `upstream/main` `238df6c`) + `cfbfe76` + `58b0567`, so no cherry-pick is needed; worktree `.worktrees/atomizer-tests`. Checks: `git diff --stat upstream/main...HEAD` lists only `recipes/atomizer/`; against #532 it adds `atomize-text.test.mjs`, `test-support/fetch-stub.mjs` and the `test-atomize.mjs` change; `node --test recipes/atomizer/` with no provider keys gives 12 pass, 0 fail; the OB1 gate's review checks, run locally with the PR title and base `upstream/main`, pass all 15 rules.
+- [ ] T031 **Ask the owner first.** Push the branch to origin and open the upstream PR `[recipes] atomizer: credential-free tests for the model defaults (follows #532)`, body stating the dependency on #532 and the caveat; the body ends with the "Generated with Claude Code" line only (no session link).
+- [ ] T032 Reply on #532 linking the new PR, and add it to the #532 ledger row's Notes in `.fork/staged-prs.md`; commit on fork `main`.
+- [ ] T033 After the follow-up PR merges or closes upstream: remove `.worktrees/atomizer-tests` and the local branch, and reconcile the ledger.
+
+---
+
 ## Dependencies & Execution Order
 
 - **T001** runs first, then **T002 and T003** in parallel.
