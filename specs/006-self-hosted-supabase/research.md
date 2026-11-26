@@ -104,7 +104,7 @@ Phase 0 for [plan.md](plan.md). Each item has a Decision, the evidence behind it
   - It runs on every `docker compose up`, so the bucket exists from the first start and is never changed afterwards (FR-009).
   - It uses a small pinned `curl` image. That's not a Supabase service and not a long-running one, so FR-004's always-on set is unchanged.
 - **Evidence**: R3 probe: create returns 200 the first time and `BucketAlreadyExists` after that. **Probed as the one-shot service at `v0.8.5`**: it talks to `http://storage:5000/bucket` directly. First start: `ob1-files ready (200)`, exit 0. Second `up`: `ready (400)` (already exists), exit 0. The always-on services stayed healthy and `ob1-init` showed as exited.
-- **Interpretation to confirm with the owner**: FR-009 says "created on first setup". The bucket needs Storage running, so it's created on the **first start** after setup. Re-running setup never touches it.
+- **Owner-confirmed (2026-11-26)**: created on the **first start** after setup, not by setup, because it needs Storage running. FR-009 is updated to match. Re-running setup never touches it.
 - **Alternatives**:
   - A setup step that starts the stack itself was rejected: it blurs setup and start.
   - A SQL insert into `storage.buckets` at database init was rejected: storage-api creates its schema on its own first start, after database init.
