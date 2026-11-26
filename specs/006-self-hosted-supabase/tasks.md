@@ -33,20 +33,20 @@ description: "Task list for spec 006: lean self-hosted Supabase recipe"
 
 **Purpose**: the branch, the worktree, the empty folder and the test harness.
 
-- [ ] T001 In `M`:
+- [X] T001 In `M`:
   1. `git fetch upstream`; confirm `upstream/main` (was `238df6c` at planning).
   2. `git worktree add .worktrees/contrib-self-hosted-supabase -b contrib/mfelker/self-hosted-supabase upstream/main`.
   3. In `W`: `git merge --no-ff contrib/mfelker/self-hosted-llm -m "[integrations] Base: merge self-hosted-llm (stacked until #533 merges)"`.
   4. Record that merge commit's SHA in plan.md Lane; T047 needs it.
   5. Check that `node M/.fork/ci/bin/tdd.mjs where` resolves `W`.
-- [ ] T002 Scaffold `F/` from `W/recipes/_template/`: `F/README.md` (headings only) and `F/metadata.json` (draft), plus `F/.gitignore` containing `supabase/` (plan Constraints; R11).
-- [ ] T003 [P] Test harness in `F/tests/helpers/`. It must:
+- [X] T002 Scaffold `F/` from `W/recipes/_template/`: `F/README.md` (headings only) and `F/metadata.json` (draft), plus `F/.gitignore` containing `supabase/` (plan Constraints; R11).
+- [X] T003 [P] Test harness in `F/tests/helpers/`. It must:
   - make a temporary copy of `F` inside a temporary git repo that also holds `integrations/self-hosted-llm-mcp/` (an empty marker folder is enough);
   - put stub `git` and `docker` executables first on `PATH`;
   - build a fixture "clone" at `<tmp>/F/supabase/docker/` with a `.env.example` (placeholder values) and a stub `utils/generate-keys.sh` that edits `.env` in its working directory, like the real one (R6), and can be told to fail.
 
   The fixture is a minimal stand-in, never a copy of Supabase's files (FR-001).
-- [ ] T004 [P] Fixture compose file `F/tests/fixtures/compose/docker-compose.yml`: the 11 service names and the dependency links of the official `v0.8.5` file (research R1, R2; spec VP-001), each with a tiny public image and no other settings. Not a copy of Supabase's file.
+- [X] T004 [P] Fixture compose file `F/tests/fixtures/compose/docker-compose.yml`: the 11 service names and the dependency links of the official `v0.8.5` file (research R1, R2; spec VP-001), each with a tiny public image and no other settings. Not a copy of Supabase's file.
 - [ ] T050 [A1] [A2] [A3] [A4] [A6] [A7] [A8] [A9] Open the outer loop: write A1–A4 and A6–A9 from `tdd/test-list.md` **first**, in `F/tests/acceptance.test.mjs` as `node:test` todo tests, driving the real `setup.sh`, `docker compose config` on the real compose files, and `init/create-bucket.sh`, with only external programs stubbed (T003) and the fixture clone (T004). Docker-dependent ones (A1, A7, A8) are skipped with `node:test`'s skip when `docker` is absent. Record each red (todo flag removed) in `tdd/cycle-log.md` before committing the todo form. A5 is opened by T006 (`tests/verify.sql`).
 
 ---
