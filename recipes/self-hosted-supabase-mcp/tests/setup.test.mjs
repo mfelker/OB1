@@ -243,3 +243,13 @@ test("U18 an .env with a Supabase key still at its example value makes setup fai
     assert.equal(readFileSync(envPath(co), "utf8"), text);
   } finally { co.cleanup(); }
 });
+
+test("U19 a fresh run prints no value of any key it wrote to .env", () => {
+  const co = makeCheckout();
+  try {
+    const r = runSetup(co);
+    for (const [k, v] of readEnv(envPath(co))) {
+      if (v.length >= 16) assert.ok(!r.out.includes(v), `${k} value printed`);
+    }
+  } finally { co.cleanup(); }
+});
