@@ -65,43 +65,43 @@ All paths are under `integrations/self-hosted-llm-mcp/`. The test file is `tests
 
 | id | behavior | traces | kind | task | state | test |
 | --- | -------- | ------ | ---- | ---- | ----- | ---- |
-| U1 | All six settings set validly: `ok: true`, each role's base, key and model as given, `chatInherits: []` | FR-003, data-model §1 | example | T008 | PENDING | |
-| U2 | Only `EMBEDDING_API_BASE`, `EMBEDDING_MODEL`, `CHAT_MODEL` set: `ok: true`, chat base equals the embedding base, no key on either role, `chatInherits: ["base"]` | FR-011, SC-012 | example | T008 | PENDING | |
-| U3 | `EMBEDDING_API_KEY` set with `CHAT_API_BASE` and `CHAT_API_KEY` unset: chat key equals the embedding key, `chatInherits: ["base", "key"]` in that order | FR-011, Q 2026-11-26 #11 | example | T008 | PENDING | |
-| U4 | `CHAT_API_BASE` set, `CHAT_API_KEY` unset, `EMBEDDING_API_KEY` set: the chat role has **no** key, `chatInherits: []` | FR-011, Q 2026-11-26 #11 | example | T008 | PENDING | |
-| U5 | `CHAT_API_BASE` and `CHAT_API_KEY` set: the chat role uses its own values | FR-003 | example | T008 | PENDING | |
-| U6 | Nothing set: `ok: false`, `missing` is exactly `["EMBEDDING_API_BASE", "EMBEDDING_MODEL", "CHAT_MODEL"]` | FR-011, data-model §1 | example | T008 | PENDING | |
-| U7 | `CHAT_MODEL` unset with `EMBEDDING_MODEL` set: `missing` is `["CHAT_MODEL"]` (no model fallback) | FR-011, SC-012 | example | T008 | PENDING | |
-| U8 | A required setting that is `""` or whitespace only is reported in `missing`; `"x"` is not | data-model §1 | example | T008 | PENDING | |
-| U9 | A blank `CHAT_API_BASE` or `CHAT_API_KEY` falls back exactly as if unset | data-model §1 | example | T008 | PENDING | |
-| U10 | `OPENROUTER_API_KEY` set with `EMBEDDING_API_BASE` unset: still `missing` `EMBEDDING_API_BASE`, and no resolved field holds an OpenRouter URL | FR-004, FR-011 | example | T008 | PENDING | |
-| U11 | A base ending in `/` is returned without it; a base without one is unchanged | data-model §1 | example | T008 | PENDING | |
-| U12 | `http://` and `https://` bases are both accepted | FR-020 | example | T008 | PENDING | |
-| U13 | Base `ollama:11434/v1` (no scheme): `invalid` names `EMBEDDING_API_BASE` with a reason requiring `http://` or `https://`, and `missing` is empty | FR-011, FR-020, Q 2026-11-26 #6 | example | T008 | PENDING | |
-| U14 | Base `ftp://host/v1` is invalid, naming its setting | FR-020, Q 2026-11-26 #6 | example | T008 | PENDING | |
-| U15 | An invalid `CHAT_API_BASE` is reported under `CHAT_API_BASE`; an invalid embedding base inherited by chat is reported once, under `EMBEDDING_API_BASE` | FR-011 | example | T008 | PENDING | |
-| U16 | `FETCH_TIMEOUT_MS` unset gives `timeoutMs` 60000 | FR-009, R11 | example | T008 | PENDING | |
-| U17 | `FETCH_TIMEOUT_MS` `"90000"` gives 90000 and `"1"` gives 1 (smallest accepted) | FR-009, SC-011, R11 | example | T008 | PENDING | |
-| U18 | `FETCH_TIMEOUT_MS` `"0"`, `"-5"`, `"60s"`, `"1.5"`, `"abc"` are each `invalid` naming `FETCH_TIMEOUT_MS`, never defaulted | FR-011, Q 2026-11-26 #4, R11 | example, sampled at boundaries | T008 | PENDING | |
-| U19 | Missing and invalid settings are reported together in one result | FR-011 | example | T008 | PENDING | |
-| U20 | Two calls with different environments each return their own values (nothing cached) | data-model §1, R7 | example | T008 | PENDING | |
-| U21 | No `missing`, `invalid` or reason text contains the `EMBEDDING_API_KEY` or `CHAT_API_KEY` value | FR-010 | example, sampled at boundaries | T008 | PENDING | |
-| U22 | `keyOverHttpWarnings`: a keyed `http://` embedding role gives exactly one `key_over_http` warning naming `embedding` with the contract's message | FR-020, SC-014, contracts/setup-check.md | example | T009 | PENDING | |
-| U23 | `keyOverHttpWarnings`: an unkeyed `http://` role and a keyed `https://` role give no warning | FR-020, SC-014, OS-005 | example | T009 | PENDING | |
-| U24 | `keyOverHttpWarnings`: a chat role inheriting a keyed `http://` embedding base gives two warnings, one per role | FR-020, contracts/setup-check.md | example | T009 | PENDING | |
+| U1 | All six settings set validly: `ok: true`, each role's base, key and model as given, `chatInherits: []` | FR-003, data-model §1 | example | T008 | DONE | `tests/config_test.ts::U1` |
+| U2 | Only `EMBEDDING_API_BASE`, `EMBEDDING_MODEL`, `CHAT_MODEL` set: `ok: true`, chat base equals the embedding base, no key on either role, `chatInherits: ["base"]` | FR-011, SC-012 | example | T008 | DONE | `tests/config_test.ts::U2` |
+| U3 | `EMBEDDING_API_KEY` set with `CHAT_API_BASE` and `CHAT_API_KEY` unset: chat key equals the embedding key, `chatInherits: ["base", "key"]` in that order | FR-011, Q 2026-11-26 #11 | example | T008 | DONE | `tests/config_test.ts::U3` |
+| U4 | `CHAT_API_BASE` set, `CHAT_API_KEY` unset, `EMBEDDING_API_KEY` set: the chat role has **no** key, `chatInherits: []` | FR-011, Q 2026-11-26 #11 | example | T008 | DONE | `tests/config_test.ts::U4` |
+| U5 | `CHAT_API_BASE` and `CHAT_API_KEY` set: the chat role uses its own values | FR-003 | example | T008 | DONE | `tests/config_test.ts::U5` |
+| U6 | Nothing set: `ok: false`, `missing` is exactly `["EMBEDDING_API_BASE", "EMBEDDING_MODEL", "CHAT_MODEL"]` | FR-011, data-model §1 | example | T008 | DONE | `tests/config_test.ts::U6` |
+| U7 | `CHAT_MODEL` unset with `EMBEDDING_MODEL` set: `missing` is `["CHAT_MODEL"]` (no model fallback) | FR-011, SC-012 | example | T008 | DONE | `tests/config_test.ts::U7` |
+| U8 | A required setting that is `""` or whitespace only is reported in `missing`; `"x"` is not | data-model §1 | example | T008 | DONE | `tests/config_test.ts::U8` |
+| U9 | A blank `CHAT_API_BASE` or `CHAT_API_KEY` falls back exactly as if unset | data-model §1 | example | T008 | DONE | `tests/config_test.ts::U9` |
+| U10 | `OPENROUTER_API_KEY` set with `EMBEDDING_API_BASE` unset: still `missing` `EMBEDDING_API_BASE`, and no resolved field holds an OpenRouter URL | FR-004, FR-011 | example | T008 | DONE | `tests/config_test.ts::U10` |
+| U11 | A base ending in `/` is returned without it; a base without one is unchanged | data-model §1 | example | T008 | DONE | `tests/config_test.ts::U11` |
+| U12 | `http://` and `https://` bases are both accepted | FR-020 | example | T008 | DONE | `tests/config_test.ts::U12` |
+| U13 | Base `ollama:11434/v1` (no scheme): `invalid` names `EMBEDDING_API_BASE` with a reason requiring `http://` or `https://`, and `missing` is empty | FR-011, FR-020, Q 2026-11-26 #6 | example | T008 | DONE | `tests/config_test.ts::U13` |
+| U14 | Base `ftp://host/v1` is invalid, naming its setting | FR-020, Q 2026-11-26 #6 | example | T008 | DONE | `tests/config_test.ts::U14` |
+| U15 | An invalid `CHAT_API_BASE` is reported under `CHAT_API_BASE`; an invalid embedding base inherited by chat is reported once, under `EMBEDDING_API_BASE` | FR-011 | example | T008 | DONE | `tests/config_test.ts::U15` |
+| U16 | `FETCH_TIMEOUT_MS` unset gives `timeoutMs` 60000 | FR-009, R11 | example | T008 | DONE | `tests/config_test.ts::U16` |
+| U17 | `FETCH_TIMEOUT_MS` `"90000"` gives 90000 and `"1"` gives 1 (smallest accepted) | FR-009, SC-011, R11 | example | T008 | DONE | `tests/config_test.ts::U17` |
+| U18 | `FETCH_TIMEOUT_MS` `"0"`, `"-5"`, `"60s"`, `"1.5"`, `"abc"` are each `invalid` naming `FETCH_TIMEOUT_MS`, never defaulted | FR-011, Q 2026-11-26 #4, R11 | example, sampled at boundaries | T008 | DONE | `tests/config_test.ts::U18` |
+| U19 | Missing and invalid settings are reported together in one result | FR-011 | example | T008 | DONE | `tests/config_test.ts::U19` |
+| U20 | Two calls with different environments each return their own values (nothing cached) | data-model §1, R7 | example | T008 | DONE | `tests/config_test.ts::U20` |
+| U21 | No `missing`, `invalid` or reason text contains the `EMBEDDING_API_KEY` or `CHAT_API_KEY` value | FR-010 | example, sampled at boundaries | T008 | DONE | `tests/config_test.ts::U21` |
+| U22 | `keyOverHttpWarnings`: a keyed `http://` embedding role gives exactly one `key_over_http` warning naming `embedding` with the contract's message | FR-020, SC-014, contracts/setup-check.md | example | T009 | DONE | `tests/config_test.ts::U22` |
+| U23 | `keyOverHttpWarnings`: an unkeyed `http://` role and a keyed `https://` role give no warning | FR-020, SC-014, OS-005 | example | T009 | DONE | `tests/config_test.ts::U23` |
+| U24 | `keyOverHttpWarnings`: a chat role inheriting a keyed `http://` embedding base gives two warnings, one per role | FR-020, contracts/setup-check.md | example | T009 | DONE | `tests/config_test.ts::U24` |
 
 ### `lib/metadata.ts` (stream C)
 
 | id | behavior | traces | kind | task | state | test |
 | --- | -------- | ------ | ---- | ---- | ----- | ---- |
-| U25 | `EXTRACTION_PROMPT` equals core's `extractMetadata` system prompt verbatim | VP-002, contracts/model-server-requests.md | contract | T010 | PENDING | |
-| U26 | `parseUsableMetadata` returns the object for a raw JSON object reply (including `{}`) | data-model §3, R5 | example | T010 | PENDING | |
-| U27 | `parseUsableMetadata` returns the object when the whole reply is one fenced block (```` ```json ```` or bare ```` ``` ````) | data-model §3, R5 | example | T010 | PENDING | |
-| U28 | `parseUsableMetadata` returns unusable for a JSON array, number, string or `null` | data-model §3, R5 | example | T010 | PENDING | |
-| U29 | `parseUsableMetadata` returns unusable for unparseable text, an empty reply, a fenced non-JSON block, prose around a fence, or two fenced blocks | data-model §3, R5, FR-006 | example | T010 | PENDING | |
-| U30 | `buildCaptureMetadata(null, m)` gives `topics: ["uncategorized"]`, `type: "observation"`, `source: "mcp"`, `embedding_model: m`, `enrichment_status: "fallback"` | FR-006, FR-015, FR-024 | example | T010 | PENDING | |
-| U31 | `buildCaptureMetadata(extracted, m)` keeps the extracted fields and adds `source`, `embedding_model: m`, `enrichment_status: "complete"`, with no default topics or type | FR-015, FR-024 | example | T010 | PENDING | |
-| U32 | Extracted metadata carrying `source`, `embedding_model` or `enrichment_status` is overridden by the real values | FR-024, data-model §3 | example, sampled at boundaries | T010 | PENDING | |
+| U25 | `EXTRACTION_PROMPT` equals core's `extractMetadata` system prompt verbatim | VP-002, contracts/model-server-requests.md | contract | T010 | DONE | `tests/metadata_test.ts::U25` |
+| U26 | `parseUsableMetadata` returns the object for a raw JSON object reply (including `{}`) | data-model §3, R5 | example | T010 | DONE | `tests/metadata_test.ts::U26` |
+| U27 | `parseUsableMetadata` returns the object when the whole reply is one fenced block (```` ```json ```` or bare ```` ``` ````) | data-model §3, R5 | example | T010 | DONE | `tests/metadata_test.ts::U27` |
+| U28 | `parseUsableMetadata` returns unusable for a JSON array, number, string or `null` | data-model §3, R5 | example | T010 | DONE | `tests/metadata_test.ts::U28` |
+| U29 | `parseUsableMetadata` returns unusable for unparseable text, an empty reply, a fenced non-JSON block, prose around a fence, or two fenced blocks | data-model §3, R5, FR-006 | example | T010 | DONE | `tests/metadata_test.ts::U29` |
+| U30 | `buildCaptureMetadata(null, m)` gives `topics: ["uncategorized"]`, `type: "observation"`, `source: "mcp"`, `embedding_model: m`, `enrichment_status: "fallback"` | FR-006, FR-015, FR-024 | example | T010 | DONE | `tests/metadata_test.ts::U30` |
+| U31 | `buildCaptureMetadata(extracted, m)` keeps the extracted fields and adds `source`, `embedding_model: m`, `enrichment_status: "complete"`, with no default topics or type | FR-015, FR-024 | example | T010 | DONE | `tests/metadata_test.ts::U31` |
+| U32 | Extracted metadata carrying `source`, `embedding_model` or `enrichment_status` is overridden by the real values | FR-024, data-model §3 | example, sampled at boundaries | T010 | DONE | `tests/metadata_test.ts::U32` |
 
 ### `lib/model_client.ts` (stream M)
 
@@ -147,38 +147,38 @@ All paths are under `integrations/self-hosted-llm-mcp/`. The test file is `tests
 
 | id | behavior | traces | kind | task | state | test |
 | --- | -------- | ------ | ---- | ---- | ----- | ---- |
-| U68 | `fetchThought(id)` requests core's columns for `id=eq.<id>` as a single object | core parity (fetch) | contract | T016 | PENDING | |
-| U69 | `fetchThought` returns the row for a 200 | core parity (fetch) | example | T016 | PENDING | |
-| U70 | `fetchThought` returns `{ error }` with PostgREST's message for a missing row or a database error | core parity (fetch) | example | T016 | PENDING | |
-| U71 | `matchThoughts` calls RPC `match_thoughts` with `query_embedding`, the given `match_threshold` and `match_count`, and `filter: {}` | core parity (search, search_thoughts) | contract | T016 | PENDING | |
-| U72 | `matchThoughts` returns the rows, and `[]` for none | core parity | example | T016 | PENDING | |
-| U73 | `matchThoughts` returns `{ error }` for an RPC error | core parity | example | T016 | PENDING | |
-| U74 | `listThoughts` with no filters requests core's columns ordered `created_at.desc` with the limit and no other filter | core parity (list_thoughts) | contract | T016 | PENDING | |
-| U75 | `listThoughts` adds a metadata contains `{type}` filter only when `type` is given | core parity (list_thoughts) | contract | T016 | PENDING | |
-| U76 | `listThoughts` adds a metadata contains `{topics: [topic]}` filter only when `topic` is given | core parity (list_thoughts) | contract | T016 | PENDING | |
-| U77 | `listThoughts` adds a metadata contains `{people: [person]}` filter only when `person` is given | core parity (list_thoughts) | contract | T016 | PENDING | |
-| U78 | `listThoughts` adds `created_at=gte.<now − days>` (within a tolerance window) only when `days` is given | core parity (list_thoughts) | contract | T016 | PENDING | |
-| U79 | `listThoughts` returns the rows, or `{ error }` for a database error | core parity | example | T016 | PENDING | |
-| U80 | `stats` sends core's two `thought_stats` queries (exact count head; metadata and created_at rows) | core parity (thought_stats) | contract | T016 | PENDING | |
-| U81 | `stats` returns the count and the rows | core parity | example | T016 | PENDING | |
-| U82 | `stats` returns `{ error }` when either query fails | core parity | example | T016 | PENDING | |
-| U83 | `upsertThought` calls RPC `upsert_thought` with `p_content` and `p_payload: { metadata }` | core parity (capture), R6 | contract | T017 | PENDING | |
-| U84 | `upsertThought` returns `{ id }` from the reply, or `{ error }` for an RPC error | core parity, R6 | example | T017 | PENDING | |
-| U85 | `setEmbedding` updates `embedding` on `id=eq.<id>` | core parity (capture), R6 | contract | T017 | PENDING | |
-| U86 | `setEmbedding` returns `{ error }` for a database error | R6, FR-005 | example | T017 | PENDING | |
-| U87 | `readBack` requests `created_at`, `updated_at` and whether `embedding` is null for one id | R6 | contract | T017 | PENDING | |
-| U88 | `readBack` reports `embeddingIsNull` true for a null embedding and false for a set one | R6, data-model §3 | example, both sides | T017 | PENDING | |
-| U89 | `readBack` returns both timestamps as the exact strings received, equal or differing | R6 | example, both sides | T017 | PENDING | |
-| U90 | `readBack` returns `{ error }` for a missing row or a database error | R6 | example | T017 | PENDING | |
-| U91 | `deleteIfInsertedByCall(id, T)` deletes filtered by `id`, `embedding is null`, `created_at=eq.T` and `updated_at=eq.T`, with `T` passed verbatim | R6 | contract | T017 | PENDING | |
-| U92 | `deleteIfInsertedByCall` reports `deleted: true` when a row was deleted | R6 | example | T017 | PENDING | |
-| U93 | `deleteIfInsertedByCall` reports `deleted: false` with no error when no row matched | R6, contracts/mcp-tools.md | example | T017 | PENDING | |
-| U94 | `deleteIfInsertedByCall` returns `{ error }` for a database error | R6 | example | T017 | PENDING | |
-| U95 | `countAll` requests an exact head count of `thoughts` and returns the total | R9, data-model §5 | contract | T018 | PENDING | |
-| U96 | `countWithModel(m)` adds `metadata->>embedding_model=eq.m` to the same count | R9, data-model §5 | contract | T018 | PENDING | |
-| U97 | Model names `qwen3-embedding:4b`, `openai/text-embedding-3-small`, `v1.5` and `a,b` reach the request intact | R9 | example, sampled | T018 | PENDING | |
-| U98 | Both counts return `{ error }` for a database error | R9 | example | T018 | PENDING | |
-| U99 | Both counts return 0 for an empty table | R9, SC-010 | example | T018 | PENDING | |
+| U68 | `fetchThought(id)` requests core's columns for `id=eq.<id>` as a single object | core parity (fetch) | contract | T016 | DONE | `tests/thought_store_test.ts::U68` |
+| U69 | `fetchThought` returns the row for a 200 | core parity (fetch) | example | T016 | DONE | `tests/thought_store_test.ts::U69` |
+| U70 | `fetchThought` returns `{ error }` with PostgREST's message for a missing row or a database error | core parity (fetch) | example | T016 | DONE | `tests/thought_store_test.ts::U70` |
+| U71 | `matchThoughts` calls RPC `match_thoughts` with `query_embedding`, the given `match_threshold` and `match_count`, and `filter: {}` | core parity (search, search_thoughts) | contract | T016 | DONE | `tests/thought_store_test.ts::U71` |
+| U72 | `matchThoughts` returns the rows, and `[]` for none | core parity | example | T016 | DONE | `tests/thought_store_test.ts::U72` |
+| U73 | `matchThoughts` returns `{ error }` for an RPC error | core parity | example | T016 | DONE | `tests/thought_store_test.ts::U73` |
+| U74 | `listThoughts` with no filters requests core's columns ordered `created_at.desc` with the limit and no other filter | core parity (list_thoughts) | contract | T016 | DONE | `tests/thought_store_test.ts::U74` |
+| U75 | `listThoughts` adds a metadata contains `{type}` filter only when `type` is given | core parity (list_thoughts) | contract | T016 | DONE | `tests/thought_store_test.ts::U75` |
+| U76 | `listThoughts` adds a metadata contains `{topics: [topic]}` filter only when `topic` is given | core parity (list_thoughts) | contract | T016 | DONE | `tests/thought_store_test.ts::U76` |
+| U77 | `listThoughts` adds a metadata contains `{people: [person]}` filter only when `person` is given | core parity (list_thoughts) | contract | T016 | DONE | `tests/thought_store_test.ts::U77` |
+| U78 | `listThoughts` adds `created_at=gte.<now − days>` (within a tolerance window) only when `days` is given | core parity (list_thoughts) | contract | T016 | DONE | `tests/thought_store_test.ts::U78` |
+| U79 | `listThoughts` returns the rows, or `{ error }` for a database error | core parity | example | T016 | DONE | `tests/thought_store_test.ts::U79` |
+| U80 | `stats` sends core's two `thought_stats` queries (exact count head; metadata and created_at rows) | core parity (thought_stats) | contract | T016 | DONE | `tests/thought_store_test.ts::U80` |
+| U81 | `stats` returns the count and the rows | core parity | example | T016 | DONE | `tests/thought_store_test.ts::U81` |
+| U82 | `stats` returns `{ error }` when either query fails | core parity | example | T016 | DONE | `tests/thought_store_test.ts::U82` |
+| U83 | `upsertThought` calls RPC `upsert_thought` with `p_content` and `p_payload: { metadata }` | core parity (capture), R6 | contract | T017 | DONE | `tests/thought_store_test.ts::U83` |
+| U84 | `upsertThought` returns `{ id }` from the reply, or `{ error }` for an RPC error | core parity, R6 | example | T017 | DONE | `tests/thought_store_test.ts::U84` |
+| U85 | `setEmbedding` updates `embedding` on `id=eq.<id>` | core parity (capture), R6 | contract | T017 | DONE | `tests/thought_store_test.ts::U85` |
+| U86 | `setEmbedding` returns `{ error }` for a database error | R6, FR-005 | example | T017 | DONE | `tests/thought_store_test.ts::U86` |
+| U87 | `readBack` requests `created_at`, `updated_at` and whether `embedding` is null for one id | R6 | contract | T017 | DONE | `tests/thought_store_test.ts::U87` |
+| U88 | `readBack` reports `embeddingIsNull` true for a null embedding and false for a set one | R6, data-model §3 | example, both sides | T017 | DONE | `tests/thought_store_test.ts::U88` |
+| U89 | `readBack` returns both timestamps as the exact strings received, equal or differing | R6 | example, both sides | T017 | DONE | `tests/thought_store_test.ts::U89` |
+| U90 | `readBack` returns `{ error }` for a missing row or a database error | R6 | example | T017 | DONE | `tests/thought_store_test.ts::U90` |
+| U91 | `deleteIfInsertedByCall(id, T)` deletes filtered by `id`, `embedding is null`, `created_at=eq.T` and `updated_at=eq.T`, with `T` passed verbatim | R6 | contract | T017 | DONE | `tests/thought_store_test.ts::U91` |
+| U92 | `deleteIfInsertedByCall` reports `deleted: true` when a row was deleted | R6 | example | T017 | DONE | `tests/thought_store_test.ts::U92` |
+| U93 | `deleteIfInsertedByCall` reports `deleted: false` with no error when no row matched | R6, contracts/mcp-tools.md | example | T017 | DONE | `tests/thought_store_test.ts::U93` |
+| U94 | `deleteIfInsertedByCall` returns `{ error }` for a database error | R6 | example | T017 | DONE | `tests/thought_store_test.ts::U94` |
+| U95 | `countAll` requests an exact head count of `thoughts` and returns the total | R9, data-model §5 | contract | T018 | DONE | `tests/thought_store_test.ts::U95` |
+| U96 | `countWithModel(m)` adds `metadata->>embedding_model=eq.m` to the same count | R9, data-model §5 | contract | T018 | DONE | `tests/thought_store_test.ts::U96` |
+| U97 | Model names `qwen3-embedding:4b`, `openai/text-embedding-3-small`, `v1.5` and `a,b` reach the request intact | R9 | example, sampled | T018 | DONE | `tests/thought_store_test.ts::U97` |
+| U98 | Both counts return `{ error }` for a database error | R9 | example | T018 | DONE | `tests/thought_store_test.ts::U98` |
+| U99 | Both counts return 0 for an empty table | R9, SC-010 | example | T018 | DONE | `tests/thought_store_test.ts::U99` |
 
 ### `lib/tools.ts` (stream T)
 

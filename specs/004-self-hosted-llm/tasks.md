@@ -156,7 +156,7 @@ Streams code against these. Signatures are the only shared contract. Behavior co
 
 ### Stream C: configuration and metadata (`shl-config`)
 
-- [ ] T008 [P] [U1] [U2] [U3] [U4] [U5] [U6] [U7] [U8] [U9] [U10] [U11] [U12] [U13] [U14] [U15] [U16] [U17] [U18] [U19] [U20] [U21] Tests first in `tests/config_test.ts`, then `resolveConfig(getEnv)` in `lib/config.ts`. Cover:
+- [X] T008 [P] [U1] [U2] [U3] [U4] [U5] [U6] [U7] [U8] [U9] [U10] [U11] [U12] [U13] [U14] [U15] [U16] [U17] [U18] [U19] [U20] [U21] Tests first in `tests/config_test.ts`, then `resolveConfig(getEnv)` in `lib/config.ts`. Cover:
   - `data-model.md` §1 `Endpoint configuration.base`, `.key` and `.model`, and the shared `timeoutMs`, `missing[]` and `invalid[]`
   - the required trio and the order in which `missing[]` names them
   - blank is the same as unset
@@ -166,8 +166,8 @@ Streams code against these. Signatures are the only shared contract. Behavior co
   - `FETCH_TIMEOUT_MS` defaults to 60000, and a non-positive-integer value is invalid rather than defaulted (research R11)
   - no `OPENROUTER_API_KEY` read and no default base (FR-004)
   - no key value appears in any reason (FR-010)
-- [ ] T009 [P] [U22] [U23] [U24] Tests first in `tests/config_test.ts`, then `keyOverHttpWarnings(config)` in `lib/config.ts`: one `key_over_http` warning per role whose base is `http://` and whose key is set, with the role named and the message from contracts/setup-check.md. No warning for an unkeyed `http://` base or any `https://` base (FR-020, SC-014, OS-005).
-- [ ] T010 [P] [U25] [U26] [U27] [U28] [U29] [U30] [U31] [U32] Tests first in `tests/metadata_test.ts`, then `lib/metadata.ts`:
+- [X] T009 [P] [U22] [U23] [U24] Tests first in `tests/config_test.ts`, then `keyOverHttpWarnings(config)` in `lib/config.ts`: one `key_over_http` warning per role whose base is `http://` and whose key is set, with the role named and the message from contracts/setup-check.md. No warning for an unkeyed `http://` base or any `https://` base (FR-020, SC-014, OS-005).
+- [X] T010 [P] [U25] [U26] [U27] [U28] [U29] [U30] [U31] [U32] Tests first in `tests/metadata_test.ts`, then `lib/metadata.ts`:
   - `EXTRACTION_PROMPT` equals core's system prompt verbatim (`W/server/index.ts`, `extractMetadata`).
   - `parseUsableMetadata` accepts a JSON object, raw or inside one fenced code block, and rejects arrays, scalars and unparseable text (`data-model.md` §3 "Usable metadata").
   - `buildCaptureMetadata` returns the extracted metadata, or the default `{ topics: ["uncategorized"], type: "observation" }` when given `null`, plus `source: "mcp"`, `embedding_model` and `enrichment_status` (`"complete"` or `"fallback"`). Those three are set last, so a reply containing them cannot override them (`data-model.md` §3 `Thought.metadata`; FR-006, FR-015, FR-024).
@@ -194,18 +194,18 @@ Streams code against these. Signatures are the only shared contract. Behavior co
 
 ### Stream S: thought store (`shl-store`)
 
-- [ ] T016 [P] [U68] [U69] [U70] [U71] [U72] [U73] [U74] [U75] [U76] [U77] [U78] [U79] [U80] [U81] [U82] Tests first in `tests/thought_store_test.ts`, then the read methods of `createSupabaseThoughtStore(url, key, fetch)` in `lib/thought_store.ts`, using supabase-js with `global.fetch` injected.
+- [X] T016 [P] [U68] [U69] [U70] [U71] [U72] [U73] [U74] [U75] [U76] [U77] [U78] [U79] [U80] [U81] [U82] Tests first in `tests/thought_store_test.ts`, then the read methods of `createSupabaseThoughtStore(url, key, fetch)` in `lib/thought_store.ts`, using supabase-js with `global.fetch` injected.
   - Assert the PostgREST/RPC request each method sends: URL path, method and body.
   - Methods: `fetchThought`, `matchThoughts` (the `match_thoughts` params core uses in `search` and `search_thoughts`), `listThoughts` (core's select, order, limit and `type`/`topic`/`person`/`days` filters) and `stats` (core's `thought_stats` queries).
   - Each must match `W/server/index.ts` exactly (contracts/mcp-tools.md parity baseline).
-- [ ] T017 [P] [U83] [U84] [U85] [U86] [U87] [U88] [U89] [U90] [U91] [U92] [U93] [U94] Tests first, then the write methods (research R6 option C):
+- [X] T017 [P] [U83] [U84] [U85] [U86] [U87] [U88] [U89] [U90] [U91] [U92] [U93] [U94] Tests first, then the write methods (research R6 option C):
   - `upsertThought` → RPC `upsert_thought` with `p_content` and `p_payload: { metadata }`, returning `{ id }`
   - `setEmbedding` → update by `id`
   - `readBack` → select `created_at, updated_at` and whether `embedding` is null, by `id`
   - `deleteIfInsertedByCall(id, T)` → delete filtered by `id`, `embedding is null`, `created_at = T` and `updated_at = T`, reporting whether a row was deleted
 
   Cover `data-model.md` §3 `Thought.embedding`.
-- [ ] T018 [P] [U95] [U96] [U97] [U98] [U99] Tests first, then `countAll()` and `countWithModel(model)`: `count: exact, head: true`, the second with `.eq("metadata->>embedding_model", model)`. A test proves that names containing `:`, `/`, `.` and `,` (`qwen3-embedding:4b`, `openai/text-embedding-3-small`, `a,b`) reach the request intact and correctly encoded (`data-model.md` §5 `Mixed-model count.other_model`; research R9).
+- [X] T018 [P] [U95] [U96] [U97] [U98] [U99] Tests first, then `countAll()` and `countWithModel(model)`: `count: exact, head: true`, the second with `.eq("metadata->>embedding_model", model)`. A test proves that names containing `:`, `/`, `.` and `,` (`qwen3-embedding:4b`, `openai/text-embedding-3-small`, `a,b`) reach the request intact and correctly encoded (`data-model.md` §5 `Mixed-model count.other_model`; research R9).
 
 **Checkpoint (integrator)**: merge C, M and S into `W` (see T040). Then create the wave-2 worktrees (`shl-tools`, `shl-check`) from the updated integration branch, and launch T and K in one message.
 
@@ -247,7 +247,7 @@ Streams code against these. Signatures are the only shared contract. Behavior co
 
 ### Stream D: docs (`shl-docs`, wave 1)
 
-- [ ] T025 [P] [US1] Write `README.md` (docs-only; gated by markdownlint and link check, not unit tests). Sections:
+- [X] T025 [P] [US1] Write `README.md` (docs-only; gated by markdownlint and link check, not unit tests). Sections:
   - **What it does and who it's for**, positioned against `../kubernetes-deployment/`: same six tools, but a Supabase Edge Function instead of Kubernetes with plain Postgres.
   - **Link to `../../docs/05-tool-audit.md`**.
   - **Prerequisites**: the `docs/01` schema at 1536 (VP-009); a model server reachable from where the function runs.
@@ -313,7 +313,7 @@ Streams code against these. Signatures are the only shared contract. Behavior co
 
 ### Stream D: docs (`shl-docs`, wave 1)
 
-- [ ] T036 [P] [US2] In `README.md`, add:
+- [X] T036 [P] [US2] In `README.md`, add:
   - **Run the setup check**: the `curl` with `x-brain-key` (preferred over `?key=`, because query strings reach access logs), how to read each check id, and the 200/503/401 meaning. A 502/504 with no JSON body comes from the Supabase gateway (research R13).
   - **Troubleshooting**: one entry per US2 failure (unreachable, unknown model, wrong size, timeout, unusable chat output, key over http). Include the cold-start hint (Ollama `keep_alive`) and the R6 messages with "capture it again to repair".
 
@@ -335,7 +335,7 @@ Streams code against these. Signatures are the only shared contract. Behavior co
 
 ### Stream D: docs (`shl-docs`, wave 1)
 
-- [ ] T039 [P] [US3] In `README.md`, add **Switching an existing brain**:
+- [X] T039 [P] [US3] In `README.md`, add **Switching an existing brain**:
   - switching embedding models makes existing embeddings incomparable until re-embedded, and 004 ships no re-embedding tool; point to the follow-up and upstream PR #252 (FR-012, OS-004)
   - the setup check's `thoughts.other_model` shows how many are affected
   - `metadata.enrichment_status = 'fallback'` finds thoughts saved with default metadata (research R12)
