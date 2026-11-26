@@ -1,0 +1,13 @@
+Real MCP client check (SC-015, SC-004 with an actual client), 2026-11-26, reported by the owner from a separate Claude Code session.
+Server added with: claude mcp add --transport http ob1-local "http://localhost:8000/functions/v1/self-hosted-llm-mcp?key=<redacted>" (project-local scope)
+
+capture_thought(content: "I'm testing this from the self-hosted Open Brain from a hotel.")
+-> Captured as observation — hotel
+
+search_thoughts(query: "testing self-hosted Open Brain from a hotel", limit: 5)
+-> Found 3 thought(s):
+   Result 1 (93.4% match)  observation  "I'm testing this from the self-hosted Open Brain from a hotel."
+   Result 2 (72.2% match)  task         "Decided to run the Open Brain self-hosted stack on my laptop with Ollama while traveling."
+   Result 3 (53.6% match)  reference    "Fallback probe: chat model missing on purpose."  (test row left from 05-failure-modes; above the 0.5 threshold)
+
+Observations: the reworded query found the just-captured thought first (SC-004 paraphrase) and the related laptop thought second; the local chat model labelled "Ollama" as a person (metadata quality is not a target).

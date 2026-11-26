@@ -21,6 +21,7 @@ Raw output is in the numbered files in this folder. No key value appears in any 
 | **T045**: R6 premise on real Postgres | After the insert, `created_at = updated_at` to the microsecond; after the duplicate, `created_at < updated_at` | `04-db-and-r6-premise.txt` |
 | SC-014: key over `http://` | 200 and `ok`, with one `key_over_http` warning per role | `05-failure-modes.txt` |
 | SC-003 / SC-008 / SC-011 / SC-012 / US2.3 | Each as specified; no row stored except the fallback (details below) | `05-failure-modes.txt` |
+| SC-015 / SC-004 with a real MCP client | Claude Code (`claude mcp add --transport http`, `?key=`): capture, then a reworded search returns it first at 93.4% | `07-real-mcp-client.txt` |
 | SC-016 / SC-010 | The fallback row was repaired to `complete` (same id); 3 legacy rows give `other_model: 3` | `06-sc010-sc016.txt` |
 
 The failure scenarios behind the SC-003 / SC-008 / SC-011 / SC-012 / US2.3 row:
@@ -35,7 +36,6 @@ The failure scenarios behind the SC-003 / SC-008 / SC-011 / SC-012 / US2.3 row:
 
 - The Supabase Cloud half: SC-007's Cloud side; SC-013 (the Cloud reachability failure, then the HTTPS-plus-key fix that is FR-019's worked example); the Cloud deploy steps (FR-022); and the Supabase CLI version row.
 - SC-001 (setup in 30 minutes using the README alone) was not timed.
-- A real MCP *client* (Claude Desktop or Claude Code) has not been connected yet. The round trip above uses a raw JSON-RPC client.
 
 **README corrections found by this run** (committed `e765921`):
 
