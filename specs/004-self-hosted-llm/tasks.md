@@ -345,13 +345,13 @@ Streams code against these. Signatures are the only shared contract. Behavior co
 
 ## Phase 6: Integration, gates and landing (integrator)
 
-- [ ] T040 Merge each stream into `W` after verifying it myself:
+- [X] T040 Merge each stream into `W` after verifying it myself:
   - check out each of its commits in a throwaway worktree and run the full suite there
   - `git diff --name-only` touches only its owned files
   - reproduce one recorded red, or one mutant, per stream
 
   Merge with `git -C W merge --no-ff contrib/mfelker/self-hosted-llm-<s>`. Wave 1 (C, M, S, D) before launching wave 2; wave 2 (T, K) before launching wave 3 (A).
-- [ ] T041 Fold `M/specs/004-self-hosted-llm/tdd/cycle-log.d/*.md` into `tdd/cycle-log.md` in behavior order. Tick tasks whose behaviors are all `DONE`. Commit on fork `main`.
+- [X] T041 Fold `M/specs/004-self-hosted-llm/tdd/cycle-log.d/*.md` into `tdd/cycle-log.md` in behavior order. Tick tasks whose behaviors are all `DONE`. Commit on fork `main`.
 - [ ] T042 Refactor with the full suite green in `W`: `deno check`, `deno lint` on `F`, and remove any remaining stub `not implemented` throws (`grep -rn "not implemented" F` is empty). Confirm `RUN_TODO=1` runs no ignored acceptance tests, because every `todo` has been flipped.
 - [ ] T043 [P] Gates in `W`:
   - `metadata.json` validates against `.github/metadata.schema.json`
