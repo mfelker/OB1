@@ -12,7 +12,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { writeFileSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { makeCheckout, writeFixtureClone, realDocker, compose, MODEL_SETTINGS } from "./helpers/harness.mjs";
+import { makeCheckout, writeFixtureClone, realDocker, compose, examplePlaceholder } from "./helpers/harness.mjs";
 
 const skip = realDocker() ? false : "docker is not on PATH";
 
@@ -27,7 +27,6 @@ const ENV_VALUES = {
   CHAT_MODEL: "test-chat-model",
   FETCH_TIMEOUT_MS: "12345",
 };
-void MODEL_SETTINGS;
 
 /** A checkout with the stand-in clone and a `.env` (copy of `.env.example` plus the model settings). */
 function stack() {
@@ -134,4 +133,15 @@ test("U35 db mounts db/ob1-schema.sql read-only as 99-ob1-schema.sql and keeps i
   const targets = vols.map((v) => v.target);
   assert.ok(targets.includes("/docker-entrypoint-initdb.d/init-scripts/99-roles.sql"), targets.join());
   assert.ok(targets.includes("/var/lib/postgresql/data"), targets.join());
+});
+
+test("U36 ob1-init waits for a healthy storage, runs once, mounts create-bucket.sh and gets SERVICE_ROLE_KEY", { skip }, () => {
+  const { services, root } = configIn();
+  const init = services["ob1-init"];
+  assert.equal(init.depends_on.storage.condition, "service_healthy");
+  assert.equal(init.restart, "no");
+  const script = init.volumes.find((v) => v.source === join(root, "recipes", "self-hosted-supabase-mcp", "init", "create-bucket.sh"));
+  assert.ok(script, JSON.stringify(init.volumes));
+  assert.equal(script.type, "bind");
+  assert.equal(init.environment.SERVICE_ROLE_KEY, examplePlaceholder("SERVICE_ROLE_KEY"));
 });

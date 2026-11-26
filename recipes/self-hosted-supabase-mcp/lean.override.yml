@@ -41,7 +41,16 @@ services:
     volumes:
       - ../../../../integrations/self-hosted-llm-mcp:/home/deno/functions/self-hosted-llm-mcp:ro
   ob1-init:
-    image: busybox:1.37
+    image: curlimages/curl:8.11.1
+    entrypoint: [sh, /init/create-bucket.sh]
+    restart: "no"
+    depends_on:
+      storage:
+        condition: service_healthy
+    environment:
+      SERVICE_ROLE_KEY: ${SERVICE_ROLE_KEY}
+    volumes:
+      - ../../init/create-bucket.sh:/init/create-bucket.sh:ro
 
 volumes:
   ob1-storage:
