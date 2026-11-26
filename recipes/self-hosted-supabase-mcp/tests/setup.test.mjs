@@ -117,3 +117,11 @@ test("U8 on a fresh folder .env holds every generated key and none keeps its .en
     }
   } finally { co.cleanup(); }
 });
+
+test("U9 on a fresh folder MCP_ACCESS_KEY is exactly 64 lowercase hex characters", () => {
+  const co = makeCheckout();
+  try {
+    runSetup(co);
+    assert.match(readEnv(envPath(co)).get("MCP_ACCESS_KEY") ?? "", /^[0-9a-f]{64}$/);
+  } finally { co.cleanup(); }
+});

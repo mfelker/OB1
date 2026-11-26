@@ -38,6 +38,7 @@ fi
 if [ ! -f "$ENV_FILE" ]; then
   cp "$CLONE/docker/.env.example" "$ENV_FILE"
   (cd "$CLONE/docker" && sh utils/generate-keys.sh --update-env >/dev/null)
+  printf '\n# Open Brain MCP access key (spec 004)\nMCP_ACCESS_KEY=%s\n' "$(openssl rand -hex 32)" >> "$ENV_FILE"
 fi
 
 echo "setup.sh: not implemented" >&2
