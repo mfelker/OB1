@@ -227,7 +227,7 @@ On 2026-11-26 the author of #532 replied to T028's comment ([comment 7179170276]
 
 - [X] T030 Cut `contrib/mfelker/atomizer-tests` at `58b0567`, which is `8bebd77` (#532's head, on `upstream/main` `238df6c`) + `cfbfe76` + `58b0567`, so no cherry-pick is needed; worktree `.worktrees/atomizer-tests`. Checks: `git diff --stat upstream/main...HEAD` lists only `recipes/atomizer/`; against #532 it adds `atomize-text.test.mjs`, `test-support/fetch-stub.mjs` and the `test-atomize.mjs` change; `node --test recipes/atomizer/` with no provider keys gives 12 pass, 0 fail; the OB1 gate's review checks, run locally with the PR title and base `upstream/main`, pass all 15 rules.
 - [X] T031 **Ask the owner first.** Push the branch to origin and open the upstream PR `[recipes] atomizer: credential-free tests for the model defaults (follows #532)`, body stating the dependency on #532 and the caveat; the body ends with the "Generated with Claude Code" line only (no session link). Done 2026-11-26: [#534](https://github.com/NateBJones-Projects/OB1/pull/534), head `58b0567`.
-- [ ] T032 Reply on #532 linking the new PR, and add it to the #532 ledger row's Notes in `.fork/staged-prs.md`; commit on fork `main`.
+- [X] T032 Reply on #532 linking the new PR, and add it to the #532 ledger row's Notes in `.fork/staged-prs.md`; commit on fork `main`. Done 2026-11-26 ([reply](https://github.com/NateBJones-Projects/OB1/pull/532#issuecomment-7203833222)).
 - [ ] T033 After the follow-up PR merges or closes upstream: remove `.worktrees/atomizer-tests` and the local branch, and reconcile the ledger.
 
 ---
