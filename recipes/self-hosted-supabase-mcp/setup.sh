@@ -32,6 +32,7 @@ if [ -f "$CLONE/docker/docker-compose.yml" ]; then
   echo "clone: already present"
 else
   git clone --quiet --depth 1 --branch "$PIN" "$SUPABASE_REPO" "$CLONE"
+  echo "clone: completed"
 fi
 
 # Can this Docker Compose read the recipe? (include: with !reset/!override overrides.)
@@ -54,9 +55,8 @@ if [ ! -f "$ENV_FILE" ]; then
   cp "$CLONE/docker/.env.example" "$build/.env"
   (cd "$build" && sh "$CLONE/docker/utils/generate-keys.sh" --update-env >/dev/null)
   add_mcp_key "$build/.env"
-  printf '\n# Model server settings (spec 004); fill these in, see README.md\n' >> "$build/.env"
-  for k in $MODEL_SETTINGS; do printf '%s=\n' "$k" >> "$build/.env"; done
   mv "$build/.env" "$ENV_FILE"
+  echo "secrets: completed"
 else
   for k in $SUPABASE_KEYS; do
     grep -q "^$k=" "$ENV_FILE" || die "supabase/docker/.env has no $k. $KEEP_KEYS"
@@ -75,11 +75,11 @@ fi
 # Model server settings (spec 004 names): add any name that is missing, blank.
 added=""
 for k in $MODEL_SETTINGS; do
-  grep -q "^$k=" "$ENV_FILE" || { printf '%s=\n' "$k" >> "$ENV_FILE"; added=1; }
+  grep -q "^$k=" "$ENV_FILE" && continue
+  [ -n "$added" ] || printf '\n# Model server settings (spec 004); fill these in, see README.md\n' >> "$ENV_FILE"
+  printf '%s=\n' "$k" >> "$ENV_FILE"
+  added=1
 done
 if [ -n "$added" ]; then echo "model-settings: completed"; else echo "model-settings: already present"; fi
 
 echo "function-link: present"
-
-echo "setup.sh: not implemented" >&2
-exit 1

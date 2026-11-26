@@ -265,3 +265,14 @@ test("U20 setup fails without the checkout's integrations/self-hosted-llm-mcp an
     assert.match(r2.out, /function-link: present/);
   } finally { without.cleanup(); withIt.cleanup(); }
 });
+
+test("U21 a fresh run exits 0 and reports clone, secrets and model settings completed and the function link present", () => {
+  const co = makeCheckout();
+  try {
+    const r = runSetup(co);
+    assert.equal(r.code, 0, r.out);
+    for (const line of ["clone: completed", "secrets: completed", "model-settings: completed", "function-link: present"]) {
+      assert.ok(r.out.includes(line), `reports "${line}"`);
+    }
+  } finally { co.cleanup(); }
+});
