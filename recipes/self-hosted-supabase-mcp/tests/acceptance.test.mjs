@@ -101,7 +101,7 @@ test("A6 creating the bucket twice leaves exactly one private ob1-files bucket",
   } finally { b.cleanup(); }
 });
 
-test("A7 with the ui profile the set adds exactly studio and meta", { todo, skip: noDocker }, () => {
+test("A7 with the ui profile the set adds exactly studio and meta", { skip: noDocker }, () => {
   const co = makeCheckout();
   try {
     assert.equal(runSetup(co).code, 0);
