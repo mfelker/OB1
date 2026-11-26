@@ -71,7 +71,7 @@ test("A3 an interrupted setup is completed by the next run, keeping every key", 
   } finally { co.cleanup(); }
 });
 
-test("A4 a fresh setup generates every key, prints none, and leaves the checkout clean", { todo }, () => {
+test("A4 a fresh setup generates every key, prints none, and leaves the checkout clean", () => {
   const co = makeCheckout();
   try {
     const r = runSetup(co);
