@@ -18,7 +18,7 @@
 | **Category** | recipes |
 | **Contribution folder** | `recipes/self-hosted-supabase-mcp/` (new) |
 | **Upstream PR** | to be opened after upstream #533 merges; landed on the fork first through a fork PR (fork `main` already has 004) |
-| **Requires** | Docker with Compose v2.20 or newer (for `include:`); `git`; an OpenAI-compatible model server with one embedding model that returns 1536 dimensions and one chat model (spec 004's requirements); `integrations/self-hosted-llm-mcp/` in the same checkout |
+| **Requires** | Docker with Compose v2.24 or newer (for `include:` with `!reset`/`!override`, plan R2); `git`; an OpenAI-compatible model server with one embedding model that returns 1536 dimensions and one chat model (spec 004's requirements); `integrations/self-hosted-llm-mcp/` in the same checkout |
 
 ## Clarifications
 
@@ -97,7 +97,7 @@ Most of the time the owner wants the stack as light as possible, but sometimes t
 - **Model server unreachable from the containers** (for example `localhost` used for a server on the host): the setup check fails naming the address (spec 004 behavior); the README explains how containers reach the host.
 - **Embedding model not 1536**: capture is refused naming both sizes (spec 004 FR behavior); the stack itself is unaffected.
 - **Ports already in use** on the host: the start step fails clearly, and the README says which ports the stack uses and how to change them.
-- **Docker Compose older than v2.20** (no `include:`): the setup step detects it and stops with the required version.
+- **Docker Compose older than v2.24** (no `include:` overrides with `!reset`): the setup step detects it and stops with the required version (plan R2).
 - **The pinned Supabase commit is no longer available, or the owner wants a newer one**: the pin is one documented setting; changing it is a documented, owner-run step, and only the pinned commit is claimed as tested.
 - **Starting a single always-on service pulls in an optional one** through the official file's dependencies (VP-001): the documented start command must start exactly the always-on set.
 - **Storage depends on the image service** in the official file (VP-001): either the image service runs as part of the always-on set or Storage is shown to work without it; the README states which.
@@ -149,7 +149,7 @@ Most of the time the owner wants the stack as light as possible, but sometimes t
 
 ### README Contract
 
-- **Prerequisites**: Docker with Compose v2.20+, `git`, a model server meeting spec 004's model requirements, enough RAM for the stack plus models.
+- **Prerequisites**: Docker with Compose v2.24+, `git`, a model server meeting spec 004's model requirements, enough RAM for the stack plus models.
 - **Steps**: setup → configure the model settings → start → run spec 004's setup check → connect an MCP client → (optional) storage check → (optional) UI add-on → stop and remove.
 - **Expected outcome**: six MCP tools working against a brain stored on the owner's machine; a working private storage bucket.
 - **Links**: `integrations/self-hosted-llm-mcp/` (the MCP server), `docs/01-getting-started.md` (schema), `docs/05-tool-audit.md`, `recipes/local-brain-no-mcp/`, `integrations/kubernetes-deployment/`.
@@ -189,6 +189,7 @@ Most of the time the owner wants the stack as light as possible, but sometimes t
 - **VP-009**: In the official stack at `a522111`, only two services publish host ports: `api-gw` on `0.0.0.0:8000` and `supavisor` on `0.0.0.0:5432` and `6543`. Without `supavisor`, Postgres has no host port, so the `psql` route (FR-013) runs inside the `db` container. Storage uses the `file` backend at `/var/lib/storage`, bind-mounted from the stack's `volumes/storage/`. The gateway protects Studio with HTTP basic auth from `DASHBOARD_USERNAME` and `DASHBOARD_PASSWORD` (`volumes/api/envoy/`) (checked with `docker compose config`, 2026-11-26).
 - **VP-010**: Every service in the official stack at `a522111` has `restart: unless-stopped`, so the stack comes back after a reboot once Docker itself starts. Postgres data lives in the bind mount `volumes/db/data` and Storage files in `volumes/storage` inside the cloned stack directory; Edge Functions are read from a mount at `/home/deno/functions` (checked with `docker compose config`, 2026-11-26).
 - **VP-011**: Docker Model Runner runs models with llama.cpp using Metal GPU acceleration automatically on Apple Silicon, and NVIDIA, AMD or Vulkan on Linux; Docker Desktop 4.62 added vLLM Metal. Containers reach its OpenAI-compatible API at `http://model-runner.docker.internal/engines/v1` (chat completions and embeddings), and it needs no API key. A Compose top-level `models:` element pulls and runs models automatically. (Docker docs: `ai/model-runner/inference-engines.md`, `api-reference.md`, `compose/how-tos/models-and-compose.md`.) On the owner's Mac it is installed but not enabled: Docker Desktop 4.96.2, `docker model` v1.2.6 (checked 2026-11-26).
+- **VP-012**: On the owner's Mac (Docker Desktop 4.96.2), Storage's `file` backend fails every upload with 500 `ENOTSUP` ("does not support extended attributes") when `/var/lib/storage` is the official bind mount; on a Docker named volume, upload, byte-identical download, refusal without credentials (400), and persistence across a restart all work, with the user-login service and the image service both absent. Studio, with `meta` and without the user-login service, lists the `thoughts` table and the bucket behind the dashboard password (plan research R3, R4; probed 2026-11-26).
 
 ## Out of Scope
 
