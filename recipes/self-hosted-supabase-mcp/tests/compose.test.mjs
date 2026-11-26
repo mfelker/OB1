@@ -74,3 +74,11 @@ test("U27 auth, realtime and supavisor are in none of the default, ui or images 
   const all = [...services(), ...services(["--profile", "ui"]), ...services(["--profile", "images"])];
   for (const never of ["auth", "realtime", "supavisor"]) assert.ok(!all.includes(never), `${never} must not start`);
 });
+
+/** The `services` map of `docker compose config --format json`. */
+const config = (args = []) => JSON.parse(run([...args, "config", "--format", "json"]).stdout).services;
+
+test("U28 api-gw has no depends_on entry for studio", { skip }, () => {
+  const gw = config(["--profile", "ui"])["api-gw"];
+  assert.ok(!Object.keys(gw.depends_on ?? {}).includes("studio"), JSON.stringify(gw.depends_on));
+});
