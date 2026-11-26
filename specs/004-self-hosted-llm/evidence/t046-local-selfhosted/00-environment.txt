@@ -1,0 +1,14 @@
+supabase/supabase docker/ at commit: a522111 2026-11-26
+supabase/postgres:17.6.1.136
+postgrest/postgrest:v14.18
+envoyproxy/envoy:v1.39.6
+supabase/edge-runtime:v1.79.2
+gateway: envoy (stack default; Kong optional overlay)
+docker: 29.9.2
+ollama: 0.40.18
+model: qwen3-embedding:4b id df5bd2e3c74c 2.5GB
+model: llama3.1:8b id 46e0c10c039e 4.9GB
+qwen3-embedding:4b embedding length    2560                  
+qwen3-embedding:4b quantization        Q4_K_M                
+machine: Apple M4 Max, 48 GB RAM, integrated GPU, macOS 15.7.2
+function code: contrib/mfelker/self-hosted-llm @ f09a3a4

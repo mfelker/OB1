@@ -1,0 +1,8 @@
+tools/list ?key= -> 200 ['capture_thought', 'fetch', 'list_thoughts', 'search', 'search_thoughts', 'thought_stats']
+wrong key -> 200 {'code': -32001, 'message': 'Unauthorized: missing or invalid authentication.'}
+capture -> ok | Captured as task — Open Brain, self-hosted, travel | People: Ollama | Actions: run the Open Brain self-hosted stack
+capture 2 -> ok | Captured as task — Cooking, Shopping | Actions: Make a caprese salad
+exact search -> Found 1 thought(s): | top: ['--- Result 1 (100.0% match) ---'] | True
+paraphrase search -> Found 1 thought(s): | has laptop thought: True
+list -> 2 recent thought(s):
+stats -> Total thoughts: 2 / Date range: 11/26/2026 → 11/26/2026 /  / Types: /   task: 2 /  / Top topics: /   Cooking: 1 /   Shopping: 1 /   Open Brain: 1 /   self-hosted: 1 /   travel: 1 /  / People mentioned

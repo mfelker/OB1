@@ -1,0 +1,12 @@
+### SC-016: recapture the fallback text with chat working -> complete, same row
+9fdb35a6-a269-4219-a6db-82e295f71bce|fallback
+recapture -> ok | Captured as reference — chat, model, missing
+9fdb35a6-a269-4219-a6db-82e295f71bce|complete|reference
+1
+### SC-010: 3 thoughts saved before 004 (no embedding_model) -> other_model 3
+INSERT 0 3
+setup-check HTTP 200 ok=True
+  other_model=3
+DELETE 3
+setup-check HTTP 200 ok=True
+  other_model=0

@@ -1,0 +1,53 @@
+### SC-014: key over http (EMBEDDING_API_KEY set, http base)
+setup-check HTTP 200 ok=True
+  WARN key_over_http role=embedding: An access key is configured for the embedding endpoint, but it uses http://; the key travels unencrypted.
+  WARN key_over_http role=chat: An access key is configured for the chat endpoint, but it uses http://; the key travels unencrypted.
+  other_model=0
+### SC-009/US2.2/FR-007: 768-dim model (nomic-embed-text)
+setup-check HTTP 503 ok=False
+  FAIL embedding_model: Embedding model "nomic-embed-text" returned 768-dimension vectors; this brain stores 1536. Choose a model that can output 1536 dimensions (see README).
+  FAIL embedding_dimension: Embedding model "nomic-embed-text" returned 768-dimension vectors; this brain stores 1536. Choose a model that can output 1536 dimensions (see README).
+  other_model=2
+capture -> isError | Error: Embedding model "nomic-embed-text" returned 768-dimension vectors; this brain stores 1536. Choose a model that can output 1536 dimensions (see README).
+  rows before/after: 2/2
+### SC-003/US2.1: unreachable model server
+capture -> isError | Error: The embedding model server at http://host.docker.internal:11999/v1 could not be reached: error sending request for url (http://host.docker.internal:11999/v1/embeddings): client error (Connect): tcp connect error: 
+  rows before/after: 2/2
+setup-check HTTP 503 ok=False
+  FAIL embedding_reachable: The embedding model server at http://host.docker.internal:11999/v1 could not be reached: error sending request for url (http://host.docker.internal:11999/v1/mod
+  FAIL embedding_model: The embedding model server at http://host.docker.internal:11999/v1 could not be reached: error sending request for url (http://host.docker.internal:11999/v1/emb
+  FAIL embedding_dimension: The embedding model server at http://host.docker.internal:11999/v1 could not be reached: error sending request for url (http://host.docker.internal:11999/v1/emb
+  FAIL chat_reachable: The chat model server at http://host.docker.internal:11999/v1 could not be reached: error sending request for url (http://host.docker.internal:11999/v1/models):
+  FAIL chat_model: The chat model server at http://host.docker.internal:11999/v1 could not be reached: error sending request for url (http://host.docker.internal:11999/v1/chat/com
+  FAIL chat_metadata: The chat model server at http://host.docker.internal:11999/v1 could not be reached: error sending request for url (http://host.docker.internal:11999/v1/chat/com
+  other_model=0
+### SC-011/FR-009: timeout (FETCH_TIMEOUT_MS=1)
+capture -> isError | Error: The embedding model server at http://host.docker.internal:11434/v1 gave no complete response within 1 ms. Raise FETCH_TIMEOUT_MS if the server is slow.
+  rows before/after: 2/2
+### SC-008/FR-011: EMBEDDING_API_BASE blank
+capture -> isError | Model endpoint not configured: missing EMBEDDING_API_BASE. Set these as function secrets (see README → Configure).
+  rows before/after: 2/2
+setup-check HTTP 503 ok=False
+  FAIL config: Missing required settings: EMBEDDING_API_BASE.
+  FAIL embedding_reachable: skipped: configuration incomplete
+  FAIL embedding_model: skipped: configuration incomplete
+  FAIL embedding_dimension: skipped: configuration incomplete
+  FAIL chat_reachable: skipped: configuration incomplete
+  FAIL chat_model: skipped: configuration incomplete
+  FAIL chat_metadata: skipped: configuration incomplete
+  other_model=None
+### SC-012/FR-011: CHAT_MODEL blank -> every tool names it
+  search -> isError | Model endpoint not configured: missing CHAT_MODEL. Set these as function secrets (see README → Configure).
+  fetch -> isError | Model endpoint not configured: missing CHAT_MODEL. Set these as function secrets (see README → Configure).
+  search_thoughts -> isError | Model endpoint not configured: missing CHAT_MODEL. Set these as function secrets (see README → Configure).
+  list_thoughts -> isError | Model endpoint not configured: missing CHAT_MODEL. Set these as function secrets (see README → Configure).
+  thought_stats -> isError | Model endpoint not configured: missing CHAT_MODEL. Set these as function secrets (see README → Configure).
+  capture_thought -> isError | Model endpoint not configured: missing CHAT_MODEL. Set these as function secrets (see README → Configure).
+### US2.3/FR-006/FR-024: unknown chat model -> saved with fallback metadata
+capture -> ok | Captured as observation — uncategorized
+Metadata extraction skipped: The chat model "no-such-chat-model" was not found on the model server at http://host.docker.internal:11434/v1. Saved with default metadata.
+  rows before/after: 2/3
+1536|observation|["uncategorized"]|fallback|qwen3-embedding:4b
+### baseline restored
+setup-check HTTP 200 ok=True
+  other_model=0
