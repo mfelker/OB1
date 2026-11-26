@@ -111,7 +111,7 @@ test("A7 with the ui profile the set adds exactly studio and meta", { skip: noDo
   } finally { co.cleanup(); }
 });
 
-test("A8 functions mounts the checkout's 004 folder read-only and receives the key and model settings", { todo, skip: noDocker }, () => {
+test("A8 functions mounts the checkout's 004 folder read-only and receives the key and model settings", { skip: noDocker }, () => {
   const co = makeCheckout();
   try {
     assert.equal(runSetup(co).code, 0);
