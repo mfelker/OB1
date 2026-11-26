@@ -140,6 +140,8 @@ docker compose --profile ui up -d
 
 Open `http://localhost:8000` and sign in with `DASHBOARD_USERNAME` and `DASHBOARD_PASSWORD` from `supabase/docker/.env`. The `thoughts` table is under Table Editor, and the `ob1-files` bucket is under Storage. The Authentication pages do not work, because the lean stack has no Supabase Auth.
 
+This command also starts the rest of the stack if it was stopped. Starting only `studio` and `meta` by name starts the database but not the gateway, so the dashboard isn't reachable that way.
+
 Stop it again without touching the rest:
 
 ```bash
