@@ -2196,3 +2196,133 @@ Each test is therefore load-bearing. Its red evidence is a mutant, not a pre-imp
 - mutant: `lib/tools.ts:~220` `Promise.all" replaced by sequential awaits -> "AssertionError: Values are not equal" (heldCount 1, not 2), failed in about 2 s, no hang (caught); restored, "git status` clean
 - suite: 239 passed, 0 failed
 - commit: `51d0961`
+
+## Test quality (T059, T060), MED findings from the audit; each change proven by a named mutant or 5/5 runs, sampled mutants re-applied by the integrator before merge (integration tip 20bee38, 252 passed)
+
+### Quality log: app and harness
+
+#### Quality: U196 (Finding 12 part, task T060)
+
+- test: `integrations/self-hosted-llm-mcp/tests/app_test.ts::U196`
+- before: expected body was computed by calling runSetupCheck on equivalent deps, so app and report could be wrong together
+- after: literal expectations. ok case: 200, ok true, the seven check ids in order all ok true, thoughts.other_model 2 (3 seeded rows, 1 with the model), config.embedding base/model/key_set, timeout_ms 60000. failing case: 503, ok false, 7 checks with "config" first and failing (reason names EMBEDDING_API_BASE), other_model null, config null. The unused runSetupCheck import was removed in the next commit.
+- proof: mutant in lib/app.ts serializing "{ ...report, ok: !report.ok }" fails U196; mutant dropping checks (and warnings) from the body fails U196; both restored
+- suite: 241 passed, 0 failed
+- commit: `aae74ea`
+
+#### Quality: U193, U194 (Finding 17, task T060)
+
+- test: `integrations/self-hosted-llm-mcp/tests/app_test.ts::U193, U194`
+- before: U194 matched the exact source text of index.ts; U193 asserted only seen.length > 0
+- after: U194 strips comments and whitespace and requires one import (createApp, productionDeps, ./lib/app.ts) and exactly one other statement that is a Deno.serve call referencing createApp( and productionDeps(). U193 keeps the finally restore and asserts exactly 1 request, origin http://db.test, path "/rest/v1/thoughts", method HEAD, apikey header.
+- proof: U194 still passes after adding a comment line and reformatting the statement across lines in index.ts (restored); U194 fails when Deno.serve is replaced by console.log (restored); U193 fails when productionDeps appends "/other" to SUPABASE_URL (restored)
+- suite: 241 passed, 0 failed
+- commit: `b273a2a`
+
+#### Quality: H10-H19 (Finding 19, task T060)
+
+- test: `integrations/self-hosted-llm-mcp/tests/helpers/helpers_test.ts::H10-H19`
+- before: H1-H9 did not exercise networkError, function handlers, handler sequences, unmatched, seed, fail, calls, countAll/countWithModel, override or todo
+- after: H10 networkError, H11 function handlers, H12 per-call sequence (500, 404, 200, 200, 200), H13 unmatched, H14 seed, H15 fail, H16 calls, H17 counts and model filter, H18 override (wins over fail, still recorded), H19 todo (Deno.test temporarily stubbed and RUN_TODO set to unset, 1 and 0 to read the registered ignore flag; both restored in finally, so no side effects)
+- proof: all 10 pass; the full suite is green
+- suite: 251 passed, 0 failed
+- commit: `4c6ed4f`
+
+### Quality log: setup check and store
+
+#### Quality: U155 (Finding 11, task T059)
+
+- test: `integrations/self-hosted-llm-mcp/tests/setup_check_test.ts::U155`
+- before: tried only embedding_dimension and chat_metadata failing.
+- after: a table of constant cases fails each of the seven checks in turn and asserts the exact set of failed checks and ok === false. A model check cannot fail alone (it implies the failed real call, which also fails dimension or metadata) and config skips all others, so those expected sets are [model, dimension], [model, metadata] and all seven.
+- proof: mutant computing ok from only embedding_dimension and chat_metadata made U155 fail; restored.
+- suite: 241 passed, 0 failed
+- commit: `3bb65ec`
+
+#### Quality: U175 (Finding 13 part, task T059)
+
+- test: `integrations/self-hosted-llm-mcp/tests/setup_check_test.ts::U175`
+- before: literal 250/850 ms bounds against a 300 ms timeout, an unexplained 6.
+- after: named TIMEOUT, MIN_ELAPSED = 0.8x, MAX_ELAPSED = 2.5x, EVERY_CHECK_BUT_CONFIG = 6.
+- proof: 5/5 consecutive runs passed; mutant making the four model requests sequential gave 1212 ms and U175 failed; restored.
+- suite: 241 passed, 0 failed
+- commit: `3bb65ec`
+
+#### Quality: U78 (Finding 13 part, task T059)
+
+- test: `integrations/self-hosted-llm-mcp/tests/thought_store_test.ts::U78`
+- before: one days value (7) with plus or minus 2 h slack, so a one-hour error passed.
+- after: days 1, 7 and 90; cutoff must lie in [before - days*DAY, after - days*DAY], shifted only by the local UTC-offset change over the span (zero except across a DST change, since the core subtracts calendar days).
+- proof: mutant subtracting an extra hour in the cutoff made U78 fail; restored.
+- suite: 241 passed, 0 failed
+- commit: `a4c1ca4`
+
+#### Quality: U82, U98 (Finding 15 part, task T060)
+
+- test: `integrations/self-hosted-llm-mcp/tests/thought_store_test.ts::U82, U98`
+- before: only "error" in r.
+- after: exact { error: "" } and no data key. Deliberate pin: supabase-js gives an empty message for a body-less HEAD 500 (observed once for stats, countAll, countWithModel). The GET failure in U82 already asserted the exact message. Observation: the real user-facing message for a failed count is empty.
+- proof: mutants returning { error: "x" } from stats and from countAll made U82 and U98 fail; restored.
+- suite: 241 passed, 0 failed
+- commit: `a4c1ca4`
+
+#### Quality: U68, U75-U77, U80, U87, U95, U96 (Finding 16, task T060)
+
+- test: `integrations/self-hosted-llm-mcp/tests/thought_store_test.ts`
+- before: pinned supabase-js serialization.
+- after: kept table, columns, filter fields and values, order, limit, RPC names and params, method. Deliberately dropped or loosened, because the feature does not own supabase-js encoding:
+  - U68, U87: dropped the Accept pgrst.object+json header regex (how .single() is encoded).
+  - U75, U76, U77: contains filter parsed to its JSON payload, no longer the literal cs.{...} operator text.
+  - U80, U95, U96: dropped select=* and Prefer count=exact assertions (how a head count is spelled); filter params asserted via a helper ignoring select.
+- proof: deliberate loosening: wire detail not owned by the feature. Mutant changing people to persons in the list filter made U77 fail; restored.
+- suite: 241 passed, 0 failed
+- commit: `a4c1ca4`
+
+### Quality log: model client
+
+#### Quality: U43, U44, U60 (Finding 13 part, task T059)
+
+- test: `integrations/self-hosted-llm-mcp/tests/model_client_test.ts::U43,U44,U60`
+- before: default timeoutMs 50 for every test; U43 and U60 used fixed sleeps.
+- after: default 5000; small timeouts only in the U44 and U60 hang parts; U43/U60 use hold + release with bounded waitFor polls; hanging calls wrapped in a bounded within() race.
+- proof: 5/5 runs of the model-client file passed (37 passed each); mutant AbortSignal.timeout(timeoutMs * 100) makes U44 and U60 FAIL after about 1 s (bound), no hang.
+- suite: 242 passed, 0 failed
+- commit: `5af8db7`
+
+#### Quality: U42, U44, U45, U46, U48, U62, U47, U64 (Finding 18 part, task T060)
+
+- test: `integrations/self-hosted-llm-mcp/tests/model_client_test.ts::U42,U44,U45,U47,U48,U64`
+- before: EMB and CHAT were the same URL; U47 embed only; U64 trim only for http_error.
+- after: chat base is http://chat.test/v1; U42/U44/U45/U48 assert the role's own base and not the other; U40 now routes chat listModels; U47 covers chat for 400/422; new U64 test covers the unreachable path (200 kept, 201 cut, redaction before cut).
+- proof: mutant chat() using the embedding base fails U35, U36, U40, U41, U42, U43, U44, U45 and more; mutant limiting the 400/422 branch to embedding fails U47; mutant replacing serverText with redact on the unreachable path fails U64. All restored; lib clean.
+- suite: 242 passed, 0 failed
+- commit: `5af8db7` (both findings in one commit)
+
+### Quality log: tools
+
+#### Quality: U145 (Finding 14, task T059)
+
+- test: `integrations/self-hosted-llm-mcp/tests/tools_test.ts::U145`
+- before: asserted only that no secret appeared in each reply; a path whose echo never reached the reply passed vacuously
+- after: every path (all 10) carries an exact expected reply with the echo redacted, plus an explicit check that the reply contains "[redacted]" (positive control)
+- proof: mutant redactSecrets returns input unchanged in lib/tools.ts: U145 fails. Mutant redact() returns text in lib/model_client.ts: U145 still passes, because the tools-layer redactSecrets independently redacts the same two model keys (EMBEDDING_API_KEY, CHAT_API_KEY); the model-path entries therefore cover the tools layer only, and the model_client redaction is covered by model_client_test.ts
+- suite: 47 passed in tools_test.ts, 0 failed (full suite green)
+- commit: `e631475`
+
+#### Quality: U102, U112 (Finding 12 part, task T060)
+
+- test: `integrations/self-hosted-llm-mcp/tests/tools_test.ts::U102, U112`
+- before: expected titles computed by a restated copy of core's thoughtTitle (title helper)
+- after: helper removed; fixed created_at 2031-02-03T12:00:00.000Z and a literal 100-char content with a doubled space; the title tail is a literal 80-char string. Deliberate loosening: the date part of the title is matched by regex (digits and separators) because toLocaleDateString varies by locale and zone; the content part after " - " is exact
+- proof: mutant slice(0, 80) to slice(0, 70) in lib/tools.ts: U102 and U112 fail
+- suite: 47 passed, 0 failed
+- commit: `e631475`
+
+#### Quality: U123, U125, U126, U127, U132, U133 (Finding 15 part, task T060)
+
+- test: `integrations/self-hosted-llm-mcp/tests/tools_test.ts::U123,U125,U126,U127,U132,U133`
+- before: startsWith, endsWith and includes fragments
+- after: exact full-string assertEquals on the deterministic reply text (U125 also drops the redundant not-contains Milk check, now implied by equality)
+- proof: mutants "could not be reached:" to "cannot be reached:" fails U125 and U126; "was not a JSON object" to "was no JSON object" fails U133; "access key rejected" to "key rejected" fails U127; "Saved with default metadata." to "Saved with defaults." fails U131, U132, U133, U145
+- suite: 47 passed, 0 failed
+- commit: `e631475`

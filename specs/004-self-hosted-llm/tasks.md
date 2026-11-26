@@ -457,13 +457,13 @@ Because streams own files rather than stories, the practical order is wave by wa
 ### Non-blocking: MED findings
 
 - [X] T058 [P] Finding 10. Bound U117's `while (!settled)` loop (`tests/tools_test.ts:315,321`), or replace it with `fake.heldCount`-driven waiting, so the suite cannot hang. Done when U117 uses no unbounded loop and passes 5/5 consecutive runs.
-- [ ] T059 [P] Findings 11, 13, 14:
+- [X] T059 [P] Findings 11, 13, 14:
   - U155 (`tests/setup_check_test.ts:131-147`): cover each of the 7 failing checks.
   - Timers: raise the default `timeoutMs` in `tests/model_client_test.ts:15`, keep small timeouts only where tested, wait on `heldCount` in U43/U60, and name U175's bounds as multiples of the timeout.
   - U145 (`tests/tools_test.ts:680-704`): assert a positive control (`[redacted]` or a known prefix) on every path.
 
   Done when the suite is green 5/5 consecutive runs.
-- [ ] T060 [P] Findings 12, 15–20:
+- [X] T060 [P] Findings 12, 15–20:
   - Literal expectations for U196 and U102/U112.
   - Exact strings for U123/U125–U127/U132/U133.
   - Fewer supabase-js wire-detail assertions in `tests/thought_store_test.ts`.
@@ -483,3 +483,7 @@ All HIGH findings are resolved and every mutant is caught. The FAIL is the rubri
 
 - [X] T062 Owner decision on U206 (`tdd/verification.md` test-first table): either extend the T057 exception in `plan.md` Complexity Tracking to include U206 (a first-run pass added by audit remediation, proven by mutant M6), or name another way to evidence it. Done when `plan.md` records the decision.
 - [X] T063 [P] Re-audit Finding 11 (LOW): rename the newer `U56` test in `W/integrations/self-hosted-llm-mcp/tests/model_client_test.ts` (about line 376) to a distinct `U56 …` suffix, and correct the older test's title so its name matches its fixture. Done when `deno test --filter "/^U56 /"` lists two tests with distinct, accurate names, and the suite is green.
+
+## Phase 9: Follow-ups found during test-quality work
+
+- [ ] T064 New behavior (test-first): when a thought count fails with an empty database error message (supabase-js gives `""` for a body-less HEAD 500, pinned by U82/U98), the setup check's `thoughts_count` warning must still name a cause, for example `Could not count thoughts from other embedding models: database returned no error detail`, instead of ending in an empty string after the colon. Trace: contracts/setup-check.md (`thoughts_count` warning carries the database message). Add the behavior to `tdd/test-list.md`, then write its failing test in `W/integrations/self-hosted-llm-mcp/tests/setup_check_test.ts` before changing `lib/setup_check.ts`.
