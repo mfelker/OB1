@@ -229,7 +229,7 @@ All paths are under `integrations/self-hosted-llm-mcp/`. The test file is `tests
 | U142 | `setEmbedding` failing with the delete erroring returns the `may be saved` text | R6 | example | T029 | DONE | `tests/tools_test.ts::U142` |
 | U143 | `setEmbedding` failing with the delete reporting `deleted: false` returns the `may be saved` text | R6, contracts/mcp-tools.md | example | T029 | DONE | `tests/tools_test.ts::U143` |
 | U144 | The compensating delete uses the read-back id and timestamp | R6 | example | T029 | DONE | `tests/tools_test.ts::U144` |
-| U206 | `setEmbedding` failing on a merged duplicate whose existing row has **no** embedding returns the `already in your brain … repair` text and makes no delete call | R6, contracts/mcp-tools.md | example | T050 | PENDING | |
+| U206 | `setEmbedding` failing on a merged duplicate whose existing row has **no** embedding returns the `already in your brain … repair` text and makes no delete call | R6, contracts/mcp-tools.md | example | T050 | DONE | `tests/tools_test.ts::U206` |
 | U145 | With known values in all four secrets echoed by the fake servers and store errors, no tool reply contains any of them | FR-010 | example, sampled across paths | T030 | DONE | `tests/tools_test.ts::U145` |
 
 ### `lib/setup_check.ts` (stream K)

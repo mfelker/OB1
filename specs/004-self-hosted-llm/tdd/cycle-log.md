@@ -2,27 +2,27 @@
 
 Append only. Newest last. Every entry's `red` block is the evidence that the test existed and failed before the implementation.
 
-During the parallel streams, each stream writes its cycles to `tdd/cycle-log.d/<stream>.md` in this checkout (fork `main`). The integrator appends them here in merge order (T041). The code lives on `contrib/mfelker/self-hosted-llm`, which never carries `specs/` (constitution Principle V).
+During the parallel streams, each stream writes its cycles to `tdd/cycle-log.d/<stream>.md" in this checkout (fork "main"). The integrator appends them here in merge order (T041). The code lives on "contrib/mfelker/self-hosted-llm", which never carries "specs/` (constitution Principle V).
 
 ## Baseline
 
-- suite: `node .fork/ci/bin/tdd.mjs suite` -> `[tdd] suite feature=specs/004-self-hosted-llm folder=integrations/self-hosted-llm-mcp → empty baseline: folder does not exist yet` (0 tests). Target: plan Worktree `.worktrees/contrib-self-hosted-llm` at upstream `238df6c`.
-- commit: `974ca30` (fork `main`); worktree `238df6c` (`upstream/main`)
+- suite: `node .fork/ci/bin/tdd.mjs suite" -> "[tdd] suite feature=specs/004-self-hosted-llm folder=integrations/self-hosted-llm-mcp → empty baseline: folder does not exist yet" (0 tests). Target: plan Worktree ".worktrees/contrib-self-hosted-llm" at upstream "238df6c`.
+- commit: `974ca30" (fork "main"); worktree "238df6c` (`upstream/main`)
 - recorded: cycle 0, before any change
 
 ## Setup (T003–T005): scaffold, seams, harness
 
-- `a5bbcb2` scaffold (`metadata.json` validated against `.github/metadata.schema.json`, README skeleton, `deno.json`); `89385a8` seams (`lib/types.ts`, throwing stubs, one-line `index.ts`; `deno check` clean); `f2d9213` harness (`tests/helpers/*`).
-- Harness self-test: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read tests/` -> `ok | 9 passed | 0 failed` (H1–H9: MCP over `app.fetch`, in-memory client, supabase-js via injected fetch, hang/hold/abort, fake-store merge, insert-only timestamp equality, R6 delete filter). `--filter "/^H4 /"` -> `1 passed | 0 failed | 8 filtered out`. Adapter: `node .fork/ci/bin/tdd.mjs suite` -> `tests=9 pass=9 fail=0 → pass`.
+- `a5bbcb2` scaffold (`metadata.json" validated against ".github/metadata.schema.json", README skeleton, "deno.json"); "89385a8` seams (`lib/types.ts", throwing stubs, one-line "index.ts"; "deno check" clean); "f2d9213` harness (`tests/helpers/*`).
+- Harness self-test: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read tests/" -> "ok | 9 passed | 0 failed" (H1–H9: MCP over "app.fetch", in-memory client, supabase-js via injected fetch, hang/hold/abort, fake-store merge, insert-only timestamp equality, R6 delete filter). "--filter "/^H4 /"" -> "1 passed | 0 failed | 8 filtered out". Adapter: "node .fork/ci/bin/tdd.mjs suite" -> "tests=9 pass=9 fail=0 → pass`.
 - No behavior ids: structural setup, not cycles.
 
 ## Outer loop opened: A1–A24 written first as `todo` (T006)
 
-- test: `integrations/self-hosted-llm-mcp/tests/acceptance_test.ts::A1`–`A24` (new), each `todo(name, fn)` (`Deno.test` ignored unless `RUN_TODO=1`), driving `createApp(deps).fetch(Request)` with only `modelFetch` (FakeFetch) and `store` (FakeStore) faked. Written by a Sonnet agent from the test list and contracts; reviewed and run by the integrator.
+- test: `integrations/self-hosted-llm-mcp/tests/acceptance_test.ts::A1`–`A24" (new), each "todo(name, fn)` (`Deno.test" ignored unless "RUN_TODO=1"), driving "createApp(deps).fetch(Request)" with only "modelFetch" (FakeFetch) and "store` (FakeStore) faked. Written by a Sonnet agent from the test list and contracts; reviewed and run by the integrator.
 - red: `RUN_TODO=1 deno test --node-modules-dir=none --no-prompt --allow-env --allow-read tests/acceptance_test.ts`
-  -> `FAILED | 0 passed | 24 failed`; every one `error: Error: not implemented` `at createApp (…/lib/app.ts:4:9)` (24 of 24).
-- green: not yet. Stream A flips each `todo` to `Deno.test` in the commit that makes it pass (T024, T035, T038).
-- suite: `deno test … tests/` -> `ok | 9 passed | 0 failed | 24 ignored`
+  -> `FAILED | 0 passed | 24 failed"; every one "error: Error: not implemented` `at createApp (…/lib/app.ts:4:9)` (24 of 24).
+- green: not yet. Stream A flips each `todo" to "Deno.test` in the commit that makes it pass (T024, T035, T038).
+- suite: `deno test … tests/" -> "ok | 9 passed | 0 failed | 24 ignored`
 - commit: `99577b2` (`contrib/mfelker/self-hosted-llm`)
 
 ## Stream logs (folded by the integrator, T041, in merge order: D (docs, no cycles), S, C, M, K, T, A)
@@ -32,7 +32,7 @@ During the parallel streams, each stream writes its cycles to `tdd/cycle-log.d/<
 #### Cycle: U68 fetchThought requests core's columns as a single object
 
 - test: `integrations/self-hosted-llm-mcp/tests/thought_store_test.ts::U68 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U68 /" tests/` -> `U68 ... FAILED: Error: not implemented (createSupabaseThoughtStore stub throws)`
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U68 /" tests/" -> "U68 ... FAILED: Error: not implemented (createSupabaseThoughtStore stub throws)`
 - green: `lib/thought_store.ts` createClient with injected fetch, fetchThought select/eq/single; other methods stubbed as rejecting not-implemented. Suite -> 10 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `8591df9`
@@ -41,7 +41,7 @@ During the parallel streams, each stream writes its cycles to `tdd/cycle-log.d/<
 #### Cycle: U69 fetchThought returns the row
 
 - test: `integrations/self-hosted-llm-mcp/tests/thought_store_test.ts::U69 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U69 /" tests/` -> `(passed on first run, 1 passed; mutant below)`
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U69 /" tests/" -> "(passed on first run, 1 passed; mutant below)`
 - green: `lib/thought_store.ts` no change (already satisfied by U68 implementation). Suite -> 11 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `6dcb393`
@@ -50,7 +50,7 @@ During the parallel streams, each stream writes its cycles to `tdd/cycle-log.d/<
 #### Cycle: U70 fetchThought error mapping
 
 - test: `integrations/self-hosted-llm-mcp/tests/thought_store_test.ts::U70 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U70 /" tests/` -> `(passed on first run, 1 passed; mutant below)`
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U70 /" tests/" -> "(passed on first run, 1 passed; mutant below)`
 - green: `lib/thought_store.ts` no change (already satisfied). Suite -> 12 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `930d951`
@@ -59,7 +59,7 @@ During the parallel streams, each stream writes its cycles to `tdd/cycle-log.d/<
 #### Cycle: U71 matchThoughts RPC contract
 
 - test: `integrations/self-hosted-llm-mcp/tests/thought_store_test.ts::U71 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U71 /" tests/` -> `U71 ... FAILED: Error: not implemented`
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U71 /" tests/" -> "U71 ... FAILED: Error: not implemented`
 - green: `lib/thought_store.ts` matchThoughts calls rpc(match_thoughts) with query_embedding/match_threshold/match_count/filter {}. Suite -> 13 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `9af493c`
@@ -68,7 +68,7 @@ During the parallel streams, each stream writes its cycles to `tdd/cycle-log.d/<
 #### Cycle: U72 matchThoughts returns rows / []
 
 - test: `integrations/self-hosted-llm-mcp/tests/thought_store_test.ts::U72 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U72 /" tests/` -> `(passed on first run, 1 passed; mutant below)`
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U72 /" tests/" -> "(passed on first run, 1 passed; mutant below)`
 - green: `lib/thought_store.ts` no change (already satisfied). Suite -> 14 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `4c2a39c`
@@ -77,7 +77,7 @@ During the parallel streams, each stream writes its cycles to `tdd/cycle-log.d/<
 #### Cycle: U73 matchThoughts RPC error
 
 - test: `integrations/self-hosted-llm-mcp/tests/thought_store_test.ts::U73 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U73 /" tests/` -> `U73 ... FAILED: AssertionError: Values are not equal (got { data: null })`
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U73 /" tests/" -> "U73 ... FAILED: AssertionError: Values are not equal (got { data: null })`
 - green: `lib/thought_store.ts` matchThoughts returns { error: error.message }. Suite -> 15 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `57cc342`
@@ -86,7 +86,7 @@ During the parallel streams, each stream writes its cycles to `tdd/cycle-log.d/<
 #### Cycle: U74 listThoughts unfiltered query
 
 - test: `integrations/self-hosted-llm-mcp/tests/thought_store_test.ts::U74 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U74 /" tests/` -> `U74 ... FAILED: Error: not implemented`
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U74 /" tests/" -> "U74 ... FAILED: Error: not implemented`
 - green: `lib/thought_store.ts` listThoughts select/order desc/limit. Suite -> 16 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `63be553`
@@ -95,7 +95,7 @@ During the parallel streams, each stream writes its cycles to `tdd/cycle-log.d/<
 #### Cycle: U75 listThoughts type filter
 
 - test: `integrations/self-hosted-llm-mcp/tests/thought_store_test.ts::U75 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U75 /" tests/` -> `U75 ... FAILED: AssertionError: Values are not equal (no metadata param)`
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U75 /" tests/" -> "U75 ... FAILED: AssertionError: Values are not equal (no metadata param)`
 - green: `lib/thought_store.ts` q.contains("metadata", { type }) when type given. Suite -> 17 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `f507cc6`
@@ -104,7 +104,7 @@ During the parallel streams, each stream writes its cycles to `tdd/cycle-log.d/<
 #### Cycle: U76 listThoughts topic filter
 
 - test: `integrations/self-hosted-llm-mcp/tests/thought_store_test.ts::U76 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U76 /" tests/` -> `U76 ... FAILED: AssertionError: Values are not equal (no metadata param)`
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U76 /" tests/" -> "U76 ... FAILED: AssertionError: Values are not equal (no metadata param)`
 - green: `lib/thought_store.ts` q.contains("metadata", { topics: [topic] }) when topic given. Suite -> 18 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `2573f28`
@@ -113,7 +113,7 @@ During the parallel streams, each stream writes its cycles to `tdd/cycle-log.d/<
 #### Cycle: U77 listThoughts person filter
 
 - test: `integrations/self-hosted-llm-mcp/tests/thought_store_test.ts::U77 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U77 /" tests/` -> `U77 ... FAILED: AssertionError: Values are not equal (no metadata param)`
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U77 /" tests/" -> "U77 ... FAILED: AssertionError: Values are not equal (no metadata param)`
 - green: `lib/thought_store.ts` q.contains("metadata", { people: [person] }) when person given. Suite -> 19 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `c98cc1b`
@@ -122,7 +122,7 @@ During the parallel streams, each stream writes its cycles to `tdd/cycle-log.d/<
 #### Cycle: U78 listThoughts days filter
 
 - test: `integrations/self-hosted-llm-mcp/tests/thought_store_test.ts::U78 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U78 /" tests/` -> `U78 ... FAILED: AssertionError: Values are not equal (no created_at param)`
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U78 /" tests/" -> "U78 ... FAILED: AssertionError: Values are not equal (no created_at param)`
 - green: `lib/thought_store.ts` gte(created_at, now - days via setDate, as core) when days given. Suite -> 20 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `0545352`
@@ -131,7 +131,7 @@ During the parallel streams, each stream writes its cycles to `tdd/cycle-log.d/<
 #### Cycle: U79 listThoughts rows / error
 
 - test: `integrations/self-hosted-llm-mcp/tests/thought_store_test.ts::U79 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U79 /" tests/` -> `U79 ... FAILED: AssertionError: Values are not equal (error case returned { data: null })`
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U79 /" tests/" -> "U79 ... FAILED: AssertionError: Values are not equal (error case returned { data: null })`
 - green: `lib/thought_store.ts` listThoughts maps error to { error: message }. Suite -> 21 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `40e412c`
@@ -140,7 +140,7 @@ During the parallel streams, each stream writes its cycles to `tdd/cycle-log.d/<
 #### Cycle: U80 stats queries
 
 - test: `integrations/self-hosted-llm-mcp/tests/thought_store_test.ts::U80 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U80 /" tests/` -> `U80 ... FAILED: Error: not implemented`
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U80 /" tests/" -> "U80 ... FAILED: Error: not implemented`
 - green: `lib/thought_store.ts` stats: head exact count + metadata/created_at rows ordered desc. Suite -> 22 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `4a009d1`
@@ -149,7 +149,7 @@ During the parallel streams, each stream writes its cycles to `tdd/cycle-log.d/<
 #### Cycle: U81 stats returns count and rows
 
 - test: `integrations/self-hosted-llm-mcp/tests/thought_store_test.ts::U81 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U81 /" tests/` -> `(passed on first run, 1 passed; mutant below)`
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U81 /" tests/" -> "(passed on first run, 1 passed; mutant below)`
 - green: `lib/thought_store.ts` no change (already satisfied). Suite -> 23 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `a99818a`
@@ -158,7 +158,7 @@ During the parallel streams, each stream writes its cycles to `tdd/cycle-log.d/<
 #### Cycle: U82 stats errors
 
 - test: `integrations/self-hosted-llm-mcp/tests/thought_store_test.ts::U82 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U82 /" tests/` -> `U82 ... FAILED: AssertionError: count failure must be an error`
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U82 /" tests/" -> "U82 ... FAILED: AssertionError: count failure must be an error`
 - green: `lib/thought_store.ts` stats returns { error: message } for count or rows failure. Suite -> 24 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `242d87f`
@@ -167,7 +167,7 @@ During the parallel streams, each stream writes its cycles to `tdd/cycle-log.d/<
 #### Cycle: U83 upsertThought RPC contract
 
 - test: `integrations/self-hosted-llm-mcp/tests/thought_store_test.ts::U83 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U83 /" tests/` -> `U83 ... FAILED: Error: not implemented`
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U83 /" tests/" -> "U83 ... FAILED: Error: not implemented`
 - green: `lib/thought_store.ts` upsertThought rpc(upsert_thought, { p_content, p_payload: { metadata } }). Suite -> 25 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `3c4b97e`
@@ -176,7 +176,7 @@ During the parallel streams, each stream writes its cycles to `tdd/cycle-log.d/<
 #### Cycle: U84 upsertThought id / error
 
 - test: `integrations/self-hosted-llm-mcp/tests/thought_store_test.ts::U84 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U84 /" tests/` -> `U84 ... FAILED: AssertionError: Values are not equal (error case returned { data: { id: undefined } })`
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U84 /" tests/" -> "U84 ... FAILED: AssertionError: Values are not equal (error case returned { data: { id: undefined } })`
 - green: `lib/thought_store.ts` upsertThought returns { error: message } on RPC error. Suite -> 26 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `44bb73d`
@@ -185,7 +185,7 @@ During the parallel streams, each stream writes its cycles to `tdd/cycle-log.d/<
 #### Cycle: U85 setEmbedding request
 
 - test: `integrations/self-hosted-llm-mcp/tests/thought_store_test.ts::U85 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U85 /" tests/` -> `U85 ... FAILED: Error: not implemented`
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U85 /" tests/" -> "U85 ... FAILED: Error: not implemented`
 - green: `lib/thought_store.ts` setEmbedding PATCH thoughts { embedding } where id=eq.<id>. Suite -> 27 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `90f4b52`
@@ -194,7 +194,7 @@ During the parallel streams, each stream writes its cycles to `tdd/cycle-log.d/<
 #### Cycle: U86 setEmbedding error
 
 - test: `integrations/self-hosted-llm-mcp/tests/thought_store_test.ts::U86 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U86 /" tests/` -> `U86 ... FAILED: AssertionError: Values are not equal (got { data: null })`
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U86 /" tests/" -> "U86 ... FAILED: AssertionError: Values are not equal (got { data: null })`
 - green: `lib/thought_store.ts` setEmbedding returns { error: message }. Suite -> 28 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `c622ac7`
@@ -203,7 +203,7 @@ During the parallel streams, each stream writes its cycles to `tdd/cycle-log.d/<
 #### Cycle: U87 readBack request
 
 - test: `integrations/self-hosted-llm-mcp/tests/thought_store_test.ts::U87 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U87 /" tests/` -> `U87 ... FAILED: Error: not implemented`
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U87 /" tests/" -> "U87 ... FAILED: Error: not implemented`
 - green: `lib/thought_store.ts` readBack selects created_at, updated_at, embedding for id=eq.<id> as a single object. Suite -> 29 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `2d03c03`
@@ -212,7 +212,7 @@ During the parallel streams, each stream writes its cycles to `tdd/cycle-log.d/<
 #### Cycle: U88 readBack embeddingIsNull
 
 - test: `integrations/self-hosted-llm-mcp/tests/thought_store_test.ts::U88 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U88 /" tests/` -> `(passed on first run, 1 passed; mutant below)`
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U88 /" tests/" -> "(passed on first run, 1 passed; mutant below)`
 - green: `lib/thought_store.ts` no change (already satisfied). Suite -> 30 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `790431f`
@@ -221,7 +221,7 @@ During the parallel streams, each stream writes its cycles to `tdd/cycle-log.d/<
 #### Cycle: U89 readBack timestamps verbatim
 
 - test: `integrations/self-hosted-llm-mcp/tests/thought_store_test.ts::U89 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U89 /" tests/` -> `(passed on first run, 1 passed; mutant below)`
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U89 /" tests/" -> "(passed on first run, 1 passed; mutant below)`
 - green: `lib/thought_store.ts` no change (already satisfied). Suite -> 31 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `4ead6fb`
@@ -230,7 +230,7 @@ During the parallel streams, each stream writes its cycles to `tdd/cycle-log.d/<
 #### Cycle: U90 readBack errors
 
 - test: `integrations/self-hosted-llm-mcp/tests/thought_store_test.ts::U90 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U90 /" tests/` -> `U90 ... FAILED: AssertionError: Values are not equal (error replies came back as data with undefined timestamps)`
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U90 /" tests/" -> "U90 ... FAILED: AssertionError: Values are not equal (error replies came back as data with undefined timestamps)`
 - green: `lib/thought_store.ts` readBack returns { error: message }. Suite -> 32 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `b3c1da3`
@@ -239,7 +239,7 @@ During the parallel streams, each stream writes its cycles to `tdd/cycle-log.d/<
 #### Cycle: U91 deleteIfInsertedByCall filters
 
 - test: `integrations/self-hosted-llm-mcp/tests/thought_store_test.ts::U91 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U91 /" tests/` -> `U91 ... FAILED: Error: not implemented`
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U91 /" tests/" -> "U91 ... FAILED: Error: not implemented`
 - green: `lib/thought_store.ts` DELETE thoughts with id=eq, embedding=is.null, created_at=eq.T, updated_at=eq.T, returning id. Suite -> 33 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `bbbe43d`
@@ -248,7 +248,7 @@ During the parallel streams, each stream writes its cycles to `tdd/cycle-log.d/<
 #### Cycle: U92 deleteIfInsertedByCall deleted: true
 
 - test: `integrations/self-hosted-llm-mcp/tests/thought_store_test.ts::U92 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U92 /" tests/` -> `(passed on first run, 1 passed; mutant below)`
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U92 /" tests/" -> "(passed on first run, 1 passed; mutant below)`
 - green: `lib/thought_store.ts` no change (already satisfied). Suite -> 34 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `cd79f69`
@@ -257,7 +257,7 @@ During the parallel streams, each stream writes its cycles to `tdd/cycle-log.d/<
 #### Cycle: U93 deleteIfInsertedByCall deleted: false
 
 - test: `integrations/self-hosted-llm-mcp/tests/thought_store_test.ts::U93 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U93 /" tests/` -> `(passed on first run, 1 passed; mutant below)`
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U93 /" tests/" -> "(passed on first run, 1 passed; mutant below)`
 - green: `lib/thought_store.ts` no change (already satisfied). Suite -> 35 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `9b1cf43`
@@ -266,7 +266,7 @@ During the parallel streams, each stream writes its cycles to `tdd/cycle-log.d/<
 #### Cycle: U94 deleteIfInsertedByCall error
 
 - test: `integrations/self-hosted-llm-mcp/tests/thought_store_test.ts::U94 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U94 /" tests/` -> `U94 ... FAILED: AssertionError: Values are not equal (got { data: { deleted: false } })`
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U94 /" tests/" -> "U94 ... FAILED: AssertionError: Values are not equal (got { data: { deleted: false } })`
 - green: `lib/thought_store.ts` deleteIfInsertedByCall returns { error: message }. Suite -> 36 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `c25e7f5`
@@ -275,7 +275,7 @@ During the parallel streams, each stream writes its cycles to `tdd/cycle-log.d/<
 #### Cycle: U95 countAll
 
 - test: `integrations/self-hosted-llm-mcp/tests/thought_store_test.ts::U95 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U95 /" tests/` -> `U95 ... FAILED: Error: not implemented`
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U95 /" tests/" -> "U95 ... FAILED: Error: not implemented`
 - green: `lib/thought_store.ts` countAll: head exact count of thoughts. Suite -> 37 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `e9b666a`
@@ -284,7 +284,7 @@ During the parallel streams, each stream writes its cycles to `tdd/cycle-log.d/<
 #### Cycle: U96 countWithModel
 
 - test: `integrations/self-hosted-llm-mcp/tests/thought_store_test.ts::U96 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U96 /" tests/` -> `U96 ... FAILED: Error: not implemented`
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U96 /" tests/" -> "U96 ... FAILED: Error: not implemented`
 - green: `lib/thought_store.ts` countWithModel: same head count plus .eq("metadata->>embedding_model", m). Suite -> 38 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `cc9114a`
@@ -293,7 +293,7 @@ During the parallel streams, each stream writes its cycles to `tdd/cycle-log.d/<
 #### Cycle: U97 model names intact
 
 - test: `integrations/self-hosted-llm-mcp/tests/thought_store_test.ts::U97 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U97 /" tests/` -> `(passed on first run, 1 passed; mutant below)`
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U97 /" tests/" -> "(passed on first run, 1 passed; mutant below)`
 - green: `lib/thought_store.ts` no change (already satisfied). Suite -> 39 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `a79a903`
@@ -302,7 +302,7 @@ During the parallel streams, each stream writes its cycles to `tdd/cycle-log.d/<
 #### Cycle: U98 counts error
 
 - test: `integrations/self-hosted-llm-mcp/tests/thought_store_test.ts::U98 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U98 /" tests/` -> `U98 ... FAILED: AssertionError: countAll must report the failure`
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U98 /" tests/" -> "U98 ... FAILED: AssertionError: countAll must report the failure`
 - green: `lib/thought_store.ts` countAll and countWithModel return { error: message }. Suite -> 40 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `fc43911`
@@ -311,7 +311,7 @@ During the parallel streams, each stream writes its cycles to `tdd/cycle-log.d/<
 #### Cycle: U99 counts empty table
 
 - test: `integrations/self-hosted-llm-mcp/tests/thought_store_test.ts::U99 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U99 /" tests/` -> `(passed on first run, 1 passed; mutant below)`
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U99 /" tests/" -> "(passed on first run, 1 passed; mutant below)`
 - green: `lib/thought_store.ts` no change (already satisfied). Suite -> 41 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `d2387d0`
@@ -319,7 +319,7 @@ During the parallel streams, each stream writes its cycles to `tdd/cycle-log.d/<
 
 #### Refactor after U99
 
-- Removed the unused `notImplemented` placeholder; `deno check` clean. Suite -> 41 passed, 0 failed, 24 ignored. Commit: `91955fd`
+- Removed the unused `notImplemented" placeholder; "deno check" clean. Suite -> 41 passed, 0 failed, 24 ignored. Commit: "91955fd`
 
 ### Stream C cycle log
 
@@ -579,7 +579,7 @@ no changes added to commit (use "git add" and/or "git commit -a")`
 #### Cycle: U27 single fenced block reply is usable
 
 - test: `integrations/self-hosted-llm-mcp/tests/metadata_test.ts::U27 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U27 /" tests/` -> SyntaxError: Unexpected token ` (fenced reply not unwrapped) (1 failed)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U27 /" tests/" -> SyntaxError: Unexpected token " (fenced reply not unwrapped) (1 failed)
 - green: lib/metadata.ts: a reply that is exactly one fenced block (json or bare) is unwrapped before parsing. Suite -> 36 passed, 0 failed, 24 ignored
 - refactor: none
 - commit: `fd51d73`
@@ -635,7 +635,7 @@ no changes added to commit (use "git add" and/or "git commit -a")`
 #### Cycle: U33 embed request shape
 
 - test: `integrations/self-hosted-llm-mcp/tests/model_client_test.ts::U33 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U33 /" tests/` -> `not implemented` error from stub (1 failed)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U33 /" tests/" -> "not implemented` error from stub (1 failed)
 - green: lib/model_client.ts embed() posts {model,input,dimensions:1536} to <base>/embeddings. Suite -> 10 passed | 0 failed | 24 ignored
 - refactor: none needed
 - commit: `0c769f4`
@@ -653,7 +653,7 @@ no changes added to commit (use "git add" and/or "git commit -a")`
 #### Cycle: U35 chat request shape
 
 - test: `integrations/self-hosted-llm-mcp/tests/model_client_test.ts::U35 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U35 /" tests/` -> `not implemented` error from stub (1 failed)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U35 /" tests/" -> "not implemented` error from stub (1 failed)
 - green: lib/model_client.ts chat() posts model/response_format/messages to <base>/chat/completions. Suite -> 12 passed | 0 failed | 24 ignored
 - refactor: none needed
 - commit: `5bd4d3c`
@@ -671,7 +671,7 @@ no changes added to commit (use "git add" and/or "git commit -a")`
 #### Cycle: U37 listModels request
 
 - test: `integrations/self-hosted-llm-mcp/tests/model_client_test.ts::U37 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U37 /" tests/` -> `not implemented` error from stub (1 failed)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U37 /" tests/" -> "not implemented` error from stub (1 failed)
 - green: lib/model_client.ts listModels() GETs <role base>/models. Suite -> 14 passed | 0 failed | 24 ignored
 - refactor: none needed
 - commit: `854ddf3`
@@ -734,7 +734,7 @@ no changes added to commit (use "git add" and/or "git commit -a")`
 #### Cycle: U44 timeout outcome
 
 - test: `integrations/self-hosted-llm-mcp/tests/model_client_test.ts::U44 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U44 /" tests/` -> `Promise resolution is still pending but the event loop has already resolved` (hung fetch never settles) (1 failed)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U44 /" tests/" -> "Promise resolution is still pending but the event loop has already resolved` (hung fetch never settles) (1 failed)
 - green: lib/model_client.ts send() passes AbortSignal.timeout(timeoutMs); aborted -> timeout. Suite -> 21 passed | 0 failed | 24 ignored
 - refactor: none needed
 - commit: `3a67b6a`
@@ -743,7 +743,7 @@ no changes added to commit (use "git add" and/or "git commit -a")`
 #### Cycle: U45 401/403 auth_rejected
 
 - test: `integrations/self-hosted-llm-mcp/tests/model_client_test.ts::U45 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U45 /" tests/` -> `TypeError: Cannot read properties of undefined (reading '0')` (no status handling) (1 failed)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U45 /" tests/" -> "TypeError: Cannot read properties of undefined (reading '0')` (no status handling) (1 failed)
 - green: lib/model_client.ts httpFailure() maps 401/403 to auth_rejected. Suite -> 22 passed | 0 failed | 24 ignored
 - refactor: send() now reads the body under the timeout and returns {status,text}
 - commit: `e344db7`
@@ -752,7 +752,7 @@ no changes added to commit (use "git add" and/or "git commit -a")`
 #### Cycle: U46 404 model_not_found
 
 - test: `integrations/self-hosted-llm-mcp/tests/model_client_test.ts::U46 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U46 /" tests/` -> `Error: not implemented` (httpFailure fallthrough) (1 failed)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U46 /" tests/" -> "Error: not implemented` (httpFailure fallthrough) (1 failed)
 - green: lib/model_client.ts httpFailure() maps 404 to model_not_found. Suite -> 23 passed | 0 failed | 24 ignored
 - refactor: none needed
 - commit: `fe7a776`
@@ -761,7 +761,7 @@ no changes added to commit (use "git add" and/or "git commit -a")`
 #### Cycle: U47 400/422 body naming unknown model
 
 - test: `integrations/self-hosted-llm-mcp/tests/model_client_test.ts::U47 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U47 /" tests/` -> `Error: not implemented` (httpFailure fallthrough) (1 failed)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U47 /" tests/" -> "Error: not implemented` (httpFailure fallthrough) (1 failed)
 - green: lib/model_client.ts namesModelAsUnknown() + 400/422 branch. Suite -> 24 passed | 0 failed | 24 ignored
 - refactor: none needed
 - commit: `74221f4`
@@ -770,7 +770,7 @@ no changes added to commit (use "git add" and/or "git commit -a")`
 #### Cycle: U48 5xx http_error
 
 - test: `integrations/self-hosted-llm-mcp/tests/model_client_test.ts::U48 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U48 /" tests/` -> `Error: not implemented` (httpFailure fallthrough) (1 failed)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U48 /" tests/" -> "Error: not implemented` (httpFailure fallthrough) (1 failed)
 - green: lib/model_client.ts httpFailure() returns http_error with role, status, text. Suite -> 25 passed | 0 failed | 24 ignored
 - refactor: none needed
 - commit: `ca3cc1c`
@@ -788,7 +788,7 @@ no changes added to commit (use "git add" and/or "git commit -a")`
 #### Cycle: U50 malformed embeddings reply is bad_response
 
 - test: `integrations/self-hosted-llm-mcp/tests/model_client_test.ts::U50 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U50 /" tests/` -> `TypeError: Cannot read properties of undefined (reading '0')` (1 failed)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U50 /" tests/" -> "TypeError: Cannot read properties of undefined (reading '0')` (1 failed)
 - green: lib/model_client.ts parseJson() + embedding shape validation -> bad_response. Suite -> 27 passed | 0 failed | 24 ignored
 - refactor: none needed
 - commit: `74d7e0b`
@@ -797,7 +797,7 @@ no changes added to commit (use "git add" and/or "git commit -a")`
 #### Cycle: U51 malformed chat reply is bad_response
 
 - test: `integrations/self-hosted-llm-mcp/tests/model_client_test.ts::U51 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U51 /" tests/` -> `TypeError: Cannot read properties of undefined (reading '0')` (1 failed)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U51 /" tests/" -> "TypeError: Cannot read properties of undefined (reading '0')` (1 failed)
 - green: lib/model_client.ts chat() validates choices[0].message.content. Suite -> 28 passed | 0 failed | 24 ignored
 - refactor: none needed
 - commit: `254a4ac`
@@ -806,7 +806,7 @@ no changes added to commit (use "git add" and/or "git commit -a")`
 #### Cycle: U52 1536 ok, 1535/1537 wrong_dimension
 
 - test: `integrations/self-hosted-llm-mcp/tests/model_client_test.ts::U52 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U52 /" tests/` -> `AssertionError: Values are not equal: length 1535` (1 failed)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U52 /" tests/" -> "AssertionError: Values are not equal: length 1535` (1 failed)
 - green: lib/model_client.ts embed() length check against EXPECTED_DIMENSIONS. Suite -> 29 passed | 0 failed | 24 ignored
 - refactor: none needed
 - commit: `1cc3324`
@@ -824,7 +824,7 @@ no changes added to commit (use "git add" and/or "git commit -a")`
 #### Cycle: U54 dimensions retry
 
 - test: `integrations/self-hosted-llm-mcp/tests/model_client_test.ts::U54 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U54 /" tests/` -> `AssertionError: Values are not equal` (only 1 request sent) (1 failed)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U54 /" tests/" -> "AssertionError: Values are not equal` (only 1 request sent) (1 failed)
 - green: lib/model_client.ts embed() retries once without dimensions on 400/422 mentioning dimension|matryoshka. Suite -> 31 passed | 0 failed | 24 ignored
 - refactor: none needed
 - commit: `dfba06f`
@@ -902,7 +902,7 @@ no changes added to commit (use "git add" and/or "git commit -a")`
 #### Cycle: U62 redact keys in server text
 
 - test: `integrations/self-hosted-llm-mcp/tests/model_client_test.ts::U62 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U62 /" tests/` -> `AssertionError: Expected actual: ... to contain: "[redacted]"` (1 failed)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U62 /" tests/" -> "AssertionError: Expected actual: ... to contain: "[redacted]"` (1 failed)
 - green: lib/model_client.ts redact() applied to the http_error server text. Suite -> 39 passed | 0 failed | 24 ignored
 - refactor: none needed
 - commit: `0e66367`
@@ -911,7 +911,7 @@ no changes added to commit (use "git add" and/or "git commit -a")`
 #### Cycle: U63 redact keys in fetch error
 
 - test: `integrations/self-hosted-llm-mcp/tests/model_client_test.ts::U63 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U63 /" tests/` -> `AssertionError: Expected actual: "...could not be reached." to contain: "[redacted]"` (1 failed)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U63 /" tests/" -> "AssertionError: Expected actual: "...could not be reached." to contain: "[redacted]"` (1 failed)
 - green: lib/model_client.ts unreachable message now carries the redacted fetch error text. Suite -> 40 passed | 0 failed | 24 ignored
 - refactor: none needed
 - commit: `97fe82b`
@@ -920,7 +920,7 @@ no changes added to commit (use "git add" and/or "git commit -a")`
 #### Cycle: U64 200-char trim after redaction
 
 - test: `integrations/self-hosted-llm-mcp/tests/model_client_test.ts::U64 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U64 /" tests/` -> `AssertionError` (201-char text not cut) (1 failed)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U64 /" tests/" -> "AssertionError` (201-char text not cut) (1 failed)
 - green: lib/model_client.ts serverText() = redact then slice(0,200), used for http_error and unreachable. Suite -> 41 passed | 0 failed | 24 ignored
 - refactor: none needed
 - commit: `d8e3f25`
@@ -929,7 +929,7 @@ no changes added to commit (use "git add" and/or "git commit -a")`
 #### Cycle: U65 listModels returns ids
 
 - test: `integrations/self-hosted-llm-mcp/tests/model_client_test.ts::U65 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U65 /" tests/` -> `AssertionError: Values are not equal` (value null) (1 failed)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U65 /" tests/" -> "AssertionError: Values are not equal` (value null) (1 failed)
 - green: lib/model_client.ts listModels() maps data[].id. Suite -> 42 passed | 0 failed | 24 ignored
 - refactor: none needed
 - commit: `7e503f6`
@@ -958,7 +958,7 @@ no changes added to commit (use "git add" and/or "git commit -a")`
 #### Cycle: U146 A healthy configuration and server give ok true
 
 - test: `integrations/self-hosted-llm-mcp/tests/setup_check_test.ts::U146 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U146 /" tests/` -> `Error: not implemented` (1 failed)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U146 /" tests/" -> "Error: not implemented` (1 failed)
 - green: lib/setup_check.ts: resolve config, run embed and chat, ok = both ok. Suite -> 109 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `b323794`
@@ -967,7 +967,7 @@ no changes added to commit (use "git add" and/or "git commit -a")`
 #### Cycle: U147 The report lists the seven checks in the contract's order
 
 - test: `integrations/self-hosted-llm-mcp/tests/setup_check_test.ts::U147 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U147 /" tests/` -> `AssertionError: Values are not equal (checks was empty)` (1 failed)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U147 /" tests/" -> "AssertionError: Values are not equal (checks was empty)` (1 failed)
 - green: lib/setup_check.ts: build the seven checks, ids and roles in contract order. Suite -> 110 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `de288ae`
@@ -976,7 +976,7 @@ no changes added to commit (use "git add" and/or "git commit -a")`
 #### Cycle: U148 config shows each role's base, model and key_set, chat inherits, and timeout_ms
 
 - test: `integrations/self-hosted-llm-mcp/tests/setup_check_test.ts::U148 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U148 /" tests/` -> `AssertionError: Values are not equal (config was null)` (1 failed)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U148 /" tests/" -> "AssertionError: Values are not equal (config was null)` (1 failed)
 - green: lib/setup_check.ts: configBlock() maps OkConfig to snake_case block. Suite -> 111 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `3516c4c`
@@ -985,7 +985,7 @@ no changes added to commit (use "git add" and/or "git commit -a")`
 #### Cycle: U149 No key value appears anywhere in the report
 
 - test: `integrations/self-hosted-llm-mcp/tests/setup_check_test.ts::U149 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U149 /" tests/` -> `n/a (passed first run)` (1 failed)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U149 /" tests/" -> "n/a (passed first run)` (1 failed)
 - green: no code change; report carries only key_set booleans. Suite -> 112 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `41bc566`
@@ -994,7 +994,7 @@ no changes added to commit (use "git add" and/or "git commit -a")`
 #### Cycle: U150 A missing setting fails config with a reason naming each missing setting
 
 - test: `integrations/self-hosted-llm-mcp/tests/setup_check_test.ts::U150 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U150 /" tests/` -> `Error: not implemented` (1 failed)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U150 /" tests/" -> "Error: not implemented` (1 failed)
 - green: lib/setup_check.ts: config-failure branch returns a failed config check naming config.missing. Suite -> 113 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `33a731c`
@@ -1003,7 +1003,7 @@ no changes added to commit (use "git add" and/or "git commit -a")`
 #### Cycle: U151 An invalid setting fails config naming it with its reason
 
 - test: `integrations/self-hosted-llm-mcp/tests/setup_check_test.ts::U151 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U151 /" tests/` -> `AssertionError: Expected actual: "Missing required settings: ." to contain: "EMBEDDING_API_BASE"` (1 failed)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U151 /" tests/" -> "AssertionError: Expected actual: "Missing required settings: ." to contain: "EMBEDDING_API_BASE"` (1 failed)
 - green: lib/setup_check.ts: reason also lists each invalid setting with its reason. Suite -> 114 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `030e720`
@@ -1012,7 +1012,7 @@ no changes added to commit (use "git add" and/or "git commit -a")`
 #### Cycle: U152 With config failed, every other check reads skipped: configuration incomplete
 
 - test: `integrations/self-hosted-llm-mcp/tests/setup_check_test.ts::U152 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U152 /" tests/` -> `AssertionError: Values are not equal (only the config check was listed)` (1 failed)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U152 /" tests/" -> "AssertionError: Values are not equal (only the config check was listed)` (1 failed)
 - green: lib/setup_check.ts: CHECK_IDS table; skipped checks appended after the failed config. Suite -> 115 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `7ef18fe`
@@ -1021,7 +1021,7 @@ no changes added to commit (use "git add" and/or "git commit -a")`
 #### Cycle: U153 With config failed, no model request is sent
 
 - test: `integrations/self-hosted-llm-mcp/tests/setup_check_test.ts::U153 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U153 /" tests/` -> `n/a (passed first run)` (1 failed)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U153 /" tests/" -> "n/a (passed first run)` (1 failed)
 - green: no code change; the config-failure branch returns before creating a model client. Suite -> 116 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `d71692c`
@@ -1030,7 +1030,7 @@ no changes added to commit (use "git add" and/or "git commit -a")`
 #### Cycle: U154 With config failed, ok is false and thoughts.other_model is null with no store call
 
 - test: `integrations/self-hosted-llm-mcp/tests/setup_check_test.ts::U154 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U154 /" tests/` -> `n/a (passed first run)` (1 failed)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U154 /" tests/" -> "n/a (passed first run)` (1 failed)
 - green: no code change; failure branch has other_model null and calls no store method. Suite -> 117 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `5de4f21`
@@ -1039,7 +1039,7 @@ no changes added to commit (use "git add" and/or "git commit -a")`
 #### Cycle: U155 Any single failed check makes ok false
 
 - test: `integrations/self-hosted-llm-mcp/tests/setup_check_test.ts::U155 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U155 /" tests/` -> `AssertionError: Values are not equal (chat_metadata passed on non-JSON reply)` (1 failed)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U155 /" tests/" -> "AssertionError: Values are not equal (chat_metadata passed on non-JSON reply)` (1 failed)
 - green: lib/setup_check.ts: chat_metadata ok requires parseUsableMetadata(reply) non-null. Suite -> 118 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `3064d77`
@@ -1048,7 +1048,7 @@ no changes added to commit (use "git add" and/or "git commit -a")`
 #### Cycle: U156 <role>_reachable passes on a 200 and on a 404 from /models
 
 - test: `integrations/self-hosted-llm-mcp/tests/setup_check_test.ts::U156 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U156 /" tests/` -> `n/a (passed first run)` (1 failed)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U156 /" tests/" -> "n/a (passed first run)` (1 failed)
 - green: no code change; reachable is still a constant-true placeholder, real logic arrives with U157. Suite -> 119 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `828a130`
@@ -1057,7 +1057,7 @@ no changes added to commit (use "git add" and/or "git commit -a")`
 #### Cycle: U157 <role>_reachable fails with auth_rejected on a 401 or 403
 
 - test: `integrations/self-hosted-llm-mcp/tests/setup_check_test.ts::U157 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U157 /" tests/` -> `AssertionError: Values are not equal: status 401` (1 failed)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U157 /" tests/" -> "AssertionError: Values are not equal: status 401` (1 failed)
 - green: lib/setup_check.ts: also call listModels per role in parallel; reachable() fails on unreachable/timeout/auth_rejected. Suite -> 120 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `144dc3a`
@@ -1066,7 +1066,7 @@ no changes added to commit (use "git add" and/or "git commit -a")`
 #### Cycle: U158 <role>_reachable fails with unreachable naming the base on a network error
 
 - test: `integrations/self-hosted-llm-mcp/tests/setup_check_test.ts::U158 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U158 /" tests/` -> `n/a (passed first run)` (1 failed)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U158 /" tests/" -> "n/a (passed first run)` (1 failed)
 - green: no code change; reachable() already fails on unreachable and carries the client message naming the base. Suite -> 121 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `6b83a78`
@@ -1075,7 +1075,7 @@ no changes added to commit (use "git add" and/or "git commit -a")`
 #### Cycle: U159 <role>_reachable fails with timeout when /models hangs
 
 - test: `integrations/self-hosted-llm-mcp/tests/setup_check_test.ts::U159 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U159 /" tests/` -> `n/a (passed first run)` (1 failed)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U159 /" tests/" -> "n/a (passed first run)` (1 failed)
 - green: no code change; reachable() already fails on timeout. Suite -> 122 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `8a76caf`
@@ -1084,7 +1084,7 @@ no changes added to commit (use "git add" and/or "git commit -a")`
 #### Cycle: U160 <role>_model passes when the model is listed
 
 - test: `integrations/self-hosted-llm-mcp/tests/setup_check_test.ts::U160 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U160 /" tests/` -> `n/a (passed first run)` (1 failed)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U160 /" tests/" -> "n/a (passed first run)` (1 failed)
 - green: no code change; model checks are constant-true placeholders until U162. Suite -> 123 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `73ccffe`
@@ -1093,7 +1093,7 @@ no changes added to commit (use "git add" and/or "git commit -a")`
 #### Cycle: U161 <role>_model passes when the model is not listed but the real call succeeded
 
 - test: `integrations/self-hosted-llm-mcp/tests/setup_check_test.ts::U161 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U161 /" tests/` -> `n/a (passed first run)` (1 failed)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U161 /" tests/" -> "n/a (passed first run)` (1 failed)
 - green: no code change; model checks still placeholders. Suite -> 124 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `138c09a`
@@ -1102,7 +1102,7 @@ no changes added to commit (use "git add" and/or "git commit -a")`
 #### Cycle: U162 <role>_model fails with model_not_found naming the model when unlisted and the real call reports it unknown
 
 - test: `integrations/self-hosted-llm-mcp/tests/setup_check_test.ts::U162 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U162 /" tests/` -> `AssertionError: Values are not equal: embedding_model` (1 failed)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U162 /" tests/" -> "AssertionError: Values are not equal: embedding_model` (1 failed)
 - green: lib/setup_check.ts: modelCheck() passes when listed or the real call succeeded, else carries the call's failure message. Suite -> 125 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `d4fdfb2`
@@ -1111,7 +1111,7 @@ no changes added to commit (use "git add" and/or "git commit -a")`
 #### Cycle: U163 With a non-JSON /models body, <role>_model follows the real call's outcome
 
 - test: `integrations/self-hosted-llm-mcp/tests/setup_check_test.ts::U163 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U163 /" tests/` -> `n/a (passed first run)` (1 failed)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U163 /" tests/" -> "n/a (passed first run)` (1 failed)
 - green: no code change; a null listing falls through to the real call's outcome. Suite -> 126 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `9f15e74`
@@ -1120,7 +1120,7 @@ no changes added to commit (use "git add" and/or "git commit -a")`
 #### Cycle: U163 With a non-JSON /models body, <role>_model follows the real call's outcome
 
 - test: `integrations/self-hosted-llm-mcp/tests/setup_check_test.ts::U163 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U163 /" tests/` -> `n/a (passed first run)` (1 failed)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U163 /" tests/" -> "n/a (passed first run)` (1 failed)
 - green: no code change; a null listing falls through to the real call's outcome. Suite -> 126 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `On branch contrib/mfelker/self-hosted-llm-check
@@ -1130,7 +1130,7 @@ nothing to commit, working tree clean`
 #### Cycle: U164 embedding_dimension passes for a 1536-number vector
 
 - test: `integrations/self-hosted-llm-mcp/tests/setup_check_test.ts::U164 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U164 /" tests/` -> `n/a (passed first run)` (1 failed)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U164 /" tests/" -> "n/a (passed first run)` (1 failed)
 - green: no code change; embedding_dimension ok = the embed call succeeded (the client enforces 1536). Suite -> 127 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `6e2bdd5`
@@ -1139,7 +1139,7 @@ nothing to commit, working tree clean`
 #### Cycle: U165 embedding_dimension fails for 768 numbers with a reason naming 768 and 1536
 
 - test: `integrations/self-hosted-llm-mcp/tests/setup_check_test.ts::U165 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U165 /" tests/` -> `AssertionError: Values are not equal (reason was undefined)` (1 failed)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U165 /" tests/" -> "AssertionError: Values are not equal (reason was undefined)` (1 failed)
 - green: lib/setup_check.ts: failed embedding_dimension carries the embed call's message. Suite -> 128 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `917bb07`
@@ -1148,7 +1148,7 @@ nothing to commit, working tree clean`
 #### Cycle: U166 embedding_dimension carries the embedding call's outcome when the call fails
 
 - test: `integrations/self-hosted-llm-mcp/tests/setup_check_test.ts::U166 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U166 /" tests/` -> `n/a (passed first run)` (1 failed)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U166 /" tests/" -> "n/a (passed first run)` (1 failed)
 - green: no code change; the same branch as U165 carries any embed failure message. Suite -> 129 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `2308d0f`
@@ -1157,7 +1157,7 @@ nothing to commit, working tree clean`
 #### Cycle: U167 chat_metadata passes for a JSON-object reply
 
 - test: `integrations/self-hosted-llm-mcp/tests/setup_check_test.ts::U167 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U167 /" tests/` -> `n/a (passed first run)` (1 failed)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U167 /" tests/" -> "n/a (passed first run)` (1 failed)
 - green: no code change; chat_metadata ok requires usable metadata (introduced for U155). Suite -> 130 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `bb29aaf`
@@ -1166,7 +1166,7 @@ nothing to commit, working tree clean`
 #### Cycle: U168 chat_metadata fails with unusable output and the first 120 characters (no more) of an unusable reply
 
 - test: `integrations/self-hosted-llm-mcp/tests/setup_check_test.ts::U168 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U168 /" tests/` -> `AssertionError: Values are not equal (reason was undefined)` (1 failed)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U168 /" tests/" -> "AssertionError: Values are not equal (reason was undefined)` (1 failed)
 - green: lib/setup_check.ts: chatMetadata() reports "unusable output: " plus reply.slice(0, 120). Suite -> 131 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `2a37871`
@@ -1175,7 +1175,7 @@ nothing to commit, working tree clean`
 #### Cycle: U169 chat_metadata carries the chat call's outcome when the call fails
 
 - test: `integrations/self-hosted-llm-mcp/tests/setup_check_test.ts::U169 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U169 /" tests/` -> `AssertionError: Expected actual: "" to contain: "HTTP 500"` (1 failed)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U169 /" tests/" -> "AssertionError: Expected actual: "" to contain: "HTTP 500"` (1 failed)
 - green: lib/setup_check.ts: failed chat call gives reason chat.message. Suite -> 132 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `0b54725`
@@ -1184,7 +1184,7 @@ nothing to commit, working tree clean`
 #### Cycle: U170 When chat inherits the embedding base, both roles' checks are reported separately and chat requests go to the embedding base
 
 - test: `integrations/self-hosted-llm-mcp/tests/setup_check_test.ts::U170 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U170 /" tests/` -> `n/a (passed first run)` (1 failed)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U170 /" tests/" -> "n/a (passed first run)` (1 failed)
 - green: no code change; roles are checked separately and the client already routes chat to the inherited base. Suite -> 133 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `ef35494`
@@ -1193,7 +1193,7 @@ nothing to commit, working tree clean`
 #### Cycle: U171 One run sends one embedding call, one chat call and one /models request per role
 
 - test: `integrations/self-hosted-llm-mcp/tests/setup_check_test.ts::U171 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U171 /" tests/` -> `n/a (passed first run)` (1 failed)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U171 /" tests/" -> "n/a (passed first run)` (1 failed)
 - green: no code change; each call is made once and shared by its checks. Suite -> 134 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `1606bd8`
@@ -1202,7 +1202,7 @@ nothing to commit, working tree clean`
 #### Cycle: U172 A key_over_http warning is reported and leaves ok true
 
 - test: `integrations/self-hosted-llm-mcp/tests/setup_check_test.ts::U172 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U172 /" tests/` -> `AssertionError: Values are not equal (warnings was empty)` (1 failed)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U172 /" tests/" -> "AssertionError: Values are not equal (warnings was empty)` (1 failed)
 - green: lib/setup_check.ts: warnings = keyOverHttpWarnings(config). Suite -> 135 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `502c045`
@@ -1211,7 +1211,7 @@ nothing to commit, working tree clean`
 #### Cycle: U173 An unkeyed http:// base and a keyed https:// base produce no warning
 
 - test: `integrations/self-hosted-llm-mcp/tests/setup_check_test.ts::U173 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U173 /" tests/` -> `n/a (passed first run)` (1 failed)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U173 /" tests/" -> "n/a (passed first run)` (1 failed)
 - green: no code change; keyOverHttpWarnings already gives none for these. Suite -> 136 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `5d8941a`
@@ -1220,7 +1220,7 @@ nothing to commit, working tree clean`
 #### Cycle: U174 Every model request starts before any reply is released
 
 - test: `integrations/self-hosted-llm-mcp/tests/setup_check_test.ts::U174 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U174 /" tests/` -> `n/a (passed first run)` (1 failed)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U174 /" tests/" -> "n/a (passed first run)` (1 failed)
 - green: no code change; the four model calls already run under Promise.all. Suite -> 137 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `3b278d0`
@@ -1229,7 +1229,7 @@ nothing to commit, working tree clean`
 #### Cycle: U175 With every model route hanging, the run finishes in about one timeoutMs, not several
 
 - test: `integrations/self-hosted-llm-mcp/tests/setup_check_test.ts::U175 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U175 /" tests/` -> `n/a (passed first run)` (1 failed)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U175 /" tests/" -> "n/a (passed first run)` (1 failed)
 - green: no code change; calls run concurrently so the run is bounded by one timeout. Suite -> 138 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `25b0380`
@@ -1238,7 +1238,7 @@ nothing to commit, working tree clean`
 #### Cycle: U176 5 thoughts, 2 matching EMBEDDING_MODEL, give thoughts.other_model: 3
 
 - test: `integrations/self-hosted-llm-mcp/tests/setup_check_test.ts::U176 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U176 /" tests/` -> `AssertionError: Values are not equal (other_model was null)` (1 failed)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U176 /" tests/" -> "AssertionError: Values are not equal (other_model was null)` (1 failed)
 - green: lib/setup_check.ts: other_model = countAll - countWithModel(EMBEDDING_MODEL). Suite -> 139 passed, 0 failed, 24 ignored
 - refactor: Moved the two counts into the same Promise.all as the model calls so database latency does not add to the run time
 - commit: `acd44a7`
@@ -1247,7 +1247,7 @@ nothing to commit, working tree clean`
 #### Cycle: U177 All thoughts matching, and an empty brain, each give other_model: 0
 
 - test: `integrations/self-hosted-llm-mcp/tests/setup_check_test.ts::U177 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U177 /" tests/` -> `n/a (passed first run)` (1 failed)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U177 /" tests/" -> "n/a (passed first run)` (1 failed)
 - green: no code change; the subtraction already yields 0. Suite -> 140 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `3968ac0`
@@ -1256,7 +1256,7 @@ nothing to commit, working tree clean`
 #### Cycle: U178 A failing count gives other_model: null with a thoughts_count warning carrying the database message
 
 - test: `integrations/self-hosted-llm-mcp/tests/setup_check_test.ts::U178 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U178 /" tests/` -> `AssertionError: countAll: no thoughts_count warning` (1 failed)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U178 /" tests/" -> "AssertionError: countAll: no thoughts_count warning` (1 failed)
 - green: lib/setup_check.ts: on a failed count, other_model stays null and a thoughts_count warning carries the store error. Suite -> 141 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `f6263a0`
@@ -1265,7 +1265,7 @@ nothing to commit, working tree clean`
 #### Cycle: U179 With a failing count, the model checks still run and decide ok
 
 - test: `integrations/self-hosted-llm-mcp/tests/setup_check_test.ts::U179 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U179 /" tests/` -> `n/a (passed first run)` (1 failed)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U179 /" tests/" -> "n/a (passed first run)` (1 failed)
 - green: no code change; warnings never feed into ok and counts run alongside the model calls. Suite -> 142 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `7e010f9`
@@ -1273,11 +1273,11 @@ nothing to commit, working tree clean`
 
 #### Integrator note: mutant checks for U156, U160, U161 (added at merge)
 
-The stream recorded U156, U160 and U161 as first-run passes against constant-true placeholders without a mutant. At the stream's tip (`7e010f9`), the integrator applied one mutant per test to the real logic in `lib/setup_check.ts`, ran the single test, and restored the file exactly (`git status` clean afterwards):
+The stream recorded U156, U160 and U161 as first-run passes against constant-true placeholders without a mutant. At the stream's tip (`7e010f9"), the integrator applied one mutant per test to the real logic in "lib/setup_check.ts`, ran the single test, and restored the file exactly (`git status` clean afterwards):
 
-- U156: `reachable()` forced to return `ok: false` -> `FAILED | 0 passed | 1 failed`
-- U160: the "model listed" branch of `modelCheck()` removed -> `FAILED | 0 passed | 1 failed`
-- U161: the "real call succeeded" branch of `modelCheck()` removed -> `FAILED | 0 passed | 1 failed`
+- U156: `reachable()" forced to return "ok: false" -> "FAILED | 0 passed | 1 failed`
+- U160: the "model listed" branch of `modelCheck()" removed -> "FAILED | 0 passed | 1 failed`
+- U161: the "real call succeeded" branch of `modelCheck()" removed -> "FAILED | 0 passed | 1 failed`
 
 Each test is therefore load-bearing. Its red evidence is a mutant, not a pre-implementation red, which the audit may grade below PROVEN.
 
@@ -1286,7 +1286,7 @@ Each test is therefore load-bearing. Its red evidence is a mutant, not a pre-imp
 #### Cycle: U100 tools/list returns exactly the six tools
 
 - test: `integrations/self-hosted-llm-mcp/tests/tools_test.ts::U100 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U100 /" tests/` -> `Error: not implemented` from buildServer (1 failed)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U100 /" tests/" -> "Error: not implemented` from buildServer (1 failed)
 - green: `lib/tools.ts` buildServer registers the six tool names with placeholder handlers. Suite -> 109 passed, 0 failed, 24 ignored
 - refactor: none
 - commit: `ebbf9c5`
@@ -1295,7 +1295,7 @@ Each test is therefore load-bearing. Its red evidence is a mutant, not a pre-imp
 #### Cycle: U101 tool title/description/schema/annotations equal core's
 
 - test: `integrations/self-hosted-llm-mcp/tests/tools_test.ts::U101 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U101 /" tests/` -> `AssertionError: Values are not equal: search` (1 failed)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U101 /" tests/" -> "AssertionError: Values are not equal: search` (1 failed)
 - green: `lib/tools.ts` registerTool configs copied from core (titles, descriptions, zod input schemas with defaults, annotations). Suite -> 110 passed, 0 failed, 24 ignored
 - refactor: none
 - commit: `ce3cbaf`
@@ -1304,7 +1304,7 @@ Each test is therefore load-bearing. Its red evidence is a mutant, not a pre-imp
 #### Cycle: U102 fetch of an existing id returns core's document text
 
 - test: `integrations/self-hosted-llm-mcp/tests/tools_test.ts::U102 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U102 /" tests/` -> `SyntaxError: "not implemented" is not valid JSON` (1 failed)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U102 /" tests/" -> "SyntaxError: "not implemented" is not valid JSON` (1 failed)
 - green: `lib/tools.ts` fetch handler maps store.fetchThought to core's document JSON; thoughtTitle/thoughtUrl helpers. Suite -> 111 passed, 0 failed, 24 ignored
 - refactor: none
 - commit: `9b0ce47`
@@ -1314,15 +1314,15 @@ Each test is therefore load-bearing. Its red evidence is a mutant, not a pre-imp
 
 - test: `integrations/self-hosted-llm-mcp/tests/tools_test.ts::U103 …` (new)
 - red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U103 /" tests/` -> (passed on first run, 1 passed; mutant below)
-- green: `lib/tools.ts` no change (fetch handler from U102 already returns `Fetch error:`). Suite -> 112 passed, 0 failed, 24 ignored
+- green: `lib/tools.ts" no change (fetch handler from U102 already returns "Fetch error:`). Suite -> 112 passed, 0 failed, 24 ignored
 - refactor: none
 - commit: `dcf7373`
-- notes: mutant: `Fetch error:` -> `Fetch err:` -> AssertionError (1 failed); restored
+- notes: mutant: `Fetch error:" -> "Fetch err:` -> AssertionError (1 failed); restored
 
 #### Cycle: U104 list_thoughts returns core's listing text for rows
 
 - test: `integrations/self-hosted-llm-mcp/tests/tools_test.ts::U104 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U104 /" tests/` -> `AssertionError: Values are not equal` (1 failed)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U104 /" tests/" -> "AssertionError: Values are not equal` (1 failed)
 - green: `lib/tools.ts` list_thoughts handler formats store rows as core does. Suite -> 113 passed, 0 failed, 24 ignored
 - refactor: none
 - commit: `a479538`
@@ -1331,8 +1331,8 @@ Each test is therefore load-bearing. Its red evidence is a mutant, not a pre-imp
 #### Cycle: U105 list_thoughts with no rows returns core's empty text
 
 - test: `integrations/self-hosted-llm-mcp/tests/tools_test.ts::U105 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U105 /" tests/` -> `AssertionError: Values are not equal` (1 failed; got `0 recent thought(s):`)
-- green: `lib/tools.ts` list_thoughts returns `No thoughts found.` for no rows. Suite -> 114 passed, 0 failed, 24 ignored
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U105 /" tests/" -> "AssertionError: Values are not equal" (1 failed; got "0 recent thought(s):`)
+- green: `lib/tools.ts" list_thoughts returns "No thoughts found.` for no rows. Suite -> 114 passed, 0 failed, 24 ignored
 - refactor: none
 - commit: `242318f`
 - notes: -
@@ -1344,12 +1344,12 @@ Each test is therefore load-bearing. Its red evidence is a mutant, not a pre-imp
 - green: `lib/tools.ts` no change (error branch written with U104). Suite -> 115 passed, 0 failed, 24 ignored
 - refactor: none
 - commit: `bbf20b8`
-- notes: mutant: `Error:` -> `Err:` prefix -> AssertionError (1 failed); restored
+- notes: mutant: `Error:" -> "Err:` prefix -> AssertionError (1 failed); restored
 
 #### Cycle: U107 list_thoughts forwards its filters to the store
 
 - test: `integrations/self-hosted-llm-mcp/tests/tools_test.ts::U107 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U107 /" tests/` -> `AssertionError: Values are not equal` (1 failed; filters missing)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U107 /" tests/" -> "AssertionError: Values are not equal` (1 failed; filters missing)
 - green: `lib/tools.ts` list_thoughts passes type/topic/person/days when set. Suite -> 116 passed, 0 failed, 24 ignored
 - refactor: none
 - commit: `136255a`
@@ -1358,7 +1358,7 @@ Each test is therefore load-bearing. Its red evidence is a mutant, not a pre-imp
 #### Cycle: U108 thought_stats returns core's stats text
 
 - test: `integrations/self-hosted-llm-mcp/tests/tools_test.ts::U108 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U108 /" tests/` -> `AssertionError: Values are not equal` (1 failed; placeholder text)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U108 /" tests/" -> "AssertionError: Values are not equal` (1 failed; placeholder text)
 - green: `lib/tools.ts` thought_stats aggregates store.stats rows as core does. Suite -> 117 passed, 0 failed, 24 ignored
 - refactor: none
 - commit: `6b8db3d`
@@ -1367,7 +1367,7 @@ Each test is therefore load-bearing. Its red evidence is a mutant, not a pre-imp
 #### Cycle: U109 search_thoughts embeds the query and matches with default threshold and count
 
 - test: `integrations/self-hosted-llm-mcp/tests/tools_test.ts::U109 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U109 /" tests/` -> `TypeError: Cannot read properties of undefined (reading 'input')` (no embeddings request; 1 failed)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U109 /" tests/" -> "TypeError: Cannot read properties of undefined (reading 'input')` (no embeddings request; 1 failed)
 - green: `lib/tools.ts` models() resolves config per call and builds the real model client; search_thoughts embeds then calls matchThoughts(vec, 0.5, 10) (results text placeholder until U111). Test rig gained an options argument for scripted replies. Suite -> 118 passed, 0 failed, 24 ignored
 - refactor: none
 - commit: `eb29564`
@@ -1376,7 +1376,7 @@ Each test is therefore load-bearing. Its red evidence is a mutant, not a pre-imp
 #### Cycle: U110 search_thoughts forwards an explicit limit and threshold
 
 - test: `integrations/self-hosted-llm-mcp/tests/tools_test.ts::U110 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U110 /" tests/` -> `AssertionError: Values are not equal` (1 failed; got 0.5/10)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U110 /" tests/" -> "AssertionError: Values are not equal` (1 failed; got 0.5/10)
 - green: `lib/tools.ts` search_thoughts passes threshold and limit to matchThoughts. Suite -> 119 passed, 0 failed, 24 ignored
 - refactor: none
 - commit: `c8016bc`
@@ -1385,7 +1385,7 @@ Each test is therefore load-bearing. Its red evidence is a mutant, not a pre-imp
 #### Cycle: U111 search_thoughts returns core's results text and no-match text
 
 - test: `integrations/self-hosted-llm-mcp/tests/tools_test.ts::U111 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U111 /" tests/` -> `AssertionError: Values are not equal` (1 failed; empty text)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U111 /" tests/" -> "AssertionError: Values are not equal` (1 failed; empty text)
 - green: `lib/tools.ts` search_thoughts formats results and the no-match line as core does. Suite -> 120 passed, 0 failed, 24 ignored
 - refactor: none
 - commit: `1d59424`
@@ -1394,7 +1394,7 @@ Each test is therefore load-bearing. Its red evidence is a mutant, not a pre-imp
 #### Cycle: U112 search returns core's results JSON
 
 - test: `integrations/self-hosted-llm-mcp/tests/tools_test.ts::U112 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U112 /" tests/` -> `SyntaxError: Unexpected token 'o', "not implemented" is not valid JSON` (1 failed)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U112 /" tests/" -> "SyntaxError: Unexpected token 'o', "not implemented" is not valid JSON` (1 failed)
 - green: `lib/tools.ts` search handler: embed, matchThoughts(0.5,10), map to id/title/url JSON. Suite -> 121 passed, 0 failed, 24 ignored
 - refactor: none
 - commit: `ff2ed37`
@@ -1404,15 +1404,15 @@ Each test is therefore load-bearing. Its red evidence is a mutant, not a pre-imp
 
 - test: `integrations/self-hosted-llm-mcp/tests/tools_test.ts::U113 …` (new)
 - red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U113 /" tests/` -> (passed on first run, 1 passed; mutant below)
-- green: `lib/tools.ts` no change (search handler from U112 already returns `Search error:`). Suite -> 122 passed, 0 failed, 24 ignored
+- green: `lib/tools.ts" no change (search handler from U112 already returns "Search error:`). Suite -> 122 passed, 0 failed, 24 ignored
 - refactor: none
 - commit: `ccf8248`
-- notes: mutant: `Search error:` -> `Search err:` -> AssertionError (1 failed); restored
+- notes: mutant: `Search error:" -> "Search err:` -> AssertionError (1 failed); restored
 
 #### Cycle: U114 successful capture replies with core's Captured as confirmation
 
 - test: `integrations/self-hosted-llm-mcp/tests/tools_test.ts::U114 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U114 /" tests/` -> `AssertionError: Values are not equal` (1 failed; placeholder text)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U114 /" tests/" -> "AssertionError: Values are not equal` (1 failed; placeholder text)
 - green: `lib/tools.ts` capture_thought: embed, chat (sequential for now), build metadata, upsert, setEmbedding, core confirmation. Suite -> 123 passed, 0 failed, 24 ignored
 - refactor: none
 - commit: `73c7afa`
@@ -1439,7 +1439,7 @@ Each test is therefore load-bearing. Its red evidence is a mutant, not a pre-imp
 #### Cycle: U117 embedding and chat requests are both in flight before either reply is released
 
 - test: `integrations/self-hosted-llm-mcp/tests/tools_test.ts::U117 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U117 /" tests/` -> `AssertionError: Values are not equal` (held 1 vs 2; 1 failed)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U117 /" tests/" -> "AssertionError: Values are not equal` (held 1 vs 2; 1 failed)
 - green: `lib/tools.ts` capture runs embed and chat with Promise.all. Suite -> 126 passed, 0 failed, 24 ignored
 - refactor: none
 - commit: `fda4748`
@@ -1457,7 +1457,7 @@ Each test is therefore load-bearing. Its red evidence is a mutant, not a pre-imp
 #### Cycle: U119 config gate: unset EMBEDDING_API_BASE returns the exact not-configured text for capture
 
 - test: `integrations/self-hosted-llm-mcp/tests/tools_test.ts::U119 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U119 /" tests/` -> `AssertionError` -  `Error: configuration incomplete` (1 failed)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U119 /" tests/" -> "AssertionError` -  `Error: configuration incomplete` (1 failed)
 - green: `lib/tools.ts` gate() wrapper resolves config per call and returns the contract text; applied to capture_thought. Suite -> 128 passed, 0 failed, 24 ignored
 - refactor: none
 - commit: `2b60f64`
@@ -1466,7 +1466,7 @@ Each test is therefore load-bearing. Its red evidence is a mutant, not a pre-imp
 #### Cycle: U120 config gate: with CHAT_MODEL unset each of the six tools returns isError naming CHAT_MODEL
 
 - test: `integrations/self-hosted-llm-mcp/tests/tools_test.ts::U120 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U120 /" tests/` -> `AssertionError: Values are not equal: search` (-`Error: configuration incomplete`; 1 failed)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U120 /" tests/" -> "AssertionError: Values are not equal: search` (-`Error: configuration incomplete`; 1 failed)
 - green: `lib/tools.ts` all six handlers wrapped in gate(); temporary models() removed. Suite -> 129 passed, 0 failed, 24 ignored
 - refactor: none
 - commit: `e2b6b9c`
@@ -1565,8 +1565,8 @@ Each test is therefore load-bearing. Its red evidence is a mutant, not a pre-imp
 #### Cycle: U131 capture with chat timing out stores the fallback row and ends with the skip line naming the timeout
 
 - test: `integrations/self-hosted-llm-mcp/tests/tools_test.ts::U131 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U131 /" tests/` -> `AssertionError: Captured as observation — uncategorized` (regex did not match; 1 failed)
-- green: `lib/tools.ts` capture appends `\nMetadata extraction skipped: <chat message sans trailing period>. Saved with default metadata.` when chat failed. Suite -> 140 passed, 0 failed, 24 ignored
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U131 /" tests/" -> "AssertionError: Captured as observation — uncategorized` (regex did not match; 1 failed)
+- green: `lib/tools.ts" capture appends "\nMetadata extraction skipped: <chat message sans trailing period>. Saved with default metadata.` when chat failed. Suite -> 140 passed, 0 failed, 24 ignored
 - refactor: none
 - commit: `e6246c0`
 - notes: -
@@ -1583,7 +1583,7 @@ Each test is therefore load-bearing. Its red evidence is a mutant, not a pre-imp
 #### Cycle: U133 capture with non-JSON-object chat content stores the fallback row with the skip line
 
 - test: `integrations/self-hosted-llm-mcp/tests/tools_test.ts::U133 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U133 /" tests/` -> `AssertionError: Captured as observation — uncategorized` (no skip line; 1 failed)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U133 /" tests/" -> "AssertionError: Captured as observation — uncategorized` (no skip line; 1 failed)
 - green: `lib/tools.ts` skip reason also set when chat replied but the content is unusable. Suite -> 142 passed, 0 failed, 24 ignored
 - refactor: none
 - commit: `56e3fcb`
@@ -1637,7 +1637,7 @@ Each test is therefore load-bearing. Its red evidence is a mutant, not a pre-imp
 #### Cycle: U139 setEmbedding failing on a row this call inserted returns the not-kept text and the row is gone
 
 - test: `integrations/self-hosted-llm-mcp/tests/tools_test.ts::U139 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U139 /" tests/` -> `AssertionError: Values are not equal` (core `Failed to save embedding:` text, row left behind; 1 failed)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U139 /" tests/" -> "AssertionError: Values are not equal" (core "Failed to save embedding:` text, row left behind; 1 failed)
 - green: `lib/tools.ts` R6 flow: readBack, created==updated && embeddingIsNull -> deleteIfInsertedByCall(id, createdAt), not-kept text; read-back/delete problems -> may-be-saved text. Suite -> 148 passed, 0 failed, 24 ignored
 - refactor: none
 - commit: `c9c7189`
@@ -1646,7 +1646,7 @@ Each test is therefore load-bearing. Its red evidence is a mutant, not a pre-imp
 #### Cycle: U140 setEmbedding failing on a merged duplicate returns the already-in-your-brain text and keeps the row
 
 - test: `integrations/self-hosted-llm-mcp/tests/tools_test.ts::U140 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U140 /" tests/` -> `AssertionError: Values are not equal` (may-be-saved text instead; 1 failed)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U140 /" tests/" -> "AssertionError: Values are not equal` (may-be-saved text instead; 1 failed)
 - green: `lib/tools.ts` merged branch (created != updated) returns the already-in-your-brain/repair text with no delete. Suite -> 149 passed, 0 failed, 24 ignored
 - refactor: none
 - commit: `55023ed`
@@ -1691,7 +1691,7 @@ Each test is therefore load-bearing. Its red evidence is a mutant, not a pre-imp
 #### Cycle: U145 no tool reply contains any of the four secrets
 
 - test: `integrations/self-hosted-llm-mcp/tests/tools_test.ts::U145 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U145 /" tests/` -> `AssertionError: fetch store error: reply contains a secret: Fetch error: rejected emb-secret-AAAA1111 / …` (1 failed)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U145 /" tests/" -> "AssertionError: fetch store error: reply contains a secret: Fetch error: rejected emb-secret-AAAA1111 / …` (1 failed)
 - green: `lib/tools.ts` gate() redacts the four secret env values from every reply text. Suite green. Suite -> 154 passed, 0 failed, 24 ignored
 - refactor: none
 - commit: `a36fe25`
@@ -1699,22 +1699,22 @@ Each test is therefore load-bearing. Its red evidence is a mutant, not a pre-imp
 
 #### Refactor after U145
 
-- removed the unused `notYet` placeholder from `lib/tools.ts`; suite -> 154 passed, 0 failed, 24 ignored; commit: `7ba8920`
+- removed the unused `notYet" placeholder from "lib/tools.ts"; suite -> 154 passed, 0 failed, 24 ignored; commit: "7ba8920`
 
 ### Stream A cycle log
 
 #### Cycle: U180 OPTIONS answers ok with CORS
 
 - test: `integrations/self-hosted-llm-mcp/tests/app_test.ts::U180 …` (new)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U180 /" tests/` -> `Error: not implemented` at createApp (1 failed)
-- green: `lib/app.ts` createApp returns a handler answering OPTIONS with `ok`, 200 and core's CORS headers. Suite -> 189 passed, 0 failed, 24 ignored
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U180 /" tests/" -> "Error: not implemented` at createApp (1 failed)
+- green: `lib/app.ts" createApp returns a handler answering OPTIONS with "ok`, 200 and core's CORS headers. Suite -> 189 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `da8d806`
 
 #### Cycle: U181 unauthorized POST gets the -32001 envelope
 
 - test: `integrations/self-hosted-llm-mcp/tests/app_test.ts::U181 …` (new)
-- red: `deno test … --filter "/^U181 /" tests/` -> `Error: not implemented` (1 failed)
+- red: `deno test … --filter "/^U181 /" tests/" -> "Error: not implemented` (1 failed)
 - green: `lib/app.ts` `unauthorizedResponse()` (id null for now); createApp returns it for non-OPTIONS. Suite -> 190 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `cb7055e`
@@ -1866,7 +1866,7 @@ Each test is therefore load-bearing. Its red evidence is a mutant, not a pre-imp
 #### Cycle: U182 envelope echoes scalar id
 
 - test: `integrations/self-hosted-llm-mcp/tests/app_test.ts::U182 …` (new)
-- red: `deno test … --filter "/^U182 /" tests/` -> `AssertionError: Values are not equal.` (1 failed)
+- red: `deno test … --filter "/^U182 /" tests/" -> "AssertionError: Values are not equal.` (1 failed)
 - green: `lib/app.ts` extractJsonRpcId/readBodyText ported from core; fetch made async. Suite -> 191 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `502eae8`
@@ -1902,7 +1902,7 @@ Each test is therefore load-bearing. Its red evidence is a mutant, not a pre-imp
 #### Cycle: U186 correct key reaches MCP route
 
 - test: `integrations/self-hosted-llm-mcp/tests/app_test.ts::U186 …` (new)
-- red: `--filter "/^U186 /"` -> `TypeError: Cannot read properties of undefined (reading 'tools')` (1 failed)
+- red: `--filter "/^U186 /"" -> "TypeError: Cannot read properties of undefined (reading 'tools')` (1 failed)
 - green: `lib/app.ts` createApp compares header-or-query key with MCP_ACCESS_KEY, serveMcp builds a fresh buildServer + StreamableHTTPTransport per request via Hono; CORS on response. Suite -> 195 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `f5ede72`
@@ -1929,7 +1929,7 @@ Each test is therefore load-bearing. Its red evidence is a mutant, not a pre-imp
 #### Cycle: U190 Accept patch
 
 - test: `integrations/self-hosted-llm-mcp/tests/app_test.ts::U190 …` (new)
-- red: `--filter "/^U190 /"` -> `AssertionError: Values are not equal: accept null` (1 failed)
+- red: `--filter "/^U190 /"" -> "AssertionError: Values are not equal: accept null` (1 failed)
 - green: `lib/app.ts` Accept header patched to application/json, text/event-stream when it lacks text/event-stream. Suite -> 199 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `ba8c9d9`
@@ -1956,7 +1956,7 @@ Each test is therefore load-bearing. Its red evidence is a mutant, not a pre-imp
 #### Cycle: U193 productionDeps
 
 - test: `integrations/self-hosted-llm-mcp/tests/app_test.ts::U193 …` (new)
-- red: `deno test … --filter "/^U193 /" tests/` -> `Error: not implemented` (1 failed)
+- red: `deno test … --filter "/^U193 /" tests/" -> "Error: not implemented` (1 failed)
 - green: `lib/app.ts` productionDeps: getEnv -> Deno.env.get, modelFetch/store fetch -> globalThis.fetch, store from SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY. Suite -> 220 passed, 0 failed, 6 ignored
 - refactor: none needed
 - commit: `b154eb7`
@@ -1972,9 +1972,9 @@ Each test is therefore load-bearing. Its red evidence is a mutant, not a pre-imp
 
 #### Cycle: U195 no bare import specifier (BLOCKED)
 
-- test: drafted `tests/imports_test.ts::U195` (copy saved at `specs/004-self-hosted-llm/tdd/cycle-log.d/app-U195-imports_test.ts.txt`; not committed, it is red)
-- red: `deno test … --filter "/^U195 /" tests/` -> offender `lib/thought_store.ts: @supabase/supabase-js` (1 failed). Negative control assertions pass; the real scan finds one genuine bare import.
-- green: BLOCKED. `lib/thought_store.ts:1` (`import { createClient } from "@supabase/supabase-js";`) belongs to another stream/merged work and must become `npm:@supabase/supabase-js@2.47.10` (the version pinned in deno.json). I may not edit that file; integrator must change it, then the test can be committed unchanged.
+- test: drafted `tests/imports_test.ts::U195" (copy saved at "specs/004-self-hosted-llm/tdd/cycle-log.d/app-U195-imports_test.ts.txt`; not committed, it is red)
+- red: `deno test … --filter "/^U195 /" tests/" -> offender "lib/thought_store.ts: @supabase/supabase-js` (1 failed). Negative control assertions pass; the real scan finds one genuine bare import.
+- green: BLOCKED. `lib/thought_store.ts:1` (`import { createClient } from "@supabase/supabase-js";") belongs to another stream/merged work and must become "npm:@supabase/supabase-js@2.47.10` (the version pinned in deno.json). I may not edit that file; integrator must change it, then the test can be committed unchanged.
 
 #### Cycle: A9 acceptance flipped (todo -> Deno.test)
 
@@ -2027,7 +2027,7 @@ Each test is therefore load-bearing. Its red evidence is a mutant, not a pre-imp
 #### Cycle: U196 setup-check 200/503
 
 - test: `integrations/self-hosted-llm-mcp/tests/app_test.ts::U196 …` (new)
-- red: `--filter "/^U196 /"` -> `AssertionError: Values are not equal.` (1 failed; the request fell through to the MCP route)
+- red: `--filter "/^U196 /"" -> "AssertionError: Values are not equal.` (1 failed; the request fell through to the MCP route)
 - green: `lib/app.ts` isSetupCheck + jsonResponse; authorized setup-check runs runSetupCheck(deps), 200 if ok else 503. Suite -> 222 passed, 0 failed, 6 ignored
 - refactor: none needed
 - commit: `70ade4e`
@@ -2035,14 +2035,14 @@ Each test is therefore load-bearing. Its red evidence is a mutant, not a pre-imp
 #### Cycle: U197 setup-check 401
 
 - test: `integrations/self-hosted-llm-mcp/tests/app_test.ts::U197 …` (new)
-- red: `--filter "/^U197 /"` -> `AssertionError: Values are not equal: …/setup-check` (1 failed)
-- green: `lib/app.ts` authorized flag; unauthorized setup-check -> 401 `{"error":"Unauthorized: missing or invalid authentication."}` with CORS. Suite -> 223 passed, 0 failed, 6 ignored
+- red: `--filter "/^U197 /"" -> "AssertionError: Values are not equal: …/setup-check` (1 failed)
+- green: `lib/app.ts" authorized flag; unauthorized setup-check -> 401 "{"error":"Unauthorized: missing or invalid authentication."}` with CORS. Suite -> 223 passed, 0 failed, 6 ignored
 - refactor: none needed
 - commit: `776df2e`
 
 #### Cycle: U198, U199, U200 setup-check key handling
 
-- test: `tests/app_test.ts::U198`, `::U199`, `::U200` (new)
+- test: `tests/app_test.ts::U198", "::U199", "::U200` (new)
 - red: all three passed on first run (the shared `authorized` flag from U197 already covers them)
 - green: no change. Suite -> 232 passed, 0 failed, 0 ignored
 - refactor: none needed
@@ -2067,7 +2067,7 @@ Each test is therefore load-bearing. Its red evidence is a mutant, not a pre-imp
 
 #### Cycle: U203 and U204 non-setup-check routing
 
-- test: `tests/app_test.ts::U203`, `::U204` (new)
+- test: `tests/app_test.ts::U203", "::U204` (new)
 - red: both passed on first run
 - green: no change
 - commit: `a359bd1` (DEVIATION: two behaviors in one commit)
@@ -2076,24 +2076,123 @@ Each test is therefore load-bearing. Its red evidence is a mutant, not a pre-imp
 #### Cycle: U205 crashing setup check
 
 - test: `tests/app_test.ts::U205` (new)
-- red: `--filter "/^U205 /"` -> `Error: boom with test-key inside` (1 failed; the crash escaped the handler)
-- green: `lib/app.ts` try/catch around runSetupCheck -> 500 `{"error":"Setup check failed unexpectedly."}` with CORS. Suite -> 236 passed, 0 failed
+- red: `--filter "/^U205 /"" -> "Error: boom with test-key inside` (1 failed; the crash escaped the handler)
+- green: `lib/app.ts" try/catch around runSetupCheck -> 500 "{"error":"Setup check failed unexpectedly."}` with CORS. Suite -> 236 passed, 0 failed
 - refactor: none needed
 - commit: `ae38281`
 
 #### Cycle: U195 no source file outside tests/ uses a bare import specifier (integrator, after merge)
 
 - test: `integrations/self-hosted-llm-mcp/tests/imports_test.ts::U195 …` (new; written by stream A, held uncommitted while red because the offender was outside stream A's files)
-- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U195 /" tests/` (on the integration branch after merging A) -> `AssertionError: Values are not equal.` listing `lib/thought_store.ts: @supabase/supabase-js` (1 failed)
-- green: `lib/thought_store.ts:1` import pinned to `npm:@supabase/supabase-js@2.47.10` (same version as `deno.json`). Suite -> 238 passed, 0 failed, 0 ignored; `deno check` clean
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U195 /" tests/" (on the integration branch after merging A) -> "AssertionError: Values are not equal." listing "lib/thought_store.ts: @supabase/supabase-js` (1 failed)
+- green: `lib/thought_store.ts:1" import pinned to "npm:@supabase/supabase-js@2.47.10" (same version as "deno.json"). Suite -> 238 passed, 0 failed, 0 ignored; "deno check` clean
 - refactor: none needed
 - commit: `aa4f940`
-- notes: a real FR-014 defect. The self-hosted router applies one shared import map and ignores the function's `deno.json` (research R10), so stream S's bare import would have failed to resolve on self-hosted Supabase while every unit test passed under the local `deno.json`.
+- notes: a real FR-014 defect. The self-hosted router applies one shared import map and ignores the function's `deno.json" (research R10), so stream S's bare import would have failed to resolve on self-hosted Supabase while every unit test passed under the local "deno.json`.
 
 ## Polish and gates (T042–T044, T048), no behavior change
 
-- T042 (Sonnet agent, verified by integrator): `94e6cbc` `deno.json` lint excludes `no-import-prefix` (the rule forbids the full `npm:`/`jsr:` specifiers that R10/U195 require); `9395fe1` README `dimensions` retry paragraph (R3); `a70736e` README exact message shapes (gate formats checked against `lib/tools.ts:36-39`, `lib/config.ts:4,38`). Merged `8fcda29`. `deno lint` -> `Checked 23 files` (0 problems); suite -> `ok | 238 passed | 0 failed`.
+- T042 (Sonnet agent, verified by integrator): `94e6cbc` `deno.json" lint excludes "no-import-prefix" (the rule forbids the full "npm:`/`jsr:" specifiers that R10/U195 require); "9395fe1" README "dimensions" retry paragraph (R3); "a70736e" README exact message shapes (gate formats checked against "lib/tools.ts:36-39", "lib/config.ts:4,38"). Merged "8fcda29". "deno lint" -> "Checked 23 files" (0 problems); suite -> "ok | 238 passed | 0 failed`.
 - T043: upstream gate self-check on the folder: credentials, local-MCP pattern, README completeness (prerequisites, numbered steps, expected outcome), tool-audit link, internal links, binaries/SQL, profanity all pass; `metadata.json` valid against the schema; PR format checked at PR time.
-- T044: `run-folder.mjs --mode strict --origin fork` -> `integrations/self-hosted-llm-mcp: pass (all tests passed)`.
-- T048: `git diff --name-only upstream/main...HEAD` -> 26 files, all under `integrations/self-hosted-llm-mcp/`, none fork-only.
+- T044: `run-folder.mjs --mode strict --origin fork" -> "integrations/self-hosted-llm-mcp: pass (all tests passed)`.
+- T048: `git diff --name-only upstream/main...HEAD" -> 26 files, all under "integrations/self-hosted-llm-mcp/`, none fork-only.
 - T045: not run. Docker daemon unavailable on this machine (2026-11-26); per the task, the R6 premise SQL moves to the owner's self-hosted run in T046.
+
+## Remediation (T050–T056, T058), after the audit at 8fcda29; each fix proven by its named mutant, re-applied by the integrator before merge
+
+### Remediation log: acceptance and app
+
+#### Remediation: A2 (verification finding 6, task T053)
+
+- test: `integrations/self-hosted-llm-mcp/tests/acceptance_test.ts::A2 …` (strengthened)
+- before: other thought was filtered by the 0.5 threshold, so "first" was trivially true
+- after: other thought embeds at cosine 0.7 (above threshold, below the exact 1.0); asserts exact text and "100.0% match" under "--- Result 1 ", other text and "70.0% match" under "--- Result 2 "
+- mutant: `tests/helpers/fake_store.ts" matchThoughts sort ascending -> "Expected actual: "--- Result 1 (70.0% match) ---" (caught); restored, "git status` clean
+- suite: 238 passed, 0 failed
+- commit: `b2ed5d1`
+
+#### Remediation: A7 (verification finding 7, task T054)
+
+- test: `tests/acceptance_test.ts::A7 …` (strengthened)
+- before: 404 body named the model, reply only needed to include the model name
+- after: 404 body is `not found"; reply must include "The embedding model "embed-1536" was not found on the model server at http://model.test/v1.`
+- mutant: `lib/model_client.ts:70" 404 -> http_error -> "Expected actual: "Error: x" to contain: "The embedding model ..."` (caught); restored, clean
+- suite: 238 passed, 0 failed
+- commit: `5a72318`
+
+#### Remediation: U187 (verification finding 8, task T055)
+
+- test: `tests/app_test.ts::U187 …` (strengthened)
+- before: accepted cases asserted only `!isRefused`
+- after: both accepted cases assert HTTP 200 and the tool list equals the six core tools
+- mutant: `lib/app.ts" serveMcp -> "new Response("x", {status: 500})" -> "Values are not equal: right header + wrong query` (caught); restored, clean
+- suite: 238 passed, 0 failed
+- commit: `e046e46`
+
+#### Remediation: U199 (verification finding 9, task T056)
+
+- test: `tests/app_test.ts::U199 …` (strengthened)
+- before: `{...MODEL_ENV, ...{}}` kept MCP_ACCESS_KEY, so "unset" was never tested
+- after: unset env built by deleting MCP_ACCESS_KEY from MODEL_ENV; empty-string case kept; key `"undefined"` added
+- mutant: `lib/app.ts:91` `authorized = !!provided && (accessKey === undefined || provided === accessKey)" -> "AssertionError: Values are not equal.` (caught); restored, clean
+- suite: 238 passed, 0 failed
+- commit: `47c613e`
+
+### Remediation log: model and setup check
+
+#### Remediation: U56 (verification finding 1, task T051)
+
+- test: `integrations/self-hosted-llm-mcp/tests/model_client_test.ts::U56 …` (strengthened)
+- before: both Matryoshka fixtures also contained "dimension", so the matryoshka alternative was never isolated
+- after: added case, HTTP 400 body `Model 'x' does not support Matryoshka embeddings`; asserts exactly 2 requests, dimensions key dropped on retry, ok 1536 result
+- mutant: `lib/model_client.ts:105` `/dimension|matryoshka/i" -> "/dimension/i" -> new U56 test FAILED (caught); restored, "git status` clean
+- suite: 240 passed, 0 failed
+- commit: `1a79400`
+
+#### Remediation: U52 (verification finding 4, task T052 part)
+
+- test: `integrations/self-hosted-llm-mcp/tests/model_client_test.ts::U52 …` (strengthened)
+- before: loop with `if (!r.ok)` deciding what to assert
+- after: straight-line: 1536 -> exactly `{ok:true, value: sent}`; 1535 and 1537 -> ok false, kind wrong_dimension
+- mutant: `lib/model_client.ts:115` `!==" -> ">" -> U52 FAILED (caught); restored, "git status` clean
+- suite: 240 passed, 0 failed
+- commit: `218d512`
+
+#### Remediation: U171 (verification finding 3, task T052 part)
+
+- test: `integrations/self-hosted-llm-mcp/tests/setup_check_test.ts::U171 shared base …", "U171 split bases …` (split)
+- before: loop over two envs with an `if` choosing counts
+- after: two straight-line tests with literal counts (shared: 1 POST embeddings, 1 POST chat, 2 GET /models, 4 total; split: 1+1+1 GET per base, 4 total)
+- mutant: `lib/setup_check.ts" extra "client.listModels("embedding")" call -> both U171 tests FAILED (3 vs expected 2 in shared) (caught); restored, "git status` clean
+- suite: 240 passed, 0 failed
+- commit: `b1180e5`
+
+### Remediation log: tools
+
+#### Cycle: U206 (verification finding 2, task T050) - NEW behavior
+
+- test: `integrations/self-hosted-llm-mcp/tests/tools_test.ts::U206 …` (new, next to U140)
+- red: passed on first run (the guard already exists in `lib/tools.ts`); evidence is the mutant below
+- asserts: existing row seeded with `embedding: null", setEmbedding fails -> exact already-in-your-brain text, "store.rows.length === 1", no "deleteIfInsertedByCall` call
+- mutant: `lib/tools.ts:~232" removed "back.data.createdAt === back.data.updatedAt && " -> "U206 … => tools_test.ts:644 AssertionError: Values are not equal" (caught); restored, "git status` clean
+- suite: 239 passed, 0 failed
+- commit: `da0576b`
+
+#### Remediation: U101 (verification finding 5, task T052)
+
+- test: `integrations/self-hosted-llm-mcp/tests/tools_test.ts::U101 …` (strengthened)
+- before: looped over the returned tools, so fewer tools asserted nothing
+- after: iterates `Object.keys(CORE_TOOLS)", finds each by name (asserts found), same field comparisons, and asserts "tools.length === Object.keys(CORE_TOOLS).length`
+- mutant: `lib/tools.ts:163` `thought_stats" registration skipped -> "AssertionError: Values are not equal" on the tool count (caught); restored, "git status` clean
+- suite: 239 passed, 0 failed
+- commit: `038be16`
+
+#### Remediation: U117 (verification finding 10, task T058)
+
+- test: `integrations/self-hosted-llm-mcp/tests/tools_test.ts::U117 …` (strengthened)
+- before: unbounded `while (!settled)` loop with real 10 ms / 5 ms timers
+- after: bounded wait (<= 200 x 10 ms) on `fake.heldCount", asserts "heldCount === 2" before a single "release()`, then awaits the call under a 5 s race timeout (timer cleared)
+- proof: 5 consecutive runs all `1 passed`
+- mutant: `lib/tools.ts:~220` `Promise.all" replaced by sequential awaits -> "AssertionError: Values are not equal" (heldCount 1, not 2), failed in about 2 s, no hang (caught); restored, "git status` clean
+- suite: 239 passed, 0 failed
+- commit: `51d0961`
