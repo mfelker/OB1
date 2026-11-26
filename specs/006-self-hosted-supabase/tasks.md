@@ -112,7 +112,7 @@ Stack configuration, in `F/tests/compose.test.mjs`. Each test runs `docker compo
 
 - [X] T024 [US1] [U1] [U2] [U3] [U4] [U5] [U6] [U7] [U8] [U9] [U10] [U11] [U12] [U13] [U14] [U15] [U16] [U17] [U18] [U19] [U20] [U21] [U22] `F/setup.sh` (POSIX `sh`), driven by T009–T019 (contract C1; data-model.md Setup piece, Secrets file).
 - [X] T025 [US1] [U24] [U27] [U28] [U29] [U30] [U32] [U33] [U34] [U35] `F/docker-compose.yml` (`include:` with path list and `env_file`) and `F/lean.override.yml`, driven by T020–T023 (R2, R3, R7, R8, R12).
-- [ ] T026 [US1] README for Story 1 in `F/README.md`. It must cover:
+- [X] T026 [US1] README for Story 1 in `F/README.md`. It must cover:
   - **What it does**, with positioning against `recipes/local-brain-no-mcp` and `integrations/kubernetes-deployment` (FR-015) and the services left out and their costs (FR-014).
   - **Prerequisites**: Docker with a recent Compose (tested v5.6.1), `git`, `openssl`, a model server meeting spec 004's requirements (link `../../integrations/self-hosted-llm-mcp/`).
   - **Steps**: setup → fill the model settings in `supabase/docker/.env` (host route through `http://host.docker.internal:<port>/v1`, C4) → `docker compose up -d` → the setup check `curl` → `claude mcp add --transport http …?key=…` (read `MCP_ACCESS_KEY` from `.env`).
@@ -122,7 +122,7 @@ Stack configuration, in `F/tests/compose.test.mjs`. Each test runs `docker compo
   - Adding more OB1 functions next to 004's (FR-021).
   - Stop, remove, data locations, and the dump command (FR-020).
   - **Expected outcome**; a link to `docs/05-tool-audit.md`.
-- [ ] T027 [US1] `F/metadata.json` complete: category `recipes`; requires Docker, git, openssl; `estimated_time` is a placeholder until T037 (SC-001).
+- [X] T027 [US1] `F/metadata.json` complete: category `recipes`; requires Docker, git, openssl; `estimated_time` is a placeholder until T037 (SC-001). **Done at `f578677`; `estimated_time` "45 minutes" stays a placeholder until T037 measures it.**
 
 - [X] T052 [US1] [A1] Outer loop: A1 green, flipped from todo in the commit that makes it pass (US1.1, FR-004).
 - [X] T053 [US1] [A2] Outer loop: A2 green (US1.4).
@@ -149,7 +149,7 @@ Stack configuration, in `F/tests/compose.test.mjs`. Each test runs `docker compo
 ### Implementation for User Story 2
 
 - [X] T030 [US2] [U31] [U36] [U47] [U48] [U49] [U50] [U51] [U52] `F/init/create-bucket.sh`, mounted into `ob1-init` by `F/lean.override.yml`, driven by T028 and T029 (R9).
-- [ ] T031 [US2] README storage section in `F/README.md`:
+- [X] T031 [US2] README storage section in `F/README.md`:
   - the storage check (upload a file to `ob1-files` with the service-role key, download it, `cmp`, then show a request without credentials refused) (FR-011; Story 2);
   - files live in the Docker volume `ob1-storage`, and **`docker compose down -v` deletes them** (R3; FR-020);
   - the `images` profile exists for later image transformations and enables nothing by itself (plan Notes).
@@ -173,7 +173,7 @@ Stack configuration, in `F/tests/compose.test.mjs`. Each test runs `docker compo
 ### Implementation for User Story 3
 
 - [X] T033 [US3] [U25] [U26] Profiles in `F/lean.override.yml`, driven by T032 (R2).
-- [ ] T034 [US3] README UI section in `F/README.md`: start and stop commands (contract C2), the dashboard user and password from `.env`, the Studio URL `http://localhost:8000`. Add what starting the UI does while the stack is stopped once T036 records it (OS-009).
+- [X] T034 [US3] README UI section in `F/README.md`: start and stop commands (contract C2), the dashboard user and password from `.env`, the Studio URL `http://localhost:8000`. Add what starting the UI does while the stack is stopped once T037 records it (OS-009). **Done at `f578677`, except the OS-009 sentence, which waits for T037.**
 
 - [X] T059 [US3] [A7] Outer loop: A7 green (US3.1, FR-005).
 
