@@ -52,3 +52,21 @@ test("U50 storage answers 500 or cannot be reached: non-zero exit naming the fai
     assert.match(down.out, /could not reach storage/i);
   } finally { env.cleanup(); }
 });
+
+test("U51 the request is a POST to /bucket with id and name ob1-files and public false", () => {
+  const env = makeBucketEnv();
+  try {
+    env.run({ SERVICE_ROLE_KEY: KEY, STUB_CURL_MODE: "fixed", STUB_CURL_STATUS: "200" });
+    const reqs = env.requests();
+    assert.equal(reqs.length, 1);
+    assert.equal(reqs[0].method, "POST");
+    assert.equal(reqs[0].url, "http://storage:5000/bucket");
+    assert.deepEqual(JSON.parse(reqs[0].body), { id: "ob1-files", name: "ob1-files", public: false });
+    assert.ok(reqs[0].headers.some((h) => /^content-type:\s*application\/json$/i.test(h)));
+    const o = makeBucketEnv();
+    try {
+      o.run({ SERVICE_ROLE_KEY: KEY, STORAGE_URL: "http://example.test:1234", STUB_CURL_MODE: "fixed", STUB_CURL_STATUS: "200" });
+      assert.equal(o.requests()[0].url, "http://example.test:1234/bucket");
+    } finally { o.cleanup(); }
+  } finally { env.cleanup(); }
+});
