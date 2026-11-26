@@ -92,3 +92,11 @@ test("U29 storage depends on exactly db (service_healthy) and rest", { skip }, (
 test("U30 storage has ENABLE_IMAGE_TRANSFORMATION set to \"false\"", { skip }, () => {
   assert.equal(config()["storage"].environment.ENABLE_IMAGE_TRANSFORMATION, "false");
 });
+
+test("U31 storage has exactly one volume: the named volume ob1-storage at /var/lib/storage", { skip }, () => {
+  const vols = config()["storage"].volumes;
+  assert.equal(vols.length, 1, JSON.stringify(vols));
+  assert.equal(vols[0].type, "volume");
+  assert.equal(vols[0].source, "ob1-storage");
+  assert.equal(vols[0].target, "/var/lib/storage");
+});

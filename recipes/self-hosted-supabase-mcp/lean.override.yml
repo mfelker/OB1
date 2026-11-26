@@ -8,6 +8,8 @@ services:
   storage:
     environment:
       ENABLE_IMAGE_TRANSFORMATION: "false"
+    volumes:
+      - ob1-storage:/var/lib/storage
     depends_on: !override
       db:
         condition: service_healthy
@@ -23,3 +25,6 @@ services:
     profiles: [never]
   ob1-init:
     image: busybox:1.37
+
+volumes:
+  ob1-storage:
