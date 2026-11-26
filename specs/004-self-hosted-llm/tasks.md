@@ -432,3 +432,47 @@ Because streams own files rather than stories, the practical order is wave by wa
   - the integrator verifies every stream before merging (T040)
   - contracts state behavior, not implementation, so behavior is built test-first inside streams
   - the only prescribed structure is the seams
+
+---
+
+## Phase 7: TDD remediation (from `tdd/verification.md`, verdict FAIL, audited at `8fcda29`)
+
+**The feature is not done until T050–T057 are cleared and a re-audit (T061) reaches PASS or PASS_WITH_GAPS** (constitution Quality Gate 1).
+
+- Paths are rooted at `W` (`/Users/mfelker/Projects/ob1/.worktrees/contrib-self-hosted-llm`). "Single" means `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^<id> /" integrations/self-hosted-llm-mcp/tests/`, run inside `W`.
+- Each test fix is a test-strengthening step with a stated reason, taken before any source change. Where a fix needs a source change, give it a new behavior id on the test list.
+- Strengthened tests still grade `TEST_AFTER` for history purposes (spec 005 precedent). The proof for these tasks is that the named mutant is now caught.
+
+### Blocking: HIGH findings
+
+- [ ] T050 Finding 2 (R6 merged row without an embedding). Add a new behavior to the test list, traced to R6 and the contracts/mcp-tools.md capture table: "`setEmbedding` failing on a merged duplicate whose existing row has no embedding returns the `already in your brain … repair` text and makes no delete call". Write its test in `W/integrations/self-hosted-llm-mcp/tests/tools_test.ts`, seeding the row with `embedding: null`. Done when the test passes, and deliberate mutant M6 (`lib/tools.ts:232`, drop `back.data.createdAt === back.data.updatedAt &&`) makes it fail, with the file restored and the suite green.
+- [ ] T051 Finding 1 (U56 Matryoshka branch). In `W/integrations/self-hosted-llm-mcp/tests/model_client_test.ts:357-358`, add a 400 whose body is exactly `Model 'x' does not support Matryoshka embeddings` (no "dimension"), and assert exactly one retry. Done when mutant M3 (`lib/model_client.ts:105`, `/dimension|matryoshka/i` → `/dimension/i`) fails U56, with the file restored and the suite green.
+- [ ] T052 Findings 3–5 (conditional logic). Split U171 (`tests/setup_check_test.ts:357-371`) into shared-base and split-base straight-line assertions with literal counts. Replace U52's `if (!r.ok)` (`tests/model_client_test.ts:303-308`) with explicit ok and wrong-dimension cases, asserting the vector for 1536. Make U101 (`tests/tools_test.ts:118`) iterate `Object.keys(CORE_TOOLS)`, assert each is present, and assert `tools.length === 6`. Done when none of those three tests contains an `if` that decides what to assert and the suite is green.
+- [ ] T053 Finding 6 (A2 ranking). In `tests/acceptance_test.ts:79-91`, seed a second thought above the 0.5 threshold but with lower similarity, and assert the exact thought is `Result 1` and the other is `Result 2`. Done when A2 fails under a mutant that reverses `matchThoughts`' order in `tests/helpers/fake_store.ts` (restored after), and the suite is green.
+- [ ] T054 Finding 7 (A7 discrimination). In `tests/acceptance_test.ts:166-176`, assert the exact `model_not_found` message the model client produces. Use a 404 body that does not contain the model name, or assert the classified sentence. Done when A7 fails if `lib/model_client.ts` maps 404 to `http_error` (mutant, restored after), and the suite is green.
+- [ ] T055 Finding 8 (U187 accepted cases). In `tests/app_test.ts:116-126`, assert status 200 and the six tool names for "right header + wrong query" and "empty header falls through". Done when U187 fails under a mutant that returns HTTP 500 for authorized requests (restored after), and the suite is green.
+- [ ] T056 Finding 9 (U199 unset key). In `tests/app_test.ts:285-293`, build the env with `MCP_ACCESS_KEY` deleted (not merged over `MODEL_ENV`), keep the empty-string case, and add the `"undefined"` key. Done when U199 fails under a mutant that treats an unset key as `""`-allowed (restored after), and the suite is green.
+- [ ] T057 Owner decision on the 99 `TEST_AFTER` behaviors (first-run passes, each mutant-verified; list in `tdd/verification.md`). Either record an accepted exception in `plan.md` Complexity Tracking with the reason and the evidence (spec 005 precedent: TEST_AFTER accepted via a recorded exception), or name which behaviors must be re-driven. Gate 1 cannot pass without this decision.
+
+### Non-blocking: MED findings
+
+- [ ] T058 [P] Finding 10. Bound U117's `while (!settled)` loop (`tests/tools_test.ts:315,321`), or replace it with `fake.heldCount`-driven waiting, so the suite cannot hang. Done when U117 uses no unbounded loop and passes 5/5 consecutive runs.
+- [ ] T059 [P] Findings 11, 13, 14:
+  - U155 (`tests/setup_check_test.ts:131-147`): cover each of the 7 failing checks.
+  - Timers: raise the default `timeoutMs` in `tests/model_client_test.ts:15`, keep small timeouts only where tested, wait on `heldCount` in U43/U60, and name U175's bounds as multiples of the timeout.
+  - U145 (`tests/tools_test.ts:680-704`): assert a positive control (`[redacted]` or a known prefix) on every path.
+
+  Done when the suite is green 5/5 consecutive runs.
+- [ ] T060 [P] Findings 12, 15–20:
+  - Literal expectations for U196 and U102/U112.
+  - Exact strings for U123/U125–U127/U132/U133.
+  - Fewer supabase-js wire-detail assertions in `tests/thought_store_test.ts`.
+  - Distinct `EMB`/`CHAT` bases in `tests/model_client_test.ts`.
+  - Harness self-tests for the uncovered `FakeFetch`/`FakeStore` features.
+  - A behavior tracing FR-002 in `tdd/test-list.md`.
+
+  Done when each item is addressed or explicitly declined in the next verification report.
+
+### Re-audit
+
+- [ ] T061 Re-run `/speckit-tdd-verify` after T050–T057 (and any of T058–T060 taken). Done when `tdd/verification.md` shows PASS or PASS_WITH_GAPS, with every `TEST_AFTER` covered by T057's recorded decision.
