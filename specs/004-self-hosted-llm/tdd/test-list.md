@@ -270,6 +270,7 @@ All paths are under `integrations/self-hosted-llm-mcp/`. The test file is `tests
 | U177 | All thoughts matching, and an empty brain, each give `other_model: 0` | FR-016 | example | T037 | DONE | `tests/setup_check_test.ts::U177` |
 | U178 | A failing count gives `other_model: null` with a `thoughts_count` warning carrying the database message | contracts/setup-check.md | example | T037 | DONE | `tests/setup_check_test.ts::U178` |
 | U179 | With a failing count, the model checks still run and decide `ok` | contracts/setup-check.md | example | T037 | DONE | `tests/setup_check_test.ts::U179` |
+| U207 | A failing count whose database error message is empty still gives a `thoughts_count` warning that names a cause (no empty text after the colon) | contracts/setup-check.md, FR-016 | example | T064 | PENDING | |
 
 ### `lib/app.ts` and `index.ts` (stream A)
 
