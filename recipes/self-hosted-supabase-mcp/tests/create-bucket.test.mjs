@@ -29,3 +29,14 @@ test("U48 storage answers 400 BucketAlreadyExists: exit 0, bucket left as is", (
     assert.match(r.out, /ob1-files.*already/i);
   } finally { env.cleanup(); }
 });
+
+test("U49 storage answers 400 with another error: non-zero exit, status and error in the output", () => {
+  const env = makeBucketEnv();
+  try {
+    const body = '{"statusCode":"400","error":"InvalidRequest","message":"bad bucket name"}';
+    const r = env.run({ SERVICE_ROLE_KEY: KEY, STUB_CURL_MODE: "fixed", STUB_CURL_STATUS: "400", STUB_CURL_BODY: body });
+    assert.notEqual(r.code, 0);
+    assert.match(r.out, /400/);
+    assert.match(r.out, /InvalidRequest/);
+  } finally { env.cleanup(); }
+});

@@ -9,5 +9,9 @@ if [ "$status" = "200" ]; then
   echo "create-bucket.sh: bucket ob1-files is ready"
 elif [ "$status" = "400" ] && grep -q BucketAlreadyExists "$resp"; then
   echo "create-bucket.sh: bucket ob1-files already exists"
+else
+  echo "create-bucket.sh: storage answered $status: $(cat "$resp")" >&2
+  rm -f "$resp"
+  exit 1
 fi
 rm -f "$resp"
