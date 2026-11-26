@@ -18,7 +18,7 @@
 | **Category** | recipes |
 | **Contribution folder** | `recipes/self-hosted-supabase-mcp/` (new) |
 | **Upstream PR** | to be opened after upstream #533 merges; landed on the fork first through a fork PR (fork `main` already has 004) |
-| **Requires** | Docker with Compose v2.24 or newer (for `include:` with `!reset`/`!override`, plan R2); `git`; an OpenAI-compatible model server with one embedding model that returns 1536 dimensions and one chat model (spec 004's requirements); `integrations/self-hosted-llm-mcp/` in the same checkout |
+| **Requires** | Docker with a Compose that can read the recipe (`include:` with `!reset`/`!override`; tested with v5.6.1, plan R2); `git`; an OpenAI-compatible model server with one embedding model that returns 1536 dimensions and one chat model (spec 004's requirements); `integrations/self-hosted-llm-mcp/` in the same checkout |
 
 ## Clarifications
 
@@ -97,7 +97,7 @@ Most of the time the owner wants the stack as light as possible, but sometimes t
 - **Model server unreachable from the containers** (for example `localhost` used for a server on the host): the setup check fails naming the address (spec 004 behavior); the README explains how containers reach the host.
 - **Embedding model not 1536**: capture is refused naming both sizes (spec 004 FR behavior); the stack itself is unaffected.
 - **Ports already in use** on the host: the start step fails clearly, and the README says which ports the stack uses and how to change them.
-- **Docker Compose older than v2.24** (no `include:` overrides with `!reset`): the setup step detects it and stops with the required version (plan R2).
+- **A Docker Compose that can't read the recipe** (too old for `include:` overrides with `!reset`/`!override`): the setup step detects it by asking Compose to read the recipe, and stops naming the version found and the tested versions (plan R2).
 - **The pinned Supabase commit is no longer available, or the owner wants a newer one**: the pin is one documented setting; changing it is a documented, owner-run step, and only the pinned commit is claimed as tested.
 - **Starting a single always-on service pulls in an optional one** through the official file's dependencies (VP-001): the documented start command must start exactly the always-on set.
 - **Storage depends on the image service** in the official file (VP-001): either the image service runs as part of the always-on set or Storage is shown to work without it; the README states which.
@@ -128,7 +128,7 @@ Most of the time the owner wants the stack as light as possible, but sometimes t
 - **FR-017**: By default the model server MUST be any OpenAI-compatible server the owner runs on the host (or elsewhere on their network), reached from the containers at a documented address. The recipe MUST also offer an optional bundled model server, Docker Model Runner, used only when the owner enables it and not part of the always-on set (FR-004): on macOS it runs models with GPU acceleration through Metal. The owner pulls each model named in `EMBEDDING_MODEL` and `CHAT_MODEL` with a documented `docker model pull` command; the recipe MUST NOT pull models automatically. If research (FR-012) shows Docker Model Runner cannot return 1536-number embeddings, the README MUST say to use it for the chat role only and serve embeddings through the host route.
 - **FR-018**: The README MUST document connecting MCP clients that run on the same machine or the local network (for example Claude Code and Claude Desktop) with the access key, and MUST state that cloud-hosted clients such as claude.ai custom connectors cannot reach the stack in this version, pointing to the planned remote-access feature (OS-007). The recipe MUST NOT expose the stack's gateway beyond the local network by default.
 - **FR-019**: The contribution folder MUST meet `CONTRIBUTING.md` and the upstream gate rules (README sections, metadata, no secrets, no binaries, scope, internal links resolving once #533 is upstream).
-- **FR-020**: The README MUST document how to stop the stack, how to remove it with or without its data, where the database and Storage files live on disk, and one command that dumps the database to a file (Round 2, Q1).
+- **FR-020**: The README MUST document how to stop the stack, how to remove it with or without its data, where the database and Storage files live (the database in the stack's data folder, the files in a Docker volume, VP-012), that removing the stack with its volumes deletes the stored files, and one command that dumps the database to a file (Round 2, Q1).
 - **FR-021**: Nothing in the stack's setup or layout may prevent deploying further OB1 Edge Function MCP servers next to 004's (for example the `extensions/professional-crm` and `extensions/household-knowledge` servers the owner already uses) or adding their tables later; 006 itself deploys only 004's server.
 
 ### Key Entities
@@ -149,7 +149,7 @@ Most of the time the owner wants the stack as light as possible, but sometimes t
 
 ### README Contract
 
-- **Prerequisites**: Docker with Compose v2.24+, `git`, a model server meeting spec 004's model requirements, enough RAM for the stack plus models.
+- **Prerequisites**: Docker with a recent Compose (tested v5.6.1), `git`, a model server meeting spec 004's model requirements, enough RAM for the stack plus models.
 - **Steps**: setup → configure the model settings → start → run spec 004's setup check → connect an MCP client → (optional) storage check → (optional) UI add-on → stop and remove.
 - **Expected outcome**: six MCP tools working against a brain stored on the owner's machine; a working private storage bucket.
 - **Links**: `integrations/self-hosted-llm-mcp/` (the MCP server), `docs/01-getting-started.md` (schema), `docs/05-tool-audit.md`, `recipes/local-brain-no-mcp/`, `integrations/kubernetes-deployment/`.
@@ -197,7 +197,7 @@ Most of the time the owner wants the stack as light as possible, but sometimes t
 - **OS-002**: Keeping files linked to thoughts, MCP tools to attach and fetch files, extracting text from PDFs such as service manuals, and describing photos with a vision model so they become searchable: planned spec 007. 006 provides only the working Storage service and bucket.
 - **OS-003**: Any change to `integrations/self-hosted-llm-mcp/`, `docs/01` or the core `thoughts` table.
 - **OS-004**: User login, `dashboards/open-brain-dashboard`, realtime features and connection pooling.
-- **OS-005**: Backups beyond documenting where the data lives (VP-010) and a one-line database dump command; a backup and restore procedure for the database and Storage files, proven by a restore test, arrives with planned spec 008 before the owner's real brain moves over. Until then, Storage files are not covered by any documented backup (Round 2, Q1).
+- **OS-005**: Backups beyond documenting where the data lives (VP-010, VP-012) and a one-line database dump command; a backup and restore procedure for the database and Storage files, proven by a restore test, arrives with planned spec 008 before the owner's real brain moves over. Until then, Storage files are not covered by any documented backup (Round 2, Q1).
 - **OS-006**: Supporting Supabase stack versions other than the pinned one.
 - **OS-007**: Reaching the stack from cloud-hosted clients (claude.ai custom connectors, a phone off the local network) through a secure public HTTPS route: a planned later feature, which can reuse the Caddy plus Tailscale Funnel pattern from spec 004's Cloud run (`specs/004-self-hosted-llm/evidence/t046-cloud/`).
 - **OS-008**: A published Docker image that serves models through a choice of vLLM, SGLang, llama.cpp or Ollama, alongside or replacing 006's Docker Model Runner option: a planned later feature (Round 1, Q4).

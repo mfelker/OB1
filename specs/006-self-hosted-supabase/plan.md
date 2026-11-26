@@ -8,10 +8,10 @@
 
 A new recipe, `recipes/self-hosted-supabase-mcp/`, stands up a lean self-hosted Supabase for Open Brain on one machine with Docker Compose and no Kubernetes. It runs 5 of the official stack's 11 services, Studio is an opt-in profile, and Storage works.
 
-- **Reuse, not copy.** A POSIX `setup.sh` shallow-clones the official stack at release tag `self-hosted/v0.8.5` (R1) into an ignored folder. It generates secrets with Supabase's own `generate-keys.sh` plus `MCP_ACCESS_KEY` (R6), and it is resumable piece by piece (FR-003).
+- **Reuse, not copy.** A POSIX `setup.sh` shallow-clones the official stack at release tag `self-hosted/v0.8.5` (R1) into an ignored folder. It generates secrets with Supabase's own `generate-keys.sh` plus `MCP_ACCESS_KEY`, building the file to the side and moving it into place so it's all-or-nothing (R6). It is resumable piece by piece (FR-003). It checks Compose by asking it to read the recipe rather than comparing an unsourced version number (R2).
 - **Service selection.** The recipe's `docker-compose.yml` `include:`s the official file merged with `lean.override.yml`, which uses profiles plus `!reset`/`!override` (R2). A plain `docker compose up -d` starts exactly `db`, `rest`, `api-gw`, `functions` and `storage`, all verified by probe. `--profile ui` adds `studio` and `meta`.
 - **Storage** runs without `auth` and `imgproxy`, but on a **named volume**: Docker Desktop's bind mounts reject the extended attributes Storage writes (R3, probed). A one-shot `ob1-init` service creates the private bucket `ob1-files` at start (R9).
-- **Schema and MCP server.** The `docs/01` schema at 1536 is a verbatim copy, guarded by a drift test, and mounted as a first-boot init script (R7, probed on a fresh database). Spec 004's server is mounted read-only by reference (R8).
+- **Schema and MCP server.** The `docs/01` schema at 1536 is a verbatim copy, guarded by a drift test, and run as a first-boot init script under `set role postgres`, so ownership matches Cloud (R7, probed). Spec 004's server is mounted read-only by reference (R8). The pinned stack in the recipe layout passed an end-to-end probe: setup check 200, six tools, capture and reworded search (R13).
 - **Model servers.** The host route works on macOS and Linux through `host-gateway` (R12). Docker Model Runner is the bundled GPU option; its 1536-number embedding check is an owner-approved task (R5).
 
 ## Lane
@@ -25,7 +25,7 @@ A new recipe, `recipes/self-hosted-supabase-mcp/`, stands up a lean self-hosted 
 
 **Language/Version**: POSIX `sh` (setup step); YAML (Compose v2.24+ overlay); SQL (Supabase Postgres 17.6.1.136, from `docs/01`); Node 26 `node --test` for tests only (not a reader prerequisite)
 
-**Primary Dependencies**: the official `supabase/supabase` `docker/` at `self-hosted/v0.8.5` (cloned, never copied); `openssl`, `git`, `docker` with Compose ≥ 2.24 on the host; a pinned small `curl` image for the one-shot `ob1-init` (R9); spec 004's `integrations/self-hosted-llm-mcp` (mounted)
+**Primary Dependencies**: the official `supabase/supabase` `docker/` at `self-hosted/v0.8.5` (cloned, never copied); `openssl`, `git`, and `docker` with a Compose that can read the recipe (`include:` with `!reset`/`!override`; tested v5.6.1, R2) on the host; a pinned small `curl` image for the one-shot `ob1-init` (R9); spec 004's `integrations/self-hosted-llm-mcp` (mounted)
 
 **Storage**: Supabase Postgres + pgvector, with `docs/01`'s `thoughts`, `match_thoughts`, `upsert_thought` at 1536 created on first boot; Supabase Storage on a named volume, bucket `ob1-files`
 
@@ -120,3 +120,12 @@ recipes/self-hosted-supabase-mcp/
 |-----------|------------|-------------------------------------|
 | Branch base is `upstream/main` **plus** `contrib/mfelker/self-hosted-llm` merged in (Principle V says "cut from `upstream/main`") | The recipe mounts `integrations/self-hosted-llm-mcp/` and links to it. Without it, neither the tests' path checks nor the live runs can work, and #533 isn't upstream yet. | Waiting for #533 would block 006 on upstream review. Copying 004 into the recipe is forbidden by FR-007. The deviation ends before the upstream PR: rebase onto `upstream/main` once #533 merges (T-last), checked with `git diff --stat upstream/main...HEAD` showing only the recipe folder. |
 | `db/ob1-schema.sql` duplicates `docs/01`'s SQL | First-boot init needs a SQL file, and FR-006 requires `docs/01`'s exact definitions. | Parsing `docs/01` at setup time is fragile and needs a Markdown parser on the host. The duplication is guarded by `schema-drift.test.mjs`, which fails on any divergence. |
+
+## Notes for `/speckit-tasks`
+
+- **Keep live runs out of the worktree's contribution folder.** Running `setup.sh` inside the worktree puts the clone (`.ts`, `.sql`) under `recipes/self-hosted-supabase-mcp/supabase/`. Local fork-ci and TDD scans would then pick it up, because `supabase` isn't in `SKIP_DIRS` (`.fork/ci/lib/runtimes.mjs`). Do the live runs in a separate scratch checkout of the branch, or delete `supabase/` before any local CI or TDD run.
+- **Final rebase.** Once #533 is upstream, use `git rebase --onto upstream/main <the 004 merge commit>`. A plain rebase would replay 004's 275 commits. The cycle-log SHAs will change, so record the old-to-new mapping in the cycle log.
+- **The `images` profile** starts `imgproxy` but leaves `ENABLE_IMAGE_TRANSFORMATION=false`, so it enables nothing on its own. Planned spec 007 turns transformations on. The README says so.
+- **The docker-absent compose tests** use `node:test`'s skip, never a silent pass (R10).
+- **Run the gate early.** Run the gate's review checks against the folder as soon as the schema file and a `setup.sh` skeleton exist, not only at V11, to catch SQL-safety or credential false positives (for example, `create table`, or key names in `lean.override.yml`).
+- **The Docker Model Runner check (R5)** is an owner-approved task: it changes a Docker Desktop setting.

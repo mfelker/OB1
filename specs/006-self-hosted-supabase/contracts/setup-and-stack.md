@@ -8,12 +8,14 @@ Run from the recipe folder. No arguments.
 
 | Situation | Exit | Output (one line per piece; exact wording free, piece name and state fixed) |
 |-----------|------|------------------------------------------------------------------------------|
-| Docker Compose below 2.24, or missing | non-zero | names the required version and the version found; nothing is created |
+| this Compose can't read the recipe (`docker compose config -q` fails after `clone`) | non-zero | names the Compose version found and the versions the live runs used; nothing else is created (R2) |
 | `docker`, `git` or `openssl` missing | non-zero | names the missing tool; nothing is created |
 | fresh folder | 0 | `clone`, `secrets`, `model-settings` reported **completed**; `function-link` **present** |
 | second run, nothing changed | 0 | every piece **already present** (Story 1, scenario 4) |
 | earlier run stopped after `secrets` | 0 | `clone`, `secrets` **already present**; the rest **completed**; every existing key unchanged (Story 1, scenario 6) |
-| `.env` missing one generated key | 0 | `secrets` **completed**; the missing key added, all others unchanged |
+| `.env` lacks `MCP_ACCESS_KEY` or a model-setting name | 0 | `secrets` / `model-settings` **completed**; only those added, every other line unchanged |
+| `.env` lacks a Supabase key, or one still has its `.env.example` value | non-zero | names the key; nothing rewritten (regenerating would invalidate stored keys and logins, R6) |
+| interrupted while generating secrets | — | no `.env` is left behind (it's built in a temporary folder and moved into place), so the next run completes `secrets` (R6) |
 | clone at a different tag than the pin | non-zero | names both tags and the documented way to change the pin; nothing is changed |
 | `integrations/self-hosted-llm-mcp` absent from the checkout | non-zero | says the checkout lacks 004's folder |
 
@@ -32,6 +34,7 @@ Invariants:
 | `docker compose --profile ui stop studio meta` | only those two stop; the MCP tools keep working (Story 3, scenario 3) |
 | `docker compose up -d --force-recreate functions` | 004's function picks up changed settings (spec 004 README) |
 | `docker compose down` | everything stops; database and files kept |
+| `docker compose down -v` | also **deletes the files volume `ob1-storage`**; the database (bind mount) stays |
 | `docker compose exec db pg_dump -U postgres postgres > backup.sql` | a database dump (FR-020) |
 
 ## C3. Endpoints (gateway, `http://<host>:8000`)

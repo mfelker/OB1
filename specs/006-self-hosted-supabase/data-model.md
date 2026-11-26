@@ -8,8 +8,9 @@ One unit of setup state, checked and completed on its own (FR-003).
 
 | Piece | Present when | Completed by | Report line |
 |-------|--------------|--------------|-------------|
+| `compose-check` | `docker compose config -q` on the recipe succeeds (needs `clone`) | nothing to create: on failure, setup stops naming the Compose version found and the tested versions (R2) | `compose-check: ok` / error |
 | `clone` | `supabase/docker/docker-compose.yml` exists and the clone is at the pinned tag | shallow clone of the pin (R1) | `clone: completed` / `clone: already present` |
-| `secrets` | `supabase/docker/.env` exists and holds every generated key, including `MCP_ACCESS_KEY` | copy `.env.example`, generate the Supabase keys (R6), append `MCP_ACCESS_KEY`; any key that's missing is generated **without changing the keys already there** | `secrets: completed` / `secrets: already present` |
+| `secrets` | `supabase/docker/.env` exists with generated Supabase keys and `MCP_ACCESS_KEY` | **if `.env` is absent**: build it in a temporary folder (copy `.env.example`, `generate-keys.sh --update-env`, append `MCP_ACCESS_KEY`), check it, move it into place, so it's all-or-nothing (R6). **If `.env` exists**: add `MCP_ACCESS_KEY` only if it's missing; never regenerate a Supabase key, and stop with an error if one is missing or still at its example value | `secrets: completed` / `secrets: already present` / error |
 | `model-settings` | `.env` has the model setting names (values may be blank) | append the blank names (`EMBEDDING_API_BASE`, `EMBEDDING_API_KEY`, `EMBEDDING_MODEL`, `CHAT_API_BASE`, `CHAT_API_KEY`, `CHAT_MODEL`, `FETCH_TIMEOUT_MS`) | `model-settings: completed` / `model-settings: already present` |
 | `function-link` | 004's folder exists at the repo path the override mounts (R8) | nothing to create: if it's missing, setup fails and says the checkout lacks `integrations/self-hosted-llm-mcp` | `function-link: present` / error |
 
@@ -65,5 +66,5 @@ It runs only when the database's data directory is empty (FR-006). Touches `thou
 | Data | Location | Removed by |
 |------|----------|-----------|
 | database | `supabase/docker/volumes/db/data` (bind mount) | deleting that folder, after `docker compose down` |
-| files | Docker volume `ob1-storage` | `docker compose down -v` (only the named volumes; the bind-mounted database stays) |
+| files | Docker volume `ob1-storage` (R3: a named volume because macOS bind mounts reject Storage's extended attributes) | `docker compose down -v`, which deletes **all stored files**; the README must warn. The bind-mounted database stays |
 | secrets | `supabase/docker/.env` | deleting the clone folder |
