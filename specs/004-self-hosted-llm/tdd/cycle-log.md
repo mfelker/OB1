@@ -333,11 +333,11 @@ During the parallel streams, each stream writes its cycles to `tdd/cycle-log.d/<
 Changes not staged for commit:
   (use "git add <file>..." to update what will be committed)
   (use "git restore <file>..." to discard changes in working directory)
-	modified:   integrations/self-hosted-llm-mcp/lib/config.ts
+    modified:   integrations/self-hosted-llm-mcp/lib/config.ts
 
 Untracked files:
   (use "git add <file>..." to include in what will be committed)
-	integrations/self-hosted-llm-mcp/tests/config_test.ts
+    integrations/self-hosted-llm-mcp/tests/config_test.ts
 
 no changes added to commit (use "git add" and/or "git commit -a")`
 - notes: none

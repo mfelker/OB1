@@ -212,7 +212,7 @@ nothing to commit, working tree clean`
 
 - test: `integrations/self-hosted-llm-mcp/tests/setup_check_test.ts::U168 …` (new)
 - red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U168 /" tests/` -> `AssertionError: Values are not equal (reason was undefined)` (1 failed)
-- green: lib/setup_check.ts: chatMetadata() reports `unusable output: ` plus reply.slice(0, 120). Suite -> 131 passed, 0 failed, 24 ignored
+- green: lib/setup_check.ts: chatMetadata() reports "unusable output: " plus reply.slice(0, 120). Suite -> 131 passed, 0 failed, 24 ignored
 - refactor: none needed
 - commit: `2a37871`
 - notes: Reason format chosen: `unusable output: <first 120 chars>`.

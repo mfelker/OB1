@@ -144,7 +144,7 @@ Streams code against these. Signatures are the only shared contract. Behavior co
   - Run with `RUN_TODO=1` and record each red (test name + decisive failure line) in `M/specs/004-self-hosted-llm/tdd/cycle-log.md`.
   - Confirm the default run is green (all ignored).
   - Commit in `W` (`[integrations] Acceptance tests as todo`) and in `M` (`[fork] Spec 004: acceptance reds`).
-- [ ] T007 From `M`, create the wave-1 stream worktrees: `git worktree add .worktrees/shl-<s> -b contrib/mfelker/self-hosted-llm-<s> contrib/mfelker/self-hosted-llm` for `s` ∈ {config, model, store, docs}. Brief and launch streams C, M, S and D in one message.
+- [X] T007 From `M`, create the wave-1 stream worktrees: `git worktree add .worktrees/shl-<s> -b contrib/mfelker/self-hosted-llm-<s> contrib/mfelker/self-hosted-llm` for `s` ∈ {config, model, store, docs}. Brief and launch streams C, M, S and D in one message.
 
 **Checkpoint**: test list committed on `M`; seams, stubs, fakes and acceptance todos committed on `W`; four wave-1 worktrees exist.
 
