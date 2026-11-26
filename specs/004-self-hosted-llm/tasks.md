@@ -368,7 +368,7 @@ Streams code against these. Signatures are the only shared contract. Behavior co
   - §6 (FR-017/FR-021 environment, plus R3's Ollama live check)
 
   The integrator then replaces the README's `pending verification` cells with the recorded values in `W` (FR-017, FR-021).
-- [ ] T047 TDD audit: run `/speckit-tdd-verify` in `M`. It writes `tdd/verification.md` with verdict PASS or PASS_WITH_GAPS (Quality Gate 1).
+- [X] T047 TDD audit: run `/speckit-tdd-verify` in `M`. It writes `tdd/verification.md` with verdict PASS or PASS_WITH_GAPS (Quality Gate 1). **Ticked 2026-11-26 against the owner exception:** the audits (`8fcda29`, re-audit `2d7f60b`) are FAIL by the rubric only because of `TEST_AFTER` behaviors, all covered by the T057 and T062 exceptions in `plan.md` Complexity Tracking; 0 HIGH findings, 0 surviving mutants.
 - [X] T048 Scope check: `git -C W diff --stat upstream/main...HEAD` lists only `integrations/self-hosted-llm-mcp/`, with no `specs/`, `.specify/` or `.fork/` (Principle V).
 - [ ] T049 Land, **asking the owner before each push or PR**:
   1. `git -C W push -u origin contrib/mfelker/self-hosted-llm`
@@ -475,7 +475,7 @@ Because streams own files rather than stories, the practical order is wave by wa
 
 ### Re-audit
 
-- [ ] T061 Re-run `/speckit-tdd-verify` after T050–T057 (and any of T058–T060 taken). Done when `tdd/verification.md` shows PASS or PASS_WITH_GAPS, with every `TEST_AFTER` covered by T057's recorded decision.
+- [X] T061 Re-run `/speckit-tdd-verify` after T050–T057 (and any of T058–T060 taken). Done when `tdd/verification.md` shows PASS or PASS_WITH_GAPS, with every `TEST_AFTER` covered by T057's recorded decision. **Ticked 2026-11-26 against the owner exception:** the re-audit at `2d7f60b` is FAIL only through `TEST_AFTER` (99 under T057, U206 under T062, both recorded in `plan.md` Complexity Tracking); 0 HIGH, 0 surviving mutants. `tdd/verification.md` predates T059, T060, T064 and the README changes; a fresh audit at `73ee726` was offered and declined.
 
 ## Phase 8: TDD remediation (re-audit T061, verdict FAIL, audited at `2d7f60b`)
 
