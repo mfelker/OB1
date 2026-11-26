@@ -104,10 +104,13 @@ recipes/self-hosted-supabase-mcp/
 ├── lean.override.yml       # profiles, !reset/!override, named storage volume, ob1-init, 004 mount, env, host-gateway
 ├── db/
 │   └── ob1-schema.sql      # create extension vector + docs/01's five blocks, verbatim
+├── init/
+│   └── create-bucket.sh    # run by the one-shot ob1-init service: private ob1-files, idempotent (R9)
 └── tests/
     ├── setup.test.mjs      # setup.sh behaviors (stub git/docker, fixture clone)
     ├── compose.test.mjs    # docker compose config against a fixture compose file (skips without docker)
     ├── schema-drift.test.mjs   # db/ob1-schema.sql contains docs/01's blocks in order
+    ├── create-bucket.test.mjs  # init/create-bucket.sh with a stub curl
     ├── verify.sql          # fork-ci SQL runtime: scratch database, apply, assert 1536, RPCs, GRANT, RLS
     └── fixtures/           # stub executables, minimal fixture clone and fixture compose file
 ```
