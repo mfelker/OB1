@@ -212,3 +212,88 @@ export const envPath = (co) => join(co.recipe, "supabase", "docker", ".env");
 
 /** Stub log lines. */
 export const stubCalls = (co) => readFileSync(co.log, "utf8").split("\n").filter(Boolean);
+
+/**
+ * Stub `curl` (node script). Understands -s, -S, -f (ignored), -o <file>, -w <fmt> (with %{http_code}),
+ * -H <header>, -d/--data/--data-raw <body>, -X <method>, and one URL. Logs each request as a JSON line
+ * to $STUB_CURL_LOG. Responds by $STUB_CURL_MODE:
+ * - "stateful": POST …/bucket creates the bucket named by the JSON body's id in $STUB_CURL_STATE
+ *   (200), or answers 400 {"statusCode":"409","error":"Duplicate","code":"BucketAlreadyExists"} if it exists;
+ * - "fixed": answers $STUB_CURL_STATUS with body $STUB_CURL_BODY;
+ * - "unreachable": prints a connection error and exits 7, like curl.
+ */
+const STUB_CURL = `#!/usr/bin/env node
+const fs = require("node:fs");
+const a = process.argv.slice(2);
+let out = null, fmt = null, body = "", method = null, url = null; const headers = [];
+for (let i = 0; i < a.length; i++) {
+  const x = a[i];
+  if (x === "-o") out = a[++i];
+  else if (x === "-w") fmt = a[++i];
+  else if (x === "-H") headers.push(a[++i]);
+  else if (x === "-d" || x === "--data" || x === "--data-raw") body = a[++i];
+  else if (x === "-X") method = a[++i];
+  else if (/^-[sSf]+$/.test(x) || x === "--silent" || x === "--show-error") continue;
+  else if (!x.startsWith("-")) url = x;
+}
+method = method || (body ? "POST" : "GET");
+fs.appendFileSync(process.env.STUB_CURL_LOG, JSON.stringify({ method, url, headers, body }) + "\\n");
+const mode = process.env.STUB_CURL_MODE || "fixed";
+if (mode === "unreachable") { process.stderr.write("curl: (7) Failed to connect to storage port 5000\\n"); process.exit(7); }
+let status = 200, resp = "";
+if (mode === "stateful") {
+  const st = fs.existsSync(process.env.STUB_CURL_STATE) ? JSON.parse(fs.readFileSync(process.env.STUB_CURL_STATE, "utf8")) : [];
+  const req = JSON.parse(body || "{}");
+  if (method === "POST" && /\\/bucket$/.test(url || "")) {
+    if (st.some((b) => b.id === req.id)) { status = 400; resp = JSON.stringify({ statusCode: "409", error: "Duplicate", message: "The resource already exists", code: "BucketAlreadyExists" }); }
+    else { st.push(req); fs.writeFileSync(process.env.STUB_CURL_STATE, JSON.stringify(st)); resp = JSON.stringify({ name: req.id }); }
+  } else { status = 404; resp = "{}"; }
+} else { status = Number(process.env.STUB_CURL_STATUS || 200); resp = process.env.STUB_CURL_BODY || ""; }
+if (out) fs.writeFileSync(out, resp); else process.stdout.write(resp);
+if (fmt) process.stdout.write(fmt.replace("%{http_code}", String(status)));
+`;
+
+/**
+ * An environment for running init/create-bucket.sh: a bin directory with POSIX tools and the stub curl.
+ * Returns run(env) → {code, stdout, stderr, out}, requests() → logged requests, buckets() → stateful store.
+ */
+export function makeBucketEnv() {
+  const root = mkdtempSync(join(tmpdir(), "ob1-006-bucket-"));
+  const bin = join(root, "bin");
+  mkdirSync(bin);
+  for (const t of POSIX_TOOLS) { const p = which(t); if (p) symlinkSync(p, join(bin, t)); }
+  symlinkSync(process.execPath, join(bin, "node"));
+  writeFileSync(join(bin, "curl"), STUB_CURL);
+  chmodSync(join(bin, "curl"), 0o755);
+  const log = join(root, "curl.log");
+  const state = join(root, "buckets.json");
+  writeFileSync(log, "");
+  const script = join(RECIPE_DIR, "init", "create-bucket.sh");
+  return {
+    root,
+    run(env = {}) {
+      const r = spawnSync("/bin/sh", [script], {
+        encoding: "utf8",
+        env: { PATH: bin, STUB_CURL_LOG: log, STUB_CURL_STATE: state, ...env },
+      });
+      return { code: r.status, stdout: r.stdout, stderr: r.stderr, out: `${r.stdout}${r.stderr}` };
+    },
+    requests: () => readFileSync(log, "utf8").split("\n").filter(Boolean).map((l) => JSON.parse(l)),
+    buckets: () => (existsSync(state) ? JSON.parse(readFileSync(state, "utf8")) : []),
+    cleanup: () => rmSync(root, { recursive: true, force: true }),
+  };
+}
+
+/** Real docker on the test runner's own PATH, or null. Compose tests skip without it. */
+export function realDocker() {
+  const r = spawnSync("/bin/sh", ["-c", "command -v docker"], { encoding: "utf8", env: process.env });
+  if (r.status !== 0) return null;
+  const v = spawnSync("docker", ["compose", "version", "--short"], { encoding: "utf8" });
+  return v.status === 0 ? r.stdout.trim() : null;
+}
+
+/** Run the real `docker compose` in a checkout's recipe folder. */
+export function compose(co, args) {
+  const r = spawnSync("docker", ["compose", ...args], { cwd: co.recipe, encoding: "utf8", env: process.env });
+  return { code: r.status, stdout: r.stdout, stderr: r.stderr };
+}
