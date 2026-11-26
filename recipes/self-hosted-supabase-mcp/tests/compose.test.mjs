@@ -118,3 +118,7 @@ test("U33 functions receives the access key and model settings from .env", { ski
   const env = config()["functions"].environment;
   for (const [k, v] of Object.entries(ENV_VALUES)) assert.equal(env[k], v, k);
 });
+
+test("U34 functions maps host.docker.internal to host-gateway", { skip }, () => {
+  assert.deepEqual(config()["functions"].extra_hosts, ["host.docker.internal=host-gateway"]);
+});

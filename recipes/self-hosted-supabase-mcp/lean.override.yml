@@ -24,6 +24,8 @@ services:
   supavisor:
     profiles: [never]
   functions:
+    extra_hosts:
+      - host.docker.internal:host-gateway
     environment:
       MCP_ACCESS_KEY: ${MCP_ACCESS_KEY}
       EMBEDDING_API_BASE: ${EMBEDDING_API_BASE}
