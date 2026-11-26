@@ -2326,3 +2326,16 @@ Each test is therefore load-bearing. Its red evidence is a mutant, not a pre-imp
 - proof: mutants "could not be reached:" to "cannot be reached:" fails U125 and U126; "was not a JSON object" to "was no JSON object" fails U133; "access key rejected" to "key rejected" fails U127; "Saved with default metadata." to "Saved with defaults." fails U131, U132, U133, U145
 - suite: 47 passed, 0 failed
 - commit: `e631475`
+
+## T064 (U207), a genuine pre-implementation red; integrator reproduced it at the parent `20bee38`: `AssertionError: Values are not equal: countAll` (1 failed); merged `f09a3a4`, 253 passed
+
+### Cycle log: T064
+
+#### Cycle: U207 empty count error still names a cause
+
+- test: `integrations/self-hosted-llm-mcp/tests/setup_check_test.ts::U207 a failing count with an empty database message still names a cause` (new; covers countAll and countWithModel)
+- red: `cd <WORKTREE>/integrations/self-hosted-llm-mcp && deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U207 /" tests/" -> "AssertionError: Values are not equal: countAll" (actual message ended after the colon, expected "...: database returned no error detail`) (1 failed)
+- green: `lib/setup_check.ts:81" empty or whitespace-only failure text becomes "database returned no error detail`. Suite -> 253 passed, 0 failed, 0 ignored
+- refactor: none needed
+- commit: `5f7c45d`
+- notes: U178 unchanged; non-empty messages pass through unchanged.
