@@ -82,3 +82,9 @@ test("U28 api-gw has no depends_on entry for studio", { skip }, () => {
   const gw = config(["--profile", "ui"])["api-gw"];
   assert.ok(!Object.keys(gw.depends_on ?? {}).includes("studio"), JSON.stringify(gw.depends_on));
 });
+
+test("U29 storage depends on exactly db (service_healthy) and rest", { skip }, () => {
+  const deps = config()["storage"].depends_on;
+  assert.deepEqual(Object.keys(deps).sort(), ["db", "rest"]);
+  assert.equal(deps.db.condition, "service_healthy");
+});
