@@ -6,6 +6,8 @@ services:
   meta:
     profiles: [ui]
   storage:
+    environment:
+      ENABLE_IMAGE_TRANSFORMATION: "false"
     depends_on: !override
       db:
         condition: service_healthy
