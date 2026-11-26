@@ -53,7 +53,7 @@ test("A2 a second setup run reports every piece already present and leaves .env 
   } finally { co.cleanup(); }
 });
 
-test("A3 an interrupted setup is completed by the next run, keeping every key", { todo }, () => {
+test("A3 an interrupted setup is completed by the next run, keeping every key", () => {
   const co = makeCheckout();
   try {
     assert.equal(runSetup(co).code, 0);
