@@ -8,6 +8,9 @@ RECIPE_DIR=$(cd "$(dirname "$0")" && pwd)
 CLONE="$RECIPE_DIR/supabase"
 ENV_FILE="$CLONE/docker/.env"
 TESTED_COMPOSE="v5.6.1"
+# Keys Supabase's utils/generate-keys.sh writes. They are never regenerated in an existing .env:
+# they sign the stored API keys and the dashboard login.
+SUPABASE_KEYS="JWT_SECRET ANON_KEY SERVICE_ROLE_KEY SECRET_KEY_BASE REALTIME_DB_ENC_KEY VAULT_ENC_KEY PG_META_CRYPTO_KEY LOGFLARE_PUBLIC_ACCESS_TOKEN LOGFLARE_PRIVATE_ACCESS_TOKEN S3_PROTOCOL_ACCESS_KEY_ID S3_PROTOCOL_ACCESS_KEY_SECRET MINIO_ROOT_PASSWORD POSTGRES_PASSWORD DASHBOARD_PASSWORD"
 
 die() { printf 'setup.sh: %s\n' "$*" >&2; exit 1; }
 
@@ -47,6 +50,12 @@ if [ ! -f "$ENV_FILE" ]; then
     printf '%s=\n' "$k" >> "$build/.env"
   done
   mv "$build/.env" "$ENV_FILE"
+fi
+for k in $SUPABASE_KEYS; do
+  grep -q "^$k=" "$ENV_FILE" || die "supabase/docker/.env has no $k. Setup does not regenerate Supabase keys in an existing .env; see \"Starting over\" in README.md. Nothing was changed."
+done
+if [ -n "${build:-}" ]; then
+  :
 elif ! grep -q '^MCP_ACCESS_KEY=' "$ENV_FILE"; then
   printf '\n# Open Brain MCP access key (spec 004)\nMCP_ACCESS_KEY=%s\n' "$(openssl rand -hex 32)" >> "$ENV_FILE"
   echo "secrets: completed"

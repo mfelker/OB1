@@ -218,3 +218,14 @@ test("U16 a complete .env is left byte-identical and secrets and model settings 
     assert.match(r.out, /model-settings: already present/);
   } finally { co.cleanup(); }
 });
+
+test("U17 an .env missing a Supabase key makes setup fail naming it and leave .env unchanged", () => {
+  const co = makeCheckout();
+  try {
+    const before = removeLines(co, ["JWT_SECRET"]);
+    const r = runSetup(co);
+    assert.notEqual(r.code, 0);
+    assert.match(r.out, /\bJWT_SECRET\b/);
+    assert.equal(readFileSync(envPath(co), "utf8"), before);
+  } finally { co.cleanup(); }
+});
