@@ -191,3 +191,18 @@ test("U14 an .env without MCP_ACCESS_KEY gets only that line added, every other 
     assert.match(r.out, /secrets: completed/);
   } finally { co.cleanup(); }
 });
+
+test("U15 an .env missing model setting names gets only the missing names added (one missing, all missing)", () => {
+  for (const missing of [["CHAT_MODEL"], MODEL_SETTINGS]) {
+    const co = makeCheckout();
+    try {
+      const before = removeLines(co, missing);
+      const r = runSetup(co);
+      const after = readFileSync(envPath(co), "utf8");
+      const added = after.split("\n").filter((l) => !before.split("\n").includes(l) && l !== "" && !l.startsWith("#"));
+      assert.deepEqual(added.sort(), missing.map((k) => `${k}=`).sort());
+      assert.ok(after.startsWith(before.replace(/\n*$/, "")), "existing lines kept in place");
+      assert.match(r.out, /model-settings: completed/);
+    } finally { co.cleanup(); }
+  }
+});
