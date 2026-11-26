@@ -263,8 +263,10 @@ git worktree add "../ob1-$DESC" -b "contrib/mfelker/$DESC" upstream/main
 git diff --stat upstream/main...HEAD   # must list only the one contribution folder
 git push -u origin "contrib/mfelker/$DESC"
 gh pr create -R NateBJones-Projects/OB1 --head "mfelker:contrib/mfelker/$DESC" --title "[category] Short description"
-# Also land it on fork main through a fork PR (fork-ci must pass):
-gh pr create -R mfelker/OB1 --base main --head "contrib/mfelker/$DESC" --title "[fork] Land contrib/mfelker/$DESC"
+# Also land it on fork main through a fork PR (fork-ci and OB1 Review must pass).
+# Use the same [category] prefix as the upstream PR: the gate's PR-format rule rejects
+# "[fork] ..." for any PR that touches a contribution folder (fork #20, spec 004 T049).
+gh pr create -R mfelker/OB1 --base main --head "contrib/mfelker/$DESC" --title "[category] Short description (fork landing)"
 gh pr merge <fork-PR-number> -R mfelker/OB1 --merge
 ```
 
