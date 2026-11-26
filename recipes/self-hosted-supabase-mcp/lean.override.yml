@@ -24,6 +24,15 @@ services:
   supavisor:
     profiles: [never]
   functions:
+    environment:
+      MCP_ACCESS_KEY: ${MCP_ACCESS_KEY}
+      EMBEDDING_API_BASE: ${EMBEDDING_API_BASE}
+      EMBEDDING_API_KEY: ${EMBEDDING_API_KEY}
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL}
+      CHAT_API_BASE: ${CHAT_API_BASE}
+      CHAT_API_KEY: ${CHAT_API_KEY}
+      CHAT_MODEL: ${CHAT_MODEL}
+      FETCH_TIMEOUT_MS: ${FETCH_TIMEOUT_MS}
     volumes:
       - ../../../../integrations/self-hosted-llm-mcp:/home/deno/functions/self-hosted-llm-mcp:ro
   ob1-init:

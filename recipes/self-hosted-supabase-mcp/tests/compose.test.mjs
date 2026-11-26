@@ -113,3 +113,8 @@ test("U32 functions mounts integrations/self-hosted-llm-mcp read-only at /home/d
   assert.equal(mount.source, join(root, "integrations", "self-hosted-llm-mcp"));
   assert.equal(mount.read_only, true);
 });
+
+test("U33 functions receives the access key and model settings from .env", { skip }, () => {
+  const env = config()["functions"].environment;
+  for (const [k, v] of Object.entries(ENV_VALUES)) assert.equal(env[k], v, k);
+});
