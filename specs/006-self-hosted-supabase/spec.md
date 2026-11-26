@@ -30,6 +30,10 @@
 - Q: Where does the model server run? → A: On the host by default (any OpenAI-compatible server the owner runs, as T046 proved), plus an optional bundled model-server container for owners who want one command to start everything, for example on a Linux box; it is opt-in and not part of the always-on set (FR-017).
 - Q: Does 006 create a storage bucket? → A: Yes, one private bucket, `ob1-files`, so the storage check has a real target and planned 007 builds on it (FR-009).
 - Q: How do the owner's AI clients reach the stack? → A: In 006, from the same machine and the local network only. A secure route for cloud-hosted clients (claude.ai custom connectors, a phone), such as the Caddy plus Tailscale Funnel setup proven in spec 004's Cloud run, is its own later feature (FR-018, OS-007).
+- Q: What is this stack in relation to the owner's existing Open Brain on their tailnet (core plus the `/crm`, `/household` and `/edit` endpoints)? → A: Its eventual replacement: 006 builds a fresh stack designed to become that brain's home; planned spec 008 moves the data and extensions onto it (FR-021, OS-001).
+- Q: What does "not as heavy" (than `integrations/kubernetes-deployment`) mean measurably? → A: No Kubernetes infrastructure: the brain runs on one machine with Docker Compose. There is no memory or size target; leanness otherwise shows only in which services run (FR-004, SC-002).
+- Q: Which machines must the recorded live run cover? → A: The owner's Mac first, then a Linux machine before the upstream PR is opened (SC-010).
+- Q: How do models get into the optional bundled model-server container? → A: In 006 the container is Ollama and the README documents a manual pull command per model (`EMBEDDING_MODEL`, `CHAT_MODEL`); nothing is pulled automatically. A later feature will publish a Docker image able to serve through vLLM, SGLang, llama.cpp or Ollama (FR-017, OS-008).
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -101,7 +105,7 @@ Most of the time the owner wants the stack as light as possible, but sometimes t
 ### Functional Requirements
 
 - **FR-001**: The recipe MUST provide a setup step that obtains the official Supabase self-hosting stack at one pinned version, without copying Supabase's own stack files into the contribution folder (VP-004).
-- **FR-002**: The setup step MUST generate fresh values for every secret the stack needs, write them only to an untracked local file, and never reuse the example defaults.
+- **FR-002**: The setup step MUST generate fresh values for every secret the stack needs, including 004's `MCP_ACCESS_KEY` (derived from FR-007 and spec 004 FR-023), write them only to an untracked local file, and never reuse the example defaults.
 - **FR-003**: Re-running the setup step MUST NOT overwrite existing secrets or data; it MUST report that setup was already done.
 - **FR-004**: The documented start command MUST start exactly the always-on services — the database, the REST API, the gateway, the Edge Functions runtime and Storage, plus the image service only if Storage requires it (FR-012) — and no user-login, realtime, pooler, web UI or metadata service, despite the official file's dependency links (VP-001).
 - **FR-005**: The web UI and its metadata service MUST be startable and stoppable as one optional add-on with one documented command each, without restarting the always-on services.
@@ -111,15 +115,16 @@ Most of the time the owner wants the stack as light as possible, but sometimes t
 - **FR-009**: The stack MUST have one private storage bucket named `ob1-files` for the owner's files, created on first setup and left untouched if it already exists; files in it are reachable only with the stack's service credentials. Later features (planned 007) may add buckets but do not rename this one.
 - **FR-010**: Data in the database and in Storage MUST survive stopping and restarting the stack and the machine.
 - **FR-011**: The recipe MUST provide an executable verification that checks the schema objects (FR-006) exist with 1536 dimensions, and a documented storage check (upload, download, compare, refused without credentials).
-- **FR-012**: Research MUST settle, on the pinned version, whether Storage runs and authorizes requests with the user-login service absent, and whether it runs without the image service; the always-on set and the README follow the result.
+- **FR-012**: Research MUST settle, on the pinned version, whether Storage runs and authorizes requests with the user-login service absent, whether it runs without the image service, and whether the UI add-on shows tables and buckets with the user-login service absent (derived from Story 3 and the no-auth decision); the always-on set and the README follow the result.
 - **FR-013**: The README MUST provide a `psql` route for every setup step that other OB1 docs describe as "paste into the SQL Editor", so the web UI is never required.
 - **FR-014**: The README MUST state the services the lean stack leaves out and what that costs: `dashboards/open-brain-dashboard` does not work (it needs user login), and Studio is opt-in (VP-006).
 - **FR-015**: The README MUST position the recipe against `recipes/local-brain-no-mcp` (for networks where MCP is blocked; full stack; 768 dimensions by default) and `integrations/kubernetes-deployment` (Kubernetes, no Supabase), and link to both.
 - **FR-016**: The README MUST carry spec 004's R2 warning: on this stack, JWT verification is one setting for all functions (VP-003).
-- **FR-017**: By default the model server MUST be any OpenAI-compatible server the owner runs on the host (or elsewhere on their network), reached from the containers at a documented address. The recipe MUST also offer an optional bundled model-server container, started only on request like the UI add-on (FR-005) and not part of the always-on set (FR-004); the README MUST state that on macOS this container runs without GPU acceleration and recommend the host route there.
+- **FR-017**: By default the model server MUST be any OpenAI-compatible server the owner runs on the host (or elsewhere on their network), reached from the containers at a documented address. The recipe MUST also offer an optional bundled model-server container, started only on request like the UI add-on (FR-005) and not part of the always-on set (FR-004); the README MUST state that on macOS this container runs without GPU acceleration and recommend the host route there. In 006 the bundled container is Ollama and starts with no models: the README MUST give the pull command for the models named in `EMBEDDING_MODEL` and `CHAT_MODEL`, and the recipe MUST NOT pull models automatically.
 - **FR-018**: The README MUST document connecting MCP clients that run on the same machine or the local network (for example Claude Code and Claude Desktop) with the access key, and MUST state that cloud-hosted clients such as claude.ai custom connectors cannot reach the stack in this version, pointing to the planned remote-access feature (OS-007). The recipe MUST NOT expose the stack's gateway beyond the local network by default.
 - **FR-019**: The contribution folder MUST meet `CONTRIBUTING.md` and the upstream gate rules (README sections, metadata, no secrets, no binaries, scope, internal links resolving once #533 is upstream).
 - **FR-020**: The README MUST document how to stop the stack, how to remove it with or without its data, and where the data lives on disk.
+- **FR-021**: Nothing in the stack's setup or layout may prevent deploying further OB1 Edge Function MCP servers next to 004's (for example the `extensions/professional-crm` and `extensions/household-knowledge` servers the owner already uses) or adding their tables later; 006 itself deploys only 004's server.
 
 ### Key Entities
 
@@ -148,20 +153,22 @@ Most of the time the owner wants the stack as light as possible, but sometimes t
 
 - **Runner**: decided in the plan. Candidates: tests for the setup step's logic (secret generation, no-overwrite, version check, service selection) in a runner from the constitution's Testing Standards table; the schema check as `tests/verify.sql`, which fork-ci runs against a throwaway Postgres with pgvector.
 - **Behaviors that MUST have tests**: FR-002 (fresh secrets, never the example defaults), FR-003 (no overwrite on re-run), FR-004 (exact service set), FR-005 (UI add-on separate), FR-017 (model-server add-on separate and opt-in), FR-006 (schema at 1536 with the GRANT), the Compose-version check (edge case), FR-019 (no secrets written into tracked files).
-- **Live acceptance**: like spec 004's T046, a recorded end-to-end run on a real machine covering Stories 1–3, with evidence in `specs/006-self-hosted-supabase/evidence/`.
+- **Live acceptance**: like spec 004's T046, recorded end-to-end runs covering Stories 1–3, first on the owner's Mac and then on a Linux machine before the upstream PR (SC-010), with evidence in `specs/006-self-hosted-supabase/evidence/`.
 
 ## Success Criteria *(mandatory)*
 
 ### Measurable Outcomes
 
 - **SC-001**: A first-time reader who already has Docker and a model server reaches a working brain (a capture found again by a reworded search) in 30 minutes or less by following the README alone.
-- **SC-002**: The stack uses at most half the memory of the full official stack at idle, measured the same way on the same machine.
+- **SC-002**: The whole brain runs on one machine with only Docker and Docker Compose: no Kubernetes, cluster, or orchestration tooling is installed or used at any step of the README (Round 1, Q2).
 - **SC-003**: All six MCP tools work from a real MCP client against the stack, and spec 004's setup check passes, on the first start after setup.
 - **SC-004**: 100% of thoughts and stored files are still present after stopping and restarting the stack and after rebooting the machine.
 - **SC-005**: A file uploaded to the owner's bucket downloads byte-for-byte identical, and an unauthenticated request for it is refused.
 - **SC-006**: Exactly the always-on services are running after the documented start command; the web UI appears only after the add-on command and disappears after its stop command, with the tools working throughout.
 - **SC-007**: Re-running setup changes no secret and loses no data.
 - **SC-008**: The contribution folder passes the upstream gate's review checks (all rules) in the upstream PR's context.
+- **SC-009**: With 004's server running, a second Edge Function placed next to it in the stack's functions directory answers on its own path while 004's six tools keep working, without re-running setup (verifies FR-021; Round 1, Q1).
+- **SC-010**: Stories 1–3 pass in a recorded live run on macOS (the owner's Mac) and in a second recorded run on Linux; the upstream PR is not opened until both runs pass, and the README names both as tested (Round 1, Q3).
 
 ## Verified Premises
 
@@ -173,20 +180,23 @@ Most of the time the owner wants the stack as light as possible, but sometimes t
 - **VP-006**: Of the repo's contributions, only `dashboards/open-brain-dashboard` calls the user-login service (`supabase.auth.getUser()`); none uses Supabase Storage or Realtime; `pg_cron` (4 contributions) and `pg_net` (1) are database extensions, not separate services; 56 contributions or docs tell the reader to use Studio's SQL or Table Editor.
 - **VP-007**: `CONTRIBUTING.md` (line 121) requires a GRANT step for every contribution that creates tables, because Supabase no longer grants `service_role` access automatically.
 - **VP-008**: Upstream gate rule 13 requires every relative link in a README to resolve; links into `integrations/self-hosted-llm-mcp/` resolve upstream only after #533 merges. Rule 12 limits a PR to one contribution folder.
+- **VP-009**: In the official stack at `a522111`, only two services publish host ports: `api-gw` on `0.0.0.0:8000` and `supavisor` on `0.0.0.0:5432` and `6543`. Without `supavisor`, Postgres has no host port, so the `psql` route (FR-013) runs inside the `db` container. Storage uses the `file` backend at `/var/lib/storage`, bind-mounted from the stack's `volumes/storage/`. The gateway protects Studio with HTTP basic auth from `DASHBOARD_USERNAME` and `DASHBOARD_PASSWORD` (`volumes/api/envoy/`) (checked with `docker compose config`, 2026-11-26).
+- **VP-010**: Every service in the official stack at `a522111` has `restart: unless-stopped`, so the stack comes back after a reboot once Docker itself starts. Postgres data lives in the bind mount `volumes/db/data` and Storage files in `volumes/storage` inside the cloned stack directory; Edge Functions are read from a mount at `/home/deno/functions` (checked with `docker compose config`, 2026-11-26).
 
 ## Out of Scope
 
-- **OS-001**: Moving an existing brain (from Supabase Cloud or elsewhere) onto this stack, and re-embedding thoughts with a new model: planned spec 008.
+- **OS-001**: Moving an existing brain (from Supabase Cloud or elsewhere, including the owner's current tailnet brain and its CRM, household and edit extensions) onto this stack, and re-embedding thoughts with a new model: planned spec 008.
 - **OS-002**: Keeping files linked to thoughts, MCP tools to attach and fetch files, extracting text from PDFs such as service manuals, and describing photos with a vision model so they become searchable: planned spec 007. 006 provides only the working Storage service and bucket.
 - **OS-003**: Any change to `integrations/self-hosted-llm-mcp/`, `docs/01` or the core `thoughts` table.
 - **OS-004**: User login, `dashboards/open-brain-dashboard`, realtime features and connection pooling.
 - **OS-005**: Backups beyond documenting where the data lives and a one-line database dump command.
 - **OS-006**: Supporting Supabase stack versions other than the pinned one.
 - **OS-007**: Reaching the stack from cloud-hosted clients (claude.ai custom connectors, a phone off the local network) through a secure public HTTPS route: a planned later feature, which can reuse the Caddy plus Tailscale Funnel pattern from spec 004's Cloud run (`specs/004-self-hosted-llm/evidence/t046-cloud/`).
+- **OS-008**: A published Docker image that serves models through a choice of vLLM, SGLang, llama.cpp or Ollama, replacing 006's Ollama-only bundled container: a planned later feature (Round 1, Q4).
 
 ## Assumptions
 
-- The owner runs Docker on macOS or Linux; Windows is not tested.
+- The owner runs Docker on macOS or Linux, both tested (SC-010); Windows is not tested.
 - A personal brain: one owner, small data volumes, no high-availability needs.
 - The 1536-dimension convention stays fixed (spec 004 VP-009).
 - Upstream #533 merges before 006's upstream PR is opened; if upstream asks for changes to #533 first, 006 waits and follows them.
