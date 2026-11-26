@@ -89,7 +89,7 @@ description: "Task list for spec 006: lean self-hosted Supabase recipe"
 
 `setup.sh` behaviors, in `F/tests/setup.test.mjs`, one test per contract row (contracts/setup-and-stack.md C1; data-model.md Setup piece):
 
-- [ ] T009 [P] [US1] [U1] [U2] [U3] Missing `docker`, `git` or `openssl` → non-zero exit naming the tool; nothing created.
+- [X] T009 [P] [US1] [U1] [U2] [U3] Missing `docker`, `git` or `openssl` → non-zero exit naming the tool; nothing created.
 - [X] T010 [P] [US1] [U4] [U5] [U21] Fresh folder → the stub `git` sees a shallow clone of tag `self-hosted/v0.8.5` (R1). The output reports `clone`, `secrets` and `model-settings` completed and `function-link` present (data-model.md Setup piece).
 - [X] T011 [P] [US1] [U8] [U9] [U10] [U11] [U19] Fresh folder → `supabase/docker/.env` holds the generated keys and none equals its `.env.example` value; `MCP_ACCESS_KEY` is 64 hex characters; the blank model-setting names are present; no key value appears in stdout or stderr (FR-002; data-model.md Secrets file.MCP_ACCESS_KEY, Secrets file.EMBEDDING_*/CHAT_*).
 - [X] T012 [P] [US1] [U12] [U13] Generation fails partway (the stub `generate-keys.sh` exits non-zero) → non-zero exit and **no** `.env` left behind; the next run completes `secrets` (R6; Story 1, scenario 6).
