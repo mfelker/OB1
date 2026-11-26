@@ -147,3 +147,14 @@ test("U11 on a fresh folder .env holds every model setting name, blank", () => {
     for (const k of MODEL_SETTINGS) assert.equal(env.get(k), "", `${k} present and blank`);
   } finally { co.cleanup(); }
 });
+
+test("U12 when key generation fails setup fails and leaves no .env or temporary file in supabase/docker", () => {
+  const co = makeCheckout();
+  try {
+    const r = runSetup(co, { STUB_GENKEYS_FAIL: "1" });
+    assert.notEqual(r.code, 0);
+    assert.equal(existsSync(envPath(co)), false, "no .env");
+    const left = readdirSync(join(co.recipe, "supabase", "docker")).sort();
+    assert.deepEqual(left, [".env.example", "docker-compose.yml", "utils"]);
+  } finally { co.cleanup(); }
+});

@@ -34,15 +34,19 @@ if ! (cd "$RECIPE_DIR" && docker compose config -q >/dev/null 2>&1); then
 fi
 [ -n "$placeholder" ] && rm -f "$ENV_FILE"
 
-# Secrets: Supabase's own generator fills .env from .env.example.
+# Secrets: Supabase's own generator fills a copy of .env.example. The file is built in a
+# temporary folder and moved into place only when complete, so an interrupted run leaves no .env.
 if [ ! -f "$ENV_FILE" ]; then
-  cp "$CLONE/docker/.env.example" "$ENV_FILE"
-  (cd "$CLONE/docker" && sh utils/generate-keys.sh --update-env >/dev/null)
-  printf '\n# Open Brain MCP access key (spec 004)\nMCP_ACCESS_KEY=%s\n' "$(openssl rand -hex 32)" >> "$ENV_FILE"
-  printf '\n# Model server settings (spec 004); fill these in, see README.md\n' >> "$ENV_FILE"
+  build=$(mktemp -d)
+  trap 'rm -rf "$build"' EXIT
+  cp "$CLONE/docker/.env.example" "$build/.env"
+  (cd "$build" && sh "$CLONE/docker/utils/generate-keys.sh" --update-env >/dev/null)
+  printf '\n# Open Brain MCP access key (spec 004)\nMCP_ACCESS_KEY=%s\n' "$(openssl rand -hex 32)" >> "$build/.env"
+  printf '\n# Model server settings (spec 004); fill these in, see README.md\n' >> "$build/.env"
   for k in EMBEDDING_API_BASE EMBEDDING_API_KEY EMBEDDING_MODEL CHAT_API_BASE CHAT_API_KEY CHAT_MODEL FETCH_TIMEOUT_MS; do
-    printf '%s=\n' "$k" >> "$ENV_FILE"
+    printf '%s=\n' "$k" >> "$build/.env"
   done
+  mv "$build/.env" "$ENV_FILE"
 fi
 
 echo "setup.sh: not implemented" >&2
