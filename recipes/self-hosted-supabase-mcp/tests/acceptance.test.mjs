@@ -133,7 +133,7 @@ test("A8 functions mounts the checkout's 004 folder read-only and receives the k
   } finally { co.cleanup(); }
 });
 
-test("A9 setup completes with only docker, git, openssl and POSIX tools available", { todo }, () => {
+test("A9 setup completes with only docker, git, openssl and POSIX tools available", () => {
   const co = makeCheckout();
   try {
     const r = runSetup(co);
