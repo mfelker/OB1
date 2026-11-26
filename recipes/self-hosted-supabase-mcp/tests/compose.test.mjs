@@ -76,7 +76,11 @@ test("U27 auth, realtime and supavisor are in none of the default, ui or images 
 });
 
 /** The `services` map of `docker compose config --format json`. */
-const config = (args = []) => JSON.parse(run([...args, "config", "--format", "json"]).stdout).services;
+const configIn = (args = []) => {
+  const { stdout, co } = run([...args, "config", "--format", "json"]);
+  return { services: JSON.parse(stdout).services, root: co.root };
+};
+const config = (args = []) => configIn(args).services;
 
 test("U28 api-gw has no depends_on entry for studio", { skip }, () => {
   const gw = config(["--profile", "ui"])["api-gw"];
@@ -99,4 +103,13 @@ test("U31 storage has exactly one volume: the named volume ob1-storage at /var/l
   assert.equal(vols[0].type, "volume");
   assert.equal(vols[0].source, "ob1-storage");
   assert.equal(vols[0].target, "/var/lib/storage");
+});
+
+test("U32 functions mounts integrations/self-hosted-llm-mcp read-only at /home/deno/functions/self-hosted-llm-mcp", { skip }, () => {
+  const { services, root } = configIn();
+  const mount = services["functions"].volumes.find((v) => v.target === "/home/deno/functions/self-hosted-llm-mcp");
+  assert.ok(mount, "no mount at the target");
+  assert.equal(mount.type, "bind");
+  assert.equal(mount.source, join(root, "integrations", "self-hosted-llm-mcp"));
+  assert.equal(mount.read_only, true);
 });

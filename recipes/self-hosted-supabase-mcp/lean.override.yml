@@ -23,6 +23,9 @@ services:
     profiles: [never]
   supavisor:
     profiles: [never]
+  functions:
+    volumes:
+      - ../../../../integrations/self-hosted-llm-mcp:/home/deno/functions/self-hosted-llm-mcp:ro
   ob1-init:
     image: busybox:1.37
 
