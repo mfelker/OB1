@@ -314,3 +314,106 @@
 - refactor: none
 - commit: `08e387f`
 - notes: mutant: plain JSON.parse instead of parseUsableMetadata -> AssertionError (1 failed); restored
+
+## Cycle: U135 fallback reply keeps core's Captured as observation — uncategorized text before the skip line
+
+- test: `integrations/self-hosted-llm-mcp/tests/tools_test.ts::U135 …` (new)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U135 /" tests/` -> (passed on first run, 1 passed; mutant below)
+- green: `lib/tools.ts` no change. Suite -> 144 passed, 0 failed, 24 ignored
+- refactor: none
+- commit: `7ca2eb6`
+- notes: mutant: confirmation prefix changed -> AssertionError (1 failed); restored
+
+## Cycle: U136 capturing existing text with chat failing marks the one existing row fallback
+
+- test: `integrations/self-hosted-llm-mcp/tests/tools_test.ts::U136 …` (new)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U136 /" tests/` -> (passed on first run, 1 passed; mutant below)
+- green: `lib/tools.ts` no change. Suite -> 145 passed, 0 failed, 24 ignored
+- refactor: none
+- commit: `f722680`
+- notes: mutant: enrichment_status forced to "complete" -> AssertionError (1 failed); restored
+
+## Cycle: U137 recapturing that text with chat working marks the same row complete
+
+- test: `integrations/self-hosted-llm-mcp/tests/tools_test.ts::U137 …` (new)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U137 /" tests/` -> (passed on first run, 1 passed; mutant below)
+- green: `lib/tools.ts` no change; test rig gained chat handler sequences. Suite -> 146 passed, 0 failed, 24 ignored
+- refactor: none
+- commit: `dece3bd`
+- notes: mutant: enrichment_status forced to "fallback" -> AssertionError (1 failed); restored
+
+## Cycle: U138 an upsertThought error returns core's Failed to capture text with no setEmbedding call
+
+- test: `integrations/self-hosted-llm-mcp/tests/tools_test.ts::U138 …` (new)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U138 /" tests/` -> (passed on first run, 1 passed; mutants below)
+- green: `lib/tools.ts` no change. Suite -> 147 passed, 0 failed, 24 ignored
+- refactor: none
+- commit: `0f6101a`
+- notes: mutants: (a) setEmbedding fired on upsert error -> AssertionError (1 failed); (b) prefix changed to `Capture failed:` -> AssertionError (1 failed); both restored (first two mutant attempts were dead code / type errors, discarded)
+
+## Cycle: U139 setEmbedding failing on a row this call inserted returns the not-kept text and the row is gone
+
+- test: `integrations/self-hosted-llm-mcp/tests/tools_test.ts::U139 …` (new)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U139 /" tests/` -> `AssertionError: Values are not equal` (core `Failed to save embedding:` text, row left behind; 1 failed)
+- green: `lib/tools.ts` R6 flow: readBack, created==updated && embeddingIsNull -> deleteIfInsertedByCall(id, createdAt), not-kept text; read-back/delete problems -> may-be-saved text. Suite -> 148 passed, 0 failed, 24 ignored
+- refactor: none
+- commit: `c9c7189`
+- notes: merge branch still returns the may-be-saved text until U140
+
+## Cycle: U140 setEmbedding failing on a merged duplicate returns the already-in-your-brain text and keeps the row
+
+- test: `integrations/self-hosted-llm-mcp/tests/tools_test.ts::U140 …` (new)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U140 /" tests/` -> `AssertionError: Values are not equal` (may-be-saved text instead; 1 failed)
+- green: `lib/tools.ts` merged branch (created != updated) returns the already-in-your-brain/repair text with no delete. Suite -> 149 passed, 0 failed, 24 ignored
+- refactor: none
+- commit: `55023ed`
+- notes: -
+
+## Cycle: U141 setEmbedding failing with readBack failing returns the may-be-saved text, no delete
+
+- test: `integrations/self-hosted-llm-mcp/tests/tools_test.ts::U141 …` (new)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U141 /" tests/` -> (passed on first run, 1 passed; mutant below)
+- green: `lib/tools.ts` no change (read-back error branch written with U139). Suite -> 150 passed, 0 failed, 24 ignored
+- refactor: none
+- commit: `2ceeb5e`
+- notes: mutant: read-back error returns the not-kept text -> AssertionError (1 failed); restored
+
+## Cycle: U142 setEmbedding failing with the delete erroring returns the may-be-saved text
+
+- test: `integrations/self-hosted-llm-mcp/tests/tools_test.ts::U142 …` (new)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U142 /" tests/` -> (passed on first run, 1 passed; mutant below)
+- green: `lib/tools.ts` no change. Suite -> 151 passed, 0 failed, 24 ignored
+- refactor: none
+- commit: `ed6e5fa`
+- notes: mutant: delete error treated as success -> AssertionError (1 failed); restored
+
+## Cycle: U143 setEmbedding failing with the delete reporting deleted: false returns the may-be-saved text
+
+- test: `integrations/self-hosted-llm-mcp/tests/tools_test.ts::U143 …` (new)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U143 /" tests/` -> (passed on first run, 1 passed; mutant below)
+- green: `lib/tools.ts` no change. Suite -> 152 passed, 0 failed, 24 ignored
+- refactor: none
+- commit: `93f5fc1`
+- notes: mutant: deleted:false ignored -> AssertionError (1 failed); restored
+
+## Cycle: U144 the compensating delete uses the read-back id and timestamp
+
+- test: `integrations/self-hosted-llm-mcp/tests/tools_test.ts::U144 …` (new)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U144 /" tests/` -> (passed on first run, 1 passed; mutant below)
+- green: `lib/tools.ts` no change. Suite -> 153 passed, 0 failed, 24 ignored
+- refactor: none
+- commit: `7228307`
+- notes: mutant: delete called with "x" instead of the read-back timestamp -> AssertionError (1 failed); restored
+
+## Cycle: U145 no tool reply contains any of the four secrets
+
+- test: `integrations/self-hosted-llm-mcp/tests/tools_test.ts::U145 …` (new)
+- red: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^U145 /" tests/` -> `AssertionError: fetch store error: reply contains a secret: Fetch error: rejected emb-secret-AAAA1111 / …` (1 failed)
+- green: `lib/tools.ts` gate() redacts the four secret env values from every reply text. Suite green. Suite -> 154 passed, 0 failed, 24 ignored
+- refactor: none
+- commit: `a36fe25`
+- notes: ten sampled paths: store errors on all tools, embedding/chat echo, upsert/setEmbedding/readBack errors
+
+## Refactor after U145
+
+- removed the unused `notYet` placeholder from `lib/tools.ts`; suite -> 154 passed, 0 failed, 24 ignored; commit: `7ba8920`

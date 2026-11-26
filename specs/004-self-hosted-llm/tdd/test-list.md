@@ -184,52 +184,52 @@ All paths are under `integrations/self-hosted-llm-mcp/`. The test file is `tests
 
 | id | behavior | traces | kind | task | state | test |
 | --- | -------- | ------ | ---- | ---- | ----- | ---- |
-| U100 | `tools/list` returns exactly the six tools named as core | VP-001, core parity | contract | T019 | PENDING | |
-| U101 | Each tool's title, description, input schema (with defaults) and annotations equal core's | VP-001, contracts/mcp-tools.md | contract | T019 | PENDING | |
-| U102 | `fetch` of an existing id returns core's document text | core parity, US1.3 | example | T020 | PENDING | |
-| U103 | `fetch` with a store error returns core's `isError` text | core parity | example | T020 | PENDING | |
-| U104 | `list_thoughts` returns core's listing text for rows | core parity, US1.3 | example | T020 | PENDING | |
-| U105 | `list_thoughts` with no rows returns core's empty text | core parity | example | T020 | PENDING | |
-| U106 | `list_thoughts` with a store error returns core's `isError` text | core parity | example | T020 | PENDING | |
-| U107 | `list_thoughts` forwards `limit`, `type`, `topic`, `person` and `days` to the store | core parity | example | T020 | PENDING | |
-| U108 | `thought_stats` returns core's stats text | core parity, US1.3 | example | T020 | PENDING | |
-| U109 | `search_thoughts` embeds the query and calls `matchThoughts` with that vector, threshold 0.5 and count 10 by default | contracts/mcp-tools.md, US1.2 | example | T020 | PENDING | |
-| U110 | `search_thoughts` forwards an explicit `limit` and `threshold` | core parity | example | T020 | PENDING | |
-| U111 | `search_thoughts` returns core's results text, and core's no-match text for none | core parity | example | T020 | PENDING | |
-| U112 | `search` returns core's results JSON (`id`, `title`, `url`) using threshold 0.5 and count 10 | core parity | example | T020 | PENDING | |
-| U113 | `search` with a store error returns core's `Search error:` text | core parity | example | T020 | PENDING | |
-| U114 | A successful capture replies with core's `Captured as …` confirmation | contracts/mcp-tools.md, US1.1 | example | T021 | PENDING | |
-| U115 | A successful capture stores the extracted metadata plus `source`, `embedding_model` and `enrichment_status: "complete"` | FR-015, FR-024 | example | T021 | PENDING | |
-| U116 | A successful capture stores the model's vector as the row's embedding | US1.1, FR-005 | example | T021 | PENDING | |
-| U117 | Both the embedding and chat requests are in flight before either reply is released | R5 | example | T021 | PENDING | |
-| U118 | Every model request in a capture and a search goes to a configured base | FR-004 | example | T021 | PENDING | |
-| U119 | Config gate: with `EMBEDDING_API_BASE` unset, capture returns the exact `Model endpoint not configured: missing EMBEDDING_API_BASE. …` text | FR-011, SC-008 | example | T026 | PENDING | |
-| U120 | Config gate: with `CHAT_MODEL` unset, each of the six tools returns `isError` naming `CHAT_MODEL` | FR-011, SC-012 | example, sampled across the six | T026 | PENDING | |
-| U121 | Config gate: no model request and no store call happen under a bad configuration | FR-011, FR-018, SC-008 | example | T026 | PENDING | |
-| U122 | Config gate: `tools/list` still returns the six tools under a bad configuration | contracts/mcp-tools.md | contract | T026 | PENDING | |
-| U123 | Config gate: an invalid setting (scheme-less base, bad `FETCH_TIMEOUT_MS`) is named with the missing ones | FR-011, Q 2026-11-26 #6 | example | T026 | PENDING | |
-| U124 | Config gate: setting a missing variable between two calls lets the second call run | R7, data-model §1 | example | T026 | PENDING | |
-| U125 | `search_thoughts` and `search` with a failing embedding return `isError` naming the cause, with no `matchThoughts` call and no results | FR-005 | example | T027 | PENDING | |
-| U126 | Capture with the embedding unreachable or timing out returns `isError` naming the cause, with no `upsertThought` call | FR-005, FR-009, US2.1, SC-003 | example | T027 | PENDING | |
-| U127 | Capture with an `auth_rejected`, `model_not_found`, `bad_response` or `http_error` embedding returns `isError` naming it, with no `upsertThought` call | FR-005, SC-003 | example, sampled | T027 | PENDING | |
-| U128 | Capture with a 768-length embedding returns the exact `wrong_dimension` text and stores nothing | FR-007, US2.2 | example | T027 | PENDING | |
-| U129 | Capture whose embedding fails while chat succeeds stores nothing | R5, data-model §3 | example | T027 | PENDING | |
-| U130 | Capture with chat unreachable stores the row with its embedding, default metadata, `embedding_model`, `source` and `enrichment_status: "fallback"` | FR-006, FR-024, US2.3 | example | T028 | PENDING | |
-| U131 | Capture with chat timing out stores the fallback row and ends the reply with `Metadata extraction skipped: <reason naming the timeout>. Saved with default metadata.` | FR-006, FR-009, Q 2026-11-26 #3 | example | T028 | PENDING | |
-| U132 | Capture with a chat 5xx or missing `choices` stores the fallback row with the skip line naming the reason | FR-006, R5 | example | T028 | PENDING | |
-| U133 | Capture with chat content that is not a JSON object stores the fallback row with the skip line | FR-006, R5 | example | T028 | PENDING | |
-| U134 | Capture with chat content in one fenced JSON block stores `enrichment_status: "complete"` | R5 | example | T028 | PENDING | |
-| U135 | A fallback reply keeps core's `Captured as observation — uncategorized` text before the skip line | contracts/mcp-tools.md | example | T028 | PENDING | |
-| U136 | Capturing existing text with chat failing marks the one existing row `fallback` | SC-016, R12 | example | T028 | PENDING | |
-| U137 | Recapturing that text with chat working marks the same row `complete` | SC-016, R12 | example | T028 | PENDING | |
-| U138 | An `upsertThought` error returns core's `Failed to capture: <msg>` text with no `setEmbedding` call | core parity, data-model §3 | example | T029 | PENDING | |
-| U139 | `setEmbedding` failing on a row this call inserted returns `… The thought was not kept; capture it again.` and the row is gone | R6, contracts/mcp-tools.md | example | T029 | PENDING | |
-| U140 | `setEmbedding` failing on a merged duplicate returns the `already in your brain … repair` text, keeps the row and makes no delete call | R6, contracts/mcp-tools.md | example | T029 | PENDING | |
-| U141 | `setEmbedding` failing with `readBack` failing returns the `may be saved without its embedding` text with no delete call | R6, contracts/mcp-tools.md | example | T029 | PENDING | |
-| U142 | `setEmbedding` failing with the delete erroring returns the `may be saved` text | R6 | example | T029 | PENDING | |
-| U143 | `setEmbedding` failing with the delete reporting `deleted: false` returns the `may be saved` text | R6, contracts/mcp-tools.md | example | T029 | PENDING | |
-| U144 | The compensating delete uses the read-back id and timestamp | R6 | example | T029 | PENDING | |
-| U145 | With known values in all four secrets echoed by the fake servers and store errors, no tool reply contains any of them | FR-010 | example, sampled across paths | T030 | PENDING | |
+| U100 | `tools/list` returns exactly the six tools named as core | VP-001, core parity | contract | T019 | DONE | `tests/tools_test.ts::U100` |
+| U101 | Each tool's title, description, input schema (with defaults) and annotations equal core's | VP-001, contracts/mcp-tools.md | contract | T019 | DONE | `tests/tools_test.ts::U101` |
+| U102 | `fetch` of an existing id returns core's document text | core parity, US1.3 | example | T020 | DONE | `tests/tools_test.ts::U102` |
+| U103 | `fetch` with a store error returns core's `isError` text | core parity | example | T020 | DONE | `tests/tools_test.ts::U103` |
+| U104 | `list_thoughts` returns core's listing text for rows | core parity, US1.3 | example | T020 | DONE | `tests/tools_test.ts::U104` |
+| U105 | `list_thoughts` with no rows returns core's empty text | core parity | example | T020 | DONE | `tests/tools_test.ts::U105` |
+| U106 | `list_thoughts` with a store error returns core's `isError` text | core parity | example | T020 | DONE | `tests/tools_test.ts::U106` |
+| U107 | `list_thoughts` forwards `limit`, `type`, `topic`, `person` and `days` to the store | core parity | example | T020 | DONE | `tests/tools_test.ts::U107` |
+| U108 | `thought_stats` returns core's stats text | core parity, US1.3 | example | T020 | DONE | `tests/tools_test.ts::U108` |
+| U109 | `search_thoughts` embeds the query and calls `matchThoughts` with that vector, threshold 0.5 and count 10 by default | contracts/mcp-tools.md, US1.2 | example | T020 | DONE | `tests/tools_test.ts::U109` |
+| U110 | `search_thoughts` forwards an explicit `limit` and `threshold` | core parity | example | T020 | DONE | `tests/tools_test.ts::U110` |
+| U111 | `search_thoughts` returns core's results text, and core's no-match text for none | core parity | example | T020 | DONE | `tests/tools_test.ts::U111` |
+| U112 | `search` returns core's results JSON (`id`, `title`, `url`) using threshold 0.5 and count 10 | core parity | example | T020 | DONE | `tests/tools_test.ts::U112` |
+| U113 | `search` with a store error returns core's `Search error:` text | core parity | example | T020 | DONE | `tests/tools_test.ts::U113` |
+| U114 | A successful capture replies with core's `Captured as …` confirmation | contracts/mcp-tools.md, US1.1 | example | T021 | DONE | `tests/tools_test.ts::U114` |
+| U115 | A successful capture stores the extracted metadata plus `source`, `embedding_model` and `enrichment_status: "complete"` | FR-015, FR-024 | example | T021 | DONE | `tests/tools_test.ts::U115` |
+| U116 | A successful capture stores the model's vector as the row's embedding | US1.1, FR-005 | example | T021 | DONE | `tests/tools_test.ts::U116` |
+| U117 | Both the embedding and chat requests are in flight before either reply is released | R5 | example | T021 | DONE | `tests/tools_test.ts::U117` |
+| U118 | Every model request in a capture and a search goes to a configured base | FR-004 | example | T021 | DONE | `tests/tools_test.ts::U118` |
+| U119 | Config gate: with `EMBEDDING_API_BASE` unset, capture returns the exact `Model endpoint not configured: missing EMBEDDING_API_BASE. …` text | FR-011, SC-008 | example | T026 | DONE | `tests/tools_test.ts::U119` |
+| U120 | Config gate: with `CHAT_MODEL` unset, each of the six tools returns `isError` naming `CHAT_MODEL` | FR-011, SC-012 | example, sampled across the six | T026 | DONE | `tests/tools_test.ts::U120` |
+| U121 | Config gate: no model request and no store call happen under a bad configuration | FR-011, FR-018, SC-008 | example | T026 | DONE | `tests/tools_test.ts::U121` |
+| U122 | Config gate: `tools/list` still returns the six tools under a bad configuration | contracts/mcp-tools.md | contract | T026 | DONE | `tests/tools_test.ts::U122` |
+| U123 | Config gate: an invalid setting (scheme-less base, bad `FETCH_TIMEOUT_MS`) is named with the missing ones | FR-011, Q 2026-11-26 #6 | example | T026 | DONE | `tests/tools_test.ts::U123` |
+| U124 | Config gate: setting a missing variable between two calls lets the second call run | R7, data-model §1 | example | T026 | DONE | `tests/tools_test.ts::U124` |
+| U125 | `search_thoughts` and `search` with a failing embedding return `isError` naming the cause, with no `matchThoughts` call and no results | FR-005 | example | T027 | DONE | `tests/tools_test.ts::U125` |
+| U126 | Capture with the embedding unreachable or timing out returns `isError` naming the cause, with no `upsertThought` call | FR-005, FR-009, US2.1, SC-003 | example | T027 | DONE | `tests/tools_test.ts::U126` |
+| U127 | Capture with an `auth_rejected`, `model_not_found`, `bad_response` or `http_error` embedding returns `isError` naming it, with no `upsertThought` call | FR-005, SC-003 | example, sampled | T027 | DONE | `tests/tools_test.ts::U127` |
+| U128 | Capture with a 768-length embedding returns the exact `wrong_dimension` text and stores nothing | FR-007, US2.2 | example | T027 | DONE | `tests/tools_test.ts::U128` |
+| U129 | Capture whose embedding fails while chat succeeds stores nothing | R5, data-model §3 | example | T027 | DONE | `tests/tools_test.ts::U129` |
+| U130 | Capture with chat unreachable stores the row with its embedding, default metadata, `embedding_model`, `source` and `enrichment_status: "fallback"` | FR-006, FR-024, US2.3 | example | T028 | DONE | `tests/tools_test.ts::U130` |
+| U131 | Capture with chat timing out stores the fallback row and ends the reply with `Metadata extraction skipped: <reason naming the timeout>. Saved with default metadata.` | FR-006, FR-009, Q 2026-11-26 #3 | example | T028 | DONE | `tests/tools_test.ts::U131` |
+| U132 | Capture with a chat 5xx or missing `choices` stores the fallback row with the skip line naming the reason | FR-006, R5 | example | T028 | DONE | `tests/tools_test.ts::U132` |
+| U133 | Capture with chat content that is not a JSON object stores the fallback row with the skip line | FR-006, R5 | example | T028 | DONE | `tests/tools_test.ts::U133` |
+| U134 | Capture with chat content in one fenced JSON block stores `enrichment_status: "complete"` | R5 | example | T028 | DONE | `tests/tools_test.ts::U134` |
+| U135 | A fallback reply keeps core's `Captured as observation — uncategorized` text before the skip line | contracts/mcp-tools.md | example | T028 | DONE | `tests/tools_test.ts::U135` |
+| U136 | Capturing existing text with chat failing marks the one existing row `fallback` | SC-016, R12 | example | T028 | DONE | `tests/tools_test.ts::U136` |
+| U137 | Recapturing that text with chat working marks the same row `complete` | SC-016, R12 | example | T028 | DONE | `tests/tools_test.ts::U137` |
+| U138 | An `upsertThought` error returns core's `Failed to capture: <msg>` text with no `setEmbedding` call | core parity, data-model §3 | example | T029 | DONE | `tests/tools_test.ts::U138` |
+| U139 | `setEmbedding` failing on a row this call inserted returns `… The thought was not kept; capture it again.` and the row is gone | R6, contracts/mcp-tools.md | example | T029 | DONE | `tests/tools_test.ts::U139` |
+| U140 | `setEmbedding` failing on a merged duplicate returns the `already in your brain … repair` text, keeps the row and makes no delete call | R6, contracts/mcp-tools.md | example | T029 | DONE | `tests/tools_test.ts::U140` |
+| U141 | `setEmbedding` failing with `readBack` failing returns the `may be saved without its embedding` text with no delete call | R6, contracts/mcp-tools.md | example | T029 | DONE | `tests/tools_test.ts::U141` |
+| U142 | `setEmbedding` failing with the delete erroring returns the `may be saved` text | R6 | example | T029 | DONE | `tests/tools_test.ts::U142` |
+| U143 | `setEmbedding` failing with the delete reporting `deleted: false` returns the `may be saved` text | R6, contracts/mcp-tools.md | example | T029 | DONE | `tests/tools_test.ts::U143` |
+| U144 | The compensating delete uses the read-back id and timestamp | R6 | example | T029 | DONE | `tests/tools_test.ts::U144` |
+| U145 | With known values in all four secrets echoed by the fake servers and store errors, no tool reply contains any of them | FR-010 | example, sampled across paths | T030 | DONE | `tests/tools_test.ts::U145` |
 
 ### `lib/setup_check.ts` (stream K)
 

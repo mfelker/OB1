@@ -219,11 +219,11 @@ Streams code against these. Signatures are the only shared contract. Behavior co
 
 ### Stream T: tools (`shl-tools`, wave 2)
 
-- [ ] T019 [U100] [U101] [US1] Tests first in `tests/tools_test.ts`, then `buildServer(deps)` in `lib/tools.ts`, registering the six tools with names, titles, descriptions, input schemas (including defaults) and annotations identical to `W/server/index.ts` (contracts/mcp-tools.md "Tools"). Drive it through the MCP SDK `Client` over `InMemoryTransport`: `tools/list` returns exactly the six, each field equal to a fixture copied from core.
-- [ ] T020 [U102] [U103] [U104] [U105] [U106] [U107] [U108] [U109] [U110] [U111] [U112] [U113] [US1] Tests first, then the read tools through `deps.store`, with output text identical to core:
+- [X] T019 [U100] [U101] [US1] Tests first in `tests/tools_test.ts`, then `buildServer(deps)` in `lib/tools.ts`, registering the six tools with names, titles, descriptions, input schemas (including defaults) and annotations identical to `W/server/index.ts` (contracts/mcp-tools.md "Tools"). Drive it through the MCP SDK `Client` over `InMemoryTransport`: `tools/list` returns exactly the six, each field equal to a fixture copied from core.
+- [X] T020 [U102] [U103] [U104] [U105] [U106] [U107] [U108] [U109] [U110] [U111] [U112] [U113] [US1] Tests first, then the read tools through `deps.store`, with output text identical to core:
   - `search` and `search_thoughts`: embed the query with the embedding role, then `matchThoughts` with core's threshold and count
   - `fetch`, `list_thoughts`, `thought_stats`
-- [ ] T021 [U114] [U115] [U116] [U117] [U118] [US1] Tests first, then `capture_thought`'s success path:
+- [X] T021 [U114] [U115] [U116] [U117] [U118] [US1] Tests first, then `capture_thought`'s success path:
   1. Embedding and chat start concurrently. Prove it with fake-fetch hold mode.
   2. `upsertThought` stores `buildCaptureMetadata(extracted, EMBEDDING_MODEL)`, so `enrichment_status` is `"complete"`.
   3. `setEmbedding`.
@@ -270,21 +270,21 @@ Streams code against these. Signatures are the only shared contract. Behavior co
 
 ### Stream T: tools (`shl-tools`, wave 2)
 
-- [ ] T026 [U119] [U120] [U121] [U122] [U123] [U124] [US2] Tests first, then the configuration gate in `lib/tools.ts`: with `resolveConfig` not `ok`, **every one of the six tools** returns `isError` with `Model endpoint not configured: …`, naming each missing and invalid setting. The fake fetch and fake store record **zero** calls. `tools/list` still returns the six tools under the bad configuration (contracts/mcp-tools.md "Configuration gate"; FR-011, FR-018, SC-008, SC-012).
-- [ ] T027 [U125] [U126] [U127] [U128] [U129] [US2] Tests first, then capture's embedding-failure paths. For each failing `Model call outcome` kind (`data-model.md` §2), including `wrong_dimension` with its exact message, the result is `isError` naming the cause, and the fake store records **no** `upsertThought` call (FR-005, FR-007, SC-003). `search` and `search_thoughts` fail the same way and return no results.
-- [ ] T028 [U130] [U131] [U132] [U133] [U134] [U135] [U136] [U137] [US2] Tests first, then capture's chat-failure paths. Chat unreachable, timing out (FR-009 as amended), non-2xx, missing `choices`, or returning unusable content each lead to:
+- [X] T026 [U119] [U120] [U121] [U122] [U123] [U124] [US2] Tests first, then the configuration gate in `lib/tools.ts`: with `resolveConfig` not `ok`, **every one of the six tools** returns `isError` with `Model endpoint not configured: …`, naming each missing and invalid setting. The fake fetch and fake store record **zero** calls. `tools/list` still returns the six tools under the bad configuration (contracts/mcp-tools.md "Configuration gate"; FR-011, FR-018, SC-008, SC-012).
+- [X] T027 [U125] [U126] [U127] [U128] [U129] [US2] Tests first, then capture's embedding-failure paths. For each failing `Model call outcome` kind (`data-model.md` §2), including `wrong_dimension` with its exact message, the result is `isError` naming the cause, and the fake store records **no** `upsertThought` call (FR-005, FR-007, SC-003). `search` and `search_thoughts` fail the same way and return no results.
+- [X] T028 [U130] [U131] [U132] [U133] [U134] [U135] [U136] [U137] [US2] Tests first, then capture's chat-failure paths. Chat unreachable, timing out (FR-009 as amended), non-2xx, missing `choices`, or returning unusable content each lead to:
   - the thought saved with its embedding
   - default metadata with `enrichment_status: "fallback"` (`data-model.md` §3 `Thought.metadata`)
   - the reply ending with `Metadata extraction skipped: <reason>. Saved with default metadata.`, the reason naming the timeout where applicable
 
   Covers FR-006, FR-024 and SC-016's fallback half. A duplicate capture that falls back marks the existing row `fallback`, and a later successful capture marks it `complete` (SC-016).
-- [ ] T029 [U138] [U139] [U140] [U141] [U142] [U143] [U144] [US2] Tests first, then the R6 option C compensation after a failed `setEmbedding`. The three cases with their exact messages and store effects from contracts/mcp-tools.md:
+- [X] T029 [U138] [U139] [U140] [U141] [U142] [U143] [U144] [US2] Tests first, then the R6 option C compensation after a failed `setEmbedding`. The three cases with their exact messages and store effects from contracts/mcp-tools.md:
   - inserted → deleted
   - merged → no delete
   - read-back or delete fails, **or `deleteIfInsertedByCall` returns `deleted: false` without an error** (the row changed between read and delete) → no further action, with the "may be saved without its embedding" message
 
   Use the fake store's failure injection and insert/merge timestamps (`data-model.md` §3 capture state transitions).
-- [ ] T030 [U145] [US2] Tests first, then the end-to-end redaction check: with known key values in `EMBEDDING_API_KEY`, `CHAT_API_KEY`, `MCP_ACCESS_KEY` and `SUPABASE_SERVICE_ROLE_KEY`, and a fake server echoing them in error bodies, no tool output contains any of them (FR-010).
+- [X] T030 [U145] [US2] Tests first, then the end-to-end redaction check: with known key values in `EMBEDDING_API_KEY`, `CHAT_API_KEY`, `MCP_ACCESS_KEY` and `SUPABASE_SERVICE_ROLE_KEY`, and a fake server echoing them in error bodies, no tool output contains any of them (FR-010).
 
 ### Stream K: setup check (`shl-check`, wave 2)
 
