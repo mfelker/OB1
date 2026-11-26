@@ -10,3 +10,11 @@ CREATE SCHEMA IF NOT EXISTS auth;
 CREATE OR REPLACE FUNCTION auth.role() RETURNS text LANGUAGE sql STABLE
   AS $$ SELECT coalesce(nullif(current_setting('request.jwt.claim.role', true), ''), 'anon') $$;
 \ir ../db/ob1-schema.sql
+
+-- U41: the embedding column is vector(1536).
+DO $$ BEGIN
+  IF (SELECT format_type(atttypid, atttypmod) FROM pg_attribute
+      WHERE attrelid = 'public.thoughts'::regclass AND attname = 'embedding') IS DISTINCT FROM 'vector(1536)' THEN
+    RAISE EXCEPTION 'U41 thoughts.embedding is not vector(1536)';
+  END IF;
+END $$;
