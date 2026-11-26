@@ -158,3 +158,14 @@ test("U12 when key generation fails setup fails and leaves no .env or temporary 
     assert.deepEqual(left, [".env.example", "docker-compose.yml", "utils"]);
   } finally { co.cleanup(); }
 });
+
+test("U13 after a failed key generation the next run completes the secrets", () => {
+  const co = makeCheckout();
+  try {
+    runSetup(co, { STUB_GENKEYS_FAIL: "1" });
+    runSetup(co);
+    const env = readEnv(envPath(co));
+    for (const k of SUPABASE_KEYS) assert.notEqual(env.get(k), examplePlaceholder(k), `${k} generated`);
+    assert.match(env.get("MCP_ACCESS_KEY") ?? "", /^[0-9a-f]{64}$/);
+  } finally { co.cleanup(); }
+});
