@@ -9,7 +9,7 @@ Read from the environment **on every request**, never at module load, so a missi
 | Field | Embedding role source | Chat role source | Rule |
 |-------|-----------------------|------------------|------|
 | `base` | `EMBEDDING_API_BASE` | `CHAT_API_BASE`, else `EMBEDDING_API_BASE` | Required (embedding). `http://` or `https://` only (FR-020). Trailing `/` removed. |
-| `key` | `EMBEDDING_API_KEY` | `CHAT_API_KEY`, else `EMBEDDING_API_KEY` | Optional. When absent, no `Authorization` header is sent. Never logged or echoed (FR-010). |
+| `key` | `EMBEDDING_API_KEY` | `CHAT_API_KEY`, else `EMBEDDING_API_KEY` **only when the chat base also falls back** (spec Q11) | Optional. When absent, no `Authorization` header is sent. Never logged or echoed (FR-010). |
 | `model` | `EMBEDDING_MODEL` | `CHAT_MODEL` | Both required, with no fallback between them (FR-011). |
 
 Shared settings:

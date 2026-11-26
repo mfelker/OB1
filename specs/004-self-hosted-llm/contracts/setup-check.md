@@ -4,7 +4,7 @@ An HTTP route on the same function, not an MCP tool (spec Q5). The README gives 
 
 ## Routing
 
-- Matches `GET` when the request path's **last segment** is `setup-check`. The function sees `/<function-name>/setup-check` on Supabase Cloud, and on self-hosted after Kong strips `/functions/v1` (research R8). Matching the last segment works on both and does not depend on the function's name (FR-014).
+- Matches `GET` when the request path's **last segment** is `setup-check`, ignoring one trailing slash (spec Q8). The function sees `/<function-name>/setup-check` on Supabase Cloud, and on self-hosted after Kong strips `/functions/v1` (research R8). Matching the last segment works on both and does not depend on the function's name (FR-014).
 - Any other method on that path goes to the MCP route, exactly as core would handle it.
 
 ## Authentication
@@ -14,7 +14,7 @@ An HTTP route on the same function, not an MCP tool (spec Q5). The README gives 
 
 ## Response
 
-`Content-Type: application/json`. HTTP **200** when `ok` is `true`, **503** when any check failed (FR-008), so `curl -f` scripts can branch on it. A 502/504 with no JSON body comes from the Supabase gateway, not from this function (research R13). Shape:
+`Content-Type: application/json`. HTTP **200** when `ok` is `true`, **503** when any check failed (FR-008), **500** with `{"error":"Setup check failed unexpectedly."}` if the check itself crashes (spec Q10), so `curl -f` scripts can branch on it. A 502/504 with no JSON body comes from the Supabase gateway, not from this function (research R13). Shape:
 
 ```json
 {
@@ -52,7 +52,7 @@ An HTTP route on the same function, not an MCP tool (spec Q5). The README gives 
 | `embedding_dimension` | a real embedding of a fixed sample sentence returns 1536 numbers | actual vs expected size (FR-007), or the call's outcome |
 | `chat_metadata` | a real chat call on a fixed sample sentence returns usable metadata (data-model §3) | `unusable output` with the first 120 chars of the reply, or the call's outcome |
 
-- When `config` fails, every other check is `ok: false` with reason `skipped: configuration incomplete`, and **no request** is sent to any model server (FR-018, SC-012).
+- When `config` fails, every other check is `ok: false` with reason `skipped: configuration incomplete`, **no request** is sent to any model server, and `thoughts.other_model` is `null` with no database call (FR-018, SC-012, spec Q9).
 - When the chat role inherits the embedding base, both roles are still checked and reported separately.
 - **Warnings** never change `ok`. `key_over_http` is reported per role whose base is `http://` and whose key is set (FR-020, SC-014). There is no warning for an unkeyed `http://` endpoint (OS-005).
 - **`thoughts.other_model`** is the mixed-model count (data-model §5, FR-016, SC-010). If the database count fails, it is `null` and a `thoughts_count` warning carries the database message. The model checks still run.

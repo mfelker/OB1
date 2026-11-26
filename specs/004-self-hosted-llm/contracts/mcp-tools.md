@@ -41,7 +41,7 @@ Each missing or invalid setting is named. No model server request and no databas
 | Both ok | success text as core (`Captured as <type> — <topics> …`) | row with embedding, extracted metadata + `source: "mcp"` + `embedding_model` + `enrichment_status: "complete"` (FR-015, FR-024) |
 | Embedding update fails; the row was inserted by this call | `isError`: `Embedding could not be saved: <db message>. The thought was not kept; capture it again.` | the new row is removed (research R6) |
 | Embedding update fails; the text was already saved (merge path) | `isError`: `… This text was already in your brain; its metadata was updated but its embedding was not. Capture it again to repair.` | existing row kept: old embedding, merged metadata; nothing deleted |
-| Embedding update fails, and the read-back or delete also fails | `isError`: `… The thought may be saved without its embedding; capture it again to repair.` | unknown; a retry repairs it |
+| Embedding update fails, and the read-back or delete also fails, or the delete matched no row (the row changed in between) | `isError`: `… The thought may be saved without its embedding; capture it again to repair.` | unknown; a retry repairs it |
 
 Error text never contains `EMBEDDING_API_KEY`, `CHAT_API_KEY`, `MCP_ACCESS_KEY` or `SUPABASE_SERVICE_ROLE_KEY` values (FR-010). Any key value that appears in an upstream server's error body is replaced with `[redacted]`.
 
