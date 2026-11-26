@@ -125,3 +125,16 @@ test("U9 on a fresh folder MCP_ACCESS_KEY is exactly 64 lowercase hex characters
     assert.match(readEnv(envPath(co)).get("MCP_ACCESS_KEY") ?? "", /^[0-9a-f]{64}$/);
   } finally { co.cleanup(); }
 });
+
+test("U10 two fresh setups produce two different MCP access keys", () => {
+  const a = makeCheckout();
+  const b = makeCheckout();
+  try {
+    runSetup(a);
+    runSetup(b);
+    const ka = readEnv(envPath(a)).get("MCP_ACCESS_KEY");
+    const kb = readEnv(envPath(b)).get("MCP_ACCESS_KEY");
+    assert.ok(ka && kb, "both keys generated");
+    assert.notEqual(ka, kb);
+  } finally { a.cleanup(); b.cleanup(); }
+});
