@@ -28,7 +28,7 @@ const noDocker = DOCKER ? false : "docker is not on PATH";
 const ALWAYS_ON = ["api-gw", "db", "functions", "ob1-init", "rest", "storage"];
 const services = (stdout) => stdout.split("\n").filter(Boolean).sort();
 
-test("A1 after setup, the default service set is exactly the always-on set", { todo, skip: noDocker }, () => {
+test("A1 after setup, the default service set is exactly the always-on set", { skip: noDocker }, () => {
   const co = makeCheckout();
   try {
     assert.equal(runSetup(co).code, 0);
