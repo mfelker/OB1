@@ -25,3 +25,10 @@ DO $$ BEGIN
     RAISE EXCEPTION 'U42 match_thoughts or upsert_thought is missing';
   END IF;
 END $$;
+
+-- U43: service_role may insert into thoughts (the GRANT step CONTRIBUTING.md requires).
+DO $$ BEGIN
+  IF NOT has_table_privilege('service_role', 'public.thoughts', 'INSERT') THEN
+    RAISE EXCEPTION 'U43 service_role has no INSERT on public.thoughts';
+  END IF;
+END $$;
