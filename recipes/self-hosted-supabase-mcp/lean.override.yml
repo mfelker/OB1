@@ -23,6 +23,9 @@ services:
     profiles: [never]
   supavisor:
     profiles: [never]
+  db:
+    volumes:
+      - ../../db/ob1-schema.sql:/docker-entrypoint-initdb.d/migrations/99-ob1-schema.sql:ro
   functions:
     extra_hosts:
       - host.docker.internal:host-gateway

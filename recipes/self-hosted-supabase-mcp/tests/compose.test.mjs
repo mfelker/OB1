@@ -122,3 +122,16 @@ test("U33 functions receives the access key and model settings from .env", { ski
 test("U34 functions maps host.docker.internal to host-gateway", { skip }, () => {
   assert.deepEqual(config()["functions"].extra_hosts, ["host.docker.internal=host-gateway"]);
 });
+
+test("U35 db mounts db/ob1-schema.sql read-only as 99-ob1-schema.sql and keeps its own mounts", { skip }, () => {
+  const { services, root } = configIn();
+  const vols = services["db"].volumes;
+  const schema = vols.find((v) => v.target === "/docker-entrypoint-initdb.d/migrations/99-ob1-schema.sql");
+  assert.ok(schema, "no schema mount");
+  assert.equal(schema.type, "bind");
+  assert.equal(schema.source, join(root, "recipes", "self-hosted-supabase-mcp", "db", "ob1-schema.sql"));
+  assert.equal(schema.read_only, true);
+  const targets = vols.map((v) => v.target);
+  assert.ok(targets.includes("/docker-entrypoint-initdb.d/init-scripts/99-roles.sql"), targets.join());
+  assert.ok(targets.includes("/var/lib/postgresql/data"), targets.join());
+});
