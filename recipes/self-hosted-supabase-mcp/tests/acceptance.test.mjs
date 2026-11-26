@@ -38,7 +38,7 @@ test("A1 after setup, the default service set is exactly the always-on set", { s
   } finally { co.cleanup(); }
 });
 
-test("A2 a second setup run reports every piece already present and leaves .env byte-identical", { todo }, () => {
+test("A2 a second setup run reports every piece already present and leaves .env byte-identical", () => {
   const co = makeCheckout();
   try {
     assert.equal(runSetup(co).code, 0);
