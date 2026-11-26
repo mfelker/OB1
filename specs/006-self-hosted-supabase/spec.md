@@ -202,7 +202,7 @@ Most of the time the owner wants the stack as light as possible, but sometimes t
 - **OS-007**: Reaching the stack from cloud-hosted clients (claude.ai custom connectors, a phone off the local network) through a secure public HTTPS route: a planned later feature, which can reuse the Caddy plus Tailscale Funnel pattern from spec 004's Cloud run (`specs/004-self-hosted-llm/evidence/t046-cloud/`).
 - **OS-008**: A published Docker image that serves models through a choice of vLLM, SGLang, llama.cpp or Ollama, alongside or replacing 006's Docker Model Runner option: a planned later feature (Round 1, Q4).
 - **OS-009**: Undecided (not asked): what starting the UI add-on does while the always-on services are stopped. Outstanding as minor; needs a user decision if the plan finds the add-on can start parts of the stack on its own.
-- **OS-010**: Undecided (not asked): whether Docker Model Runner's host port on the owner's Mac is reachable from the local network. Outstanding as minor; needs a fact from FR-012's research.
+- **OS-010**: Settled by the T035 probe: Docker Model Runner listens on `127.0.0.1:12434` only, so it isn't reachable from the local network (research R5).
 
 ## Assumptions
 

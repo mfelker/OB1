@@ -47,11 +47,18 @@ Phase 0 for [plan.md](plan.md). Each item has a Decision, the evidence behind it
 - **Evidence** (probe, `--profile ui`): all 7 services healthy. `/` without credentials returns 401; with basic auth it returns 200. Studio's API `/api/platform/pg-meta/default/tables?included_schemas=public` lists `thoughts`, and `/api/platform/storage/default/buckets` lists `ob1-files`.
 - **Open (OS-009)**: `docker compose --profile ui up -d studio meta` while the always-on services are stopped would start `meta`'s dependency `db` as well. Not probed; quickstart step V7 records the result.
 
-## R5: Docker Model Runner and 1536-number embeddings: verified in a task, not here
+## R5: Docker Model Runner and 1536-number embeddings: probed (T035)
 
-- **Decision**: The check is the owner-approved task T0-DMR (see tasks). It runs `docker desktop enable model-runner`, which changes a Docker Desktop setting on the owner's Mac. It then pulls an embedding model, posts `/engines/v1/embeddings` with `dimensions: 1536`, and records the vector length. If the result isn't 1536 numbers, the README tells the reader to use DMR for the chat role only (FR-017).
-- **Evidence so far**: VP-011 (Docker docs): DMR is OpenAI-compatible, containers reach it at `model-runner.docker.internal/engines/v1`, and it uses Metal on Apple Silicon. Whether it honors `dimensions`, and which embedding models it offers, isn't documented in what was read.
-- **Why not here**: enabling DMR is a setting change on the owner's machine. The plan phase doesn't make it without the owner.
+- **Result (2026-11-26, owner-approved, `evidence/dmr/`)**:
+  - Docker Model Runner (llama.cpp `b9879-metal`, so the Metal GPU) served `Qwen3-Embedding-4B` (Q4_K_M GGUF from Hugging Face) at its native **2560** numbers whether or not the request asked for `dimensions: 1536`.
+  - Chat with `Llama-3.1-8B-Instruct` (Q4_K_M GGUF) worked.
+  - Containers reach it at `http://model-runner.docker.internal/engines/v1`.
+  - It listens only on `127.0.0.1:12434`, so it isn't reachable from the LAN (answers OS-010).
+  - Docker Hub's `ai/` catalog returned 403 from this machine; Hugging Face models worked.
+- **Decision**: DMR is documented for the **chat role only**. Embeddings stay on the host route (for example Ollama with `qwen3-embedding:4b`, which honors `dimensions`, as spec 004's R1 found). This is FR-017's stated fallback.
+- **Alternatives**:
+  - An embedding model with native 1536 in DMR's catalog wasn't found in what was searched.
+  - Truncating vectors in the recipe was rejected: spec 004 refuses non-1536 vectors by design.
 
 ## R6: Secrets come from Supabase's own generator, plus one OB1 key
 
