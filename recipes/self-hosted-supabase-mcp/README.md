@@ -88,7 +88,7 @@ YOU FILL IN (model server, spec 004 names)
    docker compose ps
    ```
 
-   After a minute, `docker compose ps` shows `db`, `rest`, `api-gw`, `functions` and `storage` as healthy, and `ob1-init` as exited. On the first start, Postgres creates the Open Brain schema from [`db/ob1-schema.sql`](db/ob1-schema.sql), which is `docs/01-getting-started.md`'s SQL at 1536 dimensions.
+   The first start downloads the stack's images, about 5 GB as stored by Docker; later starts reuse them. After a minute, `docker compose ps` shows `db`, `rest`, `api-gw`, `functions` and `storage` as healthy, and `ob1-init` as exited. On the first start, Postgres creates the Open Brain schema from [`db/ob1-schema.sql`](db/ob1-schema.sql), which is `docs/01-getting-started.md`'s SQL at 1536 dimensions.
 
 4. **Run the setup check.** Read your key first:
 
@@ -202,6 +202,8 @@ The containers restart on their own after a reboot once Docker is running. The `
 - Your AI client lists six Open Brain tools. A captured thought is stored with a 1536-number embedding, and a search in different words finds it.
 - The storage check prints `storage works`, and the request without credentials is refused.
 - After `docker compose down` and `docker compose up -d`, or a reboot, your thoughts and files are still there.
+
+Measured on an Apple M4 Max with the images and models already downloaded, the steps from `sh setup.sh` to a reworded search finding a captured thought took about 2 minutes. Add the image download on first use.
 
 ## Troubleshooting
 

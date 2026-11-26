@@ -15,7 +15,7 @@
   "requires_skills": [],
   "tags": ["self-hosted", "supabase", "docker-compose", "mcp", "local-llm", "storage"],
   "difficulty": "advanced",
-  "estimated_time": "45 minutes",
+  "estimated_time": "30 minutes",
   "created": "2026-11-26",
   "updated": "2026-11-26"
 }
