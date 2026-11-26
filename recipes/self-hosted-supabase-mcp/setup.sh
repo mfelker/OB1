@@ -12,7 +12,11 @@ TESTED_COMPOSE="v5.6.1"
 # they sign the stored API keys and the dashboard login.
 SUPABASE_KEYS="JWT_SECRET ANON_KEY SERVICE_ROLE_KEY SECRET_KEY_BASE REALTIME_DB_ENC_KEY VAULT_ENC_KEY PG_META_CRYPTO_KEY LOGFLARE_PUBLIC_ACCESS_TOKEN LOGFLARE_PRIVATE_ACCESS_TOKEN S3_PROTOCOL_ACCESS_KEY_ID S3_PROTOCOL_ACCESS_KEY_SECRET MINIO_ROOT_PASSWORD POSTGRES_PASSWORD DASHBOARD_PASSWORD"
 
+MODEL_SETTINGS="EMBEDDING_API_BASE EMBEDDING_API_KEY EMBEDDING_MODEL CHAT_API_BASE CHAT_API_KEY CHAT_MODEL FETCH_TIMEOUT_MS"
+KEEP_KEYS="Setup does not regenerate Supabase keys in an existing .env; see \"Starting over\" in README.md. Nothing was changed."
+
 die() { printf 'setup.sh: %s\n' "$*" >&2; exit 1; }
+add_mcp_key() { printf '\n# Open Brain MCP access key (spec 004)\nMCP_ACCESS_KEY=%s\n' "$(openssl rand -hex 32)" >> "$1"; }
 
 for tool in docker git openssl; do
   command -v "$tool" >/dev/null 2>&1 || die "$tool not found on PATH"
@@ -37,38 +41,36 @@ if ! (cd "$RECIPE_DIR" && docker compose config -q >/dev/null 2>&1); then
 fi
 [ -n "$placeholder" ] && rm -f "$ENV_FILE"
 
-# Secrets: Supabase's own generator fills a copy of .env.example. The file is built in a
-# temporary folder and moved into place only when complete, so an interrupted run leaves no .env.
+# Secrets. A new .env is built in a temporary folder by Supabase's own generator and moved into
+# place only when complete, so an interrupted run leaves no .env. An existing .env keeps every
+# Supabase key as it is; only the OB1 key is added if it is missing.
 if [ ! -f "$ENV_FILE" ]; then
   build=$(mktemp -d)
   trap 'rm -rf "$build"' EXIT
   cp "$CLONE/docker/.env.example" "$build/.env"
   (cd "$build" && sh "$CLONE/docker/utils/generate-keys.sh" --update-env >/dev/null)
-  printf '\n# Open Brain MCP access key (spec 004)\nMCP_ACCESS_KEY=%s\n' "$(openssl rand -hex 32)" >> "$build/.env"
+  add_mcp_key "$build/.env"
   printf '\n# Model server settings (spec 004); fill these in, see README.md\n' >> "$build/.env"
-  for k in EMBEDDING_API_BASE EMBEDDING_API_KEY EMBEDDING_MODEL CHAT_API_BASE CHAT_API_KEY CHAT_MODEL FETCH_TIMEOUT_MS; do
-    printf '%s=\n' "$k" >> "$build/.env"
-  done
+  for k in $MODEL_SETTINGS; do printf '%s=\n' "$k" >> "$build/.env"; done
   mv "$build/.env" "$ENV_FILE"
-fi
-for k in $SUPABASE_KEYS; do
-  grep -q "^$k=" "$ENV_FILE" || die "supabase/docker/.env has no $k. Setup does not regenerate Supabase keys in an existing .env; see \"Starting over\" in README.md. Nothing was changed."
-  value=$(sed -n "s/^$k=//p" "$ENV_FILE" | head -n 1)
-  example=$(sed -n "s/^$k=//p" "$CLONE/docker/.env.example" | head -n 1)
-  [ "$value" != "$example" ] || die "$k in supabase/docker/.env still has its .env.example value. Setup does not regenerate Supabase keys in an existing .env; see \"Starting over\" in README.md. Nothing was changed."
-done
-if [ -n "${build:-}" ]; then
-  :
-elif ! grep -q '^MCP_ACCESS_KEY=' "$ENV_FILE"; then
-  printf '\n# Open Brain MCP access key (spec 004)\nMCP_ACCESS_KEY=%s\n' "$(openssl rand -hex 32)" >> "$ENV_FILE"
-  echo "secrets: completed"
 else
-  echo "secrets: already present"
+  for k in $SUPABASE_KEYS; do
+    grep -q "^$k=" "$ENV_FILE" || die "supabase/docker/.env has no $k. $KEEP_KEYS"
+    value=$(sed -n "s/^$k=//p" "$ENV_FILE" | head -n 1)
+    example=$(sed -n "s/^$k=//p" "$CLONE/docker/.env.example" | head -n 1)
+    [ "$value" != "$example" ] || die "$k in supabase/docker/.env still has its .env.example value. $KEEP_KEYS"
+  done
+  if grep -q '^MCP_ACCESS_KEY=' "$ENV_FILE"; then
+    echo "secrets: already present"
+  else
+    add_mcp_key "$ENV_FILE"
+    echo "secrets: completed"
+  fi
 fi
 
 # Model server settings (spec 004 names): add any name that is missing, blank.
 added=""
-for k in EMBEDDING_API_BASE EMBEDDING_API_KEY EMBEDDING_MODEL CHAT_API_BASE CHAT_API_KEY CHAT_MODEL FETCH_TIMEOUT_MS; do
+for k in $MODEL_SETTINGS; do
   grep -q "^$k=" "$ENV_FILE" || { printf '%s=\n' "$k" >> "$ENV_FILE"; added=1; }
 done
 if [ -n "$added" ]; then echo "model-settings: completed"; else echo "model-settings: already present"; fi
