@@ -107,41 +107,41 @@ All paths are under `integrations/self-hosted-llm-mcp/`. The test file is `tests
 
 | id | behavior | traces | kind | task | state | test |
 | --- | -------- | ------ | ---- | ---- | ----- | ---- |
-| U33 | `embed(text)` sends one `POST <embedding base>/embeddings` with `{ model, input, dimensions: 1536 }` and `Content-Type: application/json` | contracts/model-server-requests.md, R3 | contract | T011 | PENDING | |
-| U34 | `embed` returns `ok` with the vector for a 2xx reply holding a 1536-number `data[0].embedding` | contracts/model-server-requests.md | example | T011 | PENDING | |
-| U35 | `chat(text)` sends one `POST <chat base>/chat/completions` with `CHAT_MODEL`, `response_format: { type: "json_object" }` and messages `[system: EXTRACTION_PROMPT, user: text]` | contracts/model-server-requests.md | contract | T011 | PENDING | |
-| U36 | `chat` returns `ok` with `choices[0].message.content` for a 2xx reply | contracts/model-server-requests.md | example | T011 | PENDING | |
-| U37 | `listModels(role)` sends one `GET <role base>/models` | contracts/model-server-requests.md | contract | T011 | PENDING | |
-| U38 | A role with a key sends `Authorization: Bearer <key>` on embed, chat and listModels | data-model §1 key | example | T011 | PENDING | |
-| U39 | A role with no key sends no `Authorization` header at all | data-model §1 key | example | T011 | PENDING | |
-| U40 | Each role sends its own key when the two keys differ | FR-003 | example | T011 | PENDING | |
-| U41 | Every request across embed, chat, listModels and the retry goes to one of the two configured bases | FR-004, SC-002 | example, sampled across operations | T011 | PENDING | |
-| U42 | A rejected fetch gives `unreachable`, the message naming the role and base and "could not be reached" | data-model §2, US2.1 | example | T012 | PENDING | |
-| U43 | A reply arriving inside `timeoutMs` is `ok` | FR-009 | example | T012 | PENDING | |
-| U44 | A fetch that hangs past `timeoutMs` gives `timeout` for either role, the message naming the role, base, the ms value and `FETCH_TIMEOUT_MS` | FR-009, SC-011, data-model §2 | example | T012 | PENDING | |
-| U45 | HTTP 401 and 403 each give `auth_rejected`, naming the role, base and "access key rejected" | data-model §2 | example | T012 | PENDING | |
-| U46 | HTTP 404 gives `model_not_found`, naming the role and model | data-model §2 | example | T012 | PENDING | |
-| U47 | A 400 or 422 whose body names the configured model with "not found", "unknown" or "does not exist" gives `model_not_found` | data-model §2 | example | T012 | PENDING | |
-| U48 | HTTP 500 gives `http_error`, naming the role, the status and the server text | data-model §2 | example | T012 | PENDING | |
-| U49 | A 400 whose body mentions neither dimensions nor the model gives `http_error` after exactly one request | data-model §2, R3 | example | T012 | PENDING | |
-| U50 | A 2xx embeddings reply lacking `data[0].embedding`, with a non-array, non-numeric items or a non-JSON body gives `bad_response` | data-model §2 | example, sampled | T012 | PENDING | |
-| U51 | A 2xx chat reply lacking `choices[0].message.content` or with a non-JSON body gives `bad_response` | data-model §2 | example | T012 | PENDING | |
-| U52 | A 1536-length vector is `ok`; 1535 and 1537 each give `wrong_dimension` | FR-007 | example, boundary both sides | T012 | PENDING | |
-| U53 | `wrong_dimension`'s message is exactly the contracts/mcp-tools.md text naming the model, the length and 1536, and no vector is returned | FR-007, SC-009 | example | T012 | PENDING | |
-| U54 | A 400 `dimensions 1536 exceeds embedding length 768` (Ollama) is retried once to the same URL without the `dimensions` key | R3 | example | T013 | PENDING | |
-| U55 | The retry is otherwise identical (model, input, headers) and its 1536-length reply is `ok` | R3 | example | T013 | PENDING | |
-| U56 | A 422 mentioning `dimension`, a 400 `does not support Matryoshka embeddings` (vLLM) and an upper-case `DIMENSIONS` body are each retried once | R3 | example, sampled | T013 | PENDING | |
-| U57 | A 404, and a 500 whose body mentions `dimension`, are not retried | R3 | example, boundary on status | T013 | PENDING | |
-| U58 | A retry that again fails with a `dimension` 400 sends no third request and gives `http_error` | R3 | example | T013 | PENDING | |
-| U59 | A retry returning a 768-length vector gives `wrong_dimension` | R3, FR-007 | example | T013 | PENDING | |
-| U60 | The retry gets its own `timeoutMs`; a hanging retry gives `timeout` | R3, FR-009, contracts/model-server-requests.md | example | T013 | PENDING | |
-| U61 | A 2xx first reply means exactly one request is sent | R3 | example | T013 | PENDING | |
-| U62 | A key value of either role inside a server error body appears as `[redacted]` in the message | FR-010 | example | T014 | PENDING | |
-| U63 | A key value inside a thrown fetch error appears as `[redacted]` in the `unreachable` message | FR-010 | example | T014 | PENDING | |
-| U64 | A 200-char server message is kept whole and a 201-char one is cut to 200, redaction applied first so a key straddling the cut never leaks | FR-010, data-model §2 | example, boundary both sides | T014 | PENDING | |
-| U65 | `listModels` returns the `data[].id` list for a 2xx listing | contracts/model-server-requests.md | example | T015 | PENDING | |
-| U66 | `listModels` returns `ok` with `null` for a 2xx non-JSON body or one without `data[]` | contracts/model-server-requests.md | example | T015 | PENDING | |
-| U67 | `listModels` maps 401 to `auth_rejected` and a rejected fetch to `unreachable` | contracts/model-server-requests.md, data-model §2 | example | T015 | PENDING | |
+| U33 | `embed(text)` sends one `POST <embedding base>/embeddings` with `{ model, input, dimensions: 1536 }` and `Content-Type: application/json` | contracts/model-server-requests.md, R3 | contract | T011 | DONE | `tests/model_client_test.ts::U33` |
+| U34 | `embed` returns `ok` with the vector for a 2xx reply holding a 1536-number `data[0].embedding` | contracts/model-server-requests.md | example | T011 | DONE | `tests/model_client_test.ts::U34` |
+| U35 | `chat(text)` sends one `POST <chat base>/chat/completions` with `CHAT_MODEL`, `response_format: { type: "json_object" }` and messages `[system: EXTRACTION_PROMPT, user: text]` | contracts/model-server-requests.md | contract | T011 | DONE | `tests/model_client_test.ts::U35` |
+| U36 | `chat` returns `ok` with `choices[0].message.content` for a 2xx reply | contracts/model-server-requests.md | example | T011 | DONE | `tests/model_client_test.ts::U36` |
+| U37 | `listModels(role)` sends one `GET <role base>/models` | contracts/model-server-requests.md | contract | T011 | DONE | `tests/model_client_test.ts::U37` |
+| U38 | A role with a key sends `Authorization: Bearer <key>` on embed, chat and listModels | data-model §1 key | example | T011 | DONE | `tests/model_client_test.ts::U38` |
+| U39 | A role with no key sends no `Authorization` header at all | data-model §1 key | example | T011 | DONE | `tests/model_client_test.ts::U39` |
+| U40 | Each role sends its own key when the two keys differ | FR-003 | example | T011 | DONE | `tests/model_client_test.ts::U40` |
+| U41 | Every request across embed, chat, listModels and the retry goes to one of the two configured bases | FR-004, SC-002 | example, sampled across operations | T011 | DONE | `tests/model_client_test.ts::U41` |
+| U42 | A rejected fetch gives `unreachable`, the message naming the role and base and "could not be reached" | data-model §2, US2.1 | example | T012 | DONE | `tests/model_client_test.ts::U42` |
+| U43 | A reply arriving inside `timeoutMs` is `ok` | FR-009 | example | T012 | DONE | `tests/model_client_test.ts::U43` |
+| U44 | A fetch that hangs past `timeoutMs` gives `timeout` for either role, the message naming the role, base, the ms value and `FETCH_TIMEOUT_MS` | FR-009, SC-011, data-model §2 | example | T012 | DONE | `tests/model_client_test.ts::U44` |
+| U45 | HTTP 401 and 403 each give `auth_rejected`, naming the role, base and "access key rejected" | data-model §2 | example | T012 | DONE | `tests/model_client_test.ts::U45` |
+| U46 | HTTP 404 gives `model_not_found`, naming the role and model | data-model §2 | example | T012 | DONE | `tests/model_client_test.ts::U46` |
+| U47 | A 400 or 422 whose body names the configured model with "not found", "unknown" or "does not exist" gives `model_not_found` | data-model §2 | example | T012 | DONE | `tests/model_client_test.ts::U47` |
+| U48 | HTTP 500 gives `http_error`, naming the role, the status and the server text | data-model §2 | example | T012 | DONE | `tests/model_client_test.ts::U48` |
+| U49 | A 400 whose body mentions neither dimensions nor the model gives `http_error` after exactly one request | data-model §2, R3 | example | T012 | DONE | `tests/model_client_test.ts::U49` |
+| U50 | A 2xx embeddings reply lacking `data[0].embedding`, with a non-array, non-numeric items or a non-JSON body gives `bad_response` | data-model §2 | example, sampled | T012 | DONE | `tests/model_client_test.ts::U50` |
+| U51 | A 2xx chat reply lacking `choices[0].message.content` or with a non-JSON body gives `bad_response` | data-model §2 | example | T012 | DONE | `tests/model_client_test.ts::U51` |
+| U52 | A 1536-length vector is `ok`; 1535 and 1537 each give `wrong_dimension` | FR-007 | example, boundary both sides | T012 | DONE | `tests/model_client_test.ts::U52` |
+| U53 | `wrong_dimension`'s message is exactly the contracts/mcp-tools.md text naming the model, the length and 1536, and no vector is returned | FR-007, SC-009 | example | T012 | DONE | `tests/model_client_test.ts::U53` |
+| U54 | A 400 `dimensions 1536 exceeds embedding length 768` (Ollama) is retried once to the same URL without the `dimensions` key | R3 | example | T013 | DONE | `tests/model_client_test.ts::U54` |
+| U55 | The retry is otherwise identical (model, input, headers) and its 1536-length reply is `ok` | R3 | example | T013 | DONE | `tests/model_client_test.ts::U55` |
+| U56 | A 422 mentioning `dimension`, a 400 `does not support Matryoshka embeddings` (vLLM) and an upper-case `DIMENSIONS` body are each retried once | R3 | example, sampled | T013 | DONE | `tests/model_client_test.ts::U56` |
+| U57 | A 404, and a 500 whose body mentions `dimension`, are not retried | R3 | example, boundary on status | T013 | DONE | `tests/model_client_test.ts::U57` |
+| U58 | A retry that again fails with a `dimension` 400 sends no third request and gives `http_error` | R3 | example | T013 | DONE | `tests/model_client_test.ts::U58` |
+| U59 | A retry returning a 768-length vector gives `wrong_dimension` | R3, FR-007 | example | T013 | DONE | `tests/model_client_test.ts::U59` |
+| U60 | The retry gets its own `timeoutMs`; a hanging retry gives `timeout` | R3, FR-009, contracts/model-server-requests.md | example | T013 | DONE | `tests/model_client_test.ts::U60` |
+| U61 | A 2xx first reply means exactly one request is sent | R3 | example | T013 | DONE | `tests/model_client_test.ts::U61` |
+| U62 | A key value of either role inside a server error body appears as `[redacted]` in the message | FR-010 | example | T014 | DONE | `tests/model_client_test.ts::U62` |
+| U63 | A key value inside a thrown fetch error appears as `[redacted]` in the `unreachable` message | FR-010 | example | T014 | DONE | `tests/model_client_test.ts::U63` |
+| U64 | A 200-char server message is kept whole and a 201-char one is cut to 200, redaction applied first so a key straddling the cut never leaks | FR-010, data-model §2 | example, boundary both sides | T014 | DONE | `tests/model_client_test.ts::U64` |
+| U65 | `listModels` returns the `data[].id` list for a 2xx listing | contracts/model-server-requests.md | example | T015 | DONE | `tests/model_client_test.ts::U65` |
+| U66 | `listModels` returns `ok` with `null` for a 2xx non-JSON body or one without `data[]` | contracts/model-server-requests.md | example | T015 | DONE | `tests/model_client_test.ts::U66` |
+| U67 | `listModels` maps 401 to `auth_rejected` and a rejected fetch to `unreachable` | contracts/model-server-requests.md, data-model §2 | example | T015 | DONE | `tests/model_client_test.ts::U67` |
 
 ### `lib/thought_store.ts` (stream S)
 

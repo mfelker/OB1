@@ -174,7 +174,7 @@ Streams code against these. Signatures are the only shared contract. Behavior co
 
 ### Stream M: model client (`shl-model`)
 
-- [ ] T011 [P] [U33] [U34] [U35] [U36] [U37] [U38] [U39] [U40] [U41] Tests first in `tests/model_client_test.ts`, then request shapes in `lib/model_client.ts`, per contracts/model-server-requests.md:
+- [X] T011 [P] [U33] [U34] [U35] [U36] [U37] [U38] [U39] [U40] [U41] Tests first in `tests/model_client_test.ts`, then request shapes in `lib/model_client.ts`, per contracts/model-server-requests.md:
   - `POST <embedding base>/embeddings` with `{ model, input, dimensions: 1536 }`
   - `POST <chat base>/chat/completions` with `response_format: { type: "json_object" }` and `[system: EXTRACTION_PROMPT, user: text]`
   - `GET <role base>/models`
@@ -182,15 +182,15 @@ Streams code against these. Signatures are the only shared contract. Behavior co
   - requests go only to the configured bases (FR-004)
 
   Import `EXTRACTION_PROMPT` from `lib/metadata.ts`; it is a stub until C merges, so test the message structure here and the prompt text in C.
-- [ ] T012 [P] [U42] [U43] [U44] [U45] [U46] [U47] [U48] [U49] [U50] [U51] [U52] [U53] Tests first, then outcome mapping. Cover every row of `data-model.md` §2 `Model call outcome`: `unreachable` (fetch rejects), `timeout`, `auth_rejected` (401/403), `model_not_found` (404 or a 4xx naming the model), `http_error`, `bad_response` (missing `data[0].embedding` / `choices[0].message.content`) and `wrong_dimension`.
+- [X] T012 [P] [U42] [U43] [U44] [U45] [U46] [U47] [U48] [U49] [U50] [U51] [U52] [U53] Tests first, then outcome mapping. Cover every row of `data-model.md` §2 `Model call outcome`: `unreachable` (fetch rejects), `timeout`, `auth_rejected` (401/403), `model_not_found` (404 or a 4xx naming the model), `http_error`, `bad_response` (missing `data[0].embedding` / `choices[0].message.content`) and `wrong_dimension`.
   - `timeout`: an AbortSignal fires after `timeoutMs`, and the message names the ms and `FETCH_TIMEOUT_MS`. Use fake-fetch hang mode with `timeoutMs` of a few ms (FR-009).
   - Each message names the role and the base or model as the table says.
-- [ ] T013 [P] [U54] [U55] [U56] [U57] [U58] [U59] [U60] [U61] Tests first, then the `dimensions` retry (research R3): exactly one retry without `dimensions`, and only on HTTP 400/422 whose body contains `dimension` or `matryoshka` (case-insensitive). No retry on any other error. The retry's result is final and still length-checked. The `wrong_dimension` message names the model, the actual length and 1536, matching contracts/mcp-tools.md (FR-007). Fixtures:
+- [X] T013 [P] [U54] [U55] [U56] [U57] [U58] [U59] [U60] [U61] Tests first, then the `dimensions` retry (research R3): exactly one retry without `dimensions`, and only on HTTP 400/422 whose body contains `dimension` or `matryoshka` (case-insensitive). No retry on any other error. The retry's result is final and still length-checked. The `wrong_dimension` message names the model, the actual length and 1536, matching contracts/mcp-tools.md (FR-007). Fixtures:
   - Ollama's `dimensions 1536 exceeds embedding length 768` (400)
   - vLLM's `does not support Matryoshka embeddings` (400)
   - a 404 unknown-model reply (no retry)
-- [ ] T014 [P] [U62] [U63] [U64] Tests first, then redaction: any key value of either role that appears in a server error body or `fetch` error message is replaced with `[redacted]`, and server messages are trimmed to 200 chars (FR-010).
-- [ ] T015 [P] [U65] [U66] [U67] Tests first, then `listModels`: returns `data[].id` when present. A 2xx with a non-JSON or differently shaped body is `ok` with `null`, meaning reachable but no list (contracts/model-server-requests.md "Model listing").
+- [X] T014 [P] [U62] [U63] [U64] Tests first, then redaction: any key value of either role that appears in a server error body or `fetch` error message is replaced with `[redacted]`, and server messages are trimmed to 200 chars (FR-010).
+- [X] T015 [P] [U65] [U66] [U67] Tests first, then `listModels`: returns `data[].id` when present. A 2xx with a non-JSON or differently shaped body is `ok` with `null`, meaning reachable but no list (contracts/model-server-requests.md "Model listing").
 
 ### Stream S: thought store (`shl-store`)
 
