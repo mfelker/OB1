@@ -113,22 +113,22 @@ Streams code against these. Signatures are the only shared contract. Behavior co
 
 ## Phase 1: Setup (integrator, in `M` then `W`)
 
-- [ ] T001 Sync check in `M`: run `git fetch upstream`.
+- [X] T001 Sync check in `M`: run `git fetch upstream`.
   - Confirm `main` contains `upstream/main` (`git merge-base --is-ancestor upstream/main main`).
   - Confirm `W` is at `upstream/main` with a clean tree.
   - If upstream moved past `238df6c`, merge it into fork `main` (rerere on) and run `git -C W merge --ff-only upstream/main`. Then re-check that `server/index.ts`, `docs/01-getting-started.md` and `integrations/_template/` are unchanged from `238df6c`; if they changed, stop and re-plan.
-- [ ] T002 In `M`, run the `after_tasks` hook `/speckit-tdd-plan` on 004. It writes `specs/004-self-hosted-llm/tdd/test-list.md` and the baseline-only `tdd/cycle-log.md`, and adds behavior markers to this file. Create `specs/004-self-hosted-llm/tdd/cycle-log.d/.gitkeep`, then commit on fork `main` (`[fork] Spec 004: test list`).
-- [ ] T003 Scaffold `F` from `W/integrations/_template/`.
+- [X] T002 In `M`, run the `after_tasks` hook `/speckit-tdd-plan` on 004. It writes `specs/004-self-hosted-llm/tdd/test-list.md` and the baseline-only `tdd/cycle-log.md`, and adds behavior markers to this file. Create `specs/004-self-hosted-llm/tdd/cycle-log.d/.gitkeep`, then commit on fork `main` (`[fork] Spec 004: test list`).
+- [X] T003 Scaffold `F` from `W/integrations/_template/`.
   - `F/metadata.json` with real values (name, description, `category: "integrations"`, author `mfelker`, `requires.open_brain: true`, tags, difficulty, estimated time, dates 2026-11-26), validated against `W/.github/metadata.schema.json`.
   - `F/README.md`: section headings only (stream D fills it).
   - `F/deno.json`: the five `server/deno.json` imports at the same versions, plus `"@std/assert": "jsr:@std/assert@^1"`; `"lock": false`; a `test` task with fork-ci's flags.
 
   Commit in `W`: `[integrations] Scaffold self-hosted-llm-mcp`.
-- [ ] T004 Write the seams in `F/lib/types.ts` and the throwing stubs in `F/lib/{config,metadata,model_client,thought_store,tools,setup_check,app}.ts`, exactly as listed under **Seams**.
+- [X] T004 Write the seams in `F/lib/types.ts` and the throwing stubs in `F/lib/{config,metadata,model_client,thought_store,tools,setup_check,app}.ts`, exactly as listed under **Seams**.
   - Write `F/index.ts` as the one-line entry: `Deno.serve(createApp(productionDeps()).fetch)`, with `productionDeps` a stub in `lib/app.ts`.
   - Every import uses a full `npm:`/`jsr:` specifier, never a bare name (research R10).
   - Run `deno check` on all of them. Commit.
-- [ ] T005 Write `F/tests/helpers/fake_fetch.ts`, `F/tests/helpers/fake_store.ts`, `F/tests/helpers/todo.ts` and `F/tests/helpers/mcp.ts` per **Seams**. `mcp.ts` holds `mcpCall(fetchFn, method, params, key)`, which builds the JSON-RPC `Request` that T006 and stream A use, and `inMemoryClient(server)`, which uses the SDK `Client` over `InMemoryTransport` for streams T and K.
+- [X] T005 Write `F/tests/helpers/fake_fetch.ts`, `F/tests/helpers/fake_store.ts`, `F/tests/helpers/todo.ts` and `F/tests/helpers/mcp.ts` per **Seams**. `mcp.ts` holds `mcpCall(fetchFn, method, params, key)`, which builds the JSON-RPC `Request` that T006 and stream A use, and `inMemoryClient(server)`, which uses the SDK `Client` over `InMemoryTransport` for streams T and K.
 
   Then write `F/tests/helpers/helpers_test.ts`, which proves **the harness itself works under fork-ci's exact flags** (`--node-modules-dir=none --no-prompt --allow-env --allow-read`, no net) before any agent builds on it:
   - the five npm imports load
