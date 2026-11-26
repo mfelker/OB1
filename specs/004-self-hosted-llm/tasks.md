@@ -476,3 +476,10 @@ Because streams own files rather than stories, the practical order is wave by wa
 ### Re-audit
 
 - [ ] T061 Re-run `/speckit-tdd-verify` after T050–T057 (and any of T058–T060 taken). Done when `tdd/verification.md` shows PASS or PASS_WITH_GAPS, with every `TEST_AFTER` covered by T057's recorded decision.
+
+## Phase 8: TDD remediation (re-audit T061, verdict FAIL, audited at `2d7f60b`)
+
+All HIGH findings are resolved and every mutant is caught. The FAIL is the rubric's: any `TEST_AFTER` fails it. Of the 100, 99 are under the T057 owner exception. The feature's TDD gate is complete once T062 records the decision on U206. T059 and T060 (MED) stay open and non-blocking.
+
+- [ ] T062 Owner decision on U206 (`tdd/verification.md` test-first table): either extend the T057 exception in `plan.md` Complexity Tracking to include U206 (a first-run pass added by audit remediation, proven by mutant M6), or name another way to evidence it. Done when `plan.md` records the decision.
+- [ ] T063 [P] Re-audit Finding 11 (LOW): rename the newer `U56` test in `W/integrations/self-hosted-llm-mcp/tests/model_client_test.ts` (about line 376) to a distinct `U56 …` suffix, and correct the older test's title so its name matches its fixture. Done when `deno test --filter "/^U56 /"` lists two tests with distinct, accurate names, and the suite is green.
