@@ -4,6 +4,8 @@ STORAGE_URL="${STORAGE_URL:-http://storage:5000}"
 resp=$(mktemp)
 if ! status=$(curl -sS -o "$resp" -w '%{http_code}' -X POST "$STORAGE_URL/bucket" \
   -H 'Content-Type: application/json' \
+  -H "apikey: $SERVICE_ROLE_KEY" \
+  -H "Authorization: Bearer $SERVICE_ROLE_KEY" \
   -d '{"id":"ob1-files","name":"ob1-files","public":false}'); then
   echo "create-bucket.sh: could not reach storage at $STORAGE_URL" >&2
   rm -f "$resp"

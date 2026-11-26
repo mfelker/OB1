@@ -70,3 +70,23 @@ test("U51 the request is a POST to /bucket with id and name ob1-files and public
     } finally { o.cleanup(); }
   } finally { env.cleanup(); }
 });
+
+test("U52 the request carries apikey and Authorization Bearer from SERVICE_ROLE_KEY, and the key is never printed", () => {
+  const env = makeBucketEnv();
+  try {
+    const cases = [
+      { STUB_CURL_STATUS: "200", STUB_CURL_BODY: "" },
+      { STUB_CURL_STATUS: "400", STUB_CURL_BODY: '{"code":"BucketAlreadyExists"}' },
+      { STUB_CURL_STATUS: "500", STUB_CURL_BODY: "boom" },
+    ];
+    for (const c of cases) {
+      const r = env.run({ SERVICE_ROLE_KEY: KEY, STUB_CURL_MODE: "fixed", ...c });
+      assert.equal(r.out.includes(KEY), false, `key printed for status ${c.STUB_CURL_STATUS}`);
+    }
+    const down = env.run({ SERVICE_ROLE_KEY: KEY, STUB_CURL_MODE: "unreachable" });
+    assert.equal(down.out.includes(KEY), false);
+    const h = env.requests()[0].headers.map((x) => x.replace(/:\s*/, ": "));
+    assert.ok(h.includes(`apikey: ${KEY}`));
+    assert.ok(h.includes(`Authorization: Bearer ${KEY}`));
+  } finally { env.cleanup(); }
+});
