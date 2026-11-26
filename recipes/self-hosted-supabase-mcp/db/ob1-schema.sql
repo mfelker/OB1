@@ -3,6 +3,13 @@
 -- The SQL blocks below are copied verbatim from docs/01; tests/schema-drift.test.mjs
 -- fails if they stop matching.
 
+-- docs/01 enables pgvector in the dashboard; here it is enabled in SQL.
+create extension if not exists vector;
+
+-- Create the objects as postgres, the role Supabase's SQL Editor uses, so later
+-- OB1 SQL run as postgres can change them. The init runner itself is supabase_admin.
+set role postgres;
+
 -- docs/01 block 1
 -- Create the thoughts table
 create table thoughts (

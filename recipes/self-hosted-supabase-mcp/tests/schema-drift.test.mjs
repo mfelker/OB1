@@ -24,3 +24,13 @@ test("U38 the schema file contains docs/01's five SQL blocks verbatim and in ord
     from = at + block.length;
   }
 });
+
+/** SQL statements of the file, without comment lines, in order. */
+const statements = () => SCHEMA.split("\n").filter((l) => !l.startsWith("--")).join("\n")
+  .split(";").map((s) => s.trim()).filter(Boolean);
+
+test("U39 the schema file's first two statements enable vector and switch to the postgres role", () => {
+  const [first, second] = statements();
+  assert.equal(first, "create extension if not exists vector");
+  assert.equal(second, "set role postgres");
+});
