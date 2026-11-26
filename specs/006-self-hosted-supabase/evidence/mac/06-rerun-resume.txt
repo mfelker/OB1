@@ -1,0 +1,19 @@
+# V6 re-run, then a simulated interrupted run
+key-lines sha256 before: 7a0a2d9104b38ef2
+$ sh setup.sh (second run)
+clone: already present
+secrets: already present
+model-settings: already present
+function-link: present
+exit=0
+key-lines sha256 after run 2: 7a0a2d9104b38ef2
+
+simulate: remove the model-setting lines (as if setup stopped before writing them); the filled-in values are saved first
+$ sh setup.sh (third run)
+clone: already present
+secrets: already present
+model-settings: completed
+function-link: present
+exit=0
+key-lines sha256 after run 3: 7a0a2d9104b38ef2
+model names present again: 7 of 7

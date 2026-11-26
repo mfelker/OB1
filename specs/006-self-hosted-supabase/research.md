@@ -55,7 +55,8 @@ Phase 0 for [plan.md](plan.md). Each item has a Decision, the evidence behind it
   - Containers reach it at `http://model-runner.docker.internal/engines/v1`.
   - It listens only on `127.0.0.1:12434`, so it isn't reachable from the LAN (answers OS-010).
   - Docker Hub's `ai/` catalog returned 403 from this machine; Hugging Face models worked.
-- **Decision**: DMR is documented for the **chat role only**. Embeddings stay on the host route (for example Ollama with `qwen3-embedding:4b`, which honors `dimensions`, as spec 004's R1 found). This is FR-017's stated fallback.
+- **Live run update (T037, `evidence/mac/10-dmr-chat.txt`)**: chat on DMR also failed spec 004's setup check. DMR ignores `response_format: json_object` (prose in 3 of 3 direct runs, while Ollama with the same model returned JSON), and loading Llama 3.1 with a 131072-token context next to Ollama's models exhausted Metal memory. **Final decision (owner): DMR is dropped from the recipe; the GPU is used through the host model server.**
+- **Earlier decision (superseded)**: DMR is documented for the **chat role only**. Embeddings stay on the host route (for example Ollama with `qwen3-embedding:4b`, which honors `dimensions`, as spec 004's R1 found). This is FR-017's stated fallback.
 - **Alternatives**:
   - An embedding model with native 1536 in DMR's catalog wasn't found in what was searched.
   - Truncating vectors in the recipe was rejected: spec 004 refuses non-1536 vectors by design.

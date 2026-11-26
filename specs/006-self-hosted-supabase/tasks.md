@@ -191,7 +191,7 @@ Stack configuration, in `F/tests/compose.test.mjs`. Each test runs `docker compo
   4. Check whether DMR's port is reachable from another machine on the LAN (OS-010).
 
   Record the results in `M/specs/006-self-hosted-supabase/research.md` R5, with evidence in `M/specs/006-self-hosted-supabase/evidence/dmr/`. **Done 2026-11-26:** embeddings come back at 2560 whatever `dimensions` says, so DMR is chat-only; chat on Metal works; reachable from containers; not reachable from the LAN (OS-010).
-- [X] T036 [US1] README section "Bundled model server (Docker Model Runner)" in `F/README.md`, following T035:
+- [X] T036 [US1] (Superseded after the live run: the section was added at `c29d91c`, then removed at `85866d6` by owner decision; the README now says Docker Model Runner is not supported.) README section "Bundled model server (Docker Model Runner)" in `F/README.md`, following T035:
   - enable DMR, then `docker model pull` per model (manual, FR-017);
   - `CHAT_API_BASE` (and `EMBEDDING_API_BASE` only if T035 shows 1536) = `http://model-runner.docker.internal/engines/v1` (C4);
   - otherwise, the chat-only fallback with embeddings through the host route.

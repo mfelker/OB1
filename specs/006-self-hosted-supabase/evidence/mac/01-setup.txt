@@ -1,0 +1,25 @@
+# V1 setup (fresh)
+start: 2026-11-26T23:12:45Z  branch commit: c29d91c
+docker: Docker Desktop 4.96.2 (244353) / compose 5.6.1
+
+$ sh setup.sh
+warning: refs/tags/self-hosted/v0.8.5 9c6c936096a52d2a0ce6e960ae2843474d34ab1c is not a commit!
+
+
+
+
+
+
+
+clone: completed
+secrets: completed
+model-settings: completed
+function-link: present
+exit=0
+
+$ git status --porcelain (checkout)
+(empty = clean)
+
+$ ls -a supabase/docker | grep .env
+.env
+.env.example

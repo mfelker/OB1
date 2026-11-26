@@ -1,0 +1,2 @@
+# V12 database dump (README command)
+dump size: 289780 bytes; contains CREATE TABLE public.thoughts: 1; thought rows (COPY lines): 1

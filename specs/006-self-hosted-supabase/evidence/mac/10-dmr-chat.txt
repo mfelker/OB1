@@ -1,0 +1,33 @@
+# V10 chat on Docker Model Runner (SC-011); embeddings stay on Ollama (research R5)
+settings: CHAT_API_BASE=http://model-runner.docker.internal/engines/v1, CHAT_MODEL=huggingface.co/bartowski/meta-llama-3.1-8b-instruct-gguf:Q4_K_M; EMBEDDING_* unchanged (Ollama)
+setup check: FAILED ['chat_metadata'] http://model-runner.docker.internal/engines/v1
+capture (metadata extracted by the chat model on DMR): None Captured as observation — uncategorized
+Metadata extraction skipped: The chat model server at http://model-runner.docker.internal/engines/v1 answered 
+stored metadata: fallback|observation|1536
+DMR backend: llama.cpp Running llama.cpp b9879-metal (sha256:b70706f473b4043ca3e0c32704a7fda3412b83bceef0564684187b8011230de8) 72874f5 
+DMR requests seen: 0
+
+## First attempt failed: GPU memory contention (diagnosed)
+- The setup check failed only on chat_metadata: 'The chat model server at http://model-runner.docker.internal/engines/v1 answered HTTP 500: {"error":{"code":500,"message":"Compute error."}}'. The capture still stored, with fallback metadata (spec 004's designed fallback).
+- A direct call from the host failed the same way with and without response_format json_object, so JSON mode was not the cause. DMR log: 'ggml_backend_sched_graph_compute_async failed with error -1' / 'decode: Compute error.'
+- Cause: Metal memory. Ollama held qwen3-embedding:4b (8.2 GB) and llama3.1:8b (13.0 GB), while DMR loads Llama 3.1 with n_ctx_slot = 131072 x 4 slots (DMR log). After unloading Ollama's llama3.1:8b (keep_alive 0; chat no longer uses it), DMR chat answered 'ready'.
+
+## Retry with Ollama's chat model unloaded (Ollama keeps only the embedding model)
+setup check: FAILED ['chat_metadata']
+capture: None Captured as task — camping, organization | Actions: move the camping stove to its storage location
+stored metadata: complete|task|1536
+Ollama loaded now: ['qwen3-embedding:4b']
+DMR loaded now: huggingface.co/bartowski/meta-llama-3.1-8b-instruct-gguf:q4_k_m 
+DMR backend: llama.cpp b9879-metal (Metal GPU)
+
+## Second cause: Model Runner does not honor JSON mode
+- Retry result: capture stored with complete metadata once, but the setup check's chat_metadata failed with 'unusable output: To extract metadata …, I'll consider a sample thought: …' (prose), twice.
+- Direct check, same request with response_format {"type":"json_object"} (system "Extract metadata from the user's captured thought.", user "Call the plumber about the kitchen sink on Friday."):
+  - Docker Model Runner (llama.cpp b9879-metal, Llama-3.1-8B-Instruct Q4_K_M): NOT JSON in 3 of 3 runs ("Metadata extracted from the thought: * Task: …").
+  - Ollama 0.40.18 on the host (llama3.1:8b): valid JSON.
+- Earlier in the same session the Model Runner log also showed 'ggml_metal_synchronize … Insufficient Memory (kIOGPUCommandBufferCallbackErrorOutOfMemory)' while Ollama held both its models.
+
+## Result for SC-011
+FAILED as specified: with chat on Docker Model Runner, spec 004's setup check does not pass (chat_metadata), because Model Runner ignores response_format json_object, and loading its 131072-token context alongside Ollama's models exhausted GPU memory. Together with research R5 (embeddings at 2560 regardless of dimensions), Docker Model Runner cannot currently serve either of spec 004's roles reliably. Chat was switched back to Ollama for the remaining steps.
+
+setup check after switching back: ok
