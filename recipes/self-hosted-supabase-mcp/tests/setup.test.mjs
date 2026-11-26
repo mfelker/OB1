@@ -10,7 +10,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { existsSync, writeFileSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
-import { makeCheckout, runSetup, stubCalls, PIN } from "./helpers/harness.mjs";
+import { makeCheckout, runSetup, stubCalls, PIN, readEnv, envPath, SUPABASE_KEYS, examplePlaceholder } from "./helpers/harness.mjs";
 
 test("U1 without docker on PATH setup fails naming docker and creates nothing", () => {
   const co = makeCheckout({ hide: ["docker"] });
@@ -102,5 +102,18 @@ test("U7 when Compose cannot read the recipe setup fails naming the versions and
     assert.ok(r.out.includes("2.19.0"), "names the version found");
     assert.ok(r.out.includes("5.6.1"), "names the tested version");
     assert.equal(existsSync(join(co.recipe, "supabase", "docker", ".env")), false);
+  } finally { co.cleanup(); }
+});
+
+test("U8 on a fresh folder .env holds every generated key and none keeps its .env.example value", () => {
+  const co = makeCheckout();
+  try {
+    runSetup(co);
+    assert.ok(existsSync(envPath(co)), ".env created");
+    const env = readEnv(envPath(co));
+    for (const k of SUPABASE_KEYS) {
+      assert.ok(env.get(k), `${k} present`);
+      assert.notEqual(env.get(k), examplePlaceholder(k), `${k} generated`);
+    }
   } finally { co.cleanup(); }
 });

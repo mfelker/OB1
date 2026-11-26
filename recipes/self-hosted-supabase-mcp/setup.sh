@@ -34,5 +34,11 @@ if ! (cd "$RECIPE_DIR" && docker compose config -q >/dev/null 2>&1); then
 fi
 [ -n "$placeholder" ] && rm -f "$ENV_FILE"
 
+# Secrets: Supabase's own generator fills .env from .env.example.
+if [ ! -f "$ENV_FILE" ]; then
+  cp "$CLONE/docker/.env.example" "$ENV_FILE"
+  (cd "$CLONE/docker" && sh utils/generate-keys.sh --update-env >/dev/null)
+fi
+
 echo "setup.sh: not implemented" >&2
 exit 1
