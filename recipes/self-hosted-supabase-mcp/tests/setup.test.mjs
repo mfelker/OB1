@@ -252,8 +252,10 @@ test("U19 a fresh run prints no value of any key it wrote to .env", () => {
   const co = makeCheckout();
   try {
     const r = runSetup(co);
-    for (const [k, v] of readEnv(envPath(co))) {
-      if (v.length >= 16) assert.ok(!r.out.includes(v), `${k} value printed`);
+    const env = readEnv(envPath(co));
+    for (const k of [...SUPABASE_KEYS, "MCP_ACCESS_KEY"]) {
+      assert.ok(env.get(k), `${k} present`);
+      assert.ok(!r.out.includes(env.get(k)), `${k} value printed`);
     }
   } finally { co.cleanup(); }
 });

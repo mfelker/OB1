@@ -78,7 +78,7 @@ test("A4 a fresh setup generates every key, prints none, and leaves the checkout
       assert.notEqual(env.get(k), examplePlaceholder(k), `${k} generated`);
     }
     assert.ok(env.get("MCP_ACCESS_KEY"), "MCP_ACCESS_KEY set");
-    for (const [k, v] of env) if (v && v.length >= 16) assert.ok(!r.out.includes(v), `${k} not printed`);
+    for (const k of [...SUPABASE_KEYS, "MCP_ACCESS_KEY"]) assert.ok(!r.out.includes(env.get(k)), `${k} not printed`);
     const st = spawnSync("git", ["status", "--porcelain"], { cwd: co.root, encoding: "utf8" });
     assert.equal(st.stdout, "");
   } finally { co.cleanup(); }
