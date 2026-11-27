@@ -7,10 +7,14 @@ export function loadSettings(getEnv: GetEnv): SettingsResult {
     const raw = getEnv(name);
     return raw === undefined ? fallback : Number(raw);
   };
+  const mcpAccessKey = getEnv("MCP_ACCESS_KEY");
+  if (mcpAccessKey === undefined) {
+    return { ok: false, problems: [{ setting: "MCP_ACCESS_KEY", reason: "must be set" }] };
+  }
   return {
     ok: true,
     settings: {
-      mcpAccessKey: getEnv("MCP_ACCESS_KEY") ?? "",
+      mcpAccessKey,
       embeddingApiBase: text("EMBEDDING_API_BASE", "https://openrouter.ai/api/v1"),
       embeddingApiKey: getEnv("EMBEDDING_API_KEY") ?? getEnv("OPENROUTER_API_KEY"),
       embeddingModel: text("EMBEDDING_MODEL", "openai/text-embedding-3-small"),

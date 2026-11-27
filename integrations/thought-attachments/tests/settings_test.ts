@@ -79,3 +79,15 @@ Deno.test("U7 a set PUBLIC_BASE_URL wins over both fallbacks", () => {
   const s = settingsWith({ SUPABASE_PUBLIC_URL: SUPABASE_PUBLIC });
   assertEquals(s.publicBaseUrl, PUBLIC_BASE_URL);
 });
+
+/** Loads settings over the baseline env with `overrides`, and fails the test unless the result has problems. */
+function problemsWith(overrides: Record<string, string | undefined>): { setting: string; reason: string }[] {
+  const result = loadSettings(envGetter(overrides));
+  if (result.ok) throw new Error("expected settings problems, got ok settings");
+  return result.problems;
+}
+
+Deno.test("U8 with MCP_ACCESS_KEY unset the result is not ok, with a problem naming MCP_ACCESS_KEY", () => {
+  const problems = problemsWith({ MCP_ACCESS_KEY: undefined });
+  assertEquals(problems.map((p) => p.setting), ["MCP_ACCESS_KEY"]);
+});
