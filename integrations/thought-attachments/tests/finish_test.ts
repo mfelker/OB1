@@ -440,3 +440,20 @@ Deno.test("U202 with no object before the deadline, the outcome is 'no file uplo
   assertEquals(out.derived_count, 0);
   assertEquals(r.store.attachment(att.id), before);
 });
+
+Deno.test("U203 with no object after the deadline, the outcome is 'upload window expired' and the state is unchanged", async () => {
+  const r = await rig();
+  const att = r.store.seedAttachment({
+    parent_thought_id: r.parent,
+    file_name: "manual.pdf",
+    declared_type: "application/pdf",
+    declared_size: 1000,
+    storage_path: "attachments/x/manual.pdf",
+  });
+  r.clock.set(new Date(new Date(att.upload_deadline).getTime() + 1000));
+  const before = structuredClone(r.store.attachment(att.id));
+  const out = await r.finish(att.id, {});
+  assertEquals(out.state, "pending_upload");
+  assertStringIncludes(out.reason ?? "", "upload window expired");
+  assertEquals(r.store.attachment(att.id), before);
+});

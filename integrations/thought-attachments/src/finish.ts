@@ -59,7 +59,12 @@ export function createFinisher(deps: Deps): Services {
     const info = await store.objectInfo(path);
     if ("error" in info) throw new Error(info.error);
     if (info.data === null) {
-      return { state: row.state, reason: "no file uploaded yet", derived_count: row.derived_count };
+      const expired = deps.now().getTime() >= new Date(row.upload_deadline).getTime();
+      return {
+        state: row.state,
+        reason: expired ? "upload window expired" : "no file uploaded yet",
+        derived_count: row.derived_count,
+      };
     }
     const file = await store.download(path);
     if ("error" in file) throw new Error(file.error);
