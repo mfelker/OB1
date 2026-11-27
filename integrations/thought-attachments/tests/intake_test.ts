@@ -99,3 +99,9 @@ Deno.test("U143 sniffType identifies PDF, JPEG, PNG, WebP and HEIC from the firs
   assertEquals(sniffType(webpBytes()), "image/webp");
   assertEquals(sniffType(heicBytes()), "image/heic");
 });
+
+Deno.test("U144 sniffType returns null for any other bytes and for empty input", () => {
+  assertEquals(sniffType(new Uint8Array()), null);
+  assertEquals(sniffType(new TextEncoder().encode("PK\u0003\u0004 zip archive")), null);
+  assertEquals(sniffType(new TextEncoder().encode("plain text, not a file")), null);
+});
