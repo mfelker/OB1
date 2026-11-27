@@ -93,7 +93,7 @@ Every row therefore keeps its previous class.
 - **U12** (`tests/setup.test.mjs:156,158`) and **U54** (`:321,323`): assertions only added.
 - **H1** (`tests/harness.test.mjs:22`): `st.status === 0` added.
 - **Harness.**
-  - The stub generator's failure line gained ` in $(pwd)` (`helpers/harness.mjs:68`). The only tests that read it are U12 and U54, which match the new text.
+  - The stub generator's failure line gained `in $(pwd)`, with a leading space (`helpers/harness.mjs:68`). The only tests that read it are U12 and U54, which match the new text.
   - `runSetup` now spawns `/bin/dash` where present (`:193`). That is stricter than `/bin/sh` on macOS: F9 and G5 now fail.
 - **Skips and exclusions:** none. The suite reports 0 skipped, and no test file was renamed.
 

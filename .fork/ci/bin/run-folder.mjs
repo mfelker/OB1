@@ -30,6 +30,20 @@ async function step(argv, cwd, env) {
   return runCommand(argv, { cwd, timeoutSec, env });
 }
 
+/**
+ * Apply bootstrap.sql (the Supabase roles and extensions) once. main() runs it before any
+ * runtime, because runtimes run in kind order (sql last) and other runtimes' tests may use
+ * Postgres too. Returns { env } or { failure: runtimeResult }, which the sql runtime reports.
+ */
+async function applyBootstrap() {
+  const r = await step(['psql', '-v', 'ON_ERROR_STOP=1', '-X', '-q', '-f', BOOTSTRAP_SQL], repoRoot, BASE_ENV);
+  if (r.notFound) return { failure: { outcome: 'setup', reason: 'psql not found', r } };
+  if (r.timedOut) return { failure: { outcome: 'timeout', reason: 'SQL bootstrap timed out', r } };
+  if (r.code !== 0) return { failure: { outcome: 'setup', reason: 'SQL bootstrap failed (is Postgres reachable via PG* env?)', r } };
+  return { env: BASE_ENV };
+}
+let sqlBootstrap = null;
+
 /** Install dependencies for a runtime; returns { env } or { failure: runtimeResult }. */
 async function install(rt, rootAbs) {
   if (rt.kind === 'node-script') {
@@ -50,13 +64,7 @@ async function install(rt, rootAbs) {
     if (pip.code !== 0) return { failure: { outcome: 'setup', reason: 'pip install failed', r: pip } };
     return { env };
   }
-  if (rt.kind === 'sql') {
-    const r = await step(['psql', '-v', 'ON_ERROR_STOP=1', '-X', '-q', '-f', BOOTSTRAP_SQL], rootAbs, BASE_ENV);
-    if (r.notFound) return { failure: { outcome: 'setup', reason: 'psql not found', r } };
-    if (r.timedOut) return { failure: { outcome: 'timeout', reason: 'SQL bootstrap timed out', r } };
-    if (r.code !== 0) return { failure: { outcome: 'setup', reason: 'SQL bootstrap failed (is Postgres reachable via PG* env?)', r } };
-    return { env: BASE_ENV };
-  }
+  if (rt.kind === 'sql') return sqlBootstrap;
   return { env: BASE_ENV };
 }
 
@@ -94,6 +102,7 @@ async function main() {
   let outcome; let reason;
   try {
     runtimes = scanRuntimes(join(repoRoot, args.path), args.path);
+    if (runtimes.some(rt => rt.kind === 'sql' && rt.testFiles.length > 0 && rt.command)) sqlBootstrap = await applyBootstrap();
     for (const rt of runtimes) rtResults.push(await runRuntime(rt));
     outcome = rtResults.length ? worstOutcome(rtResults.map(r => r.outcome)) : 'exempt';
     reason = outcome === 'pass' ? 'all tests passed'
