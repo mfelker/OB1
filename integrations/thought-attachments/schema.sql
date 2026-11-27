@@ -216,3 +216,13 @@ begin
 end;
 $$;
 grant execute on function attachment_claim(uuid, text, int) to service_role;
+
+-- Release a claim. Only the holder's token clears it.
+create or replace function attachment_release(p_id uuid, p_token text)
+returns void
+language sql
+as $$
+  update thought_attachments set busy_op = null, busy_until = null, busy_token = null
+    where id = p_id
+$$;
+grant execute on function attachment_release(uuid, text) to service_role;

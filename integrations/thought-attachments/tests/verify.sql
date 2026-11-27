@@ -521,3 +521,15 @@ begin
   if ra->>'token' is null or rb->>'token' is null then raise exception 'U63: claims were % and %', ra, rb; end if;
   if ta = tb or ta <> ra->>'token' or tb <> rb->>'token' then raise exception 'U63: tokens mixed up'; end if;
 end $$;
+
+-- U64: release with the holder's token clears the claim, so an immediate claim succeeds
+do $$
+declare p uuid := pg_temp.mk_parent(); a uuid := pg_temp.mk_att(p, 'pending_upload', interval '-1 second'); r jsonb; r2 jsonb;
+begin
+  r := attachment_claim(a, 'finish', 60);
+  perform attachment_release(a, r->>'token');
+  r2 := attachment_claim(a, 'remove', 60);
+  delete from thought_attachments where id = a;
+  delete from thoughts where id = p;
+  if r2->>'token' is null then raise exception 'U64: claim after release returned %', r2; end if;
+end $$;
