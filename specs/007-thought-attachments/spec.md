@@ -219,7 +219,7 @@ Names are provisional; planning settles them.
 
 | Tool | Purpose | readOnlyHint | destructiveHint | openWorldHint |
 |------|---------|--------------|-----------------|---------------|
-| `attach_file` | Start an attachment for a thought; return a one-file upload link, a ready-to-run upload command and a one-time phone upload page link | false | false | false |
+| `attach_file` | Start an attachment for a thought; return a one-file upload link, a ready-to-run upload command and a one-time phone upload page link | false | false | true (embeds a new note) |
 | `finish_attachment` | Verify the uploaded file, extract text or caption, write derived thoughts (also started by the upload page for its own attachment); retry, re-check or, on explicit request, rebuild (FR-027) | false | true (a rebuild replaces derived thoughts) | true (calls the vision and embedding models) |
 | `get_attachment` | Return an attachment's details and a short-lived download link | true | n/a | false |
 | `list_attachments` | List a thought's attachments, or the attachment behind a derived thought | true | n/a | false |
