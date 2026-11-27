@@ -551,14 +551,12 @@ Deno.test("U248 a phone-upload start without file details writes a row with no d
 Deno.test("U249 an expected_kind other than photo or pdf is refused", async () => {
   const h = await harness();
   const parent = await seed(h, "garage shelf");
-  let refused = false;
-  try {
-    const out = await call(h, "attach_file", { thought_id: parent.id, expected_kind: "video" });
-    refused = out.isError;
-  } catch {
-    refused = true;
-  }
-  assertEquals(refused, true);
+  // The SDK's own input validation refuses it: an error result naming the field and the allowed values.
+  const out = await call(h, "attach_file", { thought_id: parent.id, expected_kind: "video" });
+  assertEquals(out.isError, true);
+  assertStringIncludes(out.text, "Input validation error");
+  assertStringIncludes(out.text, '"expected_kind"');
+  assertStringIncludes(out.text, "Invalid option: expected one of");
   assertNothingCreated(h);
   const ok = await call(h, "attach_file", { thought_id: parent.id, expected_kind: "pdf" });
   assertEquals(ok.isError, false);
