@@ -294,3 +294,17 @@ Deno.test("U338 /page/info for an attachment started with no expected kind retur
   assertEquals([...body.accepted_types].sort(), [...ACCEPTED_TYPES].sort());
   assertEquals(typeof body.caps.image_bytes, "number");
 });
+
+Deno.test("U339 /page/info with an unknown, used or expired token gets 410 with the expired message", async () => {
+  const r = await rig();
+  const used = await r.seed({}, "used-token");
+  await r.store.consumePageToken(used.id, await sha256Hex("used-token"));
+  const late = await r.seed({ upload_deadline: new Date(r.clock.now().getTime() - 1000).toISOString() }, "late-token");
+  const results = [];
+  for (const token of ["unknown-token", "used-token", "late-token"]) {
+    const res = await r.post("/page/info", { token });
+    results.push([res.status, (await res.json()).error]);
+  }
+  assertEquals(results, [[410, EXPIRED], [410, EXPIRED], [410, EXPIRED]]);
+  assertEquals(late.page_token_hash !== null, true);
+});
