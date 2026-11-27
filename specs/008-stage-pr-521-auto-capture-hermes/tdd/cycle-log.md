@@ -485,3 +485,50 @@ Commands run from the stage worktree folder `skills/auto-capture-hermes` with `e
 - green: no source change; suite 53 passed, 0 failed (2 runs, 4.3 s)
 - refactor: test-support gains `queueFiles()` (file names without parsing; `queueEntries()` would throw on the corrupt file), and `seedQueueEntry()` accepts a raw string. Existing callers are unchanged.
 - commit: `1652c3a`
+
+## Cycle 57: A11, U29 test correction (first audit finding 4 / second audit finding 3, T044)
+
+- test: `A11 a permanent failure is not queued and is logged as permanent`, `U29 a 400 answer is not queued and is logged as permanent` (changed)
+- reason: `some(d => d.endsWith(":permanent"))` did not pin the status. Both tests now require exactly one log line matching the contract form `/^error:HTTP 401:.*:permanent$/` (A11) and `/^error:HTTP 400:.*:permanent$/` (U29). The response body in between is not pinned.
+- red, old tests: mutant P1 (`new Error(\`HTTP ${response.status}:` → `new Error(\`HTTP 418:`) → A11 and U29 **pass**.
+- red, new tests: P1 → both `not ok`, `actual: 'error:HTTP 418:{"error":"bad key"}:permanent'` and `actual: 'error:HTTP 418:{"error":"bad payload"}:permanent'` (exit 1).
+- green: the real script passes; suite 53 passed, 0 failed
+- refactor: none needed
+- commit: `6cfc4ac`
+
+## Cycle 58: U17 test correction (first audit finding 5 / second audit finding 4, T045)
+
+- test: `U17 an over-limit transcript has the marker between the kept start and end` (changed)
+- reason: one unlabelled `assert.ok(marker > first && marker < last)` passed when FIRST-TURN was missing (`indexOf` gives -1). It is now four labelled assertions: first turn kept, last turn kept, marker after first, marker before last.
+- red, old test: mutant P2 (head slice dropped in `truncateMiddle`) → U17 **passes**.
+- red, new test: P2 → `not ok`, "the first turn is kept", `expected: true`, `actual: false` (exit 1).
+- green: suite 53 passed, 0 failed
+- refactor: none needed
+- commit: `6cfc4ac`
+
+## Cycle 59: test refactor, named values (first audit findings 6–8 / second audit findings 5–6, T046)
+
+- tests changed: A6, A9, U16, U17, U38, U40, U41. Structural only, with one strengthening (U16).
+- What changed:
+  - **Stand-in reply:** `JOB_ID` is passed explicitly by `acceptingStub()` where tests assert on it (U38, A9, U40), instead of relying on `startIngestStub`'s default.
+  - **Size limits:** derived from the fixture (`LONG_TURN_TEXT_CHARS` = 8000). Over = half (4000, previously 3000), under = 2.5× (20000).
+  - **Marker:** `TRUNCATION_MARKER` is now `/truncated/i`, because the wording is in no contract.
+  - **U16:** deep-equals the exact 8 turn contents, instead of a marker-absence check plus a count.
+  - **A9:** asserts that the last log line is `captured:${JOB_ID}`. An exact full-log equality was tried first and failed, because A9's own dry run logs `dry_run:chars_273` first; pinning that character count would couple the test, so the last-line check was used instead.
+- red: none (structural). No weakening: all 26 audit mutants re-run against `1e16541` plus T047; 25 caught, only N6 survives (out of scope, T051). The author script was clean after each.
+- green: suite 53 passed, 0 failed (3 runs, 4.3–4.5 s)
+- commit: `1e16541`
+
+## Cycle 60: U40 timing margin stated (first audit findings 9–10 / second audit findings 7–8, T047)
+
+- test: `U40 two quick on_session_end fires are captured once` (changed; structural)
+- change: a named `DEBOUNCE_MS = 1000`, a comment on why the margin is safe (two Node start-ups take about 150 ms), and the `waitFor` timeout scaled to `DEBOUNCE_MS * 5` (unchanged at 5000 ms). The test-list row and research R8 now say 1000 ms.
+- red: none (structural); mutant M "token supersession check disabled" from cycle 51 still applies.
+- green: U40 passed 5/5 alone; suite 53 passed, 0 failed
+- commit: `2c22e41`
+
+## Cycle 61: test-list rows and scope (second audit findings 8–9, T050, T051)
+
+- T050: the A8 and U22 rows now describe what the tests observe: exactly `error:missing_env` logged, an empty retry queue, and no stand-in.
+- T051: quoted `.env.local` values are recorded under "Out of scope". The README and SKILL.md show only unquoted values, so there is no requirement behind quoting. Mutant N6 surviving is therefore expected; revisit if upstream documents quoting.
+- No test or source change.

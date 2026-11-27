@@ -55,7 +55,7 @@ Phase 0 decisions. Evidence is in `evidence/baseline/` unless noted otherwise.
 
 ## R8. Hook timing (debounce, finalize delay, hard timeout)
 
-- **Decision**: Cover the timing logic deterministically. Hook-mode tests use `OB_CAPTURE_SYNC=1`, which captures in-process. One test covers **supersession**: two `on_session_end` fires with `OB_CAPTURE_DEBOUNCE_MS=300`, then poll the log (up to 5 s). The earlier detached worker must log `skipped:superseded`, and exactly one request must reach the stand-in. Wall-clock defaults (120 s debounce, 5 s finalize, hard timeouts) are not tested.
+- **Decision**: Cover the timing logic deterministically. Hook-mode tests use `OB_CAPTURE_SYNC=1`, which captures in-process. One test covers **supersession**: two `on_session_end` fires with `OB_CAPTURE_DEBOUNCE_MS=300`, then poll the log (up to 5 s). *Amended in implementation (cycle-log, cycle 51; T047):* the test uses 1000 ms and waits up to 5 × the debounce. The second fire must replace the first token before the first worker wakes, and two Node start-ups take about 150 ms, so 300 ms left too little margin. The earlier detached worker must log `skipped:superseded`, and exactly one request must reach the stand-in. Wall-clock defaults (120 s debounce, 5 s finalize, hard timeouts) are not tested.
 - **Rationale**: Supersession is what makes "captured once when idle" true, and it is checkable with short, adapter-supported delays. Testing the real defaults would break the 30-second limit (SC-004).
 - **Alternatives considered**: no timing coverage (leaves the debounce claim unproven); fake timers (impossible across a detached child process).
 

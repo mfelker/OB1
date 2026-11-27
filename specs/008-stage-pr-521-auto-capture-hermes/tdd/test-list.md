@@ -4,7 +4,7 @@ loop: outside-in # outside-in | inside-out
 profile: .specify/memory/tdd-profile.md # stack profile the commands must read
 spec_criteria: 22 # US1.1–3, US2.1–8, US3.1–3, US4.1–2 (16 scenarios) + SC-001–SC-006; 11 on the loop (US2, US3), the rest are process checks (see "Process acceptance")
 planned_at: cddad8a # short SHA the list was derived from (fork main)
-updated_at: d05470f # short SHA of the last change to this file (U42 added by remediation T049)
+updated_at: e069799 # short SHA of the last change to this file (T047 U40 row, T050 A8/U22 rows, T051 out of scope)
 suite_baseline: green # empty: skills/auto-capture-hermes has no tests at b9cbd68 (`no-tests`, adapter exit 0)
 ---
 
@@ -44,7 +44,7 @@ One per automatable acceptance scenario (US2, US3). US1 and US4 are checked by t
 | A5  | A subagent session prints no payload and logs `skipped:subagent` | US2.5, FR-010 | example | DONE | `capture-hermes-session.test.mjs::A5 a subagent session is not captured` |
 | A6  | A transcript longer than the size limit gives `text` within the limit that still contains the first and the last turn | US2.6, FR-011 | example | DONE | `capture-hermes-session.test.mjs::A6 an over-limit transcript fits the limit and keeps the first and last turns` |
 | A7  | Two runs on the same session give the same `import_key` | US2.7, FR-012 | example | DONE | `capture-hermes-session.test.mjs::A7 two runs on the same session give the same import key` |
-| A8  | With no address and no key configured, a non-dry run exits 0, logs `error:missing_env`, and a running stand-in receives 0 requests | US2.8, FR-014 | example | DONE | `capture-hermes-session.test.mjs::A8 with no address and no key nothing is sent and the run exits 0` |
+| A8  | With no address and no key configured, a non-dry run exits 0, logs exactly `error:missing_env`, and leaves the retry queue empty (no delivery attempted; no stand-in, since the child has no address to reach one) | US2.8, FR-014 | example | DONE | `capture-hermes-session.test.mjs::A8 with no address and no key nothing is sent and the run exits 0` |
 | A9  | With the stand-in answering 200, a capture sends exactly one request carrying the access key and the same payload a dry-run prints, and logs `captured:<job id>` | US3.1, FR-015 | example | DONE | `capture-hermes-session.test.mjs::A9 a successful capture sends one request with the key and the dry-run payload` |
 | A10 | With the stand-in answering 503, the payload lands in the retry queue; the next capture resends it before sending its own, and the queue ends empty | US3.2, FR-015 | example | DONE | `capture-hermes-session.test.mjs::A10 a temporary failure is queued and resent before the next capture` |
 | A11 | With the stand-in answering 401, nothing is queued and the log records the failure as permanent | US3.3, FR-015 | example | DONE | `capture-hermes-session.test.mjs::A11 a permanent failure is not queued and is logged as permanent` |
@@ -92,7 +92,7 @@ One per automatable acceptance scenario (US2, US3). US1 and US4 are checked by t
 | --- | -------- | ------ | ---- | ----- | ---- |
 | U20 | A dry-run writes no session state file | FR-013 | example | DONE | `capture-hermes-session.test.mjs::U20 a dry-run writes no session state` |
 | U21 | Address set but key missing: `error:missing_env`, 0 requests | FR-014 | example | DONE | `capture-hermes-session.test.mjs::U21 an address without a key sends nothing` |
-| U22 | Key set but address missing: `error:missing_env`, 0 requests | FR-014 | example | DONE | `capture-hermes-session.test.mjs::U22 a key without an address sends nothing` |
+| U22 | Key set but address missing: logs exactly `error:missing_env`, retry queue empty (no delivery attempted) | FR-014 | example | DONE | `capture-hermes-session.test.mjs::U22 a key without an address sends nothing` |
 | U23 | Address and key present only in `<OB_CAPTURE_ROOT>/.env.local` are used: 1 request with that key | FR-014 | example | DONE | `capture-hermes-session.test.mjs::U23 address and key from .env.local are used` |
 | U24 | `--session` with an unknown id exits 0 and logs `skipped:no_session` | INV-2 | example | DONE | `capture-hermes-session.test.mjs::U24 an unknown session id exits 0 and is logged` |
 
@@ -121,7 +121,7 @@ One per automatable acceptance scenario (US2, US3). US1 and US4 are checked by t
 | U37 | Unparseable hook stdin exits 0 and prints `{}` | INV-2 | example | DONE | `capture-hermes-session.test.mjs::U37 unparseable hook stdin exits 0 with the no-op reply` |
 | U38 | `on_session_finalize` with `OB_CAPTURE_SYNC=1` sends 1 request and leaves session state with `captured_at` and `ingest_ref` | INV-3 | example | DONE | `capture-hermes-session.test.mjs::U38 on_session_finalize captures once and records it in session state` |
 | U39 | A second hook fire after a capture logs `skipped:already_captured` and sends nothing more | INV-3 | example | DONE | `capture-hermes-session.test.mjs::U39 a hook fire after a capture is skipped and sends nothing more` |
-| U40 | Two quick `on_session_end` fires with `OB_CAPTURE_DEBOUNCE_MS=300` give one `skipped:superseded`, one capture, and exactly 1 request | INV-3 | example | DONE | `capture-hermes-session.test.mjs::U40 two quick on_session_end fires are captured once` |
+| U40 | Two quick `on_session_end` fires with `OB_CAPTURE_DEBOUNCE_MS=1000` give one `skipped:superseded`, one capture, and exactly 1 request | INV-3 | example | DONE | `capture-hermes-session.test.mjs::U40 two quick on_session_end fires are captured once` |
 
 ## Process acceptance (checked by tasks, not on the loop)
 
@@ -145,6 +145,7 @@ None.
 ## Out of scope
 
 - Wall-clock defaults (120 s debounce, 5 s finalize delay, hard timeouts): would break SC-004; supersession (U40) covers the logic with short delays (research R8).
+- Quoted values in `.env.local` (`KEY="value"`): the script strips one pair of quotes, but the README and SKILL.md only show unquoted values, so it is an undocumented convenience with no requirement behind it (second audit finding 9, mutant N6). Decided in T051; revisit if upstream documents quoting.
 - The `sqlite3` CLI fallback: CI and the owner run Node 26, where `node:sqlite` is always present, so the fallback can't be reached without editing the author's script. The test-support builder still falls back to the CLI to *build* fixtures (R4).
 - Session-id prefix matching for `--session`: a lookup convenience with no requirement behind it. Tests use full ids.
 - Header lines for profile, git branch and end reason: formatting with no requirement behind it beyond U14's fields.
