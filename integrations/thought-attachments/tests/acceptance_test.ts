@@ -1431,7 +1431,7 @@ Deno.test(
   },
 );
 
-todo(
+Deno.test(
   "A49 an attachment started with note whose link expired unused is an orphan, and its confirmed removal removes the note too",
   async () => {
     const w = world();
