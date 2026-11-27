@@ -1,6 +1,6 @@
 /** The phone upload page's routes (contracts/upload-page.md): token-only, JSON, no brain key. */
 import { Hono } from "npm:hono@4.9.2";
-import { baseName } from "./intake.ts";
+import { baseName, checkDeclared } from "./intake.ts";
 import { publicUrl } from "./links.ts";
 import type { AcceptedType, Deps, Services } from "./types.ts";
 
@@ -25,6 +25,8 @@ export function pageRoutes(deps: Deps, _services: Services): Hono {
       return c.json({ code: "wrong_size", message: "The picked file is " + body.size + " bytes, not the declared " + row.declared_size + "." }, 400);
     }
     const name = baseName(body.name);
+    const refusal = checkDeclared({ name, type: body.type, size: body.size }, deps.settings);
+    if (refusal) return c.json(refusal, 400);
     const path = `attachments/${row.id}/${name}`;
     await deps.store.setDeclaration(row.id, {
       file_name: name,

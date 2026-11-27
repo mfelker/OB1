@@ -116,3 +116,13 @@ Deno.test("U264 /page/start whose pick doesn't match the attach call's declarati
   );
   assertEquals([r.store.signedUploads.length, r.store.attachment(row.id)!.declared_size], [0, 2048]);
 });
+
+Deno.test("U265 a picked HEIC file is refused with the share-as-JPEG message, with no link", async () => {
+  const r = await rig();
+  const row = await r.seed();
+  const res = await r.post("/page/start", { token: TOKEN, name: "IMG_1.HEIC", type: "image/heic", size: 100 });
+  const body = await res.json();
+  assertEquals([res.status, body.code], [400, "heic"]);
+  assertStringIncludes(body.message, "JPEG");
+  assertEquals([r.store.signedUploads.length, r.store.attachment(row.id)!.declared_type], [0, null]);
+});
