@@ -15,7 +15,9 @@ export const HEIC_REFUSAL: Refusal = {
 };
 
 export function checkDeclared(decl: DeclaredFile, settings: Settings): Refusal | null {
-  if (decl.type === "image/heic" || decl.type === "image/heif") return HEIC_REFUSAL;
+  if (decl.type === "image/heic" || decl.type === "image/heif" || /\.(heic|heif)$/i.test(decl.name)) {
+    return HEIC_REFUSAL;
+  }
   if (!ACCEPTED.includes(decl.type as AcceptedType)) {
     return { code: "unsupported_type", message: "Accepted types are PDF, JPEG, PNG and WebP. Got " + decl.type + "." };
   }

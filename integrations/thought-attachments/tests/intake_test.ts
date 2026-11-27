@@ -82,3 +82,11 @@ Deno.test("U141 a HEIC declared type is refused with share it as JPEG and the st
     assertStringIncludes(refusal.message, "Android");
   }
 });
+
+Deno.test("U142 a file name ending .heic or .heif, in any case, gets the same refusal whatever the declared type", () => {
+  for (const name of ["a.heic", "B.HEIC", "c.Heif", "d.heif"]) {
+    const refusal = checkDeclared({ name, type: "image/jpeg", size: 1000 }, settingsWith());
+    assert(refusal !== null, name);
+    assertEquals(refusal.code, "heic");
+  }
+});
