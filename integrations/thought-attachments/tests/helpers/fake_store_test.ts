@@ -100,3 +100,26 @@ Deno.test("U29 a writeDerived row whose fingerprint equals an existing thought's
     { failed: true, owner: ownerBefore, derived: 0 },
   );
 });
+
+/** Finishes `row` with one derived thought per text, under a fresh claim that is then released. */
+async function finishWith(store: FakeStore, row: AttachmentRow, texts: string[]): Promise<void> {
+  const { token } = data(await store.claim(row.id, "finish", BUSY_SECONDS)) as { token: string };
+  const rows = await Promise.all(texts.map((t) => derivedRow(`From ${row.file_name}, photo (attachment ${row.id.slice(0, 8)})\n${t}`)));
+  data(await store.writeDerived(row.id, token, rows, { state: "processed" }));
+  data(await store.release(row.id, token));
+}
+
+Deno.test("U30 removeAttachment removes only that attachment's derived thoughts and its row", async () => {
+  const { store, parent, att } = await setup();
+  const other = store.seedAttachment({ parent_thought_id: parent.id, file_name: "shelf.jpg", declared_type: "image/jpeg" });
+  await finishWith(store, att, ["Page one.", "Page two."]);
+  await finishWith(store, other, ["A grey shelf."]);
+  await store.seedThought({ content: "Buy furnace filters" }); // an owner thought, kept with the rest
+  const keep = structuredClone({ other: store.attachment(other.id), thoughts: store.thoughts.filter((t) => t.attachment_id !== att.id) });
+  const { token } = data(await store.claim(att.id, "remove", BUSY_SECONDS)) as { token: string };
+  const removed = data(await store.removeAttachment(att.id, token));
+  assertEquals(
+    { removed, gone: store.attachment(att.id), other: store.attachment(other.id), thoughts: store.thoughts },
+    { removed: { derived: 2, noteRemoved: false }, gone: undefined, ...keep },
+  );
+});
