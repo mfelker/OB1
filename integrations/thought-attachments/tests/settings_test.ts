@@ -42,3 +42,11 @@ Deno.test("U1 each documented default applies when its variable is unset", () =>
     },
   );
 });
+
+Deno.test("U2 a set variable overrides its default", () => {
+  const s = settingsWith({ MAX_PDF_PAGES: "30", ATTACHMENTS_BUCKET: "files" });
+  assertEquals({ maxPdfPages: s.maxPdfPages, attachmentsBucket: s.attachmentsBucket }, {
+    maxPdfPages: 30,
+    attachmentsBucket: "files",
+  });
+});
