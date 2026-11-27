@@ -3,7 +3,7 @@ import { assertEquals } from "jsr:@std/assert@1.0.19";
 import { curlLine, pageLink, publicUrl } from "../src/links.ts";
 import { loadSettings } from "../src/settings.ts";
 import type { Settings } from "../src/types.ts";
-import { envGetter } from "./helpers/env.ts";
+import { BRAIN_KEY, envGetter, SERVICE_ROLE_KEY } from "./helpers/env.ts";
 
 function settingsWith(overrides: Record<string, string | undefined> = {}): Settings {
   const result = loadSettings(envGetter(overrides));
@@ -46,4 +46,20 @@ Deno.test("U23 curlLine is a PUT to the upload URL carrying every returned heade
       " -T '/home/owner/My Manuals/dishwasher'\\''s manual.pdf'" +
       ` '${UPLOAD.url}'`,
   );
+});
+
+Deno.test("U24 curlLine contains neither the MCP access key nor the service-role key", () => {
+  // Production holds both keys in the process environment; put the placeholders there for this test.
+  const saved = { MCP_ACCESS_KEY: Deno.env.get("MCP_ACCESS_KEY"), SUPABASE_SERVICE_ROLE_KEY: Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") };
+  Deno.env.set("MCP_ACCESS_KEY", BRAIN_KEY);
+  Deno.env.set("SUPABASE_SERVICE_ROLE_KEY", SERVICE_ROLE_KEY);
+  try {
+    const line = curlLine(UPLOAD, "/tmp/manual.pdf");
+    assertEquals([BRAIN_KEY, SERVICE_ROLE_KEY].filter((key) => line.includes(key)), []);
+  } finally {
+    for (const [name, value] of Object.entries(saved)) {
+      if (value === undefined) Deno.env.delete(name);
+      else Deno.env.set(name, value);
+    }
+  }
 });
