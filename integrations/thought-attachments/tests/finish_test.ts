@@ -297,3 +297,20 @@ Deno.test("U195 rebuild on a processed photo gives exactly one caption by the ne
   assertStringIncludes(derived[0].content, "a blue door");
   assertEquals(r.store.attachment(att.id)?.caption_model, "new/model");
 });
+
+Deno.test("U196 rebuild on a processed PDF replaces the passage set, and derived_count equals the new count", async () => {
+  const r = await rig();
+  const words = Array.from({ length: 120 }, (_, i) => "word" + i).join(" ");
+  const att = pending(r, await textPdf([words.slice(0, 400), words.slice(400, 800)]));
+  const first = await r.finish(att.id, {});
+  assertEquals(first.state, "processed");
+  const oldIds = r.store.derivedOf(att.id).map((t) => t.id);
+  const finishSmall = reconfigured(r, { PASSAGE_MAX_CHARS: "200" });
+  const out = await finishSmall(att.id, { rebuild: true });
+  assertEquals(out.state, "processed");
+  const derived = r.store.derivedOf(att.id);
+  assert(derived.length > first.derived_count);
+  assertEquals(out.derived_count, derived.length);
+  assertEquals(r.store.attachment(att.id)?.derived_count, derived.length);
+  for (const t of derived) assertEquals(oldIds.includes(t.id), false);
+});
