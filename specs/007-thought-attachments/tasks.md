@@ -314,7 +314,7 @@ Streams code against these. The signatures are the only shared contract. Behavio
 
 ### Stream D: docs (`ta-docs`, wave 1)
 
-- [ ] T034 [P] [US1] Write `F/README.md` per the spec's README Contract (docs only; gated by markdownlint, the link check and the live runs). Sections:
+- [X] T034 [P] [US1] Write `F/README.md` per the spec's README Contract (docs only; gated by markdownlint, the link check and the live runs). Sections:
   - **What it does**
   - a link to `../../docs/05-tool-audit.md`
   - **Prerequisites** (both platforms)
@@ -411,7 +411,7 @@ Streams code against these. The signatures are the only shared contract. Behavio
 
 ### Stream D: docs (`ta-docs`, wave 1)
 
-- [ ] T047 [P] [US2] In `F/README.md`, add:
+- [X] T047 [P] [US2] In `F/README.md`, add:
   - **Upload from your phone**: on self-hosted, `PUBLIC_BASE_URL` set to an address the phone reaches (LAN or tailnet), with the same-network limit until fork issue #29 (R6)
   - **On Supabase Cloud, publish the page once**: set the API address in `upload-page.html`, publish it to any free static host, set `UPLOAD_PAGE_URL`, and why (Cloud serves HTML as plain text; R5)
   - **Vision model**: `VISION_*` for Ollama `qwen2.5vl:7b` or an OpenRouter vision model (R4)
@@ -446,7 +446,7 @@ Streams code against these. The signatures are the only shared contract. Behavio
 
 ### Stream D: docs (`ta-docs`, wave 1)
 
-- [ ] T052 [P] [US3] In `F/README.md`, add **Get a file back**: `get_attachment` by the short id in a search result's source line, `list_attachments`, and the 10-minute link lifetime (FR-014).
+- [X] T052 [P] [US3] In `F/README.md`, add **Get a file back**: `get_attachment` by the short id in a search result's source line, `list_attachments`, and the 10-minute link lifetime (FR-014).
 
 ---
 
@@ -496,7 +496,7 @@ Streams code against these. The signatures are the only shared contract. Behavio
 
 ### Stream D: docs (`ta-docs`, wave 1)
 
-- [ ] T060 [P] [US4] In `F/README.md`, add **Limits** (the caps and why: Cloud's 2 s CPU budget, R1), **Troubleshooting** (one entry per refusal and failure in contracts/mcp-tools.md, including busy, scanned with OCR deferred to fork issue #30, an embedding size mismatch, and `EMBEDDING_BATCH_SIZE=1` if the endpoint rejects batches, R3) and **Known limitations** (fork issues #26, #30, #31 and #32).
+- [X] T060 [P] [US4] In `F/README.md`, add **Limits** (the caps and why: Cloud's 2 s CPU budget, R1), **Troubleshooting** (one entry per refusal and failure in contracts/mcp-tools.md, including busy, scanned with OCR deferred to fork issue #30, an embedding size mismatch, and `EMBEDDING_BATCH_SIZE=1` if the endpoint rejects batches, R3) and **Known limitations** (fork issues #26, #30, #31 and #32).
 
 ---
 
@@ -529,7 +529,7 @@ Streams code against these. The signatures are the only shared contract. Behavio
 
 ### Stream D: docs (`ta-docs`, wave 1)
 
-- [ ] T066 [P] [US5] In `F/README.md`, add **Remove an attachment** (dry run, then `confirm`; what goes and what never does) and **Orphan check**.
+- [X] T066 [P] [US5] In `F/README.md`, add **Remove an attachment** (dry run, then `confirm`; what goes and what never does) and **Orphan check**.
 
 ---
 

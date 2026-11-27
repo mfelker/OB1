@@ -459,3 +459,11 @@ Lines are from the whole-file `RUN_TODO=1` run. Spot checks with `--filter "/^<i
 - green: trailing slashes are stripped from the public base. Suite → 47 passed, 63 ignored
 - refactor: none
 - commit: `34dd206`
+
+## Stream D merged (README; docs-only, exempt from unit tests)
+
+- Tasks T034, T047, T052, T060 and T066 are in commits `9d49573`, `adb494b`, `49aef8f`, `8d8e32e` and `52dc8ce`, merged into W at `798e78a`. Only `README.md` changed. markdownlint reports 0 issues. The suite is unchanged at 47 passed, 63 ignored.
+- Open for T073:
+  - the link `../../recipes/self-hosted-supabase-mcp/` resolves on fork `main` (spec 006) but not on `upstream/main` until 006 lands upstream, so upstream's link check will flag it;
+  - the README mentions fork issue 26 only generically (it is resumable or background processing, R1);
+  - the self-hosted override (`env_file`) is not live-tested.
