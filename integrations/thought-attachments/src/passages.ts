@@ -8,16 +8,24 @@ export function toPassages(
 ): Passage[] {
   const passages: Passage[] = [];
   let body = "";
-  const fits = (text: string) => sourceLineFor([1, 1]).length + 1 + text.length <= settings.passageMaxChars;
-  for (const word of pageTexts.join(" ").split(/\s+/).filter(Boolean)) {
-    const next = body ? body + " " + word : word;
-    if (fits(next)) {
-      body = next;
-    } else {
-      passages.push({ text: body, pages: [1, 1] });
-      body = word;
+  let first = 1;
+  let last = 1;
+  const fits = (text: string, pages: [number, number]) =>
+    sourceLineFor(pages).length + 1 + text.length <= settings.passageMaxChars;
+  pageTexts.forEach((pageText, index) => {
+    const page = index + 1;
+    for (const word of pageText.split(/\s+/).filter(Boolean)) {
+      const next = body ? body + " " + word : word;
+      if (body && fits(next, [first, page])) {
+        body = next;
+        last = page;
+      } else {
+        if (body) passages.push({ text: body, pages: [first, last] });
+        body = word;
+        first = last = page;
+      }
     }
-  }
-  if (body) passages.push({ text: body, pages: [1, 1] });
+  });
+  if (body) passages.push({ text: body, pages: [first, last] });
   return passages;
 }

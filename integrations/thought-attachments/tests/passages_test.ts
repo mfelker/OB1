@@ -46,3 +46,9 @@ Deno.test("U126 text one character longer than that is two passages", () => {
   const passages = toPassages([body], lineFor, settingsWith({ PASSAGE_MAX_CHARS: String(max) }));
   assertEquals(passages.length, 2);
 });
+
+Deno.test("U128 a passage within one page records that page as both ends of its range", () => {
+  const full = textOf(200 - lineFor([1, 1]).length - 1); // fills a passage exactly, so nothing of the next page joins it
+  const passages = toPassages([full, full, full], lineFor, settingsWith({ PASSAGE_MAX_CHARS: "200" }));
+  assertEquals(passages.map((p) => p.pages), [[1, 1], [2, 2], [3, 3]]);
+});
