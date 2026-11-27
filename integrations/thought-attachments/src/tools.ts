@@ -2,8 +2,8 @@
 import { McpServer } from "npm:@modelcontextprotocol/sdk@1.24.3/server/mcp.js";
 import { z } from "npm:zod@4.1.13";
 import { baseName, checkDeclared } from "./intake.ts";
-import { pageLink } from "./links.ts";
-import type { AcceptedType, Deps, Services } from "./types.ts";
+import { curlLine, pageLink, publicUrl } from "./links.ts";
+import type { AcceptedType, Deps, Services, Settings, UploadInstructions } from "./types.ts";
 
 type Hints = { readOnlyHint: boolean; destructiveHint?: boolean; openWorldHint?: boolean };
 
@@ -16,6 +16,14 @@ const ONE_PARENT = "Give exactly one of thought_id or note.";
 
 /** The first 8 hex characters of an attachment id (FR-025). */
 const shortId = (id: string) => id.replace(/-/g, "").slice(0, 8).toLowerCase();
+
+/** The size (and, for a PDF, page) cap for a type. */
+function limitsFor(settings: Settings, type: string): { max_bytes: number; max_pages?: number } {
+  if (type === "application/pdf") {
+    return { max_bytes: Math.floor(settings.maxPdfMb * 1024 * 1024), max_pages: settings.maxPdfPages };
+  }
+  return { max_bytes: Math.floor(settings.maxImageMb * 1024 * 1024) };
+}
 
 const toHex = (bytes: Uint8Array) => [...bytes].map((x) => x.toString(16).padStart(2, "0")).join("");
 
@@ -117,6 +125,14 @@ export function buildServer(deps: Deps, _services: Services): McpServer {
     const id = newId(deps);
     const pageToken = toHex(deps.randomBytes(32));
     const name = baseName(file_name ?? "");
+    const storagePath = `attachments/${id}/${name}`;
+    const signed = await deps.store.signUpload(storagePath);
+    if ("error" in signed) return fail(signed.error);
+    const upload: UploadInstructions = {
+      url: publicUrl(deps.settings, signed.data.url),
+      method: "PUT",
+      headers: { "content-type": declared_type as string, "x-upsert": "false" },
+    };
     const created = await deps.store.createAttachment({
       id,
       parent_thought_id: thought_id as string,
@@ -124,15 +140,32 @@ export function buildServer(deps: Deps, _services: Services): McpServer {
       file_name: name,
       declared_type: declared_type as AcceptedType,
       declared_size,
-      storage_path: `attachments/${id}/${name}`,
+      storage_path: storagePath,
       upload_deadline: new Date(deps.now().getTime() + deps.settings.uploadLinkMinutes * 60_000).toISOString(),
       page_token_hash: await sha256Hex(pageToken),
     });
     if ("error" in created) return fail(created.error);
-    return reply(`Attachment ${created.data.id} started.`, {
-      attachment_id: created.data.id,
+    const row = created.data;
+    const data = {
+      attachment_id: row.id,
+      short_id: shortId(row.id),
+      parent_thought_id: row.parent_thought_id,
+      parent_created_here: row.parent_created_here,
+      upload_deadline: row.upload_deadline,
+      upload,
+      curl: curlLine(upload, name),
       page_link: pageLink(deps.settings, pageToken),
-    });
+      limits: limitsFor(deps.settings, declared_type as string),
+    };
+    return reply(
+      [
+        `Attachment ${row.id} (short id ${data.short_id}) started on thought ${row.parent_thought_id}.`,
+        `Upload before ${row.upload_deadline}, with a command:`,
+        data.curl,
+        `or on a phone: ${data.page_link}`,
+      ].join("\n"),
+      data,
+    );
   });
 
   server.registerTool("finish_attachment", {

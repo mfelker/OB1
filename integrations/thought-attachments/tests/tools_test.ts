@@ -1,6 +1,7 @@
 /** tools (T027-T030, T041, T049, T050, T063, T064): contracts/mcp-tools.md, driven through the MCP client over an in-memory transport. */
 import { assert, assertEquals, assertStringIncludes } from "jsr:@std/assert@1.0.19";
 import { buildServer } from "../src/tools.ts";
+import { curlLine, pageLink } from "../src/links.ts";
 import { loadSettings } from "../src/settings.ts";
 import type { EmbeddingClient, FinishOutcome, R, Services, Settings } from "../src/types.ts";
 import { Clock } from "./helpers/clock.ts";
@@ -361,4 +362,25 @@ Deno.test("U237 the stored page_token_hash is the SHA-256 of the token in page_l
   assertEquals(row.page_token_hash, await sha256Hex(token));
   assert(!JSON.stringify(h.store.attachments).includes(token));
   assert(!JSON.stringify(h.store.thoughts).includes(token));
+});
+
+Deno.test("U238 the attach_file result has the ids, deadline, upload, curl line, page link and limits", async () => {
+  const h = await harness();
+  const parent = await seed(h, "dishwasher");
+  const out = await call(h, "attach_file", { thought_id: parent.id, ...PDF });
+  const row = h.store.attachments[0];
+  const d = out.data;
+  assertEquals(d.attachment_id, row.id);
+  assertEquals(d.short_id, row.id.replace(/-/g, "").slice(0, 8));
+  assertEquals(d.parent_thought_id, parent.id);
+  assertEquals(d.parent_created_here, false);
+  assertEquals(d.upload_deadline, row.upload_deadline);
+  const upload = d.upload as { url: string; method: string; headers: Record<string, string> };
+  assertEquals(upload.method, "PUT");
+  assertEquals(upload.headers, { "content-type": "application/pdf", "x-upsert": "false" });
+  assertEquals(d.curl, curlLine({ url: upload.url, method: "PUT", headers: upload.headers }, "manual.pdf"));
+  assertEquals(d.page_link, pageLink(h.settings, (d.page_link as string).split("#t=")[1]));
+  assertEquals(d.limits, { max_bytes: 25 * 1024 * 1024, max_pages: 50 });
+  assertStringIncludes(out.text, String(d.short_id));
+  assertStringIncludes(out.text, upload.url);
 });
