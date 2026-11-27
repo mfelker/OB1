@@ -104,6 +104,18 @@ Deno.test("U144 sniffType returns null for any other bytes and for empty input",
   assertEquals(sniffType(new Uint8Array()), null);
   assertEquals(sniffType(new TextEncoder().encode("PK\u0003\u0004 zip archive")), null);
   assertEquals(sniffType(new TextEncoder().encode("plain text, not a file")), null);
+  // Near misses: one byte or field away from an accepted signature.
+  const bytes = (...parts: (string | number[])[]) =>
+    new Uint8Array(parts.flatMap((p) => typeof p === "string" ? [...p].map((c) => c.charCodeAt(0)) : p));
+  const nearMisses = {
+    riffWave: bytes("RIFF", [0x24, 0, 0, 0], "WAVEfmt "),
+    isoBmffIsom: bytes([0, 0, 0, 0x18], "ftypisom", [0, 0, 2, 0]),
+    pngWithoutLead: bytes([0x00], "PNG", [0x0d, 0x0a, 0x1a, 0x0a]),
+    jpegWithoutThirdFf: bytes([0xff, 0xd8, 0x00, 0xe0], "JFIF"),
+    pdfWithoutDash: bytes("%PDF 1.7 not a header"),
+  };
+  const sniffed = Object.fromEntries(Object.entries(nearMisses).map(([k, v]) => [k, sniffType(v)]));
+  assertEquals(sniffed, { riffWave: null, isoBmffIsom: null, pngWithoutLead: null, jpegWithoutThirdFf: null, pdfWithoutDash: null });
 });
 
 /** A pending attachment declared as `type` and `size`. `page_count` is what the finisher read from the stored PDF. */
