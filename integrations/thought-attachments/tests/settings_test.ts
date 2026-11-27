@@ -124,3 +124,8 @@ Deno.test("U13 with BUSY_SECONDS unset the busy expiry is 410 seconds on every p
   const cloud = { SUPABASE_URL: "https://abcdefghijklmnop.supabase.co", PUBLIC_BASE_URL: undefined };
   assertEquals([settingsWith().busySeconds, settingsWith(cloud).busySeconds], [410, 410]);
 });
+
+Deno.test("U15 a set UPLOAD_PAGE_URL is used as given", () => {
+  const published = "https://pages.example.test/ob1/upload-page.html";
+  assertEquals(settingsWith({ UPLOAD_PAGE_URL: published }).uploadPageUrl, published);
+});
