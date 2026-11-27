@@ -162,6 +162,16 @@ The owner says "that's the wrong manual, remove it". The attachment, its stored 
 - A file name containing personal or path information; only the file's base name is kept, never a local path.
 - The brain's embedding model returns vectors of a different length than the brain's thoughts; finishing fails loudly instead of writing unsearchable thoughts.
 - A very long passage; passage thoughts are kept small enough for the brain's full-text search limits.
+- Size caps count 1 MB as 1,048,576 bytes, the same unit as the platform's own Storage limit (the official self-hosted stack's 50 MB default is `52428800` bytes); a file exactly at the cap is accepted and one byte over is refused (derived from FR-003 and the platform default).
+- Before a file is picked, the upload page shows the expected kind (if the AI named one), the accepted types and the size limit, which the page fetches with its token alone (derived from FR-002 (b) and the page contract).
+- A passage from one page names it as `page 12`; a passage across pages as `pages 12–13` (derived from FR-025).
+- A lookup asking for more than 20 matches gets 20; exact-text lookup finds thoughts containing the given text, ignoring letter case (derived from FR-023).
+- A pending upload past its deadline no longer counts as pending, so the AI can start a new attachment for the same file at once; the expired one stays in the orphan check (derived from FR-021 and the edge case on expired links).
+- A finish whose busy mark expired before it reported back is shown as `failed` ("the run did not finish") by every later read, and the next finish proceeds (derived from FR-026).
+- A successful rebuild clears the previous "last rebuild failed" note (derived from FR-027).
+- Removal deletes the stored file first and then the records; if the records cannot be deleted, the attachment stays listed and removing it again succeeds, treating an already-missing file as removed (derived from FR-016).
+- If an existing thought's text equals a derived thought's entire text, source line included, finishing fails with a reason naming the conflict and the existing thought is untouched (derived from FR-022; considered practically unreachable because the source line carries the attachment id).
+- Starting an attachment with only some of the file name, type and size is refused: give all three (command upload) or none (phone upload) (derived from FR-001).
 
 ## Requirements *(mandatory)*
 
