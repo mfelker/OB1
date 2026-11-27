@@ -1,0 +1,37 @@
+# OB1 Review 'Run review checks' (ob1-gate-v2.yml, extracted unchanged), 2026-11-27T06:57:57Z
+# head 6bcefef, base 238df6c, title: [skills] Add auto-capture-hermes adapter (staged #521), contrib dirs: skills/auto-capture-hermes; check-jsonschema 0.39.0 via uvx, schema from base
+failed=false
+secret_blocked=false
+comment<<EOF
+## OB1 PR Gate
+
+✅ **Folder structure** — All files are in allowed directories
+✅ **Required files** — README.md and metadata.json found in all contribution folders
+✅ **Metadata valid** — All metadata.json files passed JSON Schema validation
+✅ **No credentials** — No API keys, tokens, or secrets detected
+✅ **SQL safety** — No destructive SQL or core table modifications
+✅ **Category artifacts** — Required file types present for each category
+✅ **PR format** — Title follows `[category] Description` format
+✅ **No binary blobs** — No oversized or binary files
+✅ **README completeness** — All READMEs include Prerequisites, Steps, and Expected Outcome
+✅ **Contribution dependencies** — All declared skill and primitive dependencies exist and are linked in README
+✅ **LLM clarity review** — Covered by Claude PR Review workflow
+✅ **Remote MCP pattern** — No local MCP server patterns detected — uses remote MCP correctly
+✅ **Tool audit link** — Extensions/integrations link to the MCP Tool Audit guide
+✅ **Scope check** — All changes are within the contribution folder(s)
+✅ **Internal links** — All relative links in READMEs resolve to existing files
+
+**Result: All 15 checks passed! Ready for human review.**
+
+---
+
+### Post-Merge Tasks
+
+*These don't block merge — they're reminders for admins after this PR lands.*
+
+- [ ] Add **Auto-Capture Hermes Adapter** to [`skills/README.md`](skills/README.md)
+- [ ] Add **Auto-Capture Hermes Adapter** to root README.md community contributions section
+- [ ] Add **Ezana Azene** (@eazene) to [CONTRIBUTORS.md](CONTRIBUTORS.md)
+- [ ] Post in OB1 Discord [#show-and-tell](https://discord.gg/Cgh9WJEkeG)
+
+EOF

@@ -1,0 +1,67 @@
+# 2026-11-27T06:56:50Z node v26.13.0 — env -i PATH HOME=<tmp>; cwd skills/auto-capture-hermes @ 6bcefef
+▶ acceptance
+  ✔ A1 dry-run prints one payload with the turns, label and key, and sends nothing (55.494125ms)
+  ✔ A2 tool-call-only steps and compaction summaries are absent from the capture (54.851167ms)
+  ✔ A3 a cron message is kept as user:cron and not counted as a user turn (54.180958ms)
+  ✔ A4 a session below the user-turn threshold is not captured (53.903ms)
+  ✔ A5 a subagent session is not captured (62.291542ms)
+  ✔ A6 an over-limit transcript fits the limit and keeps the first and last turns (53.854458ms)
+  ✔ A7 two runs on the same session give the same import key (99.784583ms)
+  ✔ A8 with no address and no key nothing is sent and the run exits 0 (53.965959ms)
+✔ acceptance (489.164416ms)
+✔ U1 an assistant row with empty content contributes nothing (54.136625ms)
+✔ U2 a compaction summary row contributes nothing (52.6905ms)
+✔ U3 tool and session_meta rows contribute nothing (53.990166ms)
+✔ U4 turns follow insertion order even when timestamps run backwards (55.260083ms)
+✔ U5 a JSON array of typed parts appears as its text parts joined (53.001875ms)
+✔ U6 a user message mentioning [Cronjob mid-text is a real user turn (52.634ms)
+✔ U7 exactly three real user turns is captured (53.316ms)
+✔ U8 two real user turns plus a cron turn is skipped as too short (54.391959ms)
+✔ U9 OB_CAPTURE_MIN_USER_TURNS=1 captures a one-turn session (53.515042ms)
+✔ U10 a session with a parent is skipped and nothing is sent (55.501041ms)
+✔ U11 a title starting with Subagent: is skipped and nothing is sent (51.903625ms)
+✔ U12 a title containing Subagent: later in the text is captured (53.974ms)
+✔ U13 --latest picks the newest top-level session over a newer subagent (54.884917ms)
+✔ U14 the header names project, session, source and title (53.728792ms)
+✔ U15 a literal thought_content tag inside a turn is escaped (53.762667ms)
+✔ U16 a transcript within the limit is sent whole without a marker (53.38175ms)
+✔ U17 an over-limit transcript has the marker between the kept start and end (53.367959ms)
+✔ U18 import_key has the form hermes:<session id>:<8 hex> (55.149917ms)
+✔ U19 changing one message changes the import key (99.813333ms)
+✔ U20 a dry-run writes no session state (56.966166ms)
+✔ U21 an address without a key sends nothing (52.963584ms)
+✔ U22 a key without an address sends nothing (52.133417ms)
+✔ U23 address and key from .env.local are used (71.684834ms)
+✔ U24 an unknown session id exits 0 and is logged (51.124542ms)
+✔ U35 a hook payload without session_id is skipped with the no-op reply (55.306375ms)
+✔ U36 a hook event other than session end is skipped and sends nothing (55.763833ms)
+✔ U37 unparseable hook stdin exits 0 with the no-op reply (52.701583ms)
+✔ U38 on_session_finalize captures once and records it in session state (71.700417ms)
+✔ U39 a hook fire after a capture is skipped and sends nothing more (121.270625ms)
+▶ acceptance
+  ✔ A9 a successful capture sends one request with the key and the dry-run payload (122.229833ms)
+  ✔ A10 a temporary failure is queued and resent before the next capture (156.937792ms)
+  ✔ A11 a permanent failure is not queued and is logged as permanent (72.697833ms)
+✔ acceptance (352.052875ms)
+✔ U25 an address with a trailing slash still posts to the ingest path (71.046417ms)
+✔ U26 a 2xx answer with a non-JSON body is logged captured:unknown (71.080708ms)
+✔ U27 a 429 answer queues the payload (68.78675ms)
+✔ U28 a 500 answer queues the payload (70.214083ms)
+✔ U29 a 400 answer is not queued and is logged as permanent (70.004ms)
+✔ U30 a refused connection exits 0 and queues the payload (67.554792ms)
+✔ U31 a queued entry failing a fourth time stays queued with attempt_count 4 (90.100459ms)
+✔ U32 a queued entry failing a fifth time moves to dead/ (92.197292ms)
+✔ U33 a queued entry answered with 401 moves to dead/ (103.722208ms)
+✔ U34 one run resends the three oldest queued entries and keeps the newest (90.4995ms)
+✔ U40 two quick on_session_end fires are captured once (1226.773333ms)
+ℹ tests 51
+ℹ suites 2
+ℹ pass 51
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4638.450458
+real 4.68
+user 2.61
+sys 0.95

@@ -30,7 +30,7 @@ description: "Tasks for staging upstream PR #521 (auto-capture Hermes adapter)"
 
 **Purpose**: Confirm the branches are where the plan says (plan § Branch map).
 
-- [ ] T001 Verify the stage worktree and branch (quickstart §0) in `W`:
+- [X] T001 Verify the stage worktree and branch (quickstart §0) in `W`:
   - `git -C W rev-parse --abbrev-ref HEAD` is `stage/pr-521-auto-capture-hermes`.
   - `git -C W log --oneline 238df6c..HEAD` lists exactly `b9cbd68`, `5cf07c0`, `f1f4536`.
   - `git -C W config rerere.enabled` is `true`.
@@ -43,11 +43,11 @@ description: "Tasks for staging upstream PR #521 (auto-capture Hermes adapter)"
 
 **Purpose**: The helpers every test uses. They are not tests themselves (plan Structure Decision).
 
-- [ ] T002 [P] Create `F/test-support/hermes-store.mjs` (research R4, data-model.md § Hermes session store). It exports a builder that writes a fresh `state.db` into a temp directory, with the `sessions` and `messages` columns listed in data-model.md, and helpers to add a session and a sequence of messages (role, content, `_compressed_summary`, order by insertion). It uses `node:sqlite` and falls back to the `sqlite3` CLI. When neither is available it reports that, so the suite can skip with a visible reason.
-- [ ] T003 [P] Create `F/test-support/run-adapter.mjs` (research R5, R7):
+- [X] T002 [P] Create `F/test-support/hermes-store.mjs` (research R4, data-model.md § Hermes session store). It exports a builder that writes a fresh `state.db` into a temp directory, with the `sessions` and `messages` columns listed in data-model.md, and helpers to add a session and a sequence of messages (role, content, `_compressed_summary`, order by insertion). It uses `node:sqlite` and falls back to the `sqlite3` CLI. When neither is available it reports that, so the suite can skip with a visible reason.
+- [X] T003 [P] Create `F/test-support/run-adapter.mjs` (research R5, R7):
   - `runAdapter({ args, stdin, env })`: runs `process.execPath F/capture-hermes-session.mjs …` with an environment built only from `PATH`, `HOME` (temp), `HERMES_HOME`/`OB_HERMES_STATE_DB`, `OB_CAPTURE_ROOT` (temp) and the given extras; returns `{ code, stdout, stderr }` plus readers for the capture log, session state files and the retry queue (`data/capture-retry-queue/`, `dead/`).
   - `startIngestStub(statuses)`: an `http` server on `127.0.0.1:0` that records method, path, `x-brain-key` and the JSON body of each request, and answers with the given statuses in order (default 200 `{ "job_id": "job-1" }`); returns its URL and the recorded requests, and closes cleanly.
-- [ ] T004 Create `F/capture-hermes-session.test.mjs` with imports, a per-test temp-directory fixture (removed after each test) and the skip-with-reason guard from T002. No cases yet. `node --test capture-hermes-session.test.mjs` runs 0 tests and exits 0. Commit T002–T004 on the stage branch as `[skills] auto-capture-hermes: test support (synthetic Hermes store, adapter runner)`.
+- [X] T004 Create `F/capture-hermes-session.test.mjs` with imports, a per-test temp-directory fixture (removed after each test) and the skip-with-reason guard from T002. No cases yet. `node --test capture-hermes-session.test.mjs` runs 0 tests and exits 0. Commit T002–T004 on the stage branch as `[skills] auto-capture-hermes: test support (synthetic Hermes store, adapter runner)`.
 
 **Checkpoint**: helpers ready; story tests can be added.
 
@@ -80,8 +80,8 @@ US2 goes before US1 because US1's check is only meaningful once the tests exist 
 
 ### Verification for User Story 2
 
-- [ ] T017 [US2] Run the Independent Test command above and save the output to `S/evidence/us2-node-test.txt`. Every case passes (or is `todo` naming a defect, research R9); the run takes < 30 s (SC-004). For every `todo`, add an entry to `S/evidence/defects.md` (behavior, reproduction, expected vs actual) for the #521 comment.
-- [ ] T039 [US2] Outer loop for US2: `node .fork/ci/bin/tdd.mjs file capture-hermes-session.test.mjs` shows acceptance behaviors A1–A8 green. US2 isn't complete until they are (tdd/test-list.md).
+- [X] T017 [US2] Run the Independent Test command above and save the output to `S/evidence/us2-node-test.txt`. Every case passes (or is `todo` naming a defect, research R9); the run takes < 30 s (SC-004). For every `todo`, add an entry to `S/evidence/defects.md` (behavior, reproduction, expected vs actual) for the #521 comment.
+- [X] T039 [US2] Outer loop for US2: `node .fork/ci/bin/tdd.mjs file capture-hermes-session.test.mjs` shows acceptance behaviors A1–A8 green. US2 isn't complete until they are (tdd/test-list.md).
 
 **Checkpoint**: the capture rules are proven; fork-ci would now see tests.
 
@@ -104,8 +104,8 @@ US2 goes before US1 because US1's check is only meaningful once the tests exist 
 
 ### Verification for User Story 3
 
-- [ ] T024 [US3] Run the full suite as in T017 and save the output to `S/evidence/us3-node-test.txt`: all pass (or `todo` with a defect entry), < 30 s in total.
-- [ ] T040 [US3] Outer loop for US3: the same file run shows A9–A11 green. US3 isn't complete until they are.
+- [X] T024 [US3] Run the full suite as in T017 and save the output to `S/evidence/us3-node-test.txt`: all pass (or `todo` with a defect entry), < 30 s in total.
+- [X] T040 [US3] Outer loop for US3: the same file run shows A9–A11 green. US3 isn't complete until they are.
 
 **Checkpoint**: all behavior tests done.
 
@@ -113,10 +113,10 @@ US2 goes before US1 because US1's check is only meaningful once the tests exist 
 
 ## Phase 5: Gate Self-Check (before the fork PR)
 
-- [ ] T025 [P] Lane hygiene in `W` (FR-004, quickstart §0): `git diff --stat upstream/main...HEAD` lists only paths under `skills/auto-capture-hermes/`; `git diff --quiet b9cbd68 HEAD -- <the author's four files>` succeeds (SC-001); the branch has no `.specify/`, `specs/`, `.fork/`; every fork commit title starts `[skills]` (FR-003).
-- [ ] T026 [P] fork-ci preview (quickstart §2): `run-folder` strict on `skills/auto-capture-hermes` gives `pass`, saved to `S/evidence/run-folder-final.json`; `git -C W status --short` is clean (SC-005).
-- [ ] T027 [P] Scan the stage diff (Principle VI): no secrets (only `test-key-not-real` and loopback URLs), no binaries or `.db` files committed, no profanity, no network host other than `127.0.0.1` in the tests.
-- [ ] T028 [P] Upstream gate self-check against `F` on the stage branch (research R10): `metadata.json` validates (`npx --yes -p ajv-cli@5 -p ajv-formats ajv validate --spec=draft2020 -c ajv-formats -s .github/metadata.schema.json -d skills/auto-capture-hermes/metadata.json` from `W` prints `valid`); `SKILL.md` present; `skills/auto-capture/` exists and README links to it; markdownlint per CONTRIBUTING.md passes on the author's docs. A gate failure in the author's files is recorded in `S/evidence/defects.md` for the #521 comment, not fixed here.
+- [X] T025 [P] Lane hygiene in `W` (FR-004, quickstart §0): `git diff --stat upstream/main...HEAD` lists only paths under `skills/auto-capture-hermes/`; `git diff --quiet b9cbd68 HEAD -- <the author's four files>` succeeds (SC-001); the branch has no `.specify/`, `specs/`, `.fork/`; every fork commit title starts `[skills]` (FR-003).
+- [X] T026 [P] fork-ci preview (quickstart §2): `run-folder` strict on `skills/auto-capture-hermes` gives `pass`, saved to `S/evidence/run-folder-final.json`; `git -C W status --short` is clean (SC-005).
+- [X] T027 [P] Scan the stage diff (Principle VI): no secrets (only `test-key-not-real` and loopback URLs), no binaries or `.db` files committed, no profanity, no network host other than `127.0.0.1` in the tests.
+- [X] T028 [P] Upstream gate self-check against `F` on the stage branch (research R10): `metadata.json` validates (`npx --yes -p ajv-cli@5 -p ajv-formats ajv validate --spec=draft2020 -c ajv-formats -s .github/metadata.schema.json -d skills/auto-capture-hermes/metadata.json` from `W` prints `valid`); `SKILL.md` present; `skills/auto-capture/` exists and README links to it; markdownlint per CONTRIBUTING.md passes on the author's docs. A gate failure in the author's files is recorded in `S/evidence/defects.md` for the #521 comment, not fixed here.
 - [ ] T029 TDD audit: from `M`, with `.specify/feature.json` pointing at 008, run `/speckit-tdd-verify`; it writes `S/tdd/verification.md`. Expected: test-first graded `TEST_AFTER` (waived by the owner, plan Complexity Tracking); no other HIGH finding. Fix any test-smell findings in the tests (never in the author's files) and re-run. Commit `S/tdd/` on `M` as `[fork] Spec 008: …`.
 
 ---

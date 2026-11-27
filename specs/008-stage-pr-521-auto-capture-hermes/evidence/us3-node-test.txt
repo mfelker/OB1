@@ -1,0 +1,67 @@
+# 2026-11-27T06:56:55Z node v26.13.0 — env -i PATH HOME=<tmp>; cwd skills/auto-capture-hermes @ 6bcefef
+▶ acceptance
+  ✔ A1 dry-run prints one payload with the turns, label and key, and sends nothing (58.58925ms)
+  ✔ A2 tool-call-only steps and compaction summaries are absent from the capture (55.316083ms)
+  ✔ A3 a cron message is kept as user:cron and not counted as a user turn (55.983375ms)
+  ✔ A4 a session below the user-turn threshold is not captured (54.072375ms)
+  ✔ A5 a subagent session is not captured (53.206916ms)
+  ✔ A6 an over-limit transcript fits the limit and keeps the first and last turns (54.429083ms)
+  ✔ A7 two runs on the same session give the same import key (104.547542ms)
+  ✔ A8 with no address and no key nothing is sent and the run exits 0 (53.350916ms)
+✔ acceptance (490.300875ms)
+✔ U1 an assistant row with empty content contributes nothing (53.138292ms)
+✔ U2 a compaction summary row contributes nothing (53.268209ms)
+✔ U3 tool and session_meta rows contribute nothing (53.444417ms)
+✔ U4 turns follow insertion order even when timestamps run backwards (52.13575ms)
+✔ U5 a JSON array of typed parts appears as its text parts joined (52.196792ms)
+✔ U6 a user message mentioning [Cronjob mid-text is a real user turn (52.952625ms)
+✔ U7 exactly three real user turns is captured (56.409583ms)
+✔ U8 two real user turns plus a cron turn is skipped as too short (52.457041ms)
+✔ U9 OB_CAPTURE_MIN_USER_TURNS=1 captures a one-turn session (51.034625ms)
+✔ U10 a session with a parent is skipped and nothing is sent (51.31925ms)
+✔ U11 a title starting with Subagent: is skipped and nothing is sent (51.162792ms)
+✔ U12 a title containing Subagent: later in the text is captured (51.749875ms)
+✔ U13 --latest picks the newest top-level session over a newer subagent (55.47475ms)
+✔ U14 the header names project, session, source and title (52.180458ms)
+✔ U15 a literal thought_content tag inside a turn is escaped (55.784958ms)
+✔ U16 a transcript within the limit is sent whole without a marker (54.262875ms)
+✔ U17 an over-limit transcript has the marker between the kept start and end (52.891125ms)
+✔ U18 import_key has the form hermes:<session id>:<8 hex> (53.113458ms)
+✔ U19 changing one message changes the import key (104.118875ms)
+✔ U20 a dry-run writes no session state (55.493791ms)
+✔ U21 an address without a key sends nothing (53.308833ms)
+✔ U22 a key without an address sends nothing (54.611917ms)
+✔ U23 address and key from .env.local are used (73.504958ms)
+✔ U24 an unknown session id exits 0 and is logged (56.419458ms)
+✔ U35 a hook payload without session_id is skipped with the no-op reply (59.47ms)
+✔ U36 a hook event other than session end is skipped and sends nothing (54.455292ms)
+✔ U37 unparseable hook stdin exits 0 with the no-op reply (53.315667ms)
+✔ U38 on_session_finalize captures once and records it in session state (73.400875ms)
+✔ U39 a hook fire after a capture is skipped and sends nothing more (122.889125ms)
+▶ acceptance
+  ✔ A9 a successful capture sends one request with the key and the dry-run payload (123.078875ms)
+  ✔ A10 a temporary failure is queued and resent before the next capture (169.154959ms)
+  ✔ A11 a permanent failure is not queued and is logged as permanent (79.487084ms)
+✔ acceptance (371.914167ms)
+✔ U25 an address with a trailing slash still posts to the ingest path (79.049125ms)
+✔ U26 a 2xx answer with a non-JSON body is logged captured:unknown (75.968458ms)
+✔ U27 a 429 answer queues the payload (79.940333ms)
+✔ U28 a 500 answer queues the payload (77.350667ms)
+✔ U29 a 400 answer is not queued and is logged as permanent (75.256ms)
+✔ U30 a refused connection exits 0 and queues the payload (71.264917ms)
+✔ U31 a queued entry failing a fourth time stays queued with attempt_count 4 (91.37025ms)
+✔ U32 a queued entry failing a fifth time moves to dead/ (101.668833ms)
+✔ U33 a queued entry answered with 401 moves to dead/ (97.15775ms)
+✔ U34 one run resends the three oldest queued entries and keeps the newest (91.252708ms)
+✔ U40 two quick on_session_end fires are captured once (1180.819375ms)
+ℹ tests 51
+ℹ suites 2
+ℹ pass 51
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4663.756667
+real 4.71
+user 2.64
+sys 0.99
