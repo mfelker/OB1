@@ -30,7 +30,15 @@ export function checkDeclared(decl: DeclaredFile, settings: Settings): Refusal |
 
 /** The type the bytes actually are, from their header; null when unrecognised. */
 export function sniffType(bytes: Uint8Array): AcceptedType | "image/heic" | null {
-  throw new Error("not implemented");
+  const ascii = (from: number, to: number) => String.fromCharCode(...bytes.slice(from, to));
+  if (ascii(0, 5) === "%PDF-") return "application/pdf";
+  if (bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return "image/jpeg";
+  if (ascii(1, 4) === "PNG" && bytes[0] === 0x89) return "image/png";
+  if (ascii(0, 4) === "RIFF" && ascii(8, 12) === "WEBP") return "image/webp";
+  if (ascii(4, 8) === "ftyp" && ["heic", "heix", "hevc", "hevx", "heim", "heis", "mif1", "msf1"].includes(ascii(8, 12))) {
+    return "image/heic";
+  }
+  return null;
 }
 
 export function checkActual(

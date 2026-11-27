@@ -1,9 +1,10 @@
 /** Intake checks (T020, T035, T053): declared and actual file details. */
 import { assert, assertEquals, assertStringIncludes } from "jsr:@std/assert@1.0.19";
-import { baseName, checkDeclared } from "../src/intake.ts";
+import { baseName, checkDeclared, sniffType } from "../src/intake.ts";
 import { loadSettings } from "../src/settings.ts";
 import type { Settings } from "../src/types.ts";
 import { envGetter } from "./helpers/env.ts";
+import { heicBytes, jpegBytes, pngBytes, textPdf, webpBytes } from "./helpers/fixtures.ts";
 
 function settingsWith(overrides: Record<string, string | undefined> = {}): Settings {
   const result = loadSettings(envGetter(overrides));
@@ -89,4 +90,12 @@ Deno.test("U142 a file name ending .heic or .heif, in any case, gets the same re
     assert(refusal !== null, name);
     assertEquals(refusal.code, "heic");
   }
+});
+
+Deno.test("U143 sniffType identifies PDF, JPEG, PNG, WebP and HEIC from the first bytes", async () => {
+  assertEquals(sniffType(await textPdf(["hello"])), "application/pdf");
+  assertEquals(sniffType(jpegBytes()), "image/jpeg");
+  assertEquals(sniffType(await pngBytes()), "image/png");
+  assertEquals(sniffType(webpBytes()), "image/webp");
+  assertEquals(sniffType(heicBytes()), "image/heic");
 });
