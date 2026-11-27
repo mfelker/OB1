@@ -47,7 +47,7 @@ pending_upload past upload_deadline ──▶ listed by the orphan check (state 
 - `refused` is final; finishing it again is refused (FR-004). Same bytes as another non-refused attachment on the same parent also end `refused`, naming it (T005 Q4).
 - A successful rebuild clears `last_rebuild_error`.
 - A `pending_upload` past `upload_deadline` no longer blocks a new attachment for the same file.
-- A busy claim past `busy_until` counts as failed: every later read reports `failed` ("the run did not finish"). Its partial derived thoughts never exist, because writes happen in one transaction (R9), so the next operation proceeds (FR-026).
+- A busy claim past `busy_until` ends the cut-off operation by kind: a cut-off **finish** reads as `failed` ("the run did not finish") in every later result; a cut-off **rebuild** stays `processed` with its old derived thoughts and `last_rebuild_error` "the run did not finish"; a cut-off **remove** leaves the attachment as it was, and removing again proceeds. A `failed` attachment whose file is stored still gets a download link. Its partial derived thoughts never exist, because writes happen in one transaction (R9), so the next operation proceeds (FR-026).
 
 ## Derived thought (rows in `thoughts`)
 
@@ -78,7 +78,7 @@ A grey metal garage shelf with three boxed furnace filters on the middle level �
 | `sensitivity_tier` | The attachment's tier |
 | `type` | `reference` (FR-028; ADR 0001) |
 | `topics` | `["attachment", "<file base name>"]` |
-| `provenance` | `{ method: "deterministic_conversion" \| "llm_extraction", source_locator: "pages 12–13" \| "photo", artifact: "<file base name>", extractor_model?: "<vision model>", review_status: "unreviewed" }` |
+| `provenance` | `{ method: "deterministic_conversion" \| "llm_extraction", source_locator: "page 12" \| "pages 12–13" \| "photo", artifact: "<file base name>", extractor_model?: "<vision model>", review_status: "unreviewed" }` |
 | `attachment_id`, `parent_thought_id` | Links back (FR-008, FR-015) |
 
 Never stored: signed links, keys, tokens or absolute paths (FR-009, SC-007).

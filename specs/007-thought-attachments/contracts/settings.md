@@ -4,7 +4,7 @@ Environment variables for the Edge Function (constitution Principle II: secrets 
 
 | Setting | Default | Meaning | Requirements |
 |---------|---------|---------|--------------|
-| `MCP_ACCESS_KEY` | none (required) | The brain's existing access key | FR-018, R13 |
+| `MCP_ACCESS_KEY` | none (required) | The brain's existing access key. Unset is a settings problem: every call gets the named settings error. When it is set, a caller's missing or wrong key gets an authorization error | FR-018, R13 |
 | `EMBEDDING_API_BASE` | `https://openrouter.ai/api/v1` | OpenAI-compatible embeddings endpoint; same name as specs 004 and 006 | FR-007, R3 |
 | `EMBEDDING_API_KEY` | `OPENROUTER_API_KEY` | Key for it | R3 |
 | `EMBEDDING_MODEL` | `openai/text-embedding-3-small` | Must be the brain's model (the core default) | FR-007 |

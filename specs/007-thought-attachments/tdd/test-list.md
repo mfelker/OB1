@@ -2,9 +2,9 @@
 feature: 007-thought-attachments # spec-kit feature directory name
 loop: outside-in # outside-in | inside-out
 profile: .specify/memory/tdd-profile.md # stack profile the commands must read
-spec_criteria: 41 # US1 scenarios 1–4, US2 1–7, US3 1–3, US4 1–3, US5 1–4 (21), plus SC-001 to SC-020 (20), overlapping; 53 automated A behaviors, 7 live rows (see "Live acceptance")
+spec_criteria: 41 # US1 scenarios 1–4, US2 1–7, US3 1–3, US4 1–3, US5 1–4 (21), plus SC-001 to SC-020 (20), overlapping; 63 automated A behaviors (A54–A63 added at the 54fcf51 refresh), 7 live rows (see "Live acceptance")
 planned_at: 9d20be9 # short SHA the list was derived from (fork main)
-updated_at: 9d20be9 # short SHA of the last change to this file
+updated_at: 54fcf51 # short SHA of the last change to this file (refresh after T005 and the settled edge cases)
 suite_baseline: green # empty: the worktree and integrations/thought-attachments/ don't exist yet (T001); the suite command exited 2 ("worktree not found") and 0 tests ran
 ---
 
@@ -12,14 +12,14 @@ suite_baseline: green # empty: the worktree and integrations/thought-attachments
 
 ## How this list keeps every red real
 
-- **No acceptance runner** is in the profile (`acceptance: null`). The outer loop is an **integration test against the composed app, not an end-to-end test**. It lives in `integrations/thought-attachments/tests/acceptance_test.ts` and drives `createApp(deps).fetch(new Request(…))` through the function's real request entry point: the MCP route and the page routes. It uses `FakeStore` (database and Storage), the real embedding and vision clients over `fake_fetch`, `loadSettings` over `tests/helpers/env.ts`, and the fake clock (tasks T012). Anything that needs a real Cloud project, the real core connector, the self-hosted stack or a real phone is in **Live acceptance** below. Those rows are not on the loop.
-- **Outer loop first**: T012 writes A1–A53 as `todo(...)` tests, records each red with `RUN_TODO=1`, and the stream A flip tasks (T033, T046, T051, T059, T065) turn each one into a plain `Deno.test` in the commit that makes it green. T012 carries every A marker, so it is ticked last, when all of them are `DONE` (spec 006's T050 precedent).
+- **No acceptance runner** is in the profile (`acceptance: null`). The outer loop is an **integration test against the composed app, not an end-to-end test**. It lives in `integrations/thought-attachments/tests/acceptance_test.ts` and drives `createApp(input).fetch(new Request(…))` (an `AppInput` built from `loadSettings`) through the function's real request entry point: the MCP route and the page routes. It uses `FakeStore` (database and Storage), the real embedding and vision clients over `fake_fetch`, `loadSettings` over `tests/helpers/env.ts`, and the fake clock (tasks T012). Anything that needs a real Cloud project, the real core connector, the self-hosted stack or a real phone is in **Live acceptance** below. Those rows are not on the loop.
+- **Outer loop first**: T012 writes every A behavior (A1–A63) as `todo(...)` tests, records each red with `RUN_TODO=1`, and the stream A flip tasks (T033, T046, T051, T059, T065) turn each one into a plain `Deno.test` in the commit that makes it green. T012 carries every A marker, so it is ticked last, when all of them are `DONE` (spec 006's T050 precedent).
 - **Behavior ids prefix every test name** (`"U7 …"`, `"A3 …"`). Streams select one test with `--filter "/^<id> /"`. The slashes are required, and a run that reports `0 passed | 0 failed` is never evidence.
-- **Order**: inner tables are grouped by the component file that owns them, in wave and stream order (integrator, then Q, X, E, then N, T, P, then A). Each stream has a contiguous id range, and inside it the ids follow that stream's task order in `tasks.md`. A stream takes its behaviors in id order, not table order. No U id is shared by tasks of two different streams.
+- **Order**: inner tables are grouped by the component file that owns them, in wave and stream order (integrator, then Q, X, E, then N, T, P, then A). Each stream has a contiguous id range, and inside it the ids follow that stream's task order in `tasks.md`. Ids appended by a refresh (U308 onward, A54 onward) sit after U307 and A53, one contiguous run per component, in the table next to the rows of the task that carries them. A stream takes its behaviors task by task in `tasks.md` order, and inside a task in id order, so an appended id runs with its task, not after the stream's original range. No U id is shared by tasks of two different streams.
 - **SQL behaviors** are assertion blocks in `tests/verify.sql`, each added red first and run as a whole file (no single-test mode for SQL; tasks.md "SQL behaviors").
 - **Both sides of a boundary** are separate rows. A rule with one tested side pins nothing.
 - **Proxy for "the core search finds it"**: the core connector cannot run under fakes. Wherever a criterion says the core search finds a thought (SC-009, SC-010, SC-012, US1.2), the automated row asserts what the core search depends on: an ordinary `thoughts` row with the expected content and an embedding of the brain's dimension, produced by the configured embedding model. The real search is in the live runs (L1, L2, and quickstart scenarios 1, 2 and 4 in T076 and T077).
-- **BLOCKED rows** wait on an owner answer in T005. Each names its T005 item. After T005, the integrator updates them to `PENDING` with the answered rule (re-run `/speckit-tdd-plan`, which refreshes the list and keeps every id).
+- **No BLOCKED rows remain.** T005's six answers (spec Clarifications, "implementation, T005") and the settled spec Edge Cases were applied by the refresh at 54fcf51. Every former BLOCKED row is now `PENDING` with the answered rule, except U14, which is `DROPPED`. A `DROPPED` row stays as the record of what was decided and needs no test. T008 still carries the `[U14]` marker, because a refresh never removes task text.
 - **`kind: live` rows** (Live acceptance) are a fork convention for owner-gated live runs, not a test tool. `/speckit-tdd-run` skips them. They carry no task marker; T076–T079 hold their evidence. Per the owner's earlier ruling, an audit counts a criterion covered only by them as a GAP, not HIGH.
 
 ## Trace ids
@@ -43,7 +43,7 @@ Test file: `integrations/thought-attachments/tests/acceptance_test.ts` (integrat
 | A1 | With an existing thought and a 3-page text PDF within the caps, `attach_file` (thought id, name, type, size), a `PUT` of the bytes to the returned upload link, then `finish_attachment` leave the object stored, the row `processed` with `page_count` 3 and `derived_count` N ≥ 1, and N new thoughts whose metadata names the attachment and the parent | US1.1, FR-001, FR-004, FR-005 | example | PENDING | |
 | A2 | For a sample PDF whose listed facts each sit on a known page, every fact is inside a passage thought whose first line is `From <base name>, pages a–b (attachment <short id>)` with a range that includes that page, and which has an embedding of the brain's dimension (findability within 10 results is live: L1) | US1.2, SC-001, FR-025, FR-007 | example | PENDING | |
 | A3 | `attach_file` with the same file name, type and size while the first attachment is still `pending_upload` on that parent creates no second row and returns the existing attachment's id | US1.3, FR-012 | example | PENDING | |
-| A4 | The same bytes uploaded to a second attachment on the same parent and finished after the first is `processed` create no duplicate passages and point the owner to the existing attachment | US1.3, FR-012 | example | BLOCKED (T005 item 4: the finish outcome when the unique `(parent_thought_id, content_hash)` index refuses the second one) | |
+| A4 | The same bytes uploaded to a second attachment on the same parent and finished after the first is `processed` end the second `refused` with "already attached to this thought as <first short id>": its object is deleted, it has no derived thought, and the first attachment and its passages are unchanged (T005 Q4) | US1.3, FR-012 | example | PENDING | |
 | A5 | An owner thought whose text equals a passage's body is unchanged after the PDF is finished (content, metadata, embedding), and the passage is saved as a separate row carrying the attachment's metadata | US1.4, FR-022 | example | PENDING | |
 | A6 | A thought stored as the core capture stores it is found by `find_thought` (meaning mode) with words from it; its id is among the matches, with its first line and date; `attach_file` with that id succeeds | SC-009, FR-023 | example | PENDING | |
 | A7 | The short id read from a passage's source line, given to `get_attachment`, returns that attachment and a download link | SC-012, FR-025, FR-014 | example | PENDING | |
@@ -53,6 +53,8 @@ Test file: `integrations/thought-attachments/tests/acceptance_test.ts` (integrat
 | A11 | `tools/list` returns exactly `find_thought`, `attach_file`, `finish_attachment`, `get_attachment`, `list_attachments`, `remove_attachment` and `find_orphan_attachments`, with the contract's annotations | INV-1 | example | PENDING | |
 | A12 | `attach_file` with an unknown `thought_id` is refused, and no row, link or note is created | FR-001, FR-016, edge case "parent thought does not exist" | example | PENDING | |
 | A53 | A request to `/page/start` or `/page/finish` that carries the brain key but no valid page token gets `410`, and no row or object changes (the page routes refuse the brain key) | FR-018, FR-002 | example | PENDING | |
+| A57 | `attach_file` with the same file name, type and size as a first attachment on that parent whose upload deadline passed unused (61 minutes later by the clock) creates a new attachment with a new id, and `find_orphan_attachments` still lists the first | FR-012, FR-021, edge case "pending upload past its deadline no longer counts as pending" | example | PENDING | |
+| A59 | An owner thought whose text equals an attachment's whole derived content, source line included (written after `attach_file`, from its short id), makes the finish end `failed` with a reason naming the conflict; that thought is unchanged and no derived thought exists | FR-022, US1.4, edge case "existing thought's text equals a derived thought's entire text" | example | PENDING | |
 
 ### User Story 2 (flip task T046)
 
@@ -71,7 +73,10 @@ Test file: `integrations/thought-attachments/tests/acceptance_test.ts` (integrat
 | A23 | A `not_captioned` photo finished again after the vision model is back ends `processed` with exactly one caption thought | SC-015, FR-027 | example | PENDING | |
 | A24 | A `processed` photo rebuilt (`rebuild: true`) with a different `VISION_MODEL` ends with exactly one caption thought, written by the new model | SC-015, FR-027 | example | PENDING | |
 | A25 | A `processed` photo whose rebuild fails because the vision endpoint is down keeps exactly its old caption thought, stays `processed`, and the result reports `last_rebuild_error` with the reason | SC-018, FR-027 | example | PENDING | |
-| A26 | With `PUBLIC_BASE_URL` set to a LAN address, the `upload.url`, the `curl` line and the `/page/start` upload link all start with it, and none contains the internal `SUPABASE_URL` origin | FR-002, FR-019 | example | PENDING | |
+| A26 | With `PUBLIC_BASE_URL` set to a LAN address, the `upload.url`, the `curl` line and the `/page/start` upload link all start with it, and none contains the internal `SUPABASE_URL` origin; with `UPLOAD_PAGE_URL` unset, `page_link` starts with `<PUBLIC_BASE_URL>/functions/v1/thought-attachments/upload#t=` (T005 Q2) | FR-002, FR-019 | example | PENDING | |
+| A58 | After a failed rebuild (as in A25), a rebuild with the vision endpoint back ends with exactly one caption thought, by the configured model, and `get_attachment` reports no `last_rebuild_error` | FR-027, SC-018, edge case "successful rebuild clears the previous last rebuild failed note" | example | PENDING | |
+| A60 | With only the page token, `/page/info` returns the expected kind `photo` that the attach call named, the accepted types and the size caps; no row or object changes, and `/page/start` with the same token then still returns an upload link | FR-002, edge case "before a file is picked, the upload page shows the expected kind" | example | PENDING | |
+| A61 | `/page/finish` before any `PUT` returns "no file uploaded yet" and leaves the token usable: after a `PUT`, a second `/page/finish` with it finishes the attachment, and a third gets `410` (T005 Q5) | FR-024, edge case "upload link expires before the client uploads" | example | PENDING | |
 
 ### User Story 3 (flip task T051)
 
@@ -101,6 +106,10 @@ Test file: `integrations/thought-attachments/tests/acceptance_test.ts` (integrat
 | A43 | With default settings, `/page/start` 20 minutes after `attach_file` returns an upload link | SC-017, FR-001 | example | PENDING | |
 | A44 | `/page/start` 65 minutes after `attach_file` gets `410` with the expired message, and `find_orphan_attachments` lists that pending attachment | SC-017, FR-021, edge case "after its expiry" | example | PENDING | |
 | A45 | After a simulated killed finish (claim taken, never released), a finish before `BUSY_SECONDS` is busy; one after it proceeds, finds no derived thought left from the killed run, and ends `processed` | SC-019, FR-026 | example | PENDING | |
+| A54 | With `MAX_PDF_PAGES=abc` in the environment, an `attach_file` call (with the correct key) and a `/page/start` each answer "setting MAX_PDF_PAGES is invalid: must be a positive whole number"; no row, link or object is created, and no response contains `abc` (T005 Q3) | FR-017, FR-009 | example | PENDING | |
+| A55 | After a simulated killed finish whose claim expired by the clock, `get_attachment` reports state `failed` with "the run did not finish", before any further finish | FR-026, SC-019, edge case "finish whose busy mark expired before it reported back" | example | PENDING | |
+| A62 | A `/page/finish` refused as busy (an MCP finish of the same photo held at the vision call) leaves the token valid; once the held finish completes, a `/page/finish` with the same token returns `processed`, and a further one gets `410` (T005 Q5) | FR-024, FR-026, edge case "page and the AI finish the same attachment" | example | PENDING | |
+| A63 | With default settings, `attach_file` for a JPEG declared at exactly 10,485,760 bytes returns an upload link, and one declared at 10,485,761 bytes is refused, naming the limit and the declared size | FR-003, US4.1, edge case "size caps count 1 MB as 1,048,576 bytes" | example | PENDING | |
 
 ### User Story 5 (flip task T065)
 
@@ -113,6 +122,7 @@ Test file: `integrations/thought-attachments/tests/acceptance_test.ts` (integrat
 | A50 | The same, with a second processed attachment pointing to that note: the note stays | US5.4, SC-020, FR-016 | example | PENDING | |
 | A51 | `attach_file` with `note` and a HEIC declared type saves no thought and makes no embedding request | SC-020, FR-003 | example | PENDING | |
 | A52 | After a full run (command upload, page upload, finish, rebuild, a refusal, and a file name given with an absolute path), no `thoughts` row or attachment row holds a signed URL, the MCP key, the service-role key, a page token or an absolute path | SC-007, FR-009, edge case "personal or path information" | example | PENDING | |
+| A56 | A confirmed removal whose record deletion fails (injected in the fake store) after the stored file was deleted leaves the attachment listed by `list_attachments`; a repeat confirmed removal then succeeds, removes the row and every derived thought, and treats the missing file as removed | FR-016, edge case "removal deletes the stored file first and then the records" | example | PENDING | |
 
 ## Live acceptance (owner-gated, not on the loop)
 
@@ -150,13 +160,16 @@ Test file: `tests/settings_test.ts`.
 | U10 | With `VISION_API_BASE` and `VISION_MODEL` set and `VISION_API_KEY` unset, vision is configured | FR-006 | example | PENDING | |
 | U11 | No setting's value appears in any problem's reason | FR-009 | example | PENDING | |
 | U12 | A set `BUSY_SECONDS` is used as given | FR-026, FR-017 | example | PENDING | |
-| U13 | With `BUSY_SECONDS` unset on Supabase Cloud, the busy expiry is 160 seconds | FR-026, FR-017 | example | BLOCKED (T005 item 1: which platform signal picks Cloud) | |
-| U14 | With `BUSY_SECONDS` unset elsewhere, the busy expiry is 410 seconds | FR-026, FR-017 | example | BLOCKED (T005 item 1) | |
+| U13 | With `BUSY_SECONDS` unset, the busy expiry is 410 seconds on every platform, whatever `SUPABASE_URL` or any other variable says (T005 Q1) | FR-026, FR-017 | example | PENDING | |
+| U14 | With `BUSY_SECONDS` unset elsewhere, the busy expiry is 410 seconds | FR-026, FR-017 | example | DROPPED (T005 Q1 removed the per-platform default; U13 now covers the single 410-second default) | |
 | U15 | A set `UPLOAD_PAGE_URL` is used as given | FR-002 | example | PENDING | |
-| U16 | With `UPLOAD_PAGE_URL` unset, the page address is the default `<function URL>/upload` | FR-002 | example | BLOCKED (T005 item 2: how the function URL and the function's name are built) | |
-| U17 | A non-numeric value for a numeric setting (`MAX_PDF_PAGES=abc`) gives the answered outcome (a named problem, or the default) | FR-017 | example | BLOCKED (T005 item 3) | |
-| U18 | A zero or negative value for a numeric setting (`MAX_PDF_PAGES=0`) gives the answered outcome | FR-017 | example | BLOCKED (T005 item 3) | |
-| U19 | A decimal MB cap (`MAX_IMAGE_MB=2.5`) gives the answered outcome | FR-017 | example | BLOCKED (T005 item 3: whether the MB caps accept decimals) | |
+| U16 | With `UPLOAD_PAGE_URL` unset, the page address is the public base plus `/functions/v1/thought-attachments/upload` (`PUBLIC_BASE_URL=https://brain.example` gives `https://brain.example/functions/v1/thought-attachments/upload`) (T005 Q2) | FR-002, FR-019 | example | PENDING | |
+| U17 | A non-numeric value for a numeric setting (`MAX_PDF_PAGES=abc`) gives `{ ok: false }` with a problem naming `MAX_PDF_PAGES` and what it must be ("must be a positive whole number") (T005 Q3) | FR-017 | example | PENDING | |
+| U18 | A zero or negative value for a whole-number setting (`MAX_PDF_PAGES=0`, `MAX_PDF_PAGES=-1`) gives a problem naming `MAX_PDF_PAGES` (T005 Q3) | FR-017 | example | PENDING | |
+| U19 | A decimal MB cap is accepted as given (`MAX_IMAGE_MB=2.5` gives 2.5, with no problem) (T005 Q3) | FR-017 | example | PENDING | |
+| U308 | A decimal value for a whole-number setting (`MAX_PDF_PAGES=2.5`, `BUSY_SECONDS=1.5`) gives a problem naming that setting ("must be a positive whole number") (T005 Q3) | FR-017 | example | PENDING | |
+| U309 | A non-numeric, zero or negative MB cap (`MAX_PDF_MB=abc`, `MAX_IMAGE_MB=0`, `MAX_IMAGE_MB=-1`) gives a problem naming that setting and what it must be (T005 Q3) | FR-017 | example | PENDING | |
+| U310 | Each other numeric setting (`EMBEDDING_BATCH_SIZE`, `PASSAGE_MAX_CHARS`, `SCANNED_MIN_CHARS_PER_PAGE`, `UPLOAD_LINK_MINUTES`, `DOWNLOAD_LINK_SECONDS`, `BUSY_SECONDS`) set to `abc` gives a problem naming that setting (T005 Q3) | FR-017 | example | PENDING | |
 
 #### `src/links.ts` (T009)
 
@@ -185,6 +198,9 @@ Test file: `tests/helpers/fake_store_test.ts`. The acceptance tests rely on thes
 | U31 | `removeAttachment` removes the parent note only under FR-016's exception | FR-016 | example | PENDING | |
 | U32 | `orphans` lists a row whose parent is gone, an expired `pending_upload` row and a `refused` row, each with why | FR-021 | example | PENDING | |
 | U33 | `insertNote` with a fingerprint that already exists returns that thought's id with `created: false` and leaves it unchanged | FR-001, FR-016 | example | PENDING | |
+| U311 | `findPending` returns a `pending_upload` row with the same parent, name, type and size whose `upload_deadline` is one second after the given `now` | FR-012 | example | PENDING | |
+| U312 | `findPending` returns `null` for such a row whose `upload_deadline` is one second before `now` | FR-012, FR-021, edge case "pending upload past its deadline no longer counts as pending" | example | PENDING | |
+| U313 | `findByHash` returns a non-refused attachment on that parent with that `content_hash`, and `null` when the only match is `refused` or is on another parent (T005 Q4) | FR-012 | example | PENDING | |
 
 ### Stream Q: data (wave 1, `ta-data`)
 
@@ -209,8 +225,8 @@ Test file: `tests/verify.sql` (one assertion block per behavior), except U52.
 | U46 | `service_role` has select, insert, update and delete on `thought_attachments` | FR-020 | example | PENDING | |
 | U47 | On a `thoughts` table without `content_fingerprint`, the file adds the column and `idx_thoughts_fingerprint` | FR-020 | example | PENDING | |
 | U48 | On a `thoughts` table that already has them, the file adds no second column or index (the index count on `thoughts` is unchanged) | FR-020 | example | PENDING | |
-| U49 | Where a `storage` schema exists, the `ATTACHMENTS_BUCKET` bucket (`ob1-files`) is private, allows exactly the four accepted MIME types and has no size limit of its own | FR-018, FR-020 | example | BLOCKED (not a T005 item: no test database here has a `storage` schema, because fork-ci's bootstrap creates none and R12 makes the check conditional; the spec's Testing Requirements still ask for an executable private-bucket test. Owner to choose a runnable target, or accept the live runs) | |
-| U50 | Where no `storage` schema exists, the file runs without error and skips the bucket | FR-019, FR-020 | example | PENDING | |
+| U49 | With a minimal stub `storage` schema that `tests/verify.sql` creates before including `schema.sql` (a `storage.buckets` table with only the columns `schema.sql` writes), the `ATTACHMENTS_BUCKET` bucket (`ob1-files`) row exists, is not public, and allows exactly the four accepted MIME types (and, if `schema.sql` writes `file_size_limit`, it is null). U50's no-storage run comes earlier in the file, before the stub exists | FR-018, FR-020 | example | PENDING | |
+| U50 | Where no `storage` schema exists, the file runs without error and skips the bucket (asserted before `tests/verify.sql` creates the U49 stub) | FR-019, FR-020 | example | PENDING | |
 | U51 | Running the whole file twice on the same database raises nothing and leaves one of each object | FR-020 | example | PENDING | |
 | U52 | Neither `schema.sql` nor `tests/verify.sql` contains `DROP`, `TRUNCATE` or an unqualified `DELETE` (a static scan in `tests/schema_drift_test.ts`) | INV-2, FR-016 | example | PENDING | |
 | U53 | The write-derived function, with the caller's unexpired claim token, inserts the given rows | FR-011, FR-026 | example | PENDING | |
@@ -220,15 +236,16 @@ Test file: `tests/verify.sql` (one assertion block per behavior), except U52.
 | U57 | A write replaces the attachment's previous derived set and sets its state fields and `derived_count` in the same call | FR-027, FR-011 | example | PENDING | |
 | U58 | A write that fails partway (its second row conflicts) leaves the previous set, state and `derived_count` | FR-011, FR-027 | example | PENDING | |
 | U59 | A write for one attachment leaves another attachment's derived thoughts untouched | FR-022 | example | PENDING | |
-| U60 | The write-derived function's outcome for bytes that duplicate another attachment's `content_hash` on the same parent | FR-012, US1.3 | example | BLOCKED (T005 item 4) | |
+| U60 | Setting `content_hash` on a second non-`refused` attachment of a parent to the hash another non-`refused` attachment of that parent already holds raises (the unique index of `data-model.md`) and changes nothing; the finish avoids reaching it by refusing first (U188) | FR-012, US1.3 | example | PENDING | |
 | U61 | A claim while an unexpired claim exists is refused and returns the running `busy_op` | FR-026 | example | PENDING | |
 | U62 | A claim after `busy_until` succeeds, with a `busy_token` different from the previous one | FR-026 | example | PENDING | |
 | U63 | A claim on one attachment doesn't block a claim on another | FR-026 | example | PENDING | |
 | U64 | Release with the holder's token clears the claim, so an immediate claim succeeds | FR-026 | example | PENDING | |
 | U65 | Release with another token leaves the claim in place | FR-026 | example | PENDING | |
 | U66 | The dimension function returns 1536 on fork-ci's bootstrap (`vector(1536)`) | FR-007 | example | PENDING | |
-| U67 | The exact-text find returns id, first line and capture date for a thought whose content contains the query as given | FR-023 | example | PENDING | |
+| U67 | The exact-text find returns id, first line and capture date for a thought whose content contains the query | FR-023 | example | PENDING | |
 | U68 | A query containing `%`, `,`, `)` and `'` matches only content that contains those characters literally (no wildcard, no injected filter) | FR-023 | example | PENDING | |
+| U314 | The exact-text find ignores letter case: `FURNACE Filters` finds a thought containing `furnace filters`, and a thought without the text in any case is not returned | FR-023, edge case "exact-text lookup finds thoughts containing the given text, ignoring letter case" | example | PENDING | |
 | U84 | Inserting a note whose text is new adds a thought with the note's content and `data-model.md` "Parent note" metadata, and reports it as created | FR-001 | example | PENDING | |
 | U85 | Inserting a note whose fingerprint exists returns that thought's id as not created, and leaves it unchanged | FR-001, FR-016 | example | PENDING | |
 | U86 | The page-token lookup finds a row by `page_token_hash` only | FR-002, FR-024 | example | PENDING | |
@@ -279,6 +296,11 @@ Test file: `tests/store_test.ts` (supabase-js over the fake fetch).
 | U110 | `removalPreview` maps the preview reply to `{ derived, noteWouldGo }` | FR-016 | example | PENDING | |
 | U111 | `removeAttachment` passes the claim token and maps the reply to `{ derived, noteRemoved }` | FR-016 | example | PENDING | |
 | U112 | `orphans` passes the current time and maps the reply to `{ row, why }[]` | FR-021 | example | PENDING | |
+| U315 | `findByHash(parentId, contentHash)` returns the non-`refused` attachment on that parent with that hash (T005 Q4) | FR-012 | example | PENDING | |
+| U316 | `findByHash` returns `null` when the only attachment with that hash on that parent is `refused` | FR-012, FR-004 | example | PENDING | |
+| U317 | `findByHash` returns `null` when the hash belongs only to an attachment of another parent | FR-012, edge case "same file attached to two different thoughts" | example | PENDING | |
+| U318 | `findPending(parentId, name, type, size, now)` returns the `pending_upload` row with that name, type and size on that parent while `now` is before its `upload_deadline` | FR-012 | example | PENDING | |
+| U319 | `findPending` returns `null` for that row once `now` is past its `upload_deadline` | FR-012, FR-021, edge case "pending upload past its deadline no longer counts as pending" | example | PENDING | |
 
 #### `tests/schema_drift_test.ts` (T019; `src/store.ts` against `schema.sql`)
 
@@ -290,7 +312,7 @@ Test file: `tests/store_test.ts` (supabase-js over the fake fetch).
 
 #### `src/intake.ts` (T020, T035, T053)
 
-Test file: `tests/intake_test.ts`. "The cap" means the cap's byte value; how many bytes an MB is stays unplaced (see below).
+Test file: `tests/intake_test.ts`. "The cap" means the cap's byte value, with 1 MB = 1,048,576 bytes (spec edge case): the default image cap is 10,485,760 bytes and the default PDF cap 26,214,400.
 
 | id  | behavior | traces | kind | state | test |
 | --- | -------- | ------ | ---- | ----- | ---- |
@@ -299,10 +321,11 @@ Test file: `tests/intake_test.ts`. "The cap" means the cap's byte value; how man
 | U115 | `baseName` removes control characters | FR-009 | example | PENDING | |
 | U116 | `checkDeclared` accepts each of the four accepted types within its cap | FR-003 | example | PENDING | |
 | U117 | `checkDeclared` refuses any other type (for example `application/zip`), naming the accepted types | FR-003 | example | PENDING | |
-| U118 | An image declared at exactly the image cap is accepted | FR-003 | example | PENDING | |
-| U119 | An image declared one byte over the image cap is refused, naming the cap and the declared size | FR-003 | example | PENDING | |
-| U120 | A PDF declared at exactly the PDF cap is accepted | FR-003 | example | PENDING | |
-| U121 | A PDF declared one byte over the PDF cap is refused, naming the cap and the declared size | FR-003, US4.1 | example | PENDING | |
+| U118 | An image declared at exactly the image cap (10,485,760 bytes by default) is accepted | FR-003, edge case "size caps count 1 MB as 1,048,576 bytes" | example | PENDING | |
+| U119 | An image declared one byte over the image cap (10,485,761 bytes by default) is refused, naming the cap and the declared size | FR-003, edge case "size caps count 1 MB as 1,048,576 bytes" | example | PENDING | |
+| U120 | A PDF declared at exactly the PDF cap (26,214,400 bytes by default) is accepted | FR-003, edge case "size caps count 1 MB as 1,048,576 bytes" | example | PENDING | |
+| U121 | A PDF declared one byte over the PDF cap (26,214,401 bytes by default) is refused, naming the cap and the declared size | FR-003, US4.1, edge case "size caps count 1 MB as 1,048,576 bytes" | example | PENDING | |
+| U320 | With `MAX_IMAGE_MB=2.5`, an image declared at 2,621,440 bytes is accepted and one declared at 2,621,441 bytes is refused (T005 Q3) | FR-003, FR-017, edge case "size caps count 1 MB as 1,048,576 bytes" | example | PENDING | |
 | U141 | A HEIC declared type (`image/heic`, `image/heif`) is refused with "share it as JPEG" and the steps on iPhone and Android | FR-003, US2.3 | example | PENDING | |
 | U142 | A file name ending `.heic` or `.heif`, in any case, is refused with the same message whatever the declared type | FR-003, US2.3 | example | PENDING | |
 | U143 | `sniffType` identifies PDF, JPEG, PNG, WebP and HEIC from the first bytes | FR-004 | example | PENDING | |
@@ -360,9 +383,11 @@ Test file: `tests/derived_test.ts`.
 | U138 | A passage row's metadata has `attachment_id` and `parent_thought_id` | FR-008, FR-015 | example | PENDING | |
 | U139 | An attachment with tier `restricted` gives metadata with `sensitivity_tier` `restricted` | FR-008 | example | PENDING | |
 | U140 | The metadata contains no URL, no token and no absolute path, even when built from a file name that held a path | FR-009 | example | PENDING | |
+| U321 | `sourceLine` for a passage on page 12 only is `From dishwasher-manual.pdf, page 12 (attachment a1b2c3d4)`, never `pages 12–12` | FR-025, edge case "a passage from one page names it as page 12" | example | PENDING | |
 | U145 | A caption row's content is `From shelf.jpg, photo (attachment 9f8e7d6c)`, a line break, then the caption | FR-025, FR-006 | example | PENDING | |
 | U146 | A caption row's `provenance` is `llm_extraction` with `source_locator` `photo` and `extractor_model` the model | FR-008, FR-006 | example | PENDING | |
 | U147 | `noteMetadata` is `{ type: "observation", source: "thought-attachments", source_type: "thought_attachments_note", imported_at }` | FR-001 | example | PENDING | |
+| U350 | `passageRow` for a passage on page 12 only records `provenance.source_locator` `page 12`; a passage over pages 12–13 records `pages 12–13` | FR-008, FR-025, data-model.md derived thought `provenance` | example | PENDING | |
 
 ### Stream E: model clients (wave 1, `ta-models`)
 
@@ -415,7 +440,11 @@ Test file: `tests/finish_test.ts` (the real X and E modules, `FakeStore`, `fake_
 | U185 | After a `processed` finish, a new claim on the attachment succeeds at once (the claim was released) | FR-026 | example | PENDING | |
 | U186 | An owner thought equal to a passage's body is unchanged after the finish | FR-022, US1.4 | example | PENDING | |
 | U187 | A plain finish on `processed` returns the existing outcome with no embedding or vision request and no write (it never rebuilds) | FR-012, FR-027 | example | PENDING | |
-| U188 | The finish outcome when the uploaded bytes duplicate another attachment's `content_hash` on the same parent | FR-012, US1.3 | example | BLOCKED (T005 item 4) | |
+| U188 | When `findByHash` returns another non-refused attachment on the same parent for the uploaded bytes' `content_hash`, the finish ends `refused` with "already attached to this thought as <its short id>", deletes the stored object and writes no derived thought (T005 Q4) | FR-012, US1.3 | example | PENDING | |
+| U322 | When the only attachment on the parent with those bytes is `refused`, the finish is not refused for them and ends `processed` | FR-012, FR-004 | example | PENDING | |
+| U323 | The same bytes on an attachment of another parent don't refuse the finish (it ends `processed`) | FR-012, edge case "same file attached to two different thoughts" | example | PENDING | |
+| U324 | A first attachment with those bytes in state `failed` still counts: the second ends `refused`, naming it (T005 Q4) | FR-012 | example | PENDING | |
+| U325 | Finishing a `failed` attachment again, or rebuilding a `processed` one, whose bytes `findByHash` reports only as that attachment itself, is not refused as a duplicate | FR-012, FR-027 | example | PENDING | |
 | U189 | A photo with a caption gives one derived thought, `processed`, and `caption_model` set | FR-006, US2.1 | example | PENDING | |
 | U190 | A 300-character caption is returned whole in the outcome | FR-024 | example | PENDING | |
 | U191 | A 301-character caption is returned as its first 300 characters, while the derived thought keeps the full caption | FR-024, FR-006 | example | PENDING | |
@@ -425,6 +454,7 @@ Test file: `tests/finish_test.ts` (the real X and E modules, `FakeStore`, `fake_
 | U195 | `rebuild: true` on a `processed` photo gives exactly one caption, by the newly configured model, and updates `caption_model` | FR-027, SC-015 | example | PENDING | |
 | U196 | `rebuild: true` on a `processed` PDF replaces the passage set, and `derived_count` equals the new count | FR-027 | example | PENDING | |
 | U197 | A failed rebuild keeps the old set and `processed`, and the outcome and row carry `last_rebuild_error` with the reason | FR-027, SC-018 | example | PENDING | |
+| U326 | A successful rebuild after a failed one clears `last_rebuild_error` in the row and reports none in the outcome | FR-027, edge case "a successful rebuild clears the previous last rebuild failed note" | example | PENDING | |
 | U198 | When `checkActual` refuses, the object is deleted, the row is `refused` with the actual values, and no derived thought is written | FR-004, SC-013 | example | PENDING | |
 | U199 | An object created after `upload_deadline` is refused and deleted | FR-004, FR-001 | example | PENDING | |
 | U200 | An object created exactly at `upload_deadline` is not refused for its timing | FR-004, FR-001 | example | PENDING | |
@@ -439,6 +469,7 @@ Test file: `tests/finish_test.ts` (the real X and E modules, `FakeStore`, `fake_
 | U209 | An embedding failure partway ends `failed` with the reason, and no derived thought from the attempt remains | FR-011, US4.3 | example | PENDING | |
 | U210 | A vector length different from `embeddingDimension()` ends `failed` naming both lengths, with no derived thought | FR-007, edge case "vectors of a different length" | example | PENDING | |
 | U211 | A `failed` attachment finished again with the services working ends `processed` | FR-011, FR-027 | example | PENDING | |
+| U327 | When `writeDerived` reports a fingerprint conflict with an existing thought (one whose text equals a whole derived content, source line included), the finish ends `failed` with a reason naming the conflict, writes no derived thought and leaves that thought unchanged | FR-022, FR-011, edge case "existing thought's text equals a derived thought's entire text" | example | PENDING | |
 | U212 | A finish while another finish, rebuild or remove holds an unexpired claim returns busy naming that operation, and changes nothing | FR-026, SC-014 | example | PENDING | |
 | U213 | One second before `BUSY_SECONDS` has passed, the finish is still busy | FR-026 | example | PENDING | |
 | U214 | Once `BUSY_SECONDS` has passed by the clock, the next finish proceeds and completes | FR-026, SC-019 | example | PENDING | |
@@ -465,11 +496,12 @@ Test file: `tests/tools_test.ts` (`inMemoryClient`; `services.finish` scripted).
 | U226 | `first_line` is the content up to its first line break | FR-023 | example | PENDING | |
 | U227 | Each match has `id`, `first_line` and `captured` | FR-023, SC-009 | example | PENDING | |
 | U228 | No match gives "no matching thought" | FR-023 | example | PENDING | |
+| U328 | `find_thought` with `limit` 21 asks for 20 (a larger value is reduced to 20) | FR-023, edge case "a lookup asking for more than 20 matches gets 20" | example | PENDING | |
 | U229 | `attach_file` with an unknown `thought_id` is refused, with no row, link or note | FR-001, FR-016 | example | PENDING | |
 | U230 | `attach_file` with both `thought_id` and `note` is refused, and nothing is created | FR-001 | example | PENDING | |
 | U231 | `attach_file` with neither is refused, and nothing is created | FR-001 | example | PENDING | |
 | U232 | A `checkDeclared` refusal returns its message, with no row and no link | FR-003 | example | PENDING | |
-| U233 | The same name, type and size already pending on the parent returns that attachment, with no new row | FR-012, US1.3 | example | PENDING | |
+| U233 | The same name, type and size already pending on the parent, with its upload deadline not yet passed, returns that attachment, with no new row | FR-012, US1.3 | example | PENDING | |
 | U234 | The same name and type with a different size on the parent creates a new attachment | FR-012 | example | PENDING | |
 | U235 | A successful start writes a row with the parent, the base name, the declared type and size, tier `personal` by default, `storage_path` `attachments/<id>/<name>` and state `pending_upload` | FR-001 | example | PENDING | |
 | U236 | `upload_deadline` is the injected now plus `UPLOAD_LINK_MINUTES` | FR-001 | example | PENDING | |
@@ -477,6 +509,8 @@ Test file: `tests/tools_test.ts` (`inMemoryClient`; `services.finish` scripted).
 | U238 | The result has `attachment_id`, its short id, `parent_thought_id`, whether the parent was created now, `upload_deadline`, `upload` (`url`, `method: "PUT"`, `headers`), the `curl` line, `page_link` and `limits` | FR-001, FR-002 | example | PENDING | |
 | U239 | `upload.url` is the signed link passed through `publicUrl` | FR-002 | example | PENDING | |
 | U240 | A given `sensitivity_tier` of `restricted` is stored on the row | FR-008 | example | PENDING | |
+| U329 | The same name, type and size pending on the parent but past its upload deadline doesn't count: a new attachment is created | FR-012, FR-021, edge case "pending upload past its deadline no longer counts as pending" | example | PENDING | |
+| U330 | `attach_file` with only some of `file_name`, `declared_type` and `declared_size` (name only; name and type; size only) is refused with "give all three, or none for a phone upload", and nothing is created | FR-001, edge case "starting an attachment with only some of the file name, type and size is refused" | example | PENDING | |
 | U241 | `finish_attachment` passes the id and `rebuild` to `services.finish` and returns the result text with the structured `state`, `reason`, `derived_count`, `caption` and `page_count` | FR-027, FR-005 | example | PENDING | |
 | U242 | A busy outcome gives "busy (…), try again shortly" naming the running operation as finishing, rebuilding or removing | FR-026 | example | PENDING | |
 | U243 | Every tool that takes `attachment_id` accepts the short id, and reports "not found" and "ambiguous" errors | FR-025, FR-014 | example | PENDING | |
@@ -490,14 +524,22 @@ Test file: `tests/tools_test.ts` (`inMemoryClient`; `services.finish` scripted).
 | U251 | For a stored file (`processed`, `scanned`, `not_captioned` or `failed`), `get_attachment` returns a `download_link` through `publicUrl`, signed for `DOWNLOAD_LINK_SECONDS`, with that lifetime stated | FR-014, SC-003 | example | PENDING | |
 | U252 | `get_attachment` on `pending_upload` returns no `download_link` | FR-014, SC-003 | example | PENDING | |
 | U253 | `get_attachment` on `refused` returns no `download_link` | FR-014, SC-003 | example | PENDING | |
+| U331 | `get_attachment` on an attachment whose `finish` claim is one second past `busy_until`, never released, reports state `failed` with the reason "the run did not finish" | FR-026, edge case "finish whose busy mark expired before it reported back" | example | PENDING | |
+| U332 | One second before that `busy_until`, `get_attachment` reports the stored state | FR-026 | example | PENDING | |
+| U333 | An attachment whose `rebuild` claim expired unreleased reports `processed` (a cut-off rebuild keeps its old derived thoughts) | FR-026, FR-027 | example | PENDING | |
 | U254 | `list_attachments` with `thought_id` returns each attachment's id, short id, file name, type, size, state and `derived_count` | FR-015, US3.2 | example | PENDING | |
 | U255 | `list_attachments` with `derived_thought_id` returns the attachment that owns it | FR-015 | example | PENDING | |
 | U256 | `list_attachments` with both or neither input is refused | FR-015 | example | PENDING | |
 | U257 | `list_attachments` with the id of a thought no attachment owns says not found | FR-015 | example | PENDING | |
+| U334 | `list_attachments` reports an attachment whose `finish` claim expired unreleased as `failed` | FR-026, FR-015, edge case "finish whose busy mark expired before it reported back" | example | PENDING | |
 | U258 | `remove_attachment` without `confirm` deletes nothing and lists the file, the derived count and, when it would go, the parent note | FR-016, US5.2 | example | PENDING | |
 | U259 | `remove_attachment` with `confirm` deletes the stored file, removes through the store and releases the claim, and the result names what went | FR-016, US5.1 | example | PENDING | |
 | U260 | `remove_attachment` while busy is refused with the busy message and deletes nothing | FR-026, SC-014 | example | PENDING | |
+| U335 | When the store's removal fails after the stored file was deleted, `remove_attachment` reports the failure, and the attachment is still listed by `list_attachments` | FR-016, edge case "removal deletes the stored file first and then the records" | example | PENDING | |
+| U336 | A confirmed removal whose stored file is already missing succeeds: the rows go, and the result treats the file as removed | FR-016, edge case "removal deletes the stored file first and then the records" | example | PENDING | |
 | U261 | `find_orphan_attachments` lists each orphan's id, file name, why it is listed and `derived_count` | FR-021, US5.3 | example | PENDING | |
+| U353 | `get_attachment` on an attachment whose finish was cut off (claim expired unreleased) reports `failed` "the run did not finish" and, because its file is stored, includes a download link | FR-026, FR-014, data-model.md states | example | PENDING | |
+| U354 | `remove_attachment` with confirm on an attachment whose earlier remove was cut off (claim expired unreleased) proceeds and removes it; the cut-off remove itself left the attachment as it was | FR-016, FR-026, data-model.md states | example | PENDING | |
 
 ### Stream P: phone page (wave 2, `ta-page`)
 
@@ -522,10 +564,15 @@ Test file: `tests/page_routes_test.ts` (`services.finish` scripted).
 | U274 | The page routes need no brain key, and a request carrying the brain key without a valid token gets `410` | FR-002, FR-018 | example | PENDING | |
 | U275 | CORS allows the origin of `UPLOAD_PAGE_URL`, and gives no allow-origin to any other origin | FR-002 | example | PENDING | |
 | U276 | CORS allows the same origin when the page is served by the function | FR-002 | example | PENDING | |
-| U277 | `/page/finish` with a valid token uses it up, finishes only its own attachment through `services.finish`, and returns the outcome as JSON | FR-024, SC-011 | example | PENDING | |
-| U278 | A second `/page/finish` with the same token gets `410` | FR-024 | example | PENDING | |
+| U337 | `/page/info` with a valid, unused, unexpired token returns the expected kind the attach call named, the four accepted types and the size caps, and changes no row or object | FR-002, edge case "before a file is picked, the upload page shows the expected kind" | example | PENDING | |
+| U338 | `/page/info` for an attachment started with no expected kind returns no expected kind, with the accepted types and the caps | FR-002 | example | PENDING | |
+| U339 | `/page/info` with an unknown, used or expired token gets `410` with the expired message | FR-002 | example | PENDING | |
+| U277 | `/page/finish` with a valid token finishes only its own attachment through `services.finish`, returns the outcome as JSON, and uses the token up once finishing reaches an outcome (here `processed`) | FR-024, SC-011 | example | PENDING | |
+| U278 | A second `/page/finish` with the same token, after a `processed` outcome, gets `410` | FR-024 | example | PENDING | |
 | U279 | A token for attachment X never finishes attachment Y: `services.finish` is never called with Y, and Y is unchanged | FR-024, SC-011 | example | PENDING | |
-| U280 | `/page/finish` refused as busy follows the answered rule on whether its token is used up | FR-024, FR-026 | example | BLOCKED (T005 item 5) | |
+| U280 | A `/page/finish` refused as busy returns the busy outcome and leaves the token valid: a later `/page/finish` with it, once the claim is gone, finishes the attachment (T005 Q5) | FR-024, FR-026 | example | PENDING | |
+| U340 | `/page/finish` whose outcome is "no file uploaded yet" returns it and leaves the token valid: `/page/start` and `/page/finish` still accept it (T005 Q5) | FR-024 | example | PENDING | |
+| U341 | `/page/finish` whose outcome is `refused` uses the token up, so a second call gets `410` (every finishing outcome counts, not only `processed`) (T005 Q5) | FR-024 | example | PENDING | |
 
 #### `upload-page.html` (T044)
 
@@ -534,8 +581,8 @@ Test file: `tests/page_script_test.ts`, with `tests/helpers/page_dom.ts`.
 | id  | behavior | traces | kind | state | test |
 | --- | -------- | ------ | ---- | ----- | ---- |
 | U281 | The page reads its token only from the `#t=` fragment; a token in the query string is ignored | FR-002 | example | PENDING | |
-| U282 | Every request goes to the API address fixed in the file, never to an address taken from the link | FR-002 | example | PENDING | |
-| U283 | The copy the function serves on self-hosted gets its API address by the answered rule | FR-002 | example | BLOCKED (T005 item 6) | |
+| U282 | With its API-address line filled in, every request goes to that address, never to an address taken from the link (T005 Q6) | FR-002 | example | PENDING | |
+| U283 | With its API-address line blank, every request goes to the address the page was served from: served at `…/functions/v1/thought-attachments/upload`, it calls `…/functions/v1/thought-attachments/page/start` (T005 Q6) | FR-002 | example | PENDING | |
 | U284 | The file input accepts exactly `image/jpeg,image/png,image/webp,application/pdf` and one file | FR-002 | example | PENDING | |
 | U285 | The page shows the accepted types | FR-002 | example | PENDING | |
 | U286 | A refusal from `/page/start` is shown, and no `PUT` happens | FR-003 | example | PENDING | |
@@ -545,12 +592,18 @@ Test file: `tests/page_script_test.ts`, with `tests/helpers/page_dom.ts`.
 | U290 | A `410` shows the expired message | FR-002, SC-017 | example | PENDING | |
 | U291 | The file contains no key, no token and no project address other than its API-address setting | FR-002, FR-009 | example | PENDING | |
 | U292 | The file loads no external script or style | FR-002 | example | PENDING | |
+| U342 | Before any pick, the page sends `{ token }` to `/page/info` and shows the expected kind (when one is returned) and the size limit it returns | FR-002, edge case "before a file is picked, the upload page shows the expected kind" | example | PENDING | |
+| U343 | When `/page/finish` answers busy or "no file uploaded yet", the page shows "Waiting…" and calls `/page/finish` again 10 seconds later (injected timer) (T005 Q5) | FR-024 | example | PENDING | |
+| U344 | 9 seconds after such an answer, the page has not called `/page/finish` again | FR-024 | example | PENDING | |
+| U345 | When a retried `/page/finish` gets `410`, the page shows the expired message and stops retrying | FR-024, SC-017 | example | PENDING | |
+| U346 | The repository's `upload-page.html` has its API-address line blank (T005 Q6) | FR-002 | example | PENDING | |
+| U352 | `/page/info` returns exactly `{ expected_kind, accepted_types, caps: { image_bytes, pdf_bytes, pdf_pages } }`, with `image_bytes` equal to `MAX_IMAGE_MB` × 1,048,576 (example: 10 → 10485760) | FR-002, contracts/upload-page.md `/page/info` | example | PENDING | |
 
 ### Stream A: app and entry (wave 3, `ta-app`)
 
 #### `src/app.ts` and `index.ts` (T031, T032, T045)
 
-Test files: `tests/app_test.ts` (U293–U301, U305–U307) and `tests/imports_test.ts` (U302–U304).
+Test files: `tests/app_test.ts` (U293–U301, U305–U307, U347–U349) and `tests/imports_test.ts` (U302–U304).
 
 | id  | behavior | traces | kind | state | test |
 | --- | -------- | ------ | ---- | ----- | ---- |
@@ -561,31 +614,37 @@ Test files: `tests/app_test.ts` (U293–U301, U305–U307) and `tests/imports_te
 | U297 | With an empty configured key, every MCP request is refused | FR-018 | example | PENDING | |
 | U298 | An `OPTIONS` preflight gets the CORS headers that `W/server/index.ts` sends | INV-4 | example | PENDING | |
 | U299 | An MCP request is handled with the same `Accept` treatment as `W/server/index.ts` | INV-4 | example | PENDING | |
-| U300 | `productionDeps` with settings that aren't `ok` refuses to start, naming the problem settings and no values | FR-017, FR-009 | example | PENDING | |
+| U300 | `productionDeps()` with settings that aren't `ok` returns `{ ok: false, problems }` naming the problem settings and no values, without throwing (T005 Q3) | FR-017, FR-009 | example | PENDING | |
 | U301 | `productionDeps`' store sends its requests to `SUPABASE_URL` with the service-role key (stubbed `globalThis.fetch`) | FR-019 | example | PENDING | |
 | U302 | `index.ts` is the one-line entry `Deno.serve(createApp(productionDeps()).fetch)` | FR-019 | example | PENDING | |
 | U303 | No `.ts` file outside `tests/` has a bare import specifier | FR-019 | example | PENDING | |
 | U304 | No `.ts` file outside `tests/` imports `pdf-lib` | INV-5 | example | PENDING | |
 | U305 | `GET /upload` returns 200 with `text/html`, with no brain key | FR-002 | example | PENDING | |
-| U306 | The `GET /upload` body follows the answered rule (unchanged `upload-page.html`, or the file with its API address set) | FR-002 | example | BLOCKED (T005 item 6) | |
+| U306 | The `GET /upload` body is `upload-page.html` byte for byte, with its API-address line still blank (T005 Q6) | FR-002 | example | PENDING | |
 | U307 | `/page/start` through `createApp` with no brain key is not refused by the key check | FR-002 | example | PENDING | |
+| U347 | `createApp({ ok: false, problems })` answers an MCP `tools/call` (sent with the correct key) with the named settings error, for example "setting MAX_PDF_PAGES is invalid: must be a positive whole number", and does nothing else (T005 Q3) | FR-017 | example | PENDING | |
+| U348 | That error names the setting and what it must be, never the value given (`MAX_PDF_PAGES=abc` gives no `abc`) | FR-009, FR-017 | example | PENDING | |
+| U349 | `createApp({ ok: false, problems })` answers `/page/info`, `/page/start` and `/page/finish` with the same named error, with no brain key needed, and does nothing else (T005 Q3) | FR-017, FR-002 | example | PENDING | |
+| U351 | With `MCP_ACCESS_KEY` set, a call with a missing or wrong key gets an authorization error; with `MCP_ACCESS_KEY` unset, `productionDeps()` gives `ok: false` and every call, even one with no key, gets the named settings error instead | FR-018, FR-017, contracts/settings.md `MCP_ACCESS_KEY` | example | PENDING | |
 
 ## Invariants and edge cases still to place
 
-Each needs a decision the spec and contracts don't make. None has a numbered row, so no test encodes an invented answer. Each must become a row (or be dropped with a reason) before the feature is done.
+None of the twelve items listed here at efe0f28 is left. They were settled as spec Edge Cases (commit bfd1430; the `/page/finish`-before-upload item by T005 Q5) and placed at the 54fcf51 refresh:
 
-- **Bytes in an MB.** `MAX_IMAGE_MB` and `MAX_PDF_MB` never say whether 1 MB is 1,000,000 or 1,048,576 bytes. U118–U121 and U153 test "at the cap" and "one byte over" against whatever byte value is chosen. This sits next to T005 item 3 (decimals).
-- **The page's header before a pick.** contracts/upload-page.md "What the owner sees" item 1 shows the expected kind and the size limit before any file is picked. But the only routes take a picked file (`/page/start`) or finish (`/page/finish`), so nothing supplies them first. U285 covers only the accepted types, which are static.
-- **A single-page source line.** data-model.md shows only `pages 12–13`. The text for a passage on one page (`page 12`, or `pages 12–12`) is not set.
-- **`find_thought` `limit` above 20.** "At most 20" doesn't say whether 21 is clamped to 20 or refused.
-- **Exact-text matching.** U67 takes the literal reading, "contains the query as given". Case sensitivity is not stated.
-- **An expired `pending_upload` and the duplicate-pending rule.** The edge case says "a new link can be requested" after expiry, but `attach_file` points to "the same file name, type and size already pending on that parent". Whether an expired pending row still counts as pending is not stated.
-- **"A cut-off finish counts as `failed`" (FR-026).** It's unclear whether the row is stored as `failed` after the claim expires (for example as seen by `get_attachment`), or only treated as failed by the next finish. U214 and A45 test the next finish proceeding.
-- **A successful rebuild after a failed one.** It's unclear whether it clears `last_rebuild_error`.
-- **Removal partway.** Removing deletes the stored file and then the rows, and the outcome is not stated when the row removal fails after the file is gone.
-- **`/page/finish` before any upload.** The token is "used up, then finishes", so a "no file uploaded yet" outcome would strand the page. This is the same question as T005 item 5, but for the no-file outcome.
-- **An owner thought equal to a full derived content.** An owner thought whose text equals a passage's whole content, source line included, makes the write raise, so the finish fails. US1.4 says the passage is saved as its own thought, which is then impossible. FR-025 argues this only for derived thoughts of different attachments.
-- **Partial file details in `attach_file`.** It's not stated what happens when some, but not all, of `file_name`, `declared_type` and `declared_size` are given.
+- **Bytes in an MB** (1 MB = 1,048,576 bytes): U118–U121 (reworded), U320, A63.
+- **The page's header before a pick** (`POST /page/info`, token only): U337–U339, U342, A60.
+- **A single-page source line** (`page 12`): U321.
+- **`find_thought` `limit` above 20** (reduced to 20): U328.
+- **Exact-text matching** (ignores letter case): U314; U67 reworded.
+- **An expired `pending_upload`** (no longer counts as pending): U311, U312, U318, U319, U329, A57; U233 reworded.
+- **A cut-off finish** (reads as `failed`, "the run did not finish"): U331–U334, A55.
+- **A successful rebuild after a failed one** (clears `last_rebuild_error`): U326, A58.
+- **Removal partway** (file first, then records; a repeat succeeds): U335, U336, A56.
+- **`/page/finish` before any upload** (token stays valid; the page retries every 10 s): U340, U343–U345, A61.
+- **An owner thought equal to a full derived content** (the finish fails, naming the conflict): U327, A59.
+- **Partial file details in `attach_file`** (refused): U330.
+
+The four points that were still open after the 54fcf51 refresh were decided in the contracts (`data-model.md` states and provenance, contracts/settings.md `MCP_ACCESS_KEY`, contracts/upload-page.md `/page/info`) and placed by the integrator as U350 (single-page locator), U351 (settings error versus key check), U352 (`/page/info` shape, caps in bytes) and U353–U354 (cut-off finish and remove by kind; a stored `failed` file keeps its download link).
 
 ## Out of scope
 
