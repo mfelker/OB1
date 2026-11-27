@@ -187,3 +187,24 @@ Deno.test("U379 an HTTP error keeps the status and the provider's error.message,
   assert("error" in out);
   assertEquals(out.error, "embedding endpoint answered HTTP 404: model not found");
 });
+
+Deno.test("U383 a non-JSON HTTP error body keeps its text in the reason", async () => {
+  const ff = new FakeFetch().on("POST", URL_, { status: 503, body: "upstream down for maintenance" });
+  const out = await createEmbeddingClient(settingsWith(), ff.fetch).embed(["alpha"]);
+  assert("error" in out);
+  assertEquals(out.error, "embedding endpoint answered HTTP 503: upstream down for maintenance");
+});
+
+Deno.test("U384 an HTTP error body longer than 300 characters is cut to its first 300", async () => {
+  const ff = new FakeFetch().on("POST", URL_, { status: 500, body: "0123456789".repeat(40) });
+  const out = await createEmbeddingClient(settingsWith(), ff.fetch).embed(["alpha"]);
+  assert("error" in out);
+  assertEquals(out.error, "embedding endpoint answered HTTP 500: " + "0123456789".repeat(30));
+});
+
+Deno.test("U385 a JSON error body whose error.message is not a string gives { error } with the body text, without throwing", async () => {
+  const ff = new FakeFetch().on("POST", URL_, { status: 400, body: '{"error":{"message":42}}' });
+  const out = await createEmbeddingClient(settingsWith(), ff.fetch).embed(["alpha"]);
+  assert("error" in out);
+  assertEquals(out.error, 'embedding endpoint answered HTTP 400: {"error":{"message":42}}');
+});
