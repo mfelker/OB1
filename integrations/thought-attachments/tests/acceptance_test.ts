@@ -766,7 +766,7 @@ Deno.test(
   },
 );
 
-todo(
+Deno.test(
   "A22 with the vision endpoint answering 500 a finished photo is not_captioned with that reason and has no caption thought",
   async () => {
     const w = world({ vision: [{ status: 500, body: { error: "model crashed" } }] });
