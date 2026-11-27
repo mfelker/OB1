@@ -605,7 +605,7 @@ Deno.test(
   },
 );
 
-todo(
+Deno.test(
   "A14 with only the page token, /page/start, the PUT and /page/finish finish the photo, and a second start and finish with that token each get 410",
   async () => {
     const w = world();
