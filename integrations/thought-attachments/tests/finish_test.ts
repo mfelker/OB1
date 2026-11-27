@@ -567,8 +567,9 @@ Deno.test("U210 a vector length different from embeddingDimension() ends failed 
     const att = photo ? pending(r, jpegBytes(2000)) : pending(r, await textPdf(["alpha beta gamma delta epsilon zeta"]));
     const out = await r.finish(att.id, {});
     assertEquals(out.state, "failed");
-    assertStringIncludes(out.reason ?? "", "8");
-    assertStringIncludes(out.reason ?? "", "1536");
+    // The feature's own check, not the store's dimension error: nothing is sent to writeDerived.
+    assertEquals(out.reason, "The embedding model returned vectors of length 8, but this brain's vectors have length 1536.");
+    assertEquals(r.store.callNames().includes("writeDerived"), false);
     assertEquals(out.derived_count, 0);
     assertEquals(r.store.attachment(att.id)?.state, "failed");
     assertEquals(r.store.derivedOf(att.id).length, 0);
