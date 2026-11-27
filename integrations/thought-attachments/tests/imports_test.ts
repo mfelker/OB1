@@ -39,3 +39,13 @@ Deno.test("U304 no .ts file outside tests/ imports pdf-lib", async () => {
   }
   assertEquals(offenders, []);
 });
+
+Deno.test("U303 no .ts file outside tests/ has a bare import specifier", async () => {
+  const bare: string[] = [];
+  for (const file of await sourceFiles()) {
+    for (const s of await specifiers(file)) {
+      if (!/^(npm:|jsr:|\.\.?\/|https:\/\/)/.test(s)) bare.push(`${file}: ${s}`);
+    }
+  }
+  assertEquals(bare, []);
+});

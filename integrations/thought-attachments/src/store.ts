@@ -4,7 +4,7 @@
  * Stream Q owns this file and schema.sql together: tests/schema_drift_test.ts checks every RPC name and
  * parameter sent here against schema.sql.
  */
-import { createClient } from "@supabase/supabase-js";
+import { createClient } from "npm:@supabase/supabase-js@2.47.10";
 import type { AttachmentRow, BusyOp, OrphanReason, R, Settings, Store, ThoughtMatch } from "./types.ts";
 
 export function createSupabaseStore(
