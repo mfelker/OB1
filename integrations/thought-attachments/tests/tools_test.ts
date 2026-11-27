@@ -285,3 +285,21 @@ Deno.test("U232 a checkDeclared refusal returns its message, with no row and no 
   assertStringIncludes(odd.text, "PDF, JPEG, PNG and WebP");
   assertNothingCreated(h);
 });
+
+Deno.test("U233 the same name, type and size pending on the parent returns that attachment, with no new row", async () => {
+  const h = await harness();
+  const parent = await seed(h, "dishwasher");
+  const pending = h.store.seedAttachment({
+    parent_thought_id: parent.id,
+    ...{ file_name: "manual.pdf", declared_type: "application/pdf", declared_size: 1000 },
+    upload_deadline: new Date(h.clock.now().getTime() + 60_000).toISOString(),
+  });
+  const out = await call(h, "attach_file", { thought_id: parent.id, ...PDF });
+  assertEquals(out.isError, false);
+  assertEquals(out.data.attachment_id, pending.id);
+  assertEquals(out.data.short_id, pending.id.replace(/-/g, "").slice(0, 8));
+  assertStringIncludes(out.text, "already pending");
+  assertStringIncludes(out.text, pending.id);
+  assertEquals(h.store.attachments.length, 1);
+  assertEquals(h.store.callNames().filter((m) => m === "createAttachment" || m === "signUpload"), []);
+});

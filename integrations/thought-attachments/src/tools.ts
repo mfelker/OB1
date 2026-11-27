@@ -2,7 +2,7 @@
 import { McpServer } from "npm:@modelcontextprotocol/sdk@1.24.3/server/mcp.js";
 import { z } from "npm:zod@4.1.13";
 import { baseName, checkDeclared } from "./intake.ts";
-import type { Deps, Services } from "./types.ts";
+import type { AcceptedType, Deps, Services } from "./types.ts";
 
 type Hints = { readOnlyHint: boolean; destructiveHint?: boolean; openWorldHint?: boolean };
 
@@ -12,6 +12,9 @@ const MAX_MATCHES = 20;
 const FIRST_LINE_CHARS = 120;
 
 const ONE_PARENT = "Give exactly one of thought_id or note.";
+
+/** The first 8 hex characters of an attachment id (FR-025). */
+const shortId = (id: string) => id.replace(/-/g, "").slice(0, 8).toLowerCase();
 
 const NOT_YET = () => ({ content: [{ type: "text" as const, text: "" }] });
 
@@ -72,6 +75,28 @@ export function buildServer(deps: Deps, _services: Services): McpServer {
       const exists = await deps.store.thoughtExists(thought_id);
       if ("error" in exists) return fail(exists.error);
       if (!exists.data) return fail("There is no thought with that thought_id.");
+      if (file_name !== undefined && declared_type !== undefined && declared_size !== undefined) {
+        const pending = await deps.store.findPending(
+          thought_id,
+          baseName(file_name),
+          declared_type as AcceptedType,
+          declared_size,
+          deps.now(),
+        );
+        if ("error" in pending) return fail(pending.error);
+        if (pending.data) {
+          const row = pending.data;
+          return reply(
+            `This file is already pending as attachment ${row.id} (short id ${shortId(row.id)}); upload deadline ${row.upload_deadline}.`,
+            {
+              attachment_id: row.id,
+              short_id: shortId(row.id),
+              parent_thought_id: row.parent_thought_id,
+              upload_deadline: row.upload_deadline,
+            },
+          );
+        }
+      }
     }
     return NOT_YET();
   });
