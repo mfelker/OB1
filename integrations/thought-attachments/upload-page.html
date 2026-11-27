@@ -45,10 +45,21 @@ function show(text) {
   statusEl.textContent = text;
 }
 
+var progressEl = document.getElementById("progress");
+
+function upload(file, target) {
+  show("Uploading " + file.name + "…");
+  progressEl.hidden = false;
+  return fetch(target.url, { method: target.method, headers: target.headers, body: file }).then(function () {
+    progressEl.hidden = true;
+  });
+}
+
 function start(file) {
   return post("/page/start", { token: token, name: file.name, type: file.type, size: file.size }).then(function (res) {
     return res.json().then(function (body) {
-      if (res.status === 400) show("Refused: " + body.message);
+      if (res.status === 400) return show("Refused: " + body.message);
+      return upload(file, body.upload);
     });
   });
 }

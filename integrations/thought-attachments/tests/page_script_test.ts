@@ -81,3 +81,16 @@ Deno.test("U286 a refusal from /page/start is shown, and no PUT happens", async 
   assertEquals(f.requests.filter((r) => r.method === "PUT"), []);
   assertEquals(f.requests.map((r) => r.url.slice(BASE.length)), ["/page/info", "/page/start"]);
 });
+
+const SIGNED = "https://brain.example.test/storage/v1/object/upload/sign/ob1-files/attachments/a1/receipt.jpg?token=signed";
+const UPLOAD = { upload: { url: SIGNED, method: "PUT", headers: { "content-type": "image/jpeg", "x-upsert": "true" } } };
+
+Deno.test("U287 upload progress is shown during the PUT", async () => {
+  const f = net().on("POST", `${BASE}/page/start`, { body: UPLOAD }).on("PUT", SIGNED, { hold: { status: 200, body: {} } });
+  const page = await loadPage({ href: `${PAGE_AT}#t=tok`, fetch: f.fetch });
+  await page.pick(PICK);
+  await settle();
+  assertEquals(f.heldCount, 1);
+  assertStringIncludes(page.text("status"), "Uploading");
+  assertEquals(page.el("progress").hidden, false);
+});
