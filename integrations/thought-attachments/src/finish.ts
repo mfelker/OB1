@@ -109,6 +109,13 @@ export function createFinisher(deps: Deps): Services {
       : await photoPath(stored, token, bytes, actual, rebuild);
   }
 
+  /** A write refused for a duplicate fingerprint is named as such (FR-022): an existing thought is never merged or changed. */
+  function writeReason(error: string): string {
+    return /duplicate key|fingerprint/i.test(error)
+      ? "An existing thought has the same text as a derived thought, so nothing was written (" + error + ")."
+      : error;
+  }
+
   /** FR-007: every vector has the brain's length, or the attempt fails naming both lengths. */
   async function wrongLength(vectors: number[][]): Promise<string | null> {
     const dimension = await store.embeddingDimension();
@@ -154,7 +161,7 @@ export function createFinisher(deps: Deps): Services {
       processed_at: now.toISOString(),
     };
     const written = await store.writeDerived(row.id, token, rows, patch);
-    if ("error" in written) throw new Error(written.error);
+    if ("error" in written) return await ends(row, token, actual, rebuild, "failed", writeReason(written.error));
     return { state: "processed", derived_count: rows.length, page_count: pdf.data.pageCount };
   }
 
@@ -214,7 +221,7 @@ export function createFinisher(deps: Deps): Services {
       processed_at: now.toISOString(),
     };
     const written = await store.writeDerived(row.id, token, [derived], patch);
-    if ("error" in written) throw new Error(written.error);
+    if ("error" in written) return await ends(row, token, actual, rebuild, "failed", writeReason(written.error));
     return { state: "processed", derived_count: 1, caption: caption.data.text.slice(0, 300) };
   }
 

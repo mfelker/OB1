@@ -589,3 +589,18 @@ Deno.test("U211 a failed attachment finished again with the services working end
   assertEquals(row.state_reason, null);
   assertEquals(r.store.derivedOf(att.id).length, 1);
 });
+
+Deno.test("U327 a fingerprint conflict with an existing thought ends failed naming the conflict, writes no derived thought and leaves that thought unchanged", async () => {
+  const r = await rig();
+  const att = pending(r, await textPdf(["alpha beta gamma delta epsilon zeta"]));
+  const whole = "From manual.pdf, page 1 (attachment " + att.id.slice(0, 8) + ")\nalpha beta gamma delta epsilon zeta";
+  const existing = await r.store.seedThought({ content: whole, metadata: { mine: true } });
+  const before = structuredClone(r.store.thought(existing.id));
+  const out = await r.finish(att.id, {});
+  assertEquals(out.state, "failed");
+  assertStringIncludes(out.reason ?? "", "same text");
+  assertEquals(out.derived_count, 0);
+  assertEquals(r.store.attachment(att.id)?.state, "failed");
+  assertEquals(r.store.derivedOf(att.id).length, 0);
+  assertEquals(r.store.thought(existing.id), before);
+});
