@@ -171,3 +171,14 @@ Deno.test("U322 when the only attachment with those bytes is refused, the finish
   const out = await r.finish(second.id, {});
   assertEquals(out.state, "processed");
 });
+
+Deno.test("U323 the same bytes on an attachment of another parent don't refuse the finish", async () => {
+  const r = await rig();
+  const bytes = await textPdf(["alpha beta gamma"]);
+  const otherParent = (await r.store.seedThought({ content: "another thought" })).id;
+  pending(r, bytes, { parent_thought_id: otherParent, file_name: "theirs.pdf", state: "processed", content_hash: await contentHash(bytes) });
+  const mine = pending(r, bytes, { file_name: "mine.pdf" });
+  const out = await r.finish(mine.id, {});
+  assertEquals(out.state, "processed");
+  assertEquals(r.store.attachment(mine.id)?.state, "processed");
+});
