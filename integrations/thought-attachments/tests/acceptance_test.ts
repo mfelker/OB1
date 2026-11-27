@@ -880,7 +880,7 @@ Deno.test(
   },
 );
 
-todo(
+Deno.test(
   "A60 with only the page token, /page/info returns the expected kind, accepted types and caps, changes nothing, and /page/start still returns an upload link",
   async () => {
     const w = world();
