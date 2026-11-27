@@ -232,3 +232,17 @@ Deno.test("U344 9 seconds after a busy answer, the page has not called /page/fin
   await page.advance(9_000);
   assertEquals([finishCalls(f), page.text("status")], [1, "Waiting…"]);
 });
+
+Deno.test("U345 when a retried /page/finish gets 410, the page shows the expired message and stops retrying", async () => {
+  const f = net()
+    .on("POST", `${BASE}/page/start`, { body: UPLOAD })
+    .on("PUT", SIGNED, { status: 200, body: {} })
+    .on("POST", `${BASE}/page/finish`, { body: BUSY }, { status: 410, body: { error: EXPIRED } });
+  const page = await loadPage({ href: `${PAGE_AT}#t=tok`, fetch: f.fetch });
+  await page.pick(PICK);
+  await settle();
+  await page.advance(10_000);
+  assertEquals([page.text("status"), finishCalls(f), page.pendingTimers], [EXPIRED, 2, 0]);
+  await page.advance(120_000);
+  assertEquals(finishCalls(f), 2);
+});
