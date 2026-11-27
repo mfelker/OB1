@@ -414,7 +414,7 @@ Deno.test(
   },
 );
 
-todo(
+Deno.test(
   "A7 the short id read from a passage's source line, given to get_attachment, returns that attachment and a download link",
   async () => {
     const w = world();
