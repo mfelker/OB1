@@ -1373,7 +1373,7 @@ Deno.test(
 
 // ============================================================== User Story 5
 
-todo(
+Deno.test(
   "A46 a confirmed removal deletes the object, row and every derived thought; get_attachment then says not found; the parent and its other attachment are unchanged",
   async () => {
     const w = world();
