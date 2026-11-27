@@ -24,7 +24,7 @@ function originOf(url: string): string | null {
 }
 
 /** The page's routes (contracts/upload-page.md), as a Hono sub-app. */
-export function pageRoutes(deps: Deps, _services: Services): Hono {
+export function pageRoutes(deps: Deps, services: Services): Hono {
   const app = new Hono();
 
   // CORS only for the page's own origin (or the function's own origin, when it serves the page).
@@ -95,6 +95,15 @@ export function pageRoutes(deps: Deps, _services: Services): Hono {
     return c.json({
       upload: { url: publicUrl(deps.settings, signed.data.url), method: "PUT", headers: { "content-type": body.type } },
     });
+  });
+
+  app.post("/page/finish", async (c) => {
+    const body = await c.req.json().catch(() => ({}));
+    const row = await attachmentFor(body);
+    if (!row) return c.json({ error: EXPIRED }, 410);
+    const outcome = await services.finish(row.id, {});
+    await deps.store.consumePageToken(row.id, await sha256Hex(body.token));
+    return c.json(outcome);
   });
 
   return app;

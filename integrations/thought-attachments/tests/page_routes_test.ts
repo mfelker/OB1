@@ -317,3 +317,14 @@ Deno.test("U352 /page/info returns exactly expected_kind, accepted_types and cap
   assertEquals(Object.keys(body.caps).sort(), ["image_bytes", "pdf_bytes", "pdf_pages"]);
   assertEquals(body.caps, { image_bytes: 10485760, pdf_bytes: 7864320, pdf_pages: 30 });
 });
+
+Deno.test("U277 /page/finish finishes only its own attachment, returns the outcome as JSON and uses the token up", async () => {
+  const r = await rig();
+  const row = await r.seed();
+  r.outcomes.push({ state: "processed", derived_count: 1, caption: "A receipt on a desk" });
+  const res = await r.post("/page/finish", { token: TOKEN });
+  assertEquals(res.status, 200);
+  assertEquals(await res.json(), { state: "processed", derived_count: 1, caption: "A receipt on a desk" });
+  assertEquals(r.finishCalls, [row.id]);
+  assertEquals(r.store.attachment(row.id)!.page_token_hash, null);
+});
