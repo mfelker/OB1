@@ -8,6 +8,12 @@ export function loadSettings(getEnv: GetEnv): SettingsResult {
     return raw === undefined ? fallback : Number(raw);
   };
   const mcpAccessKey = getEnv("MCP_ACCESS_KEY");
+  // Vision is configured only with both an endpoint and a model (FR-006); otherwise none of it is kept.
+  const visionApiBase = getEnv("VISION_API_BASE");
+  const visionModel = getEnv("VISION_MODEL");
+  const vision = visionApiBase !== undefined && visionModel !== undefined
+    ? { visionApiBase, visionApiKey: getEnv("VISION_API_KEY"), visionModel }
+    : { visionApiBase: undefined, visionApiKey: undefined, visionModel: undefined };
   if (mcpAccessKey === undefined) {
     return { ok: false, problems: [{ setting: "MCP_ACCESS_KEY", reason: "must be set" }] };
   }
@@ -19,9 +25,7 @@ export function loadSettings(getEnv: GetEnv): SettingsResult {
       embeddingApiKey: getEnv("EMBEDDING_API_KEY") ?? getEnv("OPENROUTER_API_KEY"),
       embeddingModel: text("EMBEDDING_MODEL", "openai/text-embedding-3-small"),
       embeddingBatchSize: num("EMBEDDING_BATCH_SIZE", 64),
-      visionApiBase: getEnv("VISION_API_BASE"),
-      visionApiKey: getEnv("VISION_API_KEY"),
-      visionModel: getEnv("VISION_MODEL"),
+      ...vision,
       attachmentsBucket: text("ATTACHMENTS_BUCKET", "ob1-files"),
       maxImageMb: num("MAX_IMAGE_MB", 10),
       maxPdfMb: num("MAX_PDF_MB", 25),

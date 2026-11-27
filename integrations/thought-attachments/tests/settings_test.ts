@@ -91,3 +91,12 @@ Deno.test("U8 with MCP_ACCESS_KEY unset the result is not ok, with a problem nam
   const problems = problemsWith({ MCP_ACCESS_KEY: undefined });
   assertEquals(problems.map((p) => p.setting), ["MCP_ACCESS_KEY"]);
 });
+
+/** The vision part of settings: all three undefined means vision is not configured (FR-006). */
+const visionOf = (s: Settings) => ({ base: s.visionApiBase, key: s.visionApiKey, model: s.visionModel });
+const NOT_CONFIGURED = { base: undefined, key: undefined, model: undefined };
+
+Deno.test("U9 with VISION_API_BASE or VISION_MODEL unset (each alone) vision is not configured", () => {
+  assertEquals(visionOf(settingsWith({ VISION_API_BASE: undefined })), NOT_CONFIGURED);
+  assertEquals(visionOf(settingsWith({ VISION_MODEL: undefined })), NOT_CONFIGURED);
+});
