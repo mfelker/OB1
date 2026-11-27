@@ -279,3 +279,18 @@ Deno.test("U307 /page/start through createApp with no brain key is not refused b
     { status: 200, method: "PUT", declared: "shelf.jpg" },
   );
 });
+
+Deno.test("U349 createApp with settings not ok answers /page/info, /page/start and /page/finish with the named error, no brain key needed", async () => {
+  const app = brokenApp({ MAX_PDF_PAGES: "abc" });
+  const answers = [];
+  for (const route of ["info", "start", "finish"]) {
+    const response = await app.fetch(new Request(`${FUNCTION_URL}/page/${route}`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ token: "any", name: "shelf.jpg", type: "image/jpeg", size: 4096 }),
+    }));
+    answers.push({ status: response.status, message: (await response.json()).message });
+  }
+  // A 400 with { code, message } is what the page shows as "Refused: <message>" (upload-page.html).
+  assertEquals(answers, [1, 2, 3].map(() => ({ status: 400, message: PAGES_INVALID })));
+});

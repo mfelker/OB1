@@ -66,6 +66,10 @@ function settingsErrorApp(problems: { setting: string; reason: string }[]): Fetc
   const message = settingsError(problems);
   return {
     fetch: async (request) => {
+      // The page shows a 400's message as "Refused: <message>"; MCP clients get a JSON-RPC error.
+      if (new URL(withLocalPath(request).url).pathname.startsWith("/page/")) {
+        return Response.json({ code: "settings_invalid", message }, { status: 400 });
+      }
       const body = { jsonrpc: "2.0", error: { code: -32000, message }, id: await jsonRpcId(request) };
       return new Response(JSON.stringify(body), {
         status: 200,
