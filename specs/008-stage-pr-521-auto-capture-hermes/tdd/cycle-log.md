@@ -464,3 +464,13 @@ Commands run from the stage worktree folder `skills/auto-capture-hermes` with `e
 ## Notes and deviations (remediation)
 
 - **Exact fit is trimmed by one character (observed, not a defect):** with `OB_CAPTURE_MAX_CHARS` equal to the full capture size (8305), the author's script trims it. Its budget reserves 40 characters for the `<thought_content>` wrapper, which uses 39. FR-011 ("MUST NOT exceed") holds, so U41 pins the sides at ±1 and asserts nothing about exact fit. This is worth mentioning in the #521 comment (T036) as a remark, not a defect. `evidence/defects.md` is still not created.
+
+## Cycle 55: U13 test correction (second audit finding 1, T048)
+
+- test: `capture-hermes-session.test.mjs::U13 --latest picks the newest top-level session over a newer subagent` (changed)
+- reason: the fixture had one top-level session, so "newest" was never exercised. It now has `session-1` (older top-level), `session-3` (newer top-level) and `session-2` (a subagent newer than both). The assertion changed from header `includes("Session: session-1")` to an exact `Session:` line `"Session: session-3"`. This is a strengthening.
+- red, old test: audit mutant N5 (`findLatestSession` `DESC` → `ASC`) → old U13 **passes** (second audit, `cc50f39`).
+- red, new test: N5 → `not ok`, `expected: 'Session: session-3'`, `actual: 'Session: session-1'` (exit 1). N4 (parent filter dropped) → `not ok`, `no payload printed (exit 0); stderr: (empty)` (the subagent is picked, then skipped). Script restored, `git diff --quiet` clean after each, green again on the restored script.
+- green: the real script passes; suite 52 passed, 0 failed (2 runs, 4.3 s)
+- refactor: none needed
+- commit: `7cd5290`
