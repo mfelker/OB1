@@ -174,11 +174,16 @@ Deno.test("U171 a key value in a server's error body is redacted from the reason
 });
 
 Deno.test("U379 an HTTP error keeps the status and the provider's error.message, never other body fields such as an account id", async () => {
-  const body = JSON.stringify({ error: { message: "model not found", code: 404 }, user_id: "user_acct123" });
+  const body = JSON.stringify({
+    error: {
+      message: "model not found",
+      code: 404,
+      metadata: { provider_name: "acme", account_id: "acct_nested_456" },
+    },
+    user_id: "user_acct123",
+  });
   const ff = new FakeFetch().on("POST", URL_, { status: 404, body });
   const out = await createEmbeddingClient(settingsWith(), ff.fetch).embed(["one passage"]);
   assert("error" in out);
-  assertStringIncludes(out.error, "404");
-  assertStringIncludes(out.error, "model not found");
-  assert(!out.error.includes("user_acct123"), out.error);
+  assertEquals(out.error, "embedding endpoint answered HTTP 404: model not found");
 });

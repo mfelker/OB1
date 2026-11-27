@@ -190,11 +190,16 @@ Deno.test("U181 a key value in an error is redacted", async () => {
 });
 
 Deno.test("U378 an HTTP error keeps the status and the provider's error.message, never other body fields such as an account id", async () => {
-  const body = JSON.stringify({ error: { message: "ob1-test/x is not a valid model ID", code: 400 }, user_id: "user_acct123" });
+  const body = JSON.stringify({
+    error: {
+      message: "ob1-test/x is not a valid model ID",
+      code: 400,
+      metadata: { provider_name: "acme", account_id: "acct_nested_456" },
+    },
+    user_id: "user_acct123",
+  });
   const ff = new FakeFetch().on("POST", URL_, { status: 400, body });
   const out = await createVisionClient(settingsWith(), ff.fetch).caption(JPEG, "image/jpeg");
   assert("error" in out);
-  assertStringIncludes(out.error, "400");
-  assertStringIncludes(out.error, "ob1-test/x is not a valid model ID");
-  assert(!out.error.includes("user_acct123"), out.error);
+  assertEquals(out.error, "vision endpoint answered HTTP 400: ob1-test/x is not a valid model ID");
 });
