@@ -19,8 +19,17 @@ export function createEmbeddingClient(settings: Settings, fetch: typeof globalTh
     if (!response.ok) {
       return { error: `embedding endpoint answered HTTP ${response.status}: ${(await response.text()).slice(0, 300)}` };
     }
-    const body = await response.json();
-    return { data: body.data.map((d: { embedding: number[] }) => d.embedding) };
+    let vectors: number[][] | undefined;
+    try {
+      const body = await response.json();
+      if (Array.isArray(body?.data)) vectors = body.data.map((d: { embedding: number[] }) => d.embedding);
+    } catch {
+      // falls through to the malformed reply below
+    }
+    if (!vectors || vectors.length !== batch.length || !vectors.every(Array.isArray)) {
+      return { error: "embedding endpoint sent a malformed reply (expected one vector per input text)" };
+    }
+    return { data: vectors };
   }
 
   return {

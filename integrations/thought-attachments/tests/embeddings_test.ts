@@ -87,3 +87,13 @@ Deno.test("U168 a non-2xx status fails the call with the status in the reason", 
   assert("error" in out);
   assertStringIncludes(out.error, "503");
 });
+
+Deno.test("U169 a malformed body (no data, or a different vector count) fails the call", async () => {
+  for (const body of [{ object: "list" }, "not json", { data: [{ embedding: [1, 2] }] }]) {
+    const ff = new FakeFetch().on("POST", URL_, { status: 200, body });
+    const client = createEmbeddingClient(settingsWith(), ff.fetch);
+    const out = await client.embed(["alpha", "beta"]);
+    assert("error" in out, `expected an error for ${JSON.stringify(body)}`);
+    assertStringIncludes(out.error, "malformed");
+  }
+});
