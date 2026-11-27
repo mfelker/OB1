@@ -4,7 +4,7 @@ loop: outside-in # outside-in | inside-out
 profile: .specify/memory/tdd-profile.md # stack profile the commands must read
 spec_criteria: 22 # US1.1–3, US2.1–8, US3.1–3, US4.1–2 (16 scenarios) + SC-001–SC-006; 11 on the loop (US2, US3), the rest are process checks (see "Process acceptance")
 planned_at: cddad8a # short SHA the list was derived from (fork main)
-updated_at: 4675a03 # short SHA of the last change to this file
+updated_at: 4ad3e3f # short SHA of the last change to this file (U41 added by remediation T043)
 suite_baseline: green # empty: skills/auto-capture-hermes has no tests at b9cbd68 (`no-tests`, adapter exit 0)
 ---
 
@@ -82,6 +82,7 @@ One per automatable acceptance scenario (US2, US3). US1 and US4 are checked by t
 | U15 | A literal `<thought_content>` or `</thought_content>` inside a turn appears escaped, so the body has exactly one opening and one closing tag | INV-1 | example | DONE | `capture-hermes-session.test.mjs::U15 a literal thought_content tag inside a turn is escaped` |
 | U16 | A transcript that fits the limit is sent whole, with no truncation marker | FR-011 | example | DONE | `capture-hermes-session.test.mjs::U16 a transcript within the limit is sent whole without a marker` |
 | U17 | An over-limit transcript carries the truncation marker between the kept start and end | FR-011 | example | DONE | `capture-hermes-session.test.mjs::U17 an over-limit transcript has the marker between the kept start and end` |
+| U41 | A transcript one character under the limit is sent whole (no marker); one character over is trimmed to within the limit and carries the marker | FR-011 | example | DONE | `capture-hermes-session.test.mjs::U41 a transcript one character under the limit is sent whole and one character over is trimmed to fit` |
 | U18 | `import_key` has the form `hermes:<session id>:<8 lowercase hex>` | FR-012 | example | DONE | `capture-hermes-session.test.mjs::U18 import_key has the form hermes:<session id>:<8 hex>` |
 | U19 | Changing one message's content changes `import_key` | FR-012 | example | DONE | `capture-hermes-session.test.mjs::U19 changing one message changes the import key` |
 

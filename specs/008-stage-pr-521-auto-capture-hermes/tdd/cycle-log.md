@@ -427,3 +427,40 @@ Append only. Newest last. On this feature no base-red is possible (add-only PR; 
 - **Two-site mutants (adapter has redundant guards)**: U1 needed both empty-content filters removed (parse and format); U39 needed both already-captured checks disabled (hook entry and `captureIfCurrent`). With one site removed the behavior still held, so a one-site mutant could not be detected. Not a defect.
 - **U40 debounce 1000 ms** instead of research R8's 300 ms: the second hook fire must land before the first worker wakes, and two Node start-ups take about 150 ms. 5/5 repeated runs passed.
 - **No adapter defects found**: `evidence/defects.md` not created.
+
+## Remediation after `/speckit-tdd-verify` (verdict FAIL at `4ad3e3f`)
+
+Commands run from the stage worktree folder `skills/auto-capture-hermes` with `env -i PATH="$PATH" HOME="$TMPDIR" node --test --test-reporter=tap --test-name-pattern=<pattern> capture-hermes-session.test.mjs` (the adapter's `single` was not used, so the other session's `.specify/feature.json` stayed on 007). Each mutant was applied alone to the author's script, then restored; `git diff --quiet` was clean after every one, and the test was green again on the restored script.
+
+## Cycle 52: A8, U22 test correction (finding 1, T041)
+
+- test: `A8 with no address and no key nothing is sent and the run exits 0`, `U22 a key without an address sends nothing` (changed)
+- reason: their `stub.requests.length === 0` could not fail, because the child was never given the stand-in's address. Replaced by exact `dispositions` (`["error:missing_env"]`) and an empty retry queue; the unused stand-in was removed. This is a strengthening, not a loosening.
+- red, old tests: mutant "guard logs `error:missing_env` but falls through" (`"error:missing_env");\n    return;` → `"error:missing_env");`) → old A8 and U22 **pass** (exit 0): the gap is confirmed.
+- red, new tests: same mutant → `not ok` for both, decisive line `+   "error:main:Cannot read properties of undefined (reading 'replace')"` (exit 1). Loop mutant "missing-config guard disabled" → both `not ok` (exit 1).
+- green: the real script passes both; suite 51 passed, 0 failed
+- refactor: none needed
+- commit: `b13ca53`
+
+## Cycle 53: U38 test correction (finding 2, T042)
+
+- test: `U38 on_session_finalize captures once and records it in session state` (changed)
+- reason: `assert.ok(state.captured_at)` accepted any truthy value. It now matches ISO-8601 and checks that `Date.parse` falls between timestamps taken before and after the run.
+- red, old test: mutants `captured_at: true` and `captured_at: new Date(0).toISOString()` → old U38 **passes** both (exit 0).
+- red, new test: `captured_at: true` → `not ok`, `operator: 'match'`; `new Date(0)` → `not ok`, `captured_at 1970-01-01T00:00:00.000Z is outside this run`; field removed → `not ok`, `operator: 'match'` (all exit 1).
+- green: the real script passes; suite 51 passed, 0 failed
+- refactor: none needed
+- commit: `b13ca53`
+
+## Cycle 54: U41 a transcript one character under the limit is sent whole and one character over is trimmed to fit (finding 3, T043)
+
+- test: `capture-hermes-session.test.mjs::U41 a transcript one character under the limit is sent whole and one character over is trimmed to fit` (new)
+- red: none possible (add-only PR, TEST_AFTER by owner decision). Detection check, not S1: audit mutant M7 (`text.length <= budget` → `<` in `truncateMiddle`) → `not ok`, `actual: true` on "one character under the limit: no marker" (exit 1). Mutant "truncation call removed" → `not ok` (exit 1).
+- green: no source change. `ok 1 - U41 …`; suite 52 passed, 0 failed, in 3 consecutive runs (4.3 s, 4.4 s, 4.8 s)
+- refactor: none needed
+- commit: `dfb0d57`
+- note: the limits are derived from the measured capture size (dry run with limit 100000, giving 8305 chars), not from the author's `header.length - 40` budget, so the test does not copy the implementation. Under M7 the trimmed text happens to have the full length, so the marker assertion is the one that detects it.
+
+## Notes and deviations (remediation)
+
+- **Exact fit is trimmed by one character (observed, not a defect):** with `OB_CAPTURE_MAX_CHARS` equal to the full capture size (8305), the author's script trims it. Its budget reserves 40 characters for the `<thought_content>` wrapper, which uses 39. FR-011 ("MUST NOT exceed") holds, so U41 pins the sides at ±1 and asserts nothing about exact fit. This is worth mentioning in the #521 comment (T036) as a remark, not a defect. `evidence/defects.md` is still not created.
