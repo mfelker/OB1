@@ -504,3 +504,17 @@ Deno.test("U245 note text matching an existing thought makes it the parent, not 
   assertEquals(h.store.attachments[0].parent_created_here, false);
   assertStringIncludes(out.text, "attached to your existing thought");
 });
+
+Deno.test("U246 note with a HEIC declaration saves no note and makes no embedding request", async () => {
+  const h = await harness();
+  const out = await call(h, "attach_file", {
+    note: "Photo of the shelf",
+    file_name: "IMG_0001.HEIC",
+    declared_type: "image/heic",
+    declared_size: 2000,
+  });
+  assertEquals(out.isError, true);
+  assertStringIncludes(out.text, "share it as JPEG");
+  assertEquals(h.store.thoughts, []);
+  assertNothingCreated(h);
+});
