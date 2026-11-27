@@ -229,3 +229,11 @@ Deno.test("U318 findPending returns the pending_upload row with that name, type 
   assertEquals(url.includes("declared_type=eq.application/pdf"), true);
   assertEquals(url.includes("declared_size=eq.1234"), true);
 });
+
+Deno.test("U319 findPending returns null for that row once now is past its deadline", async () => {
+  const { store, ff } = setup();
+  const row = attachmentRow({ upload_deadline: "2026-01-01T01:00:00.000Z" });
+  ff.on("GET", `${REST}/thought_attachments*`, pendingDb(row));
+  assertEquals(await store.findPending(PARENT, "manual.pdf", "application/pdf", 1234, new Date("2026-01-01T01:00:00.000Z")), { data: null });
+  assertEquals(await store.findPending(PARENT, "manual.pdf", "application/pdf", 1234, new Date("2026-01-01T01:00:01.000Z")), { data: null });
+});
