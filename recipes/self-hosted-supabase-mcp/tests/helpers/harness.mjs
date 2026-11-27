@@ -185,9 +185,16 @@ export function makeCheckout({ withIntegration = true, hide = [] } = {}) {
   return { root, recipe, bin, log, cleanup: () => rmSync(root, { recursive: true, force: true }) };
 }
 
-/** Run `sh setup.sh` in the checkout's recipe folder with only the checkout's bin on PATH. */
+/**
+ * Shell the setup tests run setup.sh under: dash where present, else /bin/sh. On macOS /bin/sh is
+ * bash, which accepts bashisms that Debian and Ubuntu's sh (dash) rejects; dash keeps the tests
+ * strict about POSIX sh on every host.
+ */
+export const SETUP_SHELL = existsSync("/bin/dash") ? "/bin/dash" : "/bin/sh";
+
+/** Run `sh setup.sh` (under SETUP_SHELL) in the checkout's recipe folder with only the checkout's bin on PATH. */
 export function runSetup(co, env = {}) {
-  const r = spawnSync("/bin/sh", ["setup.sh"], {
+  const r = spawnSync(SETUP_SHELL, ["setup.sh"], {
     cwd: co.recipe,
     encoding: "utf8",
     env: { PATH: co.bin, HOME: co.root, STUB_LOG: co.log, ...env },
