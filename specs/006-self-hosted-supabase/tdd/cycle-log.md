@@ -167,6 +167,7 @@ The schema behavior already existed when these assertions were written: U38 copi
 ## Stream B log (folded in after the merge `17968fc`)
 
 ### U47 200 -> exit 0, output says bucket ready
+
 - test: `tests/create-bucket.test.mjs::U47 …`
 - red: `node --test --test-name-pattern='^U47 ' tests/create-bucket.test.mjs` → `AssertionError: Expected values to be strictly equal: actual: 1, expected: 0` (stub script exited 1)
 - green: script replaced by a minimal ready message; suite -> 11 pass / 0 fail / 1 skipped / 8 todo
@@ -174,6 +175,7 @@ The schema behavior already existed when these assertions were written: U38 copi
 - commit: `980c6f3`
 
 ### U48 400 BucketAlreadyExists -> exit 0
+
 - test: `tests/create-bucket.test.mjs::U48 …`
 - red: `node --test --test-name-pattern='^U48 ' tests/create-bucket.test.mjs` → `actual: 'create-bucket.sh: bucket ob1-files is ready\n', expected: /ob1-files.*already/i` (exit-0 half already held; output assertion failed)
 - green: script now POSTs via curl with -o/-w, branches on 200 / 400+BucketAlreadyExists; suite -> 12 pass / 0 fail
@@ -181,6 +183,7 @@ The schema behavior already existed when these assertions were written: U38 copi
 - commit: `ea127e6`
 
 ### U49 other 400 -> non-zero with status and error
+
 - test: `tests/create-bucket.test.mjs::U49 …`
 - red: `node --test --test-name-pattern='^U49 ' tests/create-bucket.test.mjs` → `Expected "actual" to be strictly unequal to: 0 (actual: 0)`
 - green: else branch prints status and body to stderr, exit 1; suite -> 13 pass / 0 fail
@@ -188,6 +191,7 @@ The schema behavior already existed when these assertions were written: U38 copi
 - commit: `6954f0c`
 
 ### U50 500 / unreachable -> non-zero naming failure
+
 - test: `tests/create-bucket.test.mjs::U50 …`
 - red: first run PASSED (500 hit the U49 branch). Mutant 1 (`exit 1`->`exit 0`): `ℹ fail 1`, `actual: 0` (caught). Mutant 2 (`curl -sS`->`-s`): survived, because the stub writes its error regardless of flags, so the test's `/Failed to connect/` assertion proved nothing about the script. Strengthened the test (not weakened): unreachable case now requires `/could not reach storage/i`; run → `actual: 'curl: (7) Failed to connect to storage port 5000\ncreate-bucket.sh: storage answered : \n', expected: /could not reach storage/i`
 - green: curl invocation wrapped in `if ! status=$(...)` printing "could not reach storage at $STORAGE_URL", exit 1; suite -> 14 pass / 0 fail. Exit-code mutant re-run on final script: fails as expected; script restored exactly.
@@ -195,6 +199,7 @@ The schema behavior already existed when these assertions were written: U38 copi
 - commit: `fb9a8ae`
 
 ### U51 POST /bucket with id/name ob1-files, public false
+
 - test: `tests/create-bucket.test.mjs::U51 …` (also checks Content-Type header and STORAGE_URL override)
 - red: first run PASSED (behavior already implemented). Mutants on the script, each failed the test: `"public":true` (actual public: true), `/buckets`, `-X PUT`, default port 5001. Script restored exactly.
 - green: no script change; suite -> 15 pass / 0 fail
@@ -202,6 +207,7 @@ The schema behavior already existed when these assertions were written: U38 copi
 - commit: `723f218`
 
 ### U52 apikey + Authorization Bearer from SERVICE_ROLE_KEY; key never printed
+
 - test: `tests/create-bucket.test.mjs::U52 …` (key checked absent in 200, 400-exists, 500 and unreachable outputs)
 - red: `node --test --test-name-pattern='^U52 ' tests/create-bucket.test.mjs` → `actual: false, expected: true` (apikey header missing)
 - green: added the two -H headers; suite -> 16 pass / 0 fail / 1 skipped / 8 todo. The "never printed" half passed from the start, so mutant: error message echoing `$SERVICE_ROLE_KEY` → `AssertionError: key printed for status 500` (caught); script restored exactly.
@@ -232,38 +238,64 @@ The schema behavior already existed when these assertions were written: U38 copi
 
 ## Stream C log (folded in after the merge `612936a`)
 
-# Compose stream cycle log (branch contrib/mfelker/self-hosted-supabase-compose)
+Folded in from the compose stream cycle log (branch `contrib/mfelker/self-hosted-supabase-compose`).
+
 Test file: recipes/self-hosted-supabase-mcp/tests/compose.test.mjs. Run: `node --test --test-name-pattern='^Uxx ' tests/compose.test.mjs`. Suite after every cycle: `node --test tests/` 0 fail (final: 32 tests, 23 pass, 0 fail, 1 skipped, 8 todo).
 
 ### U24 default service set
+
 - red 1 (no compose files): `U24` -> `AssertionError: no configuration file provided: not found`
 - red 2 (placeholder docker-compose.yml, include of base only): -> `+ 'auth', + 'imgproxy', + 'meta', + 'realtime', + 'studio'` extra, `- 'ob1-init'` missing
 - green: lean.override.yml with profiles (ui/images/never) and ob1-init. Compose refused ("api-gw depends on undefined service studio", then "storage depends on undefined service imgproxy"), so api-gw `!reset` (U28) and storage depends_on `!override` (U29) landed here. suite 11 pass/0 fail.
 - commit: 4beeb8d
+
 ### U25 ui profile adds studio+meta
+
 - first run PASS (profiles from U24). Mutant: meta -> profile never: `- 'meta'` missing. Restored.
 - commit: 598c934
+
 ### U26 images profile adds imgproxy
+
 - first run PASS. Mutant: imgproxy -> profile ui: `- 'imgproxy'` missing. Restored. commit: 9c70f74
+
 ### U27 auth/realtime/supavisor never start
+
 - first run PASS. Mutant: auth -> profile ui: `auth must not start`. Restored. commit: a76fabe
+
 ### U28 api-gw has no depends_on studio
+
 - first run PASS (reset forced by U24). Mutant: depends_on studio: `{"studio":{"condition":"service_started","required":true}}`. Restored. commit: 5974b52
+
 ### U29 storage depends on db(healthy)+rest
+
 - first run PASS (override forced by U24). Mutants: add imgproxy dep -> "invalid compose project" (weak); db condition service_started -> strict-equal failure. Restored. commit: 6dc2e1c
+
 ### U30 ENABLE_IMAGE_TRANSFORMATION "false"
+
 - red: AssertionError strictly equal ("true" vs "false"). green: env in storage override. suite 17/0. commit: b508947
+
 ### U31 storage named volume ob1-storage
+
 - red: AssertionError strictly equal (bind vs volume). green: volumes entry + top-level volume ob1-storage. suite 18/0. commit: fb56c99
+
 ### U32 functions mounts 004
+
 - red: `no mount at the target`. green: `../../../../integrations/self-hosted-llm-mcp:...:ro`. refactor: config() split into configIn() returning root. commit: 224c874
+
 ### U33 functions env
+
 - red: `AssertionError: MCP_ACCESS_KEY`. green: 8 `${VAR}` entries. commit: b8c0ffb
+
 ### U34 extra_hosts
+
 - red: assertion on undefined extra_hosts. green: `host.docker.internal:host-gateway` (config emits list `["host.docker.internal=host-gateway"]`, test asserts that). Slip: first commit carried a wrongly-shaped assertion; fixed by amending before anything else, red re-verified. commit: 5729d95
+
 ### U35 db schema mount
+
 - red: `no schema mount`. green: ro bind `../../db/ob1-schema.sql`; fixture db mounts retained. commit: 3b02e01
+
 ### U36 ob1-init
+
 - red: `TypeError ... reading 'storage'` (no depends_on). green: curlimages/curl:8.11.1 entrypoint, depends storage healthy, restart "no", script mount, SERVICE_ROLE_KEY. Mutants: restart always, SERVICE_ROLE_KEY literal -> both fail. refactor: removed unused MODEL_SETTINGS import. commit: 945d6ab
 
 ## U11 on a fresh folder .env holds every model setting name, blank
@@ -497,7 +529,7 @@ The fork-ci SQL runtime needs `psql` and a Postgres reachable through the `PG*` 
 ## Remediation: T076 + T080 U12/U54 prove setup reached key generation; exit codes; H1 (re-audit Findings 6, 9, 10, 11)
 
 - harness: the stand-in `generate-keys.sh` failure line now names its working folder (`stub: generate-keys failed in $(pwd)`).
-- U12 asserts the output contains `stub: generate-keys failed in `. U54 asserts it ran in `${TMPDIR}/ob1-setup.…`. Both assert `typeof r.code === "number"` before `notEqual(r.code, 0)`. H1 asserts the fixture's `git status` exited 0.
+- U12 asserts the output contains `stub: generate-keys failed in`. U54 asserts it ran in `${TMPDIR}/ob1-setup.…`. Both assert `typeof r.code === "number"` before `notEqual(r.code, 0)`. H1 asserts the fixture's `git status` exited 0.
 - mutant F21 (`exit 1` inserted before `setup.sh:54`) → U54 single fails (`key generation ran in a build folder under TMPDIR`); U12 single fails (`setup reached key generation`).
 - mutant F1+M16 (`mktemp -d` with no template, and no `trap`) → U54 single fails (same message). That run leaked a `tmp.*` folder with fake stub keys in the system temp dir, and it was removed. This is the leak the test now catches.
 - green: suite → tests=60 pass=60 fail=0. commit: `8ef2bf6`
