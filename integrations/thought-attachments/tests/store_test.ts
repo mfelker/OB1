@@ -392,3 +392,13 @@ Deno.test("UQ1 createAttachment inserts a pending_upload row with the given fiel
     page_token_hash: "sha256:h",
   });
 });
+
+Deno.test("UQ2 setDeclaration updates the declared fields of that attachment only and returns the row", async () => {
+  const { store, ff } = setup();
+  const row = attachmentRow({ file_name: "shelf.jpg", declared_type: "image/jpeg", declared_size: 99 });
+  ff.on("PATCH", `${REST}/thought_attachments*`, { body: row });
+  const decl = { file_name: "shelf.jpg", declared_type: "image/jpeg" as const, declared_size: 99, storage_path: `attachments/${ATT_ID}/shelf.jpg` };
+  assertEquals(await store.setDeclaration(ATT_ID, decl), { data: row });
+  assertEquals(ff.requests[0].body, decl);
+  assertEquals(new URL(ff.requests[0].url).searchParams.get("id"), `eq.${ATT_ID}`);
+});
