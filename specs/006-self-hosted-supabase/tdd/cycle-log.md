@@ -432,3 +432,41 @@ Run in a scratch checkout of the branch at `23a226c` (`/Users/mfelker/Projects/o
 - test fix (stated reason: `if (v.length >= 16)` inside the loop chose which values were checked): both now loop over `SUPABASE_KEYS` and `MCP_ACCESS_KEY` with straight-line assertions (U19 also asserts each is present). No `if` remains in either test.
 - mutant M1 (generator output not silenced) still fails both: U19 → `AssertionError [ERR_ASSERTION]: JWT_SECRET value printed`; A4 → `AssertionError [ERR_ASSERTION]: JWT_SECRET not printed`
 - restored exactly; singles → pass; suite → `tests=58 pass=58 fail=0 → pass`; commit `751bd3b`
+
+### T066 owner decision on the 17 TEST_AFTER behaviors
+
+- Accepted as a recorded exception in `plan.md` Complexity Tracking (spec 004 precedent), with the per-behavior mutant records plus the audit's 20 independent mutants as evidence.
+
+### T068 Finding 8: a failed key generation must leave no temporary `.env` (new behavior U54)
+
+- test: `tests/setup.test.mjs::U54 …` (new; setup runs with `TMPDIR` set to a folder the test owns)
+- first run: `tests=1 pass=1`. **Mutant M16 (no cleanup `trap`) also passed**, so the test as written was worthless, and it had already been committed (`9e6374b`). That's a process slip, recorded here.
+- cause: macOS `mktemp -d` without a template ignores `TMPDIR` and uses the per-user system temp folder, so the test looked in the wrong place.
+- fix (`setup.sh`): `mktemp -d "${TMPDIR:-/tmp}/ob1-setup.XXXXXX"`, which honors `TMPDIR` on macOS and Linux. U54 → pass. **M16 now fails it**: `Expected values to be strictly deep-equal: actual: [Array], expected: []`. Restored; the trap is intact; dash re-check OK; suite → `tests=59 pass=59 fail=0 → pass`. commit `3a0ee07`.
+
+### T067 and T072 test hardening
+
+- U22 and A4 assert `git status` exited 0 before comparing its output; U20 asserts the second run exits 0; U29 asserts `rest`'s condition `service_started`. A mutant with `rest` set to `service_healthy` fails U29 (`actual: 'service_healthy'`), then is restored. Suite → `tests=59 pass=59`. commit `c9d27a5`.
+- `tests/verify.sql` header notes the scratch databases and the `ob1_init_runner` role it leaves behind. commit `c963653`.
+- U55 (the `STORAGE_URL` override) was added to the test list: it was already asserted inside U51's test.
+- Spec and contract cleanup: stale Docker Model Runner rows and lines removed (contract C4, spec Key Entities and Testing Requirements).
+
+### T070 Finding 10: US1.6 vs contract C1
+
+- US1.6 is amended to describe the interrupted run A3 and C1 actually test (model settings missing; `model-settings: completed`, secrets `already present`). Setup only checks 004's folder and reports it `present`; it never creates a link.
+
+### T071 Findings 11–12: corrections to earlier entries
+
+- **U34**: stream C's commit was amended (`e9789ed` → `5729d95`). The pre-amend test asserted `extra_hosts` as a map and couldn't pass. The audit grades U34 `LIKELY`, not `PROVEN`.
+- **U19**'s commit is `4ac1479`; its entry above didn't name it.
+- **U53** was added after the outer loop closed (prompted by the advisor review), not mid-loop.
+- **Timing**: the U25–U29 (stream C) and U41–U45 commits were made seconds apart (`9c70f74` and `a76fabe` in the same second), so their per-cycle mutant records are self-reported; the audit's independent mutants are the stronger evidence.
+- **U50 and U52** had real reds (stream B), so the test list's "mutant-proven" labels on them were wrong; they're now corrected.
+
+### T069 Finding 9: reproducing the local SQL runtime
+
+The fork-ci SQL runtime needs `psql` and a Postgres reachable through the `PG*` variables. Locally (macOS, no host `psql`) it was reproduced like this:
+1. `docker run -d --name ob1-006-pgtest -e POSTGRES_PASSWORD=<any> --mount type=bind,source=<repo root>,target=<repo root>,readonly pgvector/pgvector:pg17`. The repo is mounted at the same absolute path, so `psql -f <absolute path>` and `\ir ../db/ob1-schema.sql` resolve as on the host.
+2. A `psql` wrapper first on `PATH`, outside the repo: `exec docker exec -i -w "$PWD" -e PGUSER="${PGUSER:-postgres}" -e PGDATABASE="${PGDATABASE:-postgres}" ob1-006-pgtest psql "$@"`.
+3. Then `PATH=<wrapper dir>:$PATH node .fork/ci/bin/tdd.mjs suite` (or `file tests/verify.sql`).
+- Caveats seen in this feature: (a) the container has no restart policy, so a Docker Desktop restart stops it (`docker start ob1-006-pgtest`); (b) during the audit, the bind mount once served stale file contents until the container was restarted. If results look inconsistent with the files, restart the container before trusting a red.

@@ -68,6 +68,8 @@ Test file: `tests/setup.test.mjs`.
 | U21 | A fresh run reports `clone: completed`, `secrets: completed`, `model-settings: completed`, `function-link: present` and exits 0 | C1, US1.1 | example | DONE | `tests/setup.test.mjs::U21` |
 | U22 | After a fresh run, `git status --porcelain` in the checkout is empty (everything written is under the ignored `supabase/`) | FR-019 | example | DONE | `tests/setup.test.mjs::U22` (mutant-proven) |
 | U53 | An empty `supabase/docker/.env` (left when a run is interrupted during the Compose check's placeholder) is treated as absent: the next run generates the secrets, reports `secrets: completed` and exits 0 | US1.6, FR-003 (added mid-loop: advisor review found the U7 placeholder could be left behind) | example | DONE | `tests/setup.test.mjs::U53` |
+| U54 | After a failed key generation, no temporary `.env` (or temporary folder) remains under `$TMPDIR` | C1 (interrupted while generating secrets), C1 no-secret invariant (added by audit remediation T068) | example | DONE | `tests/setup.test.mjs::U54` (mutant-proven; needed `mktemp` under `$TMPDIR`) |
+| U55 | `STORAGE_URL` in the environment overrides the bucket script's storage address | R9, FR-009 (row added by audit remediation T072; already asserted inside U51's test) | example | DONE | `tests/create-bucket.test.mjs::U51` (second half) |
 
 ### `recipes/self-hosted-supabase-mcp/docker-compose.yml` + `lean.override.yml` (contract C2; R2, R3, R7, R8, R12)
 
@@ -114,9 +116,9 @@ Test file: `tests/create-bucket.test.mjs`, with a stub `curl` on `PATH`.
 | U47 | Storage answers 200 → exit 0, and the output says the bucket is ready | FR-009 | example | DONE | `tests/create-bucket.test.mjs::U47` |
 | U48 | Storage answers 400 with `BucketAlreadyExists` → exit 0 (bucket left as is) | FR-009, R9 | example | DONE | `tests/create-bucket.test.mjs::U48` |
 | U49 | Storage answers 400 with any other error → non-zero exit, with the status and error in the output (other side of U48) | R9 | example | DONE | `tests/create-bucket.test.mjs::U49` |
-| U50 | Storage answers 500, or can't be reached → non-zero exit naming the failure | R9 | example | DONE | `tests/create-bucket.test.mjs::U50` (mutant-proven) |
+| U50 | Storage answers 500, or can't be reached → non-zero exit naming the failure | R9 | example | DONE | `tests/create-bucket.test.mjs::U50` (real red; label corrected by T071) |
 | U51 | The request is a POST to the storage service's `/bucket` with body `id` and `name` `ob1-files`, `public` false | FR-009, data-model.md Storage.Bucket | example | DONE | `tests/create-bucket.test.mjs::U51` (mutant-proven) |
-| U52 | The request carries `apikey` and `Authorization: Bearer` with `SERVICE_ROLE_KEY` from the environment, and the key never appears in the output | FR-009, data-model.md Storage.Access | example | DONE | `tests/create-bucket.test.mjs::U52` (mutant-proven) |
+| U52 | The request carries `apikey` and `Authorization: Bearer` with `SERVICE_ROLE_KEY` from the environment, and the key never appears in the output | FR-009, data-model.md Storage.Access | example | DONE | `tests/create-bucket.test.mjs::U52` (real red; label corrected by T071) |
 
 ## Live acceptance (manual, not on the loop)
 

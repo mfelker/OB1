@@ -49,7 +49,6 @@ Invariants:
 
 ## C4. Model server settings (owner-filled, spec 004 names)
 
-| Route | `EMBEDDING_API_BASE` / `CHAT_API_BASE` |
+| Route | `EMBEDDING_API_BASE` / `CHAT_API_BASE` (Docker Model Runner was dropped after the live run; research R5) |
 |-------|----------------------------------------|
 | Server on the host (default) | `http://host.docker.internal:<port>/v1` on both macOS and Linux (R12) |
-| Docker Model Runner (bundled option) | `http://model-runner.docker.internal/engines/v1`; embedding role only if R5 shows 1536 (FR-017) |

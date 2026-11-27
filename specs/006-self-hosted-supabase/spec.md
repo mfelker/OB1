@@ -57,7 +57,7 @@ An owner who already runs (or is willing to run) their own model server wants Op
 3. **Given** the running stack and an MCP client connected with the access key, **When** the owner lists tools, captures a thought and searches with different wording, **Then** all six tools are listed, the capture is stored with a 1536-number embedding, and the search returns it first.
 4. **Given** the setup step has already been run, **When** the owner runs it again, **Then** it does not overwrite the existing secrets or data and reports every piece as already present.
 5. **Given** a running stack with thoughts in it, **When** the owner stops and restarts the stack (or the machine), **Then** every thought is still there and the tools work again without re-running setup.
-6. **Given** a setup run that stopped after writing the secrets file but before linking 004's function, **When** the owner runs setup again, **Then** the same secrets are kept, the function is linked, and setup reports the link as completed and the secrets as already present (Round 5, Q1).
+6. **Given** a setup run that stopped after writing the secrets file but before adding the model settings, **When** the owner runs setup again, **Then** the same secrets are kept, the model settings are added, and setup reports `model-settings` as completed and the secrets as already present (Round 5, Q1; amended after audit finding 10: setup checks 004's folder and reports it `present`, it never creates a link).
 
 ---
 
@@ -138,7 +138,7 @@ Most of the time the owner wants the stack as light as possible, but sometimes t
 - **Local secrets file**: the untracked file holding the generated secrets and the owner's model settings.
 - **Always-on service set**: database, REST API, gateway, functions runtime, Storage (plus the image service if required).
 - **UI add-on**: the web UI and its metadata service, started on request.
-- **Model-server add-on**: Docker Model Runner, an optional bundled OpenAI-compatible model server the owner enables, with models pulled by hand; the default is the owner's own server on the host (FR-017).
+- **Model-server add-on**: none. Docker Model Runner was evaluated and dropped after the live run; the model server runs on the host (FR-017).
 - **Owner bucket**: the private Storage bucket `ob1-files` that later features use for files (FR-009).
 
 ### Data & Schema Changes
@@ -158,7 +158,7 @@ Most of the time the owner wants the stack as light as possible, but sometimes t
 ### Testing Requirements
 
 - **Runner**: decided in the plan. Candidates: tests for the setup step's logic (secret generation, no-overwrite, version check, service selection) in a runner from the constitution's Testing Standards table; the schema check as `tests/verify.sql`, which fork-ci runs against a throwaway Postgres with pgvector.
-- **Behaviors that MUST have tests**: FR-002 (fresh secrets, never the example defaults), FR-003 (no overwrite on re-run), FR-004 (exact service set), FR-005 (UI add-on separate), FR-017 (model-server add-on separate and opt-in), FR-006 (schema at 1536 with the GRANT), the Compose-version check (edge case), FR-019 (no secrets written into tracked files).
+- **Behaviors that MUST have tests**: FR-002 (fresh secrets, never the example defaults), FR-003 (no overwrite on re-run), FR-004 (exact service set), FR-005 (UI add-on separate), FR-006 (schema at 1536 with the GRANT), the Compose-version check (edge case), FR-019 (no secrets written into tracked files).
 - **Live acceptance**: like spec 004's T046, recorded end-to-end runs covering Stories 1–3, first on the owner's Mac and then on a Linux machine before the upstream PR (SC-010), with evidence in `specs/006-self-hosted-supabase/evidence/`.
 
 ## Success Criteria *(mandatory)*
