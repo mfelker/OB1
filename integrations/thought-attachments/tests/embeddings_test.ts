@@ -62,3 +62,11 @@ Deno.test("U165 each request carries Authorization Bearer with the configured em
   assertEquals(ff.requests.length, 2);
   for (const r of ff.requests) assertEquals(r.headers["authorization"], `Bearer ${EMBEDDING_API_KEY}`);
 });
+
+Deno.test("U166 the vectors come back in input order across batches", async () => {
+  const ff = new FakeFetch().on("POST", URL_, embeddingResponder(8));
+  const client = createEmbeddingClient(settingsWith({ EMBEDDING_BATCH_SIZE: "2" }), ff.fetch);
+  const input = texts(5);
+  const out = await client.embed(input);
+  assertEquals(out, { data: input.map((t) => vectorFor(t, 8)) });
+});
