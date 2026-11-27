@@ -273,7 +273,7 @@ Streams code against these. The signatures are the only shared contract. Behavio
 
 ### Stream E: model clients (`ta-models`, wave 1)
 
-- [ ] T024 [P] [US1] [U161] [U162] [U163] [U164] [U165] [U166] [U167] [U168] [U169] [U170] [U171] Tests first in `F/tests/embeddings_test.ts`, then `createEmbeddingClient` in `F/src/embeddings.ts` (R3; contracts/settings.md):
+- [X] T024 [P] [US1] [U161] [U162] [U163] [U164] [U165] [U166] [U167] [U168] [U169] [U170] [U171] Tests first in `F/tests/embeddings_test.ts`, then `createEmbeddingClient` in `F/src/embeddings.ts` (R3; contracts/settings.md):
   - `POST <EMBEDDING_API_BASE>/embeddings` with `EMBEDDING_MODEL` and an array input of at most `EMBEDDING_BATCH_SIZE` texts; with `1`, one text per request
   - `Authorization: Bearer` with `EMBEDDING_API_KEY` (or its fallback)
   - vectors come back in input order across batches
@@ -350,7 +350,7 @@ Streams code against these. The signatures are the only shared contract. Behavio
 
 ### Stream E: model clients (`ta-models`, wave 1)
 
-- [ ] T037 [P] [US2] [U172] [U173] [U174] [U175] [U176] [U177] [U178] [U179] [U180] [U181] Tests first in `F/tests/vision_test.ts`, then `createVisionClient` in `F/src/vision.ts` (R4):
+- [X] T037 [P] [US2] [U172] [U173] [U174] [U175] [U176] [U177] [U178] [U179] [U180] [U181] Tests first in `F/tests/vision_test.ts`, then `createVisionClient` in `F/src/vision.ts` (R4):
   - `configured` is false when `VISION_API_BASE` or `VISION_MODEL` is unset
   - `POST <VISION_API_BASE>/chat/completions` with `VISION_MODEL`, the image as a base64 `data:` URL of its real type, and a prompt asking for visible objects, places, labels and text
   - `VISION_API_KEY` as a bearer token only when set

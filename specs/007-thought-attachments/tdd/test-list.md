@@ -399,17 +399,17 @@ Test file: `tests/embeddings_test.ts`.
 
 | id  | behavior | traces | kind | state | test |
 | --- | -------- | ------ | ---- | ----- | ---- |
-| U161 | `embed` sends `POST <EMBEDDING_API_BASE>/embeddings` with `EMBEDDING_MODEL` and an array input | FR-007 | example | PENDING | |
-| U162 | 64 texts at the default batch size go in one request | FR-007 | example | PENDING | |
-| U163 | 65 texts at the default batch size go in two requests (64, then 1) | FR-007 | example | PENDING | |
-| U164 | With batch size 1, each text goes in its own request | FR-007 | example | PENDING | |
-| U165 | Each request carries `Authorization: Bearer` with the configured embedding key | FR-007 | example | PENDING | |
-| U166 | The vectors come back in input order across batches | FR-007 | example | PENDING | |
-| U167 | An unreachable endpoint fails the call with a reason naming it unreachable | FR-011 | example | PENDING | |
-| U168 | A non-2xx status fails the call with the status in the reason | FR-011 | example | PENDING | |
-| U169 | A malformed body (no data, or a vector count different from the inputs) fails the call | FR-011 | example | PENDING | |
-| U170 | A failure in a later batch fails the whole call, with no partial vectors returned | FR-011 | example | PENDING | |
-| U171 | A key value that appears in a server's error body is redacted from the reason | FR-009 | example | PENDING | |
+| U161 | `embed` sends `POST <EMBEDDING_API_BASE>/embeddings` with `EMBEDDING_MODEL` and an array input | FR-007 | example | DONE | `tests/embeddings_test.ts::U161 embed sends POST <EMBEDDING_API_BASE>/embeddings with the model and an array input` |
+| U162 | 64 texts at the default batch size go in one request | FR-007 | example | DONE | `tests/embeddings_test.ts::U162 64 texts at the default batch size go in one request` |
+| U163 | 65 texts at the default batch size go in two requests (64, then 1) | FR-007 | example | DONE | `tests/embeddings_test.ts::U163 65 texts at the default batch size go in two requests, 64 then 1` |
+| U164 | With batch size 1, each text goes in its own request | FR-007 | example | DONE | `tests/embeddings_test.ts::U164 with batch size 1 each text goes in its own request` |
+| U165 | Each request carries `Authorization: Bearer` with the configured embedding key | FR-007 | example | DONE | `tests/embeddings_test.ts::U165 each request carries Authorization Bearer with the configured embedding key` |
+| U166 | The vectors come back in input order across batches | FR-007 | example | DONE | `tests/embeddings_test.ts::U166 the vectors come back in input order across batches` |
+| U167 | An unreachable endpoint fails the call with a reason naming it unreachable | FR-011 | example | DONE | `tests/embeddings_test.ts::U167 an unreachable endpoint fails the call with a reason naming it unreachable` |
+| U168 | A non-2xx status fails the call with the status in the reason | FR-011 | example | DONE | `tests/embeddings_test.ts::U168 a non-2xx status fails the call with the status in the reason` |
+| U169 | A malformed body (no data, or a vector count different from the inputs) fails the call | FR-011 | example | DONE | `tests/embeddings_test.ts::U169 a malformed body (no data, or a different vector count) fails the call` |
+| U170 | A failure in a later batch fails the whole call, with no partial vectors returned | FR-011 | example | DONE | `tests/embeddings_test.ts::U170 a failure in a later batch fails the whole call with no partial vectors` |
+| U171 | A key value that appears in a server's error body is redacted from the reason | FR-009 | example | DONE | `tests/embeddings_test.ts::U171 a key value in a server's error body is redacted from the reason` |
 
 #### `src/vision.ts` (T037)
 
@@ -417,16 +417,16 @@ Test file: `tests/vision_test.ts`.
 
 | id  | behavior | traces | kind | state | test |
 | --- | -------- | ------ | ---- | ----- | ---- |
-| U172 | `configured` is false when `VISION_API_BASE` or `VISION_MODEL` is unset | FR-006 | example | PENDING | |
-| U173 | `caption` sends `POST <VISION_API_BASE>/chat/completions` with `VISION_MODEL` and the image as a `data:<type>;base64,…` URL of its real type | FR-006 | example | PENDING | |
-| U174 | The prompt asks for the visible objects, places, labels and text | FR-006 | example | PENDING | |
-| U175 | With `VISION_API_KEY` set, the request carries it as a bearer token | FR-006 | example | PENDING | |
-| U176 | With `VISION_API_KEY` unset, the request has no `Authorization` header | FR-006 | example | PENDING | |
-| U177 | A successful reply gives the caption text and the model | FR-006, FR-008 | example | PENDING | |
-| U178 | An unreachable endpoint fails with a reason | FR-006 | example | PENDING | |
-| U179 | A non-2xx status fails with the status in the reason | FR-006 | example | PENDING | |
-| U180 | An empty or whitespace-only caption fails with a reason | FR-006 | example | PENDING | |
-| U181 | A key value in an error is redacted | FR-009 | example | PENDING | |
+| U172 | `configured` is false when `VISION_API_BASE` or `VISION_MODEL` is unset | FR-006 | example | DONE | `tests/vision_test.ts::U172 configured is false when VISION_API_BASE or VISION_MODEL is unset` |
+| U173 | `caption` sends `POST <VISION_API_BASE>/chat/completions` with `VISION_MODEL` and the image as a `data:<type>;base64,…` URL of its real type | FR-006 | example | DONE | `tests/vision_test.ts::U173 caption posts to <VISION_API_BASE>/chat/completions with the model and the image as a data URL of its real type` |
+| U174 | The prompt asks for the visible objects, places, labels and text | FR-006 | example | DONE | `tests/vision_test.ts::U174 the prompt asks for the visible objects, places, labels and text` |
+| U175 | With `VISION_API_KEY` set, the request carries it as a bearer token | FR-006 | example | DONE | `tests/vision_test.ts::U175 with VISION_API_KEY set the request carries it as a bearer token` |
+| U176 | With `VISION_API_KEY` unset, the request has no `Authorization` header | FR-006 | example | DONE | `tests/vision_test.ts::U176 with VISION_API_KEY unset the request has no Authorization header` |
+| U177 | A successful reply gives the caption text and the model | FR-006, FR-008 | example | DONE | `tests/vision_test.ts::U177 a successful reply gives the caption text and the configured model` |
+| U178 | An unreachable endpoint fails with a reason | FR-006 | example | DONE | `tests/vision_test.ts::U178 an unreachable endpoint fails with a reason` |
+| U179 | A non-2xx status fails with the status in the reason | FR-006 | example | DONE | `tests/vision_test.ts::U179 a non-2xx status fails with the status in the reason` |
+| U180 | An empty or whitespace-only caption fails with a reason | FR-006 | example | DONE | `tests/vision_test.ts::U180 an empty or whitespace-only caption fails with a reason` |
+| U181 | A key value in an error is redacted | FR-009 | example | DONE | `tests/vision_test.ts::U181 a key value in an error is redacted` |
 
 ### Stream N: finishing (wave 2, `ta-finish`)
 
