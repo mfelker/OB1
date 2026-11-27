@@ -5,7 +5,7 @@
  * parameter sent here against schema.sql.
  */
 import { createClient } from "@supabase/supabase-js";
-import type { R, Settings, Store } from "./types.ts";
+import type { R, Settings, Store, ThoughtMatch } from "./types.ts";
 
 const notYet = (): Promise<never> => Promise.reject(new Error("not implemented"));
 
@@ -21,13 +21,28 @@ export function createSupabaseStore(
   });
   void settings;
 
+  /** One RPC: the reply data on success, `{ error }` otherwise. */
+  async function rpc<T>(name: string, args: Record<string, unknown>): Promise<R<T>> {
+    const { data, error } = await db.rpc(name, args);
+    if (error) return { error: error.message };
+    return { data: data as T };
+  }
+
   return {
     async thoughtExists(id) {
       const { data } = await db.from("thoughts").select("id").eq("id", id).limit(1);
       return { data: (data ?? []).length > 0 } as R<boolean>;
     },
     insertNote: notYet,
-    matchThoughts: notYet,
+    async matchThoughts(embedding, limit) {
+      const r = await rpc<{ id: string; content: string; created_at: string }[]>("match_thoughts", {
+        query_embedding: embedding,
+        match_threshold: 0,
+        match_count: limit,
+      });
+      if ("error" in r) return r;
+      return { data: r.data.map((t): ThoughtMatch => ({ id: t.id, first_line: t.content.split("\n")[0].slice(0, 120), captured: t.created_at })) };
+    },
     findThoughtsExact: notYet,
     embeddingDimension: notYet,
     createAttachment: notYet,

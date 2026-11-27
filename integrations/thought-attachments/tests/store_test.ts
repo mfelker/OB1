@@ -63,3 +63,26 @@ Deno.test("U69 thoughtExists is true for an existing id and false for an unknown
   assertEquals(await store.thoughtExists("unknown-id"), { data: false });
   assertEquals(ff.requests[0].headers["apikey"], SERVICE_ROLE_KEY);
 });
+
+Deno.test("U70 matchThoughts sends the embedding and limit to the base match_thoughts and maps the reply to ThoughtMatch", async () => {
+  const { store, ff } = setup();
+  const long = "x".repeat(200);
+  ff.on("POST", `${REST}/rpc/match_thoughts`, {
+    body: [
+      { id: "t1", content: `First line\nsecond line`, metadata: {}, similarity: 0.9, created_at: "2026-02-03T04:05:06+00:00" },
+      { id: "t2", content: long, metadata: {}, similarity: 0.8, created_at: "2026-02-04T00:00:00+00:00" },
+    ],
+  });
+  const embedding = [0.1, 0.2, 0.3];
+  const result = await store.matchThoughts(embedding, 5);
+  assertEquals(result, {
+    data: [
+      { id: "t1", first_line: "First line", captured: "2026-02-03T04:05:06+00:00" },
+      { id: "t2", first_line: "x".repeat(120), captured: "2026-02-04T00:00:00+00:00" },
+    ],
+  });
+  const body = ff.requests[0].body as Record<string, unknown>;
+  assertEquals(body.query_embedding, embedding);
+  assertEquals(body.match_count, 5);
+  assertEquals(body.match_threshold, 0);
+});
