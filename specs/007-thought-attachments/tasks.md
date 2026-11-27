@@ -86,6 +86,12 @@ All paths are relative to `F`.
 > - concrete parameters where this list says `…`.
 >
 > Conventions: `Settings` fields are camelCase, and `AttachmentRow` fields are snake_case (data-model.md). `findByHash` may return the caller's own row, so callers compare ids. The store returns rows as stored; **the reading layer** (stream T's tools and stream N's finisher) reports an expired `finish` claim as `failed` "the run did not finish", from `busy_op` and `busy_until` (data-model.md states). `unpdf` is pinned at 2.2.2 (`10c67a7`), because 2.2.3 was inside Deno 2.9.8's 24-hour minimum dependency age.
+>
+> **From stream X (merged `bf285d9`), binding on wave 2:**
+> - **Refusal `code` values** used by `intake.ts`: `unsupported_type`, `too_large`, `heic`, `wrong_type`, `wrong_size` and `too_many_pages`. Tools and page routes pass them through unchanged.
+> - `checkActual(row, bytes, info, settings)` reads `row.page_count` and skips the page check when it is null, so **the finisher (stream N) sets `page_count` from `openPdf` before calling `checkActual`**.
+> - `importer_version` is the constant `"0.1.0"`, matching `metadata.json`; bump both together.
+> - `fingerprint` uses JS `\s` and `toLowerCase`; stream Q's SQL normalisation test (T015) is the cross-check.
 
 Streams code against these. The signatures are the only shared contract. Behavior comes from the cited contract and data-model sections.
 
@@ -256,16 +262,16 @@ Streams code against these. The signatures are the only shared contract. Behavio
 
 ### Stream X: files (`ta-files`, wave 1)
 
-- [ ] T020 [P] [US1] [U113] [U114] [U115] [U116] [U117] [U118] [U119] [U120] [U121] [U320] Tests first in `F/tests/intake_test.ts`, then `baseName` and `checkDeclared` in `F/src/intake.ts`:
+- [X] T020 [P] [US1] [U113] [U114] [U115] [U116] [U117] [U118] [U119] [U120] [U121] [U320] Tests first in `F/tests/intake_test.ts`, then `baseName` and `checkDeclared` in `F/src/intake.ts`:
   - `baseName` keeps only the base name, without path parts or control characters (`data-model.md` `thought_attachments.file_name`; spec edge case; FR-009)
   - `checkDeclared` refuses a type outside the four accepted types (`data-model.md` `thought_attachments.declared_type`) and a size over the cap for its type, naming the cap and the declared size (`data-model.md` `thought_attachments.declared_size`; `MAX_IMAGE_MB`, `MAX_PDF_MB`; FR-003)
-- [ ] T021 [P] [US1] [U122] [U123] Tests first in `F/tests/pdf_test.ts`, then `openPdf` in `F/src/pdf.ts` with `unpdf` (R2): the page count is available before any text is extracted (R1), and per-page text comes back in page order for `pdf-lib` fixtures.
-- [ ] T022 [P] [US1] [U124] [U125] [U126] [U127] [U128] [U129] [U130] Tests first in `F/tests/passages_test.ts`, then `toPassages` in `F/src/passages.ts`:
+- [X] T021 [P] [US1] [U122] [U123] Tests first in `F/tests/pdf_test.ts`, then `openPdf` in `F/src/pdf.ts` with `unpdf` (R2): the page count is available before any text is extracted (R1), and per-page text comes back in page order for `pdf-lib` fixtures.
+- [X] T022 [P] [US1] [U124] [U125] [U126] [U127] [U128] [U129] [U130] Tests first in `F/tests/passages_test.ts`, then `toPassages` in `F/src/passages.ts`:
   - every passage, its source line included, is at most `PASSAGE_MAX_CHARS` (FR-005, FR-025)
   - passages keep reading order and cover all the text
   - each records the page range it spans, including a passage that crosses a page boundary
   - a single over-long run of text is still split
-- [ ] T023 [P] [US1] [U131] [U132] [U133] [U134] [U135] [U136] [U137] [U138] [U139] [U140] [U321] [U350] Tests first in `F/tests/derived_test.ts`, then `sourceLine`, `fingerprint` and `passageRow` in `F/src/derived.ts`:
+- [X] T023 [P] [US1] [U131] [U132] [U133] [U134] [U135] [U136] [U137] [U138] [U139] [U140] [U321] [U350] Tests first in `F/tests/derived_test.ts`, then `sourceLine`, `fingerprint` and `passageRow` in `F/src/derived.ts`:
   - the source line has the format of the data-model examples, with the page range and the short id (`data-model.md` `Derived thought.content`; FR-025)
   - `fingerprint` equals `upsert_thought`'s normalisation (VP-004; `data-model.md` `Derived thought.content_fingerprint`)
   - the metadata has every key of `data-model.md` `Derived thought.metadata`: `Derived thought.metadata.source`, `Derived thought.metadata.source_type`, `Derived thought.metadata.source_label`, `Derived thought.metadata.importer_name`, `Derived thought.metadata.importer_version`, `Derived thought.metadata.imported_at`, `Derived thought.metadata.input_hash`, `Derived thought.metadata.content_fingerprint`, `Derived thought.metadata.sensitivity_tier`, `Derived thought.metadata.type` (`reference`), `Derived thought.metadata.topics`, `Derived thought.metadata.provenance` (`deterministic_conversion`, `source_locator`, `artifact`, `review_status`), `Derived thought.metadata.attachment_id` and `Derived thought.metadata.parent_thought_id` (FR-008, FR-028)
@@ -341,10 +347,10 @@ Streams code against these. The signatures are the only shared contract. Behavio
 
 ### Stream X: files (`ta-files`, wave 1)
 
-- [ ] T035 [P] [US2] [U141] [U142] [U143] [U144] Tests first in `F/tests/intake_test.ts`, then HEIC handling and `sniffType` in `F/src/intake.ts`:
+- [X] T035 [P] [US2] [U141] [U142] [U143] [U144] Tests first in `F/tests/intake_test.ts`, then HEIC handling and `sniffType` in `F/src/intake.ts`:
   - a HEIC name or declared type gets "share it as JPEG", with the steps on iPhone and Android (FR-003, US2 #3 and #4)
   - `sniffType` identifies PDF, JPEG, PNG, WebP and HEIC from the first bytes, never from a name or declared type (R7), and returns `null` for anything else
-- [ ] T036 [P] [US2] [U145] [U146] [U147] Tests first in `F/tests/derived_test.ts`, then `captionRow` and `noteMetadata` in `F/src/derived.ts`:
+- [X] T036 [P] [US2] [U145] [U146] [U147] Tests first in `F/tests/derived_test.ts`, then `captionRow` and `noteMetadata` in `F/src/derived.ts`:
   - the caption's source line uses "photo" (FR-025), and `data-model.md` `Derived thought.metadata.provenance` has `method: "llm_extraction"`, `source_locator: "photo"` and `extractor_model` (FR-006, FR-008)
   - `noteMetadata` gives `data-model.md` `Parent note.metadata` (`type: "observation"`, `source: "thought-attachments"`, `source_type: "thought_attachments_note"`, `imported_at`; FR-001)
 
@@ -458,12 +464,12 @@ Streams code against these. The signatures are the only shared contract. Behavio
 
 ### Stream X: files (`ta-files`, wave 1)
 
-- [ ] T053 [P] [US4] [U148] [U149] [U150] [U151] [U152] [U153] [U154] [U155] Tests first in `F/tests/intake_test.ts`, then `checkActual` in `F/src/intake.ts` (FR-004, FR-013):
+- [X] T053 [P] [US4] [U148] [U149] [U150] [U151] [U152] [U153] [U154] [U155] Tests first in `F/tests/intake_test.ts`, then `checkActual` in `F/src/intake.ts` (FR-004, FR-013):
   - it refuses when the sniffed type or the exact size differs from the declaration, or when the size or page count is over its cap
   - the reason names the actual type, size or page count (`data-model.md` `thought_attachments.actual_type`, `thought_attachments.actual_size`, `thought_attachments.page_count`)
   - a page-cap refusal names `MAX_PDF_PAGES` and the planned background processing (fork issue #26)
   - HEIC bytes get the "share as JPEG" message (US2 #4)
-- [ ] T054 [P] [US4] [U156] [U157] [U158] [U159] [U160] Tests first in `F/tests/pdf_test.ts`, then in `F/src/pdf.ts`:
+- [X] T054 [P] [US4] [U156] [U157] [U158] [U159] [U160] Tests first in `F/tests/pdf_test.ts`, then in `F/src/pdf.ts`:
   - `isScanned` is true below `SCANNED_MIN_CHARS_PER_PAGE` non-space characters per page on average (R2, FR-010)
   - corrupt bytes fail `openPdf` with a readable reason (spec edge case)
   - an encrypted fixture, if one can be generated without a committed binary (`pdf-lib` cannot encrypt); otherwise the encrypted case is a live check in T077

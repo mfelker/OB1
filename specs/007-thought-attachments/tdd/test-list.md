@@ -318,28 +318,28 @@ Test file: `tests/intake_test.ts`. "The cap" means the cap's byte value, with 1 
 
 | id  | behavior | traces | kind | state | test |
 | --- | -------- | ------ | ---- | ----- | ---- |
-| U113 | `baseName` drops POSIX directory parts (`/Users/a/b/manual.pdf` gives `manual.pdf`) | FR-009, edge case "personal or path information" | example | PENDING | |
-| U114 | `baseName` drops Windows directory parts and the drive (`C:\Users\a\manual.pdf` gives `manual.pdf`) | FR-009, edge case "personal or path information" | example | PENDING | |
-| U115 | `baseName` removes control characters | FR-009 | example | PENDING | |
-| U116 | `checkDeclared` accepts each of the four accepted types within its cap | FR-003 | example | PENDING | |
-| U117 | `checkDeclared` refuses any other type (for example `application/zip`), naming the accepted types | FR-003 | example | PENDING | |
-| U118 | An image declared at exactly the image cap (10,485,760 bytes by default) is accepted | FR-003, edge case "size caps count 1 MB as 1,048,576 bytes" | example | PENDING | |
-| U119 | An image declared one byte over the image cap (10,485,761 bytes by default) is refused, naming the cap and the declared size | FR-003, edge case "size caps count 1 MB as 1,048,576 bytes" | example | PENDING | |
-| U120 | A PDF declared at exactly the PDF cap (26,214,400 bytes by default) is accepted | FR-003, edge case "size caps count 1 MB as 1,048,576 bytes" | example | PENDING | |
-| U121 | A PDF declared one byte over the PDF cap (26,214,401 bytes by default) is refused, naming the cap and the declared size | FR-003, US4.1, edge case "size caps count 1 MB as 1,048,576 bytes" | example | PENDING | |
-| U320 | With `MAX_IMAGE_MB=2.5`, an image declared at 2,621,440 bytes is accepted and one declared at 2,621,441 bytes is refused (T005 Q3) | FR-003, FR-017, edge case "size caps count 1 MB as 1,048,576 bytes" | example | PENDING | |
-| U141 | A HEIC declared type (`image/heic`, `image/heif`) is refused with "share it as JPEG" and the steps on iPhone and Android | FR-003, US2.3 | example | PENDING | |
-| U142 | A file name ending `.heic` or `.heif`, in any case, is refused with the same message whatever the declared type | FR-003, US2.3 | example | PENDING | |
-| U143 | `sniffType` identifies PDF, JPEG, PNG, WebP and HEIC from the first bytes | FR-004 | example | PENDING | |
-| U144 | `sniffType` returns `null` for any other bytes and for empty input | FR-004 | example | PENDING | |
-| U148 | `checkActual` accepts a file whose sniffed type and exact size equal the declaration and are within the caps | FR-004 | example | PENDING | |
-| U149 | `checkActual` refuses a sniffed type that differs from the declared one, naming the actual type | FR-004, edge case "declares one type or size but uploads another" | example | PENDING | |
-| U150 | `checkActual` refuses an actual size one byte different from the declared one, naming the actual size | FR-004, SC-013 | example | PENDING | |
-| U151 | `checkActual` accepts a PDF of exactly `MAX_PDF_PAGES` pages | FR-004, FR-013 | example | PENDING | |
-| U152 | `checkActual` refuses a PDF of `MAX_PDF_PAGES` + 1 pages, naming `MAX_PDF_PAGES`, the actual page count and the planned background processing | FR-013, US4.1 | example | PENDING | |
-| U153 | `checkActual` refuses an actual size over its type's cap, naming the cap and the actual size, and for a PDF also the planned background processing | FR-004, FR-013, US4.1 | example | PENDING | |
-| U154 | `checkActual` refuses HEIC bytes with the "share it as JPEG" message, whatever was declared | FR-004, US2.4 | example | PENDING | |
-| U155 | `checkActual` refuses bytes `sniffType` doesn't recognise as a type that isn't accepted | FR-004 | example | PENDING | |
+| U113 | `baseName` drops POSIX directory parts (`/Users/a/b/manual.pdf` gives `manual.pdf`) | FR-009, edge case "personal or path information" | example | DONE | `tests/intake_test.ts::U113 baseName drops POSIX directory parts` |
+| U114 | `baseName` drops Windows directory parts and the drive (`C:\Users\a\manual.pdf` gives `manual.pdf`) | FR-009, edge case "personal or path information" | example | DONE | `tests/intake_test.ts::U114 baseName drops Windows directory parts and the drive` |
+| U115 | `baseName` removes control characters | FR-009 | example | DONE | `tests/intake_test.ts::U115 baseName removes control characters` |
+| U116 | `checkDeclared` accepts each of the four accepted types within its cap | FR-003 | example | DONE | `tests/intake_test.ts::U116 checkDeclared accepts each of the four accepted types within its cap` |
+| U117 | `checkDeclared` refuses any other type (for example `application/zip`), naming the accepted types | FR-003 | example | DONE | `tests/intake_test.ts::U117 checkDeclared refuses any other type, naming the accepted types` |
+| U118 | An image declared at exactly the image cap (10,485,760 bytes by default) is accepted | FR-003, edge case "size caps count 1 MB as 1,048,576 bytes" | example | DONE | `tests/intake_test.ts::U118 an image declared at exactly the image cap is accepted` |
+| U119 | An image declared one byte over the image cap (10,485,761 bytes by default) is refused, naming the cap and the declared size | FR-003, edge case "size caps count 1 MB as 1,048,576 bytes" | example | DONE | `tests/intake_test.ts::U119 an image declared one byte over the image cap is refused, naming the cap and the declared size` |
+| U120 | A PDF declared at exactly the PDF cap (26,214,400 bytes by default) is accepted | FR-003, edge case "size caps count 1 MB as 1,048,576 bytes" | example | DONE | `tests/intake_test.ts::U120 a PDF declared at exactly the PDF cap is accepted` |
+| U121 | A PDF declared one byte over the PDF cap (26,214,401 bytes by default) is refused, naming the cap and the declared size | FR-003, US4.1, edge case "size caps count 1 MB as 1,048,576 bytes" | example | DONE | `tests/intake_test.ts::U121 a PDF declared one byte over the PDF cap is refused, naming the cap and the declared size` |
+| U320 | With `MAX_IMAGE_MB=2.5`, an image declared at 2,621,440 bytes is accepted and one declared at 2,621,441 bytes is refused (T005 Q3) | FR-003, FR-017, edge case "size caps count 1 MB as 1,048,576 bytes" | example | DONE | `tests/intake_test.ts::U320 with MAX_IMAGE_MB=2.5 an image at 2,621,440 bytes is accepted and one byte more is refused` |
+| U141 | A HEIC declared type (`image/heic`, `image/heif`) is refused with "share it as JPEG" and the steps on iPhone and Android | FR-003, US2.3 | example | DONE | `tests/intake_test.ts::U141 a HEIC declared type is refused with share it as JPEG and the steps on iPhone and Android` |
+| U142 | A file name ending `.heic` or `.heif`, in any case, is refused with the same message whatever the declared type | FR-003, US2.3 | example | DONE | `tests/intake_test.ts::U142 a file name ending .heic or .heif, in any case, gets the same refusal whatever the declared type` |
+| U143 | `sniffType` identifies PDF, JPEG, PNG, WebP and HEIC from the first bytes | FR-004 | example | DONE | `tests/intake_test.ts::U143 sniffType identifies PDF, JPEG, PNG, WebP and HEIC from the first bytes` |
+| U144 | `sniffType` returns `null` for any other bytes and for empty input | FR-004 | example | DONE | `tests/intake_test.ts::U144 sniffType returns null for any other bytes and for empty input` |
+| U148 | `checkActual` accepts a file whose sniffed type and exact size equal the declaration and are within the caps | FR-004 | example | DONE | `tests/intake_test.ts::U148 checkActual accepts a file whose sniffed type and exact size equal the declaration, within the caps` |
+| U149 | `checkActual` refuses a sniffed type that differs from the declared one, naming the actual type | FR-004, edge case "declares one type or size but uploads another" | example | DONE | `tests/intake_test.ts::U149 checkActual refuses a sniffed type that differs from the declared one, naming the actual type` |
+| U150 | `checkActual` refuses an actual size one byte different from the declared one, naming the actual size | FR-004, SC-013 | example | DONE | `tests/intake_test.ts::U150 checkActual refuses an actual size one byte different from the declared one, naming the actual size` |
+| U151 | `checkActual` accepts a PDF of exactly `MAX_PDF_PAGES` pages | FR-004, FR-013 | example | DONE | `tests/intake_test.ts::U151 checkActual accepts a PDF of exactly MAX_PDF_PAGES pages` |
+| U152 | `checkActual` refuses a PDF of `MAX_PDF_PAGES` + 1 pages, naming `MAX_PDF_PAGES`, the actual page count and the planned background processing | FR-013, US4.1 | example | DONE | `tests/intake_test.ts::U152 checkActual refuses a PDF of MAX_PDF_PAGES + 1 pages, naming MAX_PDF_PAGES, the page count and background processing` |
+| U153 | `checkActual` refuses an actual size over its type's cap, naming the cap and the actual size, and for a PDF also the planned background processing | FR-004, FR-013, US4.1 | example | DONE | `tests/intake_test.ts::U153 checkActual refuses an actual size over its type's cap, naming cap and size, and for a PDF the planned background processing` |
+| U154 | `checkActual` refuses HEIC bytes with the "share it as JPEG" message, whatever was declared | FR-004, US2.4 | example | DONE | `tests/intake_test.ts::U154 checkActual refuses HEIC bytes with the share it as JPEG message, whatever was declared` |
+| U155 | `checkActual` refuses bytes `sniffType` doesn't recognise as a type that isn't accepted | FR-004 | example | DONE | `tests/intake_test.ts::U155 checkActual refuses bytes sniffType does not recognise as a type that is not accepted` |
 
 #### `src/pdf.ts` (T021, T054)
 
@@ -347,13 +347,13 @@ Test file: `tests/pdf_test.ts` (fixtures generated with `pdf-lib` at test time).
 
 | id  | behavior | traces | kind | state | test |
 | --- | -------- | ------ | ---- | ----- | ---- |
-| U122 | `openPdf` of a 3-page fixture reports `pageCount` 3 | FR-004, FR-013 | example | PENDING | |
-| U123 | `pageTexts` returns each page's text in page order | FR-005 | example | PENDING | |
-| U156 | `isScanned` is true when the average of non-space characters per page is one under `SCANNED_MIN_CHARS_PER_PAGE` | FR-010 | example | PENDING | |
-| U157 | `isScanned` is false at exactly `SCANNED_MIN_CHARS_PER_PAGE` | FR-010 | example | PENDING | |
-| U158 | Whitespace-only page text counts as zero characters | FR-010 | example | PENDING | |
-| U159 | `openPdf` of corrupt bytes returns `{ error }` with a readable reason, without throwing | FR-011, edge case "encrypted or corrupt" | example | PENDING | |
-| U160 | `openPdf` of an encrypted PDF returns `{ error }` with a readable reason (only if an encrypted fixture can be generated without a committed binary; `pdf-lib` cannot encrypt. Otherwise this becomes `DROPPED` here and is checked live in T077) | FR-011, edge case "encrypted or corrupt" | example | PENDING | |
+| U122 | `openPdf` of a 3-page fixture reports `pageCount` 3 | FR-004, FR-013 | example | DONE | `tests/pdf_test.ts::U122 openPdf of a 3-page fixture reports pageCount 3` |
+| U123 | `pageTexts` returns each page's text in page order | FR-005 | example | DONE | `tests/pdf_test.ts::U123 pageTexts returns each page's text in page order` |
+| U156 | `isScanned` is true when the average of non-space characters per page is one under `SCANNED_MIN_CHARS_PER_PAGE` | FR-010 | example | DONE | `tests/pdf_test.ts::U156 isScanned is true when the average non-space characters per page is one under SCANNED_MIN_CHARS_PER_PAGE` |
+| U157 | `isScanned` is false at exactly `SCANNED_MIN_CHARS_PER_PAGE` | FR-010 | example | DONE | `tests/pdf_test.ts::U157 isScanned is false at exactly SCANNED_MIN_CHARS_PER_PAGE` |
+| U158 | Whitespace-only page text counts as zero characters | FR-010 | example | DONE | `tests/pdf_test.ts::U158 whitespace-only page text counts as zero characters` |
+| U159 | `openPdf` of corrupt bytes returns `{ error }` with a readable reason, without throwing | FR-011, edge case "encrypted or corrupt" | example | DONE | `tests/pdf_test.ts::U159 openPdf of corrupt bytes returns an error with a readable reason, without throwing` |
+| U160 | `openPdf` of an encrypted PDF returns `{ error }` with a readable reason (only if an encrypted fixture can be generated without a committed binary; `pdf-lib` cannot encrypt. Otherwise this becomes `DROPPED` here and is checked live in T077) | FR-011, edge case "encrypted or corrupt" | example | DONE | `tests/pdf_test.ts::U160 openPdf of an encrypted PDF returns an error with a readable reason` |
 
 #### `src/passages.ts` (T022)
 
@@ -361,13 +361,13 @@ Test file: `tests/passages_test.ts`.
 
 | id  | behavior | traces | kind | state | test |
 | --- | -------- | ------ | ---- | ----- | ---- |
-| U124 | Every passage, source line included, is at most `PASSAGE_MAX_CHARS` | FR-005, FR-025 | example | PENDING | |
-| U125 | Text that fits in exactly `PASSAGE_MAX_CHARS` with its source line is one passage | FR-005, FR-025 | example | PENDING | |
-| U126 | Text one character longer than that is two passages | FR-005, FR-025 | example | PENDING | |
-| U127 | Passages keep reading order, and together their bodies contain all of the page text, whitespace aside (sampled on fixtures; no property library in the profile) | FR-005 | example | PENDING | |
-| U128 | A passage within one page records that page as both ends of its range | FR-005 | example | PENDING | |
-| U129 | A passage that crosses a page boundary records both pages | FR-005 | example | PENDING | |
-| U130 | A run of non-space text longer than the maximum is split into passages that are each within it | FR-005, edge case "very long passage" | example | PENDING | |
+| U124 | Every passage, source line included, is at most `PASSAGE_MAX_CHARS` | FR-005, FR-025 | example | DONE | `tests/passages_test.ts::U124 every passage, source line included, is at most PASSAGE_MAX_CHARS` |
+| U125 | Text that fits in exactly `PASSAGE_MAX_CHARS` with its source line is one passage | FR-005, FR-025 | example | DONE | `tests/passages_test.ts::U125 text that fits in exactly PASSAGE_MAX_CHARS with its source line is one passage` |
+| U126 | Text one character longer than that is two passages | FR-005, FR-025 | example | DONE | `tests/passages_test.ts::U126 text one character longer than that is two passages` |
+| U127 | Passages keep reading order, and together their bodies contain all of the page text, whitespace aside (sampled on fixtures; no property library in the profile) | FR-005 | example | DONE | `tests/passages_test.ts::U127 passages keep reading order and together contain all of the page text, whitespace aside` |
+| U128 | A passage within one page records that page as both ends of its range | FR-005 | example | DONE | `tests/passages_test.ts::U128 a passage within one page records that page as both ends of its range` |
+| U129 | A passage that crosses a page boundary records both pages | FR-005 | example | DONE | `tests/passages_test.ts::U129 a passage that crosses a page boundary records both pages` |
+| U130 | A run of non-space text longer than the maximum is split into passages that are each within it | FR-005, edge case "very long passage" | example | DONE | `tests/passages_test.ts::U130 a run of non-space text longer than the maximum is split into passages that are each within it` |
 
 #### `src/derived.ts` (T023, T036)
 
@@ -375,21 +375,21 @@ Test file: `tests/derived_test.ts`.
 
 | id  | behavior | traces | kind | state | test |
 | --- | -------- | ------ | ---- | ----- | ---- |
-| U131 | `sourceLine` for a passage on pages 12–13 is `From dishwasher-manual.pdf, pages 12–13 (attachment a1b2c3d4)` (data-model.md example) | FR-025 | example | PENDING | |
-| U132 | The short id in a source line is the first 8 hex characters of the attachment id | FR-025 | example | PENDING | |
-| U133 | `fingerprint` equals the normalisation of `W/docs/01-getting-started.md` step 2.6 for content with surrounding whitespace, capitals and runs of whitespace | FR-012, FR-022 | example | PENDING | |
-| U134 | A passage row's content is the source line, a line break, then the passage text | FR-025 | example | PENDING | |
-| U135 | A passage row's metadata carries the ingestion contract fields: `source` and `source_type` `local_document`, `source_label` the base name, `importer_name` `thought-attachments`, `importer_version`, `imported_at` (ISO 8601 UTC from the injected clock), `input_hash` the attachment's `content_hash`, `content_fingerprint` `sha256:` plus the fingerprint, and `sensitivity_tier` | FR-008 | example | PENDING | |
-| U136 | A passage row's metadata has `type` `reference` and `topics` `["attachment", "<base name>"]` | FR-028 | example | PENDING | |
-| U137 | A passage row's `provenance` is `deterministic_conversion` with `source_locator` (`pages 12–13`), `artifact` (the base name) and `review_status` `unreviewed` | FR-008 | example | PENDING | |
-| U138 | A passage row's metadata has `attachment_id` and `parent_thought_id` | FR-008, FR-015 | example | PENDING | |
-| U139 | An attachment with tier `restricted` gives metadata with `sensitivity_tier` `restricted` | FR-008 | example | PENDING | |
-| U140 | The metadata contains no URL, no token and no absolute path, even when built from a file name that held a path | FR-009 | example | PENDING | |
-| U321 | `sourceLine` for a passage on page 12 only is `From dishwasher-manual.pdf, page 12 (attachment a1b2c3d4)`, never `pages 12–12` | FR-025, edge case "a passage from one page names it as page 12" | example | PENDING | |
-| U145 | A caption row's content is `From shelf.jpg, photo (attachment 9f8e7d6c)`, a line break, then the caption | FR-025, FR-006 | example | PENDING | |
-| U146 | A caption row's `provenance` is `llm_extraction` with `source_locator` `photo` and `extractor_model` the model | FR-008, FR-006 | example | PENDING | |
-| U147 | `noteMetadata` is `{ type: "observation", source: "thought-attachments", source_type: "thought_attachments_note", imported_at }` | FR-001 | example | PENDING | |
-| U350 | `passageRow` for a passage on page 12 only records `provenance.source_locator` `page 12`; a passage over pages 12–13 records `pages 12–13` | FR-008, FR-025, data-model.md derived thought `provenance` | example | PENDING | |
+| U131 | `sourceLine` for a passage on pages 12–13 is `From dishwasher-manual.pdf, pages 12–13 (attachment a1b2c3d4)` (data-model.md example) | FR-025 | example | DONE | `tests/derived_test.ts::U131 sourceLine for a passage on pages 12–13 is the data-model example` |
+| U132 | The short id in a source line is the first 8 hex characters of the attachment id | FR-025 | example | DONE | `tests/derived_test.ts::U132 the short id in a source line is the first 8 hex characters of the attachment id` |
+| U133 | `fingerprint` equals the normalisation of `W/docs/01-getting-started.md` step 2.6 for content with surrounding whitespace, capitals and runs of whitespace | FR-012, FR-022 | example | DONE | `tests/derived_test.ts::U133 fingerprint equals upsert_thought's normalisation: collapse whitespace runs, trim, lowercase, sha256 hex` |
+| U134 | A passage row's content is the source line, a line break, then the passage text | FR-025 | example | DONE | `tests/derived_test.ts::U134 a passage row's content is the source line, a line break, then the passage text` |
+| U135 | A passage row's metadata carries the ingestion contract fields: `source` and `source_type` `local_document`, `source_label` the base name, `importer_name` `thought-attachments`, `importer_version`, `imported_at` (ISO 8601 UTC from the injected clock), `input_hash` the attachment's `content_hash`, `content_fingerprint` `sha256:` plus the fingerprint, and `sensitivity_tier` | FR-008 | example | DONE | `tests/derived_test.ts::U135 a passage row's metadata carries the ingestion contract fields` |
+| U136 | A passage row's metadata has `type` `reference` and `topics` `["attachment", "<base name>"]` | FR-028 | example | DONE | `tests/derived_test.ts::U136 a passage row's metadata has type reference and topics [attachment, base name]` |
+| U137 | A passage row's `provenance` is `deterministic_conversion` with `source_locator` (`pages 12–13`), `artifact` (the base name) and `review_status` `unreviewed` | FR-008 | example | DONE | `tests/derived_test.ts::U137 a passage row's provenance is deterministic_conversion with locator, artifact and review status` |
+| U138 | A passage row's metadata has `attachment_id` and `parent_thought_id` | FR-008, FR-015 | example | DONE | `tests/derived_test.ts::U138 a passage row's metadata has attachment_id and parent_thought_id` |
+| U139 | An attachment with tier `restricted` gives metadata with `sensitivity_tier` `restricted` | FR-008 | example | DONE | `tests/derived_test.ts::U139 an attachment with tier restricted gives metadata with sensitivity_tier restricted` |
+| U140 | The metadata contains no URL, no token and no absolute path, even when built from a file name that held a path | FR-009 | example | DONE | `tests/derived_test.ts::U140 the metadata contains no URL, token or absolute path, even from a file name that held a path` |
+| U321 | `sourceLine` for a passage on page 12 only is `From dishwasher-manual.pdf, page 12 (attachment a1b2c3d4)`, never `pages 12–12` | FR-025, edge case "a passage from one page names it as page 12" | example | DONE | `tests/derived_test.ts::U321 a passage on page 12 only is named page 12, never pages 12–12` |
+| U145 | A caption row's content is `From shelf.jpg, photo (attachment 9f8e7d6c)`, a line break, then the caption | FR-025, FR-006 | example | DONE | `tests/derived_test.ts::U145 a caption row's content is the source line with photo, a line break, then the caption` |
+| U146 | A caption row's `provenance` is `llm_extraction` with `source_locator` `photo` and `extractor_model` the model | FR-008, FR-006 | example | DONE | `tests/derived_test.ts::U146 a caption row's provenance is llm_extraction with locator photo and the extractor model` |
+| U147 | `noteMetadata` is `{ type: "observation", source: "thought-attachments", source_type: "thought_attachments_note", imported_at }` | FR-001 | example | DONE | `tests/derived_test.ts::U147 noteMetadata is type observation, source thought-attachments, the note source type and imported_at` |
+| U350 | `passageRow` for a passage on page 12 only records `provenance.source_locator` `page 12`; a passage over pages 12–13 records `pages 12–13` | FR-008, FR-025, data-model.md derived thought `provenance` | example | DONE | `tests/derived_test.ts::U350 passageRow records provenance.source_locator page 12 for one page and pages 12–13 across two` |
 
 ### Stream E: model clients (wave 1, `ta-models`)
 
