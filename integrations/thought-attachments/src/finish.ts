@@ -1,9 +1,15 @@
 /** finish_attachment's engine (T025 and later): claim, verify, extract, embed, write (contracts/mcp-tools.md). */
-import { checkActual } from "./intake.ts";
+import { checkActual, sniffType } from "./intake.ts";
 import { passageRow, sourceLine } from "./derived.ts";
 import { toPassages } from "./passages.ts";
 import { openPdf } from "./pdf.ts";
 import type { AttachmentRow, Deps, FinishOutcome, Services } from "./types.ts";
+
+/** `sha256:<hex>` of the bytes, as `content_hash` stores it. */
+async function sha256(bytes: Uint8Array): Promise<string> {
+  const digest = await crypto.subtle.digest("SHA-256", bytes as Uint8Array<ArrayBuffer>);
+  return "sha256:" + [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
 
 export function createFinisher(deps: Deps): Services {
   const { store, settings } = deps;
@@ -29,6 +35,7 @@ export function createFinisher(deps: Deps): Services {
     const file = await store.download(path);
     if ("error" in file) throw new Error(file.error);
     const bytes = file.data;
+    const hash = await sha256(bytes);
     const pdf = await openPdf(bytes);
     if ("error" in pdf) throw new Error(pdf.error);
     const pageTexts = await pdf.data.pageTexts();
@@ -45,7 +52,10 @@ export function createFinisher(deps: Deps): Services {
     const rows = await Promise.all(passages.map((p, i) => passageRow(row, p, embedded.data[i], now)));
     const patch = {
       state: "processed" as const,
+      actual_type: sniffType(bytes),
+      actual_size: info.data.size,
       page_count: pdf.data.pageCount,
+      content_hash: hash,
       processed_at: now.toISOString(),
     };
     const written = await store.writeDerived(row.id, token, rows, patch);

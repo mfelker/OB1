@@ -84,3 +84,17 @@ Deno.test("U182 a pending PDF with a matching upload ends processed, with derive
   assertEquals(r.store.attachment(att.id)?.state, "processed");
   assertEquals(r.store.attachment(att.id)?.page_count, 2);
 });
+
+Deno.test("U183 finishing sets actual_type, actual_size, page_count, content_hash and processed_at", async () => {
+  const r = await rig();
+  const bytes = await textPdf(["alpha beta gamma", "delta epsilon"]);
+  const att = pending(r, bytes);
+  r.clock.advanceMinutes(5);
+  await r.finish(att.id, {});
+  const row = r.store.attachment(att.id) as AttachmentRow;
+  assertEquals(row.actual_type, "application/pdf");
+  assertEquals(row.actual_size, bytes.length);
+  assertEquals(row.page_count, 2);
+  assertEquals(row.content_hash, await contentHash(bytes));
+  assertEquals(row.processed_at, r.clock.iso());
+});
