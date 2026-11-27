@@ -136,3 +136,14 @@ Deno.test("U266 a picked type outside the four is refused with attach_file's mes
   assertStringIncludes(body.message, "Accepted types are PDF, JPEG, PNG and WebP");
   assertEquals([r.store.signedUploads.length, r.store.attachment(row.id)!.declared_type], [0, null]);
 });
+
+Deno.test("U268 a picked size over its cap is refused, naming the cap and the size", async () => {
+  const r = await rig({ MAX_IMAGE_MB: "1" });
+  const row = await r.seed();
+  const res = await r.post("/page/start", { token: TOKEN, ...PICK, size: 2_000_000 });
+  const body = await res.json();
+  assertEquals([res.status, body.code], [400, "too_large"]);
+  assertStringIncludes(body.message, "2000000");
+  assertStringIncludes(body.message, "1048576");
+  assertEquals([r.store.signedUploads.length, r.store.attachment(row.id)!.declared_size], [0, null]);
+});
