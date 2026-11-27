@@ -28,3 +28,12 @@ Deno.test("U161 embed sends POST <EMBEDDING_API_BASE>/embeddings with the model 
   assertEquals(ff.requests[0].url, URL_);
   assertEquals(ff.requests[0].body, { model: EMBEDDING_MODEL, input: ["alpha", "beta"] });
 });
+
+Deno.test("U162 64 texts at the default batch size go in one request", async () => {
+  const ff = new FakeFetch().on("POST", URL_, embeddingResponder(8));
+  const client = createEmbeddingClient(settingsWith(), ff.fetch);
+  const out = await client.embed(texts(64));
+  assert("data" in out);
+  assertEquals(ff.requests.length, 1);
+  assertEquals((ff.requests[0].body as { input: string[] }).input.length, 64);
+});
