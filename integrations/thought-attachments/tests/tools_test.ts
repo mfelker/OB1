@@ -100,3 +100,41 @@ Deno.test("U218 each tool's readOnlyHint, destructiveHint and openWorldHint matc
   const remove = hints("remove_attachment");
   assertEquals([remove?.readOnlyHint, remove?.destructiveHint, remove?.openWorldHint], [false, true, false]);
 });
+
+interface JsonSchema {
+  properties?: Record<string, { type?: string; default?: unknown; enum?: unknown[]; maximum?: number }>;
+  required?: string[];
+}
+
+Deno.test("U219 each tool's input schema and defaults match the contract", async () => {
+  const h = await harness();
+  const { tools } = await h.client.listTools();
+  const schema = (name: string) => tools.find((t) => t.name === name)?.inputSchema as JsonSchema;
+  const find = schema("find_thought");
+  assertEquals(find.required, ["query"]);
+  assertEquals(find.properties?.mode?.enum, ["meaning", "exact"]);
+  assertEquals(find.properties?.mode?.default, "meaning");
+  assertEquals(find.properties?.limit?.default, 5);
+  assertEquals(Object.keys(schema("attach_file").properties ?? {}).sort(), [
+    "declared_size",
+    "declared_type",
+    "expected_kind",
+    "file_name",
+    "note",
+    "sensitivity_tier",
+    "thought_id",
+  ]);
+  assertEquals(schema("attach_file").required ?? [], []);
+  assertEquals(schema("attach_file").properties?.expected_kind?.enum, ["photo", "pdf"]);
+  assertEquals(schema("attach_file").properties?.sensitivity_tier?.enum, ["standard", "personal", "restricted"]);
+  const finish = schema("finish_attachment");
+  assertEquals(finish.required, ["attachment_id"]);
+  assertEquals(Object.keys(finish.properties ?? {}).sort(), ["attachment_id", "rebuild"]);
+  assertEquals(schema("get_attachment").required, ["attachment_id"]);
+  assertEquals(Object.keys(schema("list_attachments").properties ?? {}).sort(), ["derived_thought_id", "thought_id"]);
+  assertEquals(schema("list_attachments").required ?? [], []);
+  const remove = schema("remove_attachment");
+  assertEquals(remove.required, ["attachment_id"]);
+  assertEquals(remove.properties?.confirm?.default, false);
+  assertEquals(Object.keys(schema("find_orphan_attachments").properties ?? {}), []);
+});
