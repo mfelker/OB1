@@ -223,6 +223,6 @@ returns void
 language sql
 as $$
   update thought_attachments set busy_op = null, busy_until = null, busy_token = null
-    where id = p_id
+    where id = p_id and busy_token = p_token
 $$;
 grant execute on function attachment_release(uuid, text) to service_role;

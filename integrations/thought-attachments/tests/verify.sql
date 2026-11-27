@@ -533,3 +533,15 @@ begin
   delete from thoughts where id = p;
   if r2->>'token' is null then raise exception 'U64: claim after release returned %', r2; end if;
 end $$;
+
+-- U65: release with another token leaves the claim in place
+do $$
+declare p uuid := pg_temp.mk_parent(); a uuid := pg_temp.mk_att(p, 'pending_upload', interval '-1 second'); r jsonb; r2 jsonb;
+begin
+  r := attachment_claim(a, 'finish', 60);
+  perform attachment_release(a, 'not-the-token');
+  r2 := attachment_claim(a, 'remove', 60);
+  delete from thought_attachments where id = a;
+  delete from thoughts where id = p;
+  if r2 is distinct from '{"busy": "finish"}'::jsonb then raise exception 'U65: the claim was released by another token: %', r2; end if;
+end $$;
