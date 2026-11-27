@@ -20,6 +20,6 @@ Environment variables for the Edge Function (constitution Principle II: secrets 
 | `DOWNLOAD_LINK_SECONDS` | 600 | Download link lifetime | FR-014 |
 | `BUSY_SECONDS` | 410 | Busy-mark expiry; one default on every platform (T005 Q1). Cloud owners may lower it to 160 for faster recovery after a killed run | FR-026, R10 |
 | `PUBLIC_BASE_URL` | `SUPABASE_PUBLIC_URL`, else `SUPABASE_URL` | Address put in every returned link; on 006, an address the phone can reach | R6 |
-| `UPLOAD_PAGE_URL` | `<function URL>/upload` | Where the phone page lives; on Cloud, the owner's published copy | R5 |
+| `UPLOAD_PAGE_URL` | `PUBLIC_BASE_URL` + `/functions/v1/thought-attachments/upload` | Where the phone page lives. The function's name is fixed: `thought-attachments` (T005 Q2). On Cloud this must be set to the owner's published copy (README step) | R5 |
 
 `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are provided by the platform. No setting value is ever written into a thought, an attachment record or a log line (FR-009).

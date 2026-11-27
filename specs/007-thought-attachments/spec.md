@@ -56,6 +56,7 @@
 ### Session 2026-11-26 (implementation, T005)
 
 - Q: How does the busy-mark expiry default know which platform it runs on? → A: It doesn't need to: the default is 410 seconds everywhere (just over the self-hosted router's 400-second worker timeout); an explicit setting overrides it. A run killed on Supabase Cloud therefore locks its attachment for up to about 7 minutes before a retry can proceed.
+- Q: How is the default phone-page address built, and what is the function called? → A: The function is always deployed as `thought-attachments`; the default page address is the public base address plus `/functions/v1/thought-attachments/upload`, which works on the self-hosted stack with no extra setting; on Supabase Cloud the README makes setting the page address to the owner's published copy a required step.
 
 ## User Scenarios & Testing *(mandatory)*
 
