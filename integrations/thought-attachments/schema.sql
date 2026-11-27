@@ -317,13 +317,20 @@ returns jsonb
 language plpgsql
 as $$
 declare
+  a thought_attachments;
   n int;
+  note_goes boolean;
 begin
-  perform attachment_require_claim(p_id, p_token);
+  a := attachment_require_claim(p_id, p_token);
+  note_goes := a.state = 'refused' and a.parent_created_here
+    and not exists (select 1 from thought_attachments o where o.parent_thought_id = a.parent_thought_id and o.id <> p_id);
   delete from thoughts where metadata->>'attachment_id' = p_id::text;
   get diagnostics n = row_count;
+  if note_goes then
+    delete from thoughts where id = a.parent_thought_id;
+  end if;
   delete from thought_attachments where id = p_id;
-  return jsonb_build_object('derived', n, 'noteRemoved', false);
+  return jsonb_build_object('derived', n, 'noteRemoved', note_goes);
 end;
 $$;
 grant execute on function attachment_remove(uuid, text) to service_role;

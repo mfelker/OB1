@@ -746,3 +746,27 @@ begin
   if not refused_wrong or not refused_expired then raise exception 'U97: not refused (wrong %, expired %)', refused_wrong, refused_expired; end if;
   if n <> 1 or rows_ <> 1 then raise exception 'U97: something was deleted (% thoughts, % rows)', n, rows_; end if;
 end $$;
+
+-- Helper for the parent-note rules: set up a parent and an attachment, remove it, report what happened.
+create or replace function pg_temp.note_case(p_state text, p_created_here boolean, p_deadline interval, p_other boolean default false) returns jsonb
+language plpgsql as $$
+declare p uuid := pg_temp.mk_parent(); a uuid := pg_temp.mk_att(p, p_state); o uuid; r jsonb; still boolean; pre jsonb;
+begin
+  update thought_attachments set parent_created_here = p_created_here, upload_deadline = now() + p_deadline where id = a;
+  if p_other then
+    insert into thought_attachments (parent_thought_id, state, upload_deadline) values (p, 'processed', now()) returning id into o;
+  end if;
+  -- (the preview is added to this helper with U104)
+  r := attachment_remove(a, 'tok');
+  select exists (select 1 from thoughts where id = p) into still;
+  if o is not null then delete from thought_attachments where id = o; end if;
+  delete from thoughts where id = p;
+  return jsonb_build_object('removed', r, 'preview', pre, 'parent_still_there', still);
+end $$;
+
+-- U98: remove deletes the parent note when parent_created_here is true, the attachment ended refused and no other attachment points to it
+do $$
+declare r jsonb := pg_temp.note_case('refused', true, interval '1 hour');
+begin
+  if (r->'removed'->>'noteRemoved')::boolean is not true or (r->>'parent_still_there')::boolean then raise exception 'U98: %', r; end if;
+end $$;
