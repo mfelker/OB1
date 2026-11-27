@@ -163,3 +163,9 @@ Deno.test("U221 find_thought in exact mode returns findThoughtsExact's matches, 
   assertEquals(h.embeddings.calls, []);
   assertEquals(out.data.matches, [{ id: hit.id, first_line: "Furnace FILTERS are on the shelf", captured: hit.created_at }]);
 });
+
+Deno.test("U222 find_thought with no limit asks for 5 matches", async () => {
+  const h = await harness();
+  await call(h, "find_thought", { query: "filters", mode: "exact" });
+  assertEquals(h.store.calls.find((c) => c.method === "findThoughtsExact")?.args, ["filters", 5]);
+});
