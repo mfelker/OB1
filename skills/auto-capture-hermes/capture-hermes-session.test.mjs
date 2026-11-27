@@ -631,12 +631,17 @@ test("U42 an unreadable queue entry moves to dead/ and the valid entries behind 
 test("U40 two quick on_session_end fires are captured once", { skip }, async () => {
   seedSession();
   stub = await acceptingStub();
-  const env = { ...brainEnv(), OB_CAPTURE_DEBOUNCE_MS: "1000" };
+  // Timing margin: the second fire must replace the first fire's token before the
+  // first worker wakes. Two Node start-ups take about 150 ms, so a 1000 ms debounce
+  // leaves a wide margin (research R8). The wait allows the second worker's full
+  // debounce plus its capture.
+  const DEBOUNCE_MS = 1000;
+  const env = { ...brainEnv(), OB_CAPTURE_DEBOUNCE_MS: String(DEBOUNCE_MS) };
   await runAdapter(sandbox, { stdin: hookPayload("on_session_end"), env });
   await runAdapter(sandbox, { stdin: hookPayload("on_session_end"), env });
   await waitFor(() => {
     const d = dispositions(sandbox);
     return d.includes("skipped:superseded") && d.includes(`captured:${JOB_ID}`);
-  }, { what: "one superseded worker and one capture" });
+  }, { timeoutMs: DEBOUNCE_MS * 5, what: "one superseded worker and one capture" });
   assert.equal(stub.requests.length, 1);
 });
