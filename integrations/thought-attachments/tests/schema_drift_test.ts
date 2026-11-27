@@ -71,12 +71,29 @@ export function driftProblems(storeSource: string, schemaSql: string): string[] 
   return problems;
 }
 
+/** Every RPC src/store.ts calls, one entry per call site. */
+const STORE_RPCS = [
+  "attachment_insert_note",
+  "match_thoughts",
+  "attachment_find_thoughts_exact",
+  "attachment_embedding_dimension",
+  "attachment_orphans",
+  "attachment_by_page_token",
+  "attachment_consume_page_token",
+  "attachment_claim",
+  "attachment_release",
+  "attachment_write_derived",
+  "attachment_set_state",
+  "attachment_removal_preview",
+  "attachment_remove",
+];
+
 Deno.test("U83 every RPC name and named parameter that src/store.ts sends exists in schema.sql, or is the base match_thoughts", () => {
   const store = read("../src/store.ts");
   const schema = read("../schema.sql");
   const calls = rpcCalls(store);
-  // the scan must really see the store's calls, not match nothing
-  assertEquals(calls.length >= 13, true, `only ${calls.length} rpc calls found`);
+  // the scan must really see the store's calls, not match nothing: these are the thirteen it makes
+  assertEquals(calls.map((c) => c.name).sort(), [...STORE_RPCS].sort());
   assertEquals(calls.filter((c) => c.name === "attachment_claim")[0].keys, ["p_id", "p_op", "p_seconds"]);
   assertEquals(driftProblems(store, schema), []);
 });

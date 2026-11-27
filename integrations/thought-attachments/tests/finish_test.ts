@@ -628,7 +628,7 @@ Deno.test("U212 a finish while another finish, rebuild or remove holds an unexpi
   for (const op of ["finish", "rebuild", "remove"] as const) {
     const r = await rig();
     const att = pending(r, await textPdf(["alpha beta gamma delta epsilon zeta"]));
-    const held = await r.store.claim(att.id, op, 410);
+    const held = await r.store.claim(att.id, op, r.settings.busySeconds);
     assert("data" in held && "token" in held.data);
     const before = structuredClone(r.store.attachment(att.id));
     const out = await r.finish(att.id, {});
@@ -655,8 +655,8 @@ Deno.test("U213 one second before BUSY_SECONDS has passed, the finish is still b
   const r = await rig();
   const att = pending(r, await textPdf(["alpha beta gamma delta epsilon zeta"]));
   const held = await startHeld(r, att.id);
-  assertEquals(r.settings.busySeconds, 410);
-  r.clock.advanceSeconds(409);
+  assertEquals(r.settings.busySeconds, 410); // the default BUSY_SECONDS
+  r.clock.advanceSeconds(r.settings.busySeconds - 1);
   const out = await r.finish(att.id, {});
   assertEquals(out.busy, "finish");
   held.release();
@@ -668,9 +668,9 @@ Deno.test("U215 after a killed rebuild has expired, the attachment is processed 
   const att = pending(r, jpegBytes(2000));
   assertEquals((await r.finish(att.id, {})).state, "processed");
   const oldIds = r.store.derivedOf(att.id).map((t) => t.id);
-  const killed = await r.store.claim(att.id, "rebuild", 410);
+  const killed = await r.store.claim(att.id, "rebuild", r.settings.busySeconds);
   assert("data" in killed && "token" in killed.data);
-  r.clock.advanceSeconds(411);
+  r.clock.advanceSeconds(r.settings.busySeconds + 1);
   const out = await r.finish(att.id, {});
   assertEquals(out.state, "processed");
   assertEquals(out.derived_count, 1);
@@ -698,7 +698,7 @@ Deno.test("U216 a finish whose claim expired and was taken over has its write re
   const older = r.finish(att.id, {});
   for (let i = 0; i < 200 && !stalled; i++) await new Promise((resolve) => setTimeout(resolve, 5));
   assert(stalled);
-  r.clock.advanceSeconds(411);
+  r.clock.advanceSeconds(r.settings.busySeconds + 1);
   const newer = await r.finish(att.id, {});
   assertEquals(newer.state, "processed");
   const newerIds = r.store.derivedOf(att.id).map((t) => t.id);
