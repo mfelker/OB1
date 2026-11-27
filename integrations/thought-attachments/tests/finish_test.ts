@@ -492,3 +492,17 @@ Deno.test("U205 a text-less PDF ends scanned with the reason and 'text search wo
   assertEquals(r.store.objects.has(att.storage_path as string), true);
   assertEquals(r.ff.requests.length, 0);
 });
+
+Deno.test("U206 a scanned PDF finished again after SCANNED_MIN_CHARS_PER_PAGE is lowered below its text ends processed", async () => {
+  const r = await rig({ SCANNED_MIN_CHARS_PER_PAGE: "50" });
+  const att = pending(r, await textPdf(["delta epsilon", "zeta eta theta"]));
+  assertEquals((await r.finish(att.id, {})).state, "scanned");
+  const lowered = reconfigured(r, { SCANNED_MIN_CHARS_PER_PAGE: "5" });
+  const out = await lowered(att.id, {});
+  assertEquals(out.state, "processed");
+  assert(out.derived_count >= 1);
+  const row = r.store.attachment(att.id) as AttachmentRow;
+  assertEquals(row.state, "processed");
+  assertEquals(row.state_reason, null);
+  assertEquals(row.derived_count, out.derived_count);
+});

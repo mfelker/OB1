@@ -136,6 +136,7 @@ export function createFinisher(deps: Deps): Services {
     const patch: StatePatch = {
       ...actual,
       state: "processed",
+      state_reason: null,
       last_rebuild_error: null,
       page_count: pdf.data.pageCount,
       processed_at: now.toISOString(),
