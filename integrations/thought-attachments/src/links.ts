@@ -6,7 +6,7 @@ export function publicUrl(settings: Settings, url: string): string {
   // Signed links always come from the store's own Supabase origin, so whatever origin
   // the link has is the internal one; the rest of it is kept character for character.
   const rest = url.slice(new URL(url).origin.length);
-  return settings.publicBaseUrl.replace(/\/+$/, "") + rest;
+  return settings.publicBaseUrl + rest;
 }
 
 /** `UPLOAD_PAGE_URL#t=<token>` (contracts/upload-page.md "The link"). */
