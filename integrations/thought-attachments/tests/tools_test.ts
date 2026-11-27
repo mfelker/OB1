@@ -921,6 +921,33 @@ Deno.test("U336 a confirmed removal whose stored file is already missing succeed
   assertEquals(h.store.derivedOf(row.id), []);
 });
 
+Deno.test("U388 when deleting the stored file fails, a confirmed remove_attachment reports it, removes nothing, and a repeat removes it", async () => {
+  const h = await harness();
+  const row = await storedRow(h, { derived_count: 2 });
+  addDerived(h, row.id, 2);
+  const path = row.storage_path as string;
+  h.store.failNext("deleteObject", "storage went away");
+  const out = await call(h, "remove_attachment", { attachment_id: row.id, confirm: true });
+  assertEquals(out.isError, true);
+  assertStringIncludes(out.text, "storage went away");
+  assert(!out.text.includes("Removed"), out.text);
+  assertEquals(h.store.callNames().includes("removeAttachment"), false);
+  const listed = await call(h, "list_attachments", { thought_id: row.parent_thought_id });
+  assertEquals((listed.data.attachments as { attachment_id: string }[]).map((a) => a.attachment_id), [row.id]);
+  assertEquals(h.store.derivedOf(row.id).length, 2);
+  assertEquals(h.store.objects.has(path), true);
+  assertEquals(h.store.attachment(row.id)?.busy_op, null);
+  const again = await call(h, "remove_attachment", { attachment_id: row.id, confirm: true });
+  assertEquals({ isError: again.isError, removed: again.data.removed, derived: again.data.derived_thoughts }, {
+    isError: false,
+    removed: true,
+    derived: 2,
+  });
+  assertEquals(h.store.attachments, []);
+  assertEquals(h.store.derivedOf(row.id), []);
+  assertEquals(h.store.objects.has(path), false);
+});
+
 Deno.test("U354 a confirmed remove proceeds on an attachment whose earlier remove was cut off, which left it as it was", async () => {
   const h = await harness();
   const row = await claimedRow(h, "remove", 100, { derived_count: 2 });
