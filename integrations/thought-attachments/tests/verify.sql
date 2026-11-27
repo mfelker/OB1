@@ -639,3 +639,19 @@ begin
   if hit is distinct from a then raise exception 'U86: lookup returned %', hit; end if;
   if n_other <> 0 or n_null <> 0 or n_id <> 0 then raise exception 'U86: matched by something else (% % %)', n_other, n_null, n_id; end if;
 end $$;
+
+-- U87: consuming a page token succeeds once and clears the hash; a second consume fails
+do $$
+declare p uuid := pg_temp.mk_parent(); a uuid; first_ boolean; second_ boolean; wrong boolean; h text;
+begin
+  insert into thought_attachments (parent_thought_id, state, upload_deadline, page_token_hash)
+    values (p, 'pending_upload', now(), 'sha256:u87hash') returning id into a;
+  wrong := attachment_consume_page_token(a, 'sha256:not-it');
+  first_ := attachment_consume_page_token(a, 'sha256:u87hash');
+  second_ := attachment_consume_page_token(a, 'sha256:u87hash');
+  select page_token_hash into h from thought_attachments where id = a;
+  delete from thought_attachments where id = a;
+  delete from thoughts where id = p;
+  if wrong then raise exception 'U87: a wrong hash was consumed'; end if;
+  if first_ is not true or second_ is not false or h is not null then raise exception 'U87: first %, second %, hash %', first_, second_, h; end if;
+end $$;

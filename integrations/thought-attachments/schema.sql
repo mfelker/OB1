@@ -284,3 +284,16 @@ as $$
   select * from thought_attachments where page_token_hash = p_hash
 $$;
 grant execute on function attachment_by_page_token(text) to service_role;
+
+-- Consume a page token: true once, false afterwards or for a wrong hash.
+create or replace function attachment_consume_page_token(p_id uuid, p_hash text)
+returns boolean
+language plpgsql
+as $$
+begin
+  update thought_attachments set page_token_hash = null
+    where id = p_id and page_token_hash = p_hash;
+  return found;
+end;
+$$;
+grant execute on function attachment_consume_page_token(uuid, text) to service_role;
