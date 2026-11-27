@@ -60,7 +60,7 @@ export function createVisionClient(
       if (!response.ok) {
         return {
           error: `vision endpoint answered HTTP ${response.status}: ${
-            redact(await response.text()).slice(0, 300)
+            redact(bodyReason(await response.text())).slice(0, 300)
           }`,
         };
       }
@@ -76,4 +76,17 @@ export function createVisionClient(
       return { data: { text, model: settings.visionModel! } };
     },
   };
+}
+
+/** The provider's own error message from a JSON error body, or the bounded text of any other body.
+ * Other body fields (for example an account `user_id`) are never kept (FR-009, T101). */
+function bodyReason(text: string): string {
+  try {
+    const parsed = JSON.parse(text);
+    const message = parsed?.error?.message;
+    if (typeof message === "string") return message;
+  } catch {
+    // not JSON: fall through to the bounded text
+  }
+  return text;
 }
