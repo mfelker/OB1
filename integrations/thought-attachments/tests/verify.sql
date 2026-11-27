@@ -22,7 +22,9 @@ select set_config('ob1.verify_real_storage', exists (select 1 from pg_namespace 
 do $$
 begin
   if current_setting('ob1.verify_real_storage') = 'true' then
-    return; -- a real Supabase storage schema: this path is not testable here
+    -- A real Supabase storage schema: the no-storage path can't be run here, so say so instead of passing silently.
+    raise notice 'U50: SKIPPED: a real storage schema exists, so the no-storage path was not run (it runs on fork-ci''s bootstrap)';
+    return;
   end if;
   if exists (select 1 from pg_namespace where nspname = 'storage') then
     raise exception 'U50: a storage schema exists after the no-storage run';
