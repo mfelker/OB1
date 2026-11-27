@@ -11,13 +11,13 @@ This integration adds a second remote MCP connector, the Edge Function `thought-
 
 These derived thoughts are embedded with your brain's own embedding model, so the core connector's `search_thoughts` finds them with no changes. The original file stays retrievable through a short-lived download link. Derived thoughts carry the fields of the [ingestion metadata contract](../../docs/ingestion-metadata-contract.md).
 
-It works on both platforms: Supabase Cloud, and the self-hosted stack from [spec 006's recipe](../../recipes/self-hosted-supabase-mcp/). Only the settings and the deploy step differ.
+It works on both platforms: Supabase Cloud, and the lean self-hosted Supabase stack from the `recipes/self-hosted-supabase-mcp` recipe (published separately). Only the settings and the deploy step differ.
 
 The AI sees seven tools: `find_thought`, `attach_file`, `finish_attachment`, `get_attachment`, `list_attachments`, `remove_attachment` and `find_orphan_attachments`. That adds to your AI's context weight; see the [MCP Tool Audit & Optimization Guide](../../docs/05-tool-audit.md) and [Tool Surface Area](#tool-surface-area) below.
 
 ## Prerequisites
 
-- A working Open Brain on **Supabase Cloud** (following [Getting Started](../../docs/01-getting-started.md)) or on the **self-hosted stack** from [`recipes/self-hosted-supabase-mcp`](../../recipes/self-hosted-supabase-mcp/). Both give you a `thoughts` table and a private bucket named `ob1-files`, or setup creates the bucket for you.
+- A working Open Brain on **Supabase Cloud** (following [Getting Started](../../docs/01-getting-started.md)) or on the **self-hosted stack** from the `recipes/self-hosted-supabase-mcp` recipe. Both give you a `thoughts` table and a private bucket named `ob1-files`, or setup creates the bucket for you.
 - The **Supabase CLI** (Cloud only).
 - Your brain's **access key** (`MCP_ACCESS_KEY`).
 - Your brain's **embedding settings**. The integration must use the same model and vector size as your brain; it checks the size and fails loudly on a mismatch rather than writing thoughts that search can't find. The core default is OpenRouter with `openai/text-embedding-3-small`.
@@ -196,7 +196,7 @@ Instead of the command, you can have the AI create an upload link for your phone
 
 To start with a note, ask the AI to attach a photo "with the note: the filters are on this shelf". It saves the note as a thought, uses it as the parent, and returns the page link. If the file is then refused or the link expires unused, that note is removed with the attachment unless another attachment uses it.
 
-**On self-hosted**, the function serves the page itself. Set `PUBLIC_BASE_URL` to an address your phone can reach, such as the machine's LAN address or its tailnet address, and recreate the functions service. The phone must be on the same network (or the tailnet) as the stack. `localhost` would send the phone to itself. Reaching the stack from anywhere else is not covered yet (fork issue 29).
+**On self-hosted**, the function serves the page itself. Set `PUBLIC_BASE_URL` to an address your phone can reach, such as the machine's LAN address or its tailnet address, and recreate the functions service. The phone must be on the same network (or the tailnet) as the stack. `localhost` would send the phone to itself. Reaching the stack from anywhere else is not covered yet.
 
 **On Supabase Cloud, publish the page once.** Cloud rewrites HTML served by an Edge Function to plain text, so the function cannot serve the page itself. Instead you publish one static file:
 
@@ -257,7 +257,7 @@ Ask the AI to run `find_orphan_attachments`. It lists attachments whose parent t
 
 Tested with: Supabase Cloud ____ (placeholder), self-hosted stack from spec 006 ____ (placeholder), Deno ____, `unpdf` 2.2.2, vision model ____, embedding model ____.
 
-Related reading: the [ingestion metadata contract](../../docs/ingestion-metadata-contract.md), [Getting Started](../../docs/01-getting-started.md) and the [self-hosted Supabase recipe](../../recipes/self-hosted-supabase-mcp/).
+Related reading: the [ingestion metadata contract](../../docs/ingestion-metadata-contract.md), [Getting Started](../../docs/01-getting-started.md), and the self-hosted Supabase recipe (`recipes/self-hosted-supabase-mcp`).
 
 ## Limits
 
@@ -297,7 +297,7 @@ Solution: the same bytes are already attached to that thought. Use the one it na
 Solution: another operation is running on that attachment. Wait and retry; the phone page retries by itself. If a run was killed, the busy mark expires after `BUSY_SECONDS` (410 s by default) and the attachment then reads as `failed` ("the run did not finish"); finish it again.
 
 **Issue: state `scanned`**
-Solution: the PDF has no usable text layer, so text search will not cover it. The file is stored and downloadable, but there are no passages. Reading scanned pages with OCR is not built yet (fork issue 30).
+Solution: the PDF has no usable text layer, so text search will not cover it. The file is stored and downloadable, but there are no passages. Reading scanned pages with OCR is not built yet.
 
 **Issue: state `not_captioned`**
 Solution: the vision model is not set, or it failed; the reason is shown. Set or fix `VISION_*`, then run `finish_attachment` again for the same attachment.
@@ -322,10 +322,11 @@ Solution: it is stored and marked `failed` with a readable reason, and no passag
 
 ## Known limitations
 
-- Scanned PDFs are stored but not searchable by text until OCR is added (fork issue 30).
-- Files over the caps need background processing, which is not built (fork issue 31).
-- Phone upload on the self-hosted stack works on the same network or tailnet; access from anywhere else is not built (fork issue 29).
-- Fork issue 26 and issue 32 are also open against this integration; see the fork's issue list for their scope.
+- Scanned PDFs are stored but not searchable by text until OCR is added.
+- Files over the caps are refused: processing them in the background, in resumable steps, is not built.
+- Photos have no thumbnails; fetching one returns the original file.
+- Passages and captions are ordinary thoughts typed `reference`, so they appear in the unfiltered recent-thoughts list; filter by type to hide them.
+- Phone upload on the self-hosted stack works on the same network or tailnet; access from anywhere else is not built.
 - Cloud owners publish the upload page themselves once, because of how Cloud serves HTML.
 
 ## Tool Surface Area
