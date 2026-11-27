@@ -569,3 +569,16 @@ begin
   delete from thoughts where id = t;
   if n <> 1 then raise exception 'U67: % matches', n; end if;
 end $$;
+
+-- U68: a query containing % , ) and ' matches only content that has those characters literally
+do $$
+declare tag text := 'u68' || replace(gen_random_uuid()::text, '-', ''); q text; lit uuid; wild uuid; n int; hit uuid;
+begin
+  q := tag || ' 50%, (a) it''s';
+  insert into thoughts (content) values ('has ' || q || ' inside') returning id into lit;
+  insert into thoughts (content) values ('has ' || tag || ' 50x, (a) it''s inside') returning id into wild;
+  select count(*), min(id::text)::uuid into n, hit from attachment_find_thoughts_exact(q, 20);
+  delete from thoughts where id = lit;
+  delete from thoughts where id = wild;
+  if n <> 1 or hit <> lit then raise exception 'U68: % matches, first %', n, hit; end if;
+end $$;
