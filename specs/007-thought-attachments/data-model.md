@@ -14,6 +14,7 @@ One row per file.
 | `file_name` | text | Base name only. Path parts and control characters are stripped (spec edge case, FR-009). Empty until declared. |
 | `declared_type` | text | One of `application/pdf`, `image/jpeg`, `image/png`, `image/webp`. Set by the attach call (command upload) or by the page's declaration (phone upload); empty until then. |
 | `declared_size` | bigint | Exact bytes. At most the cap for its type (FR-003). Set like `declared_type`. |
+| `declared_by_page` | boolean, not null, default false | True once the upload page made the declaration, so a later pick replaces it; a declaration from the attach call is confirmed, never replaced (FR-002; U365–U367). |
 | `expected_kind` | text | `photo` or `pdf` when the AI named one for a phone upload; the page's declaration must agree. |
 | `actual_type`, `actual_size`, `page_count` | text, bigint, int | Set at finishing from the stored file (FR-004). `page_count` is set for PDFs only. |
 | `content_hash` | text | `sha256:<hex>` of the stored bytes. It is the `input_hash` of every derived thought (FR-008). |

@@ -314,6 +314,7 @@ Test file: `tests/store_test.ts` (supabase-js over the fake fetch).
 | U359 | `release` passes the claim token | FR-026, R10 | example | DONE | `tests/store_test.ts::U359 release passes the claim token` |
 | U360 | `writeDerived` sends the rows (content, metadata, embedding) and the state patch under the claim token | FR-011, FR-027, R9 | example | DONE | `tests/store_test.ts::U360 writeDerived sends the rows (content, metadata, embedding) and the state patch under the claim token` |
 | U361 | `setState` sends the patch under the claim token and returns the row | FR-026, data-model.md states | example | DONE | `tests/store_test.ts::U361 setState sends the patch under the claim token and returns the row` |
+| U367 | `thought_attachments.declared_by_page` is boolean, not null, default false, and is added to an earlier install | data-model.md `thought_attachments.declared_by_page` | example | DONE | `tests/verify.sql` (U34 block, column list) |
 
 ### Stream X: files (wave 1, `ta-files`)
 
@@ -607,6 +608,8 @@ Test file: `tests/page_script_test.ts`, with `tests/helpers/page_dom.ts`.
 | U346 | The repository's `upload-page.html` has its API-address line blank (T005 Q6) | FR-002 | example | DONE | `tests/page_script_test.ts::U346 the repository's upload-page.html has its API-address line blank` |
 | U352 | `/page/info` returns exactly `{ expected_kind, accepted_types, caps: { image_bytes, pdf_bytes, pdf_pages } }`, with `image_bytes` equal to `MAX_IMAGE_MB` × 1,048,576 (example: 10 → 10485760) | FR-002, contracts/upload-page.md `/page/info` | example | DONE | `tests/page_routes_test.ts::U352 /page/info returns exactly expected_kind, accepted_types and caps, with image_bytes at MAX_IMAGE_MB times 1048576` |
 | U363 | A failed upload or an unreachable server shows "Failed:" on the page and does not call finish | FR-002, FR-024, contracts/upload-page.md | example | DONE | `tests/page_script_test.ts::U363 a failed upload or an unreachable server shows Failed, and /page/finish is not called` |
+| U365 | A second pick on a fresh instance (a new isolate) replaces a page-made declaration instead of refusing it | FR-002, contracts/upload-page.md (a second `/page/start` replaces) | example | DONE | `tests/page_routes_test.ts::U365 a second pick on a fresh instance (a new isolate) replaces a page-made declaration instead of refusing it` |
+| U366 | The declaration `/page/start` sends to the store carries `declared_by_page: true` | FR-002, data-model.md `thought_attachments.declared_by_page` | example | DONE | `tests/page_routes_test.ts::U366 the declaration /page/start sends to the store carries declared_by_page: true, so the real store persists the flag` |
 
 ### Stream A: app and entry (wave 3, `ta-app`)
 

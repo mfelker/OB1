@@ -235,7 +235,7 @@ Streams code against these. The signatures are the only shared contract. Behavio
 
 ### Stream Q: data (`ta-data`, wave 1)
 
-- [X] T014 [P] [US1] [U34] [U35] [U36] [U37] [U38] [U39] [U40] [U41] [U42] [U43] [U44] [U45] [U46] [U47] [U48] [U49] [U50] [U51] [U52] Tests first in `F/tests/verify.sql`, then `F/schema.sql` (fork-ci SQL runtime, after `bootstrap.sql`). Assert:
+- [X] T014 [P] [US1] [U34] [U35] [U36] [U37] [U38] [U39] [U40] [U41] [U42] [U43] [U44] [U45] [U46] [U47] [U48] [U49] [U50] [U51] [U52] [U367] Tests first in `F/tests/verify.sql`, then `F/schema.sql` (fork-ci SQL runtime, after `bootstrap.sql`). Assert:
   - the table `thought_attachments` with every column, type, default and not-null rule of `data-model.md` `thought_attachments` (`thought_attachments.id`, `thought_attachments.parent_thought_id` with **no** foreign key, `thought_attachments.parent_created_here`, `thought_attachments.file_name`, `thought_attachments.declared_type`, `thought_attachments.declared_size`, `thought_attachments.expected_kind`, `thought_attachments.actual_type`, `thought_attachments.actual_size`, `thought_attachments.page_count`, `thought_attachments.content_hash`, `thought_attachments.storage_path`, `thought_attachments.sensitivity_tier`, `thought_attachments.state`, `thought_attachments.state_reason`, `thought_attachments.last_rebuild_error`, `thought_attachments.caption_model`, `thought_attachments.derived_count`, `thought_attachments.upload_deadline`, `thought_attachments.page_token_hash`, `thought_attachments.busy_op`, `thought_attachments.busy_until`, `thought_attachments.busy_token`, `thought_attachments.created_at`, `thought_attachments.updated_at` with its trigger, `thought_attachments.processed_at`)
   - the value rules that data-model.md states for `thought_attachments.declared_type`, `thought_attachments.expected_kind`, `thought_attachments.sensitivity_tier`, `thought_attachments.state` and `thought_attachments.busy_op`
   - the indexes on `parent_thought_id` and `content_hash`, and the partial unique `(parent_thought_id, content_hash)` index that excludes `refused` (FR-012)
@@ -392,7 +392,7 @@ Streams code against these. The signatures are the only shared contract. Behavio
 
 ### Stream P: phone page (`ta-page`, wave 2)
 
-- [X] T042 [P] [US2] [U262] [U263] [U264] [U265] [U266] [U267] [U268] [U269] [U270] [U271] [U272] [U273] [U274] [U275] [U276] [U337] [U338] [U339] [U352] Tests first in `F/tests/page_routes_test.ts`, then `POST /page/info` (token only: expected kind, accepted types, caps; changes nothing) and `POST /page/start` in `F/src/page_routes.ts` (contracts/upload-page.md):
+- [X] T042 [P] [US2] [U262] [U263] [U264] [U265] [U266] [U267] [U268] [U269] [U270] [U271] [U272] [U273] [U274] [U275] [U276] [U337] [U338] [U339] [U352] [U365] [U366] Tests first in `F/tests/page_routes_test.ts`, then `POST /page/info` (token only: expected kind, accepted types, caps; changes nothing) and `POST /page/start` in `F/src/page_routes.ts` (contracts/upload-page.md):
   - a valid, unused token before `thought_attachments.upload_deadline` records the picked name, type and exact size as the declaration, or confirms they match the one the attach call gave
   - it refuses HEIC, other types, an `expected_kind` mismatch or an over-cap size, with `attach_file`'s messages, before any link is made
   - otherwise it returns a fresh signed upload link through `publicUrl`
