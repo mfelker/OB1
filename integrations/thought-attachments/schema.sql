@@ -346,3 +346,23 @@ begin
 end;
 $$;
 grant execute on function attachment_remove(uuid, text) to service_role;
+
+-- The same counts a remove would report, deleting nothing. Returns { "derived": n, "noteWouldGo": bool }.
+create or replace function attachment_removal_preview(p_id uuid)
+returns jsonb
+language plpgsql
+stable
+as $$
+declare
+  a thought_attachments;
+begin
+  select * into a from thought_attachments where id = p_id;
+  if not found then
+    raise exception 'attachment not found';
+  end if;
+  return jsonb_build_object(
+    'derived', (select count(*) from thoughts where metadata->>'attachment_id' = p_id::text),
+    'noteWouldGo', attachment_note_would_go(a));
+end;
+$$;
+grant execute on function attachment_removal_preview(uuid) to service_role;

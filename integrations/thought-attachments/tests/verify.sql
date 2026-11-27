@@ -756,7 +756,7 @@ begin
   if p_other then
     insert into thought_attachments (parent_thought_id, state, upload_deadline) values (p, 'processed', now()) returning id into o;
   end if;
-  -- (the preview is added to this helper with U104)
+  pre := attachment_removal_preview(a);
   r := attachment_remove(a, 'tok');
   select exists (select 1 from thoughts where id = p) into still;
   if o is not null then delete from thought_attachments where id = o; end if;
@@ -804,4 +804,22 @@ do $$
 declare r jsonb := pg_temp.note_case('pending_upload', true, interval '1 hour');
 begin
   if (r->'removed'->>'noteRemoved')::boolean is not false or not (r->>'parent_still_there')::boolean then raise exception 'U103: %', r; end if;
+end $$;
+
+-- U104: the preview reports the same derived count and note flag the remove would, and deletes nothing
+do $$
+declare p uuid := pg_temp.mk_parent(); a uuid := pg_temp.mk_att(p, 'refused'); pre jsonb; r jsonb; n_before bigint; n_after bigint; rows_ bigint; par bigint;
+begin
+  update thought_attachments set parent_created_here = true where id = a;
+  perform attachment_write_derived(a, 'tok', pg_temp.rows_json('u104 one ' || a, 'u104 two ' || a), '{"state":"refused"}'::jsonb);
+  select count(*) into n_before from thoughts where metadata->>'attachment_id' = a::text;
+  pre := attachment_removal_preview(a);
+  select count(*) into n_after from thoughts where metadata->>'attachment_id' = a::text;
+  select count(*) into rows_ from thought_attachments where id = a;
+  select count(*) into par from thoughts where id = p;
+  r := attachment_remove(a, 'tok');
+  delete from thoughts where id = p;
+  if pre is distinct from '{"derived": 2, "noteWouldGo": true}'::jsonb then raise exception 'U104: preview %', pre; end if;
+  if n_before <> n_after or rows_ <> 1 or par <> 1 then raise exception 'U104: the preview deleted something'; end if;
+  if (r->>'derived')::int <> (pre->>'derived')::int or r->'noteRemoved' <> pre->'noteWouldGo' then raise exception 'U104: remove % differs from preview %', r, pre; end if;
 end $$;
