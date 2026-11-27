@@ -50,3 +50,10 @@ Deno.test("U2 a set variable overrides its default", () => {
     attachmentsBucket: "files",
   });
 });
+
+const OPENROUTER_KEY = "test-openrouter-key-placeholder";
+
+Deno.test("U3 with EMBEDDING_API_KEY unset the embedding key is OPENROUTER_API_KEY", () => {
+  const s = settingsWith({ EMBEDDING_API_KEY: undefined, OPENROUTER_API_KEY: OPENROUTER_KEY });
+  assertEquals(s.embeddingApiKey, OPENROUTER_KEY);
+});
