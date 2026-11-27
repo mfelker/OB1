@@ -1112,7 +1112,7 @@ Deno.test(
   },
 );
 
-todo(
+Deno.test(
   "A35 a file declared image/png whose bytes are a JPEG of that size is refused at finishing naming the actual type",
   async () => {
     const w = world();
