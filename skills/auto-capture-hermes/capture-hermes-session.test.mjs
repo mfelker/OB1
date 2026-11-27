@@ -297,11 +297,16 @@ test("U12 a title containing Subagent: later in the text is captured", { skip },
 });
 
 test("U13 --latest picks the newest top-level session over a newer subagent", { skip }, async () => {
+  // Two top-level sessions (older, newer) and a subagent newer than both:
+  // the newer top-level one must win, so both "newest" and "not a subagent" can fail.
   seedSession({ started_at: 1764200000 });
-  const child = store.addSession({ id: "session-2", parent_session_id: SESSION_ID, started_at: 1764209999 });
+  const newer = store.addSession({ id: "session-3", cwd: `/work/${PROJECT}`, started_at: 1764205000 });
+  store.addMessages(newer.id, conversation("n1", "na1", "n2", "na2", "n3", "na3"));
+  const child = store.addSession({ id: "session-2", parent_session_id: newer.id, started_at: 1764209999 });
   store.addMessages(child.id, conversation("c1", "ca1", "c2", "ca2", "c3", "ca3"));
   const result = await runAdapter(sandbox, { args: ["--dry-run", "--latest"] });
-  assert.ok(headerOf(parsePayload(result)).includes("Session: session-1"));
+  const header = headerOf(parsePayload(result));
+  assert.equal(header.find((line) => line.startsWith("Session: ")), "Session: session-3");
 });
 
 // ── Payload (US2.1, FR-011, FR-012, INV-1) ──────────────────────────────────
