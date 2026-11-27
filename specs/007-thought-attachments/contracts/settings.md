@@ -22,4 +22,6 @@ Environment variables for the Edge Function (constitution Principle II: secrets 
 | `PUBLIC_BASE_URL` | `SUPABASE_PUBLIC_URL`, else `SUPABASE_URL` | Address put in every returned link; on 006, an address the phone can reach | R6 |
 | `UPLOAD_PAGE_URL` | `PUBLIC_BASE_URL` + `/functions/v1/thought-attachments/upload` | Where the phone page lives. The function's name is fixed: `thought-attachments` (T005 Q2). On Cloud this must be set to the owner's published copy (README step) | R5 |
 
+**Invalid values** (T005 Q3): a numeric setting that doesn't parse, or is zero or negative, makes every MCP call and page route return a named error, for example "setting MAX_PDF_PAGES is invalid: must be a positive whole number", and nothing else happens. The `*_MB` caps accept decimals (`7.5`). `MAX_PDF_PAGES`, `PASSAGE_MAX_CHARS`, `SCANNED_MIN_CHARS_PER_PAGE`, `EMBEDDING_BATCH_SIZE`, `UPLOAD_LINK_MINUTES`, `DOWNLOAD_LINK_SECONDS` and `BUSY_SECONDS` must be whole numbers. The error names the setting but never echoes its value (FR-009).
+
 `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are provided by the platform. No setting value is ever written into a thought, an attachment record or a log line (FR-009).
