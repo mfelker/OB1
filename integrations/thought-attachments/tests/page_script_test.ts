@@ -253,7 +253,7 @@ Deno.test("U346 the repository's upload-page.html has its API-address line blank
   assertEquals(/=\s*(""|'')\s*;/.test(lines[0]), true);
 });
 
-Deno.test("P1 a failed upload or an unreachable server shows Failed, and /page/finish is not called", async () => {
+Deno.test("U363 a failed upload or an unreachable server shows Failed, and /page/finish is not called", async () => {
   const bad = net()
     .on("POST", `${BASE}/page/start`, { body: UPLOAD })
     .on("PUT", SIGNED, { status: 500, body: "storage error" })
