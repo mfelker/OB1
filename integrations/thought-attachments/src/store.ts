@@ -72,7 +72,12 @@ export function createSupabaseStore(
       return { data: rows[0] ?? "not_found" };
     },
     findPending: notYet,
-    findByHash: notYet,
+    async findByHash(parentId, contentHash) {
+      const { data, error } = await db.from("thought_attachments").select("*")
+        .eq("parent_thought_id", parentId).eq("content_hash", contentHash).neq("state", "refused").limit(1);
+      if (error) return { error: scrub(error.message) };
+      return { data: ((data ?? []) as AttachmentRow[])[0] ?? null };
+    },
     setDeclaration: notYet,
     listByParent: notYet,
     attachmentForDerived: notYet,

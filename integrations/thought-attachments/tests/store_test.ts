@@ -167,3 +167,17 @@ Deno.test("U78 a database error maps to { error } whose text contains no service
     assertEquals(r.error.length > 0, true);
   }
 });
+
+const PARENT = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
+const HASH = "sha256:" + "ab".repeat(32);
+
+Deno.test("U315 findByHash returns the non-refused attachment on that parent with that hash", async () => {
+  const { store, ff } = setup();
+  const row = attachmentRow({ state: "processed", content_hash: HASH });
+  ff.on("GET", `${REST}/thought_attachments*`, { body: [row] });
+  assertEquals(await store.findByHash(PARENT, HASH), { data: row });
+  const url = decodeURIComponent(ff.requests[0].url);
+  assertEquals(url.includes(`parent_thought_id=eq.${PARENT}`), true);
+  assertEquals(url.includes(`content_hash=eq.${HASH}`), true);
+  assertEquals(url.includes("state=neq.refused"), true);
+});
