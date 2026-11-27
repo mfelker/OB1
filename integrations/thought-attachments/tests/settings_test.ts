@@ -3,6 +3,7 @@ import { assertEquals } from "jsr:@std/assert@1.0.19";
 import { loadSettings } from "../src/settings.ts";
 import type { Settings } from "../src/types.ts";
 import {
+  baseEnv,
   EMBEDDING_API_KEY,
   envGetter,
   PUBLIC_BASE_URL,
@@ -185,4 +186,25 @@ Deno.test("U310 each other numeric setting set to abc is a problem naming it", (
     names.map((name) => problemsWith({ [name]: "abc" })),
     names.map((name) => [{ setting: name, reason: WHOLE }]),
   );
+});
+
+Deno.test("U11 no setting's value appears in any problem's reason", () => {
+  const numeric = [
+    "EMBEDDING_BATCH_SIZE",
+    "MAX_IMAGE_MB",
+    "MAX_PDF_MB",
+    "MAX_PDF_PAGES",
+    "PASSAGE_MAX_CHARS",
+    "SCANNED_MIN_CHARS_PER_PAGE",
+    "UPLOAD_LINK_MINUTES",
+    "DOWNLOAD_LINK_SECONDS",
+    "BUSY_SECONDS",
+  ];
+  const overrides: Record<string, string | undefined> = { MCP_ACCESS_KEY: undefined };
+  for (const name of numeric) overrides[name] = `bad${name.toLowerCase()}`;
+  const values = Object.values({ ...baseEnv(), ...overrides }).filter((v): v is string => v !== undefined);
+  const problems = problemsWith(overrides);
+  assertEquals(problems.length, numeric.length + 1);
+  const leaks = problems.flatMap((p) => values.filter((v) => p.reason.includes(v)).map((v) => `${p.setting}: ${v}`));
+  assertEquals(leaks, []);
 });
