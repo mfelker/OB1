@@ -402,3 +402,18 @@ Deno.test("U240 a given sensitivity_tier of restricted is stored on the row", as
   await call(h, "attach_file", { thought_id: parent.id, ...PDF, sensitivity_tier: "restricted" });
   assertEquals(h.store.attachments[0].sensitivity_tier, "restricted");
 });
+
+Deno.test("U329 the same file pending on the parent but past its upload deadline creates a new attachment", async () => {
+  const h = await harness();
+  const parent = await seed(h, "dishwasher");
+  const expired = h.store.seedAttachment({
+    parent_thought_id: parent.id,
+    ...{ file_name: "manual.pdf", declared_type: "application/pdf", declared_size: 1000 },
+    upload_deadline: new Date(h.clock.now().getTime() + 60_000).toISOString(),
+  });
+  h.clock.advanceSeconds(61);
+  const out = await call(h, "attach_file", { thought_id: parent.id, ...PDF });
+  assertEquals(out.isError, false);
+  assertEquals(h.store.attachments.length, 2);
+  assert(out.data.attachment_id !== expired.id);
+});
