@@ -916,3 +916,28 @@ Deno.test("U261 find_orphan_attachments lists each orphan's id, file name, why i
   assertStringIncludes(out.text, "parent_gone");
   assertEquals(h.store.calls.find((c) => c.method === "orphans")?.args, [h.clock.now()]);
 });
+
+// ---------- every tool that takes attachment_id ----------
+
+Deno.test("U243 every tool taking attachment_id accepts the short id and reports not found and ambiguous", async () => {
+  const h = await harness();
+  const row = await storedRow(h);
+  const short = row.id.replace(/-/g, "").slice(0, 8);
+  const one = await pendingRow(h, { id: "a1b2c3d4-0000-4000-8000-000000000001" });
+  await pendingRow(h, { id: "a1b2c3d4-0000-4000-8000-000000000002" });
+  for (const tool of ["finish_attachment", "get_attachment", "remove_attachment"]) {
+    const ok = await call(h, tool, { attachment_id: short });
+    assertEquals(ok.isError, false, tool);
+    assertEquals(ok.data.attachment_id ?? row.id, row.id, tool);
+    const missing = await call(h, tool, { attachment_id: "ffffffff" });
+    assertEquals(missing.isError, true, tool);
+    assertStringIncludes(missing.text, "not found");
+    const ambiguous = await call(h, tool, { attachment_id: "a1b2c3d4" });
+    assertEquals(ambiguous.isError, true, tool);
+    assertStringIncludes(ambiguous.text, "ambiguous");
+    const full = await call(h, tool, { attachment_id: one.id });
+    assertEquals(full.isError, false, tool);
+  }
+  assertEquals(h.finish.calls.map((c) => c.id), [row.id, one.id]);
+  assertEquals(h.store.attachments.length, 3);
+});

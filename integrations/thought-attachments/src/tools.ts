@@ -201,7 +201,7 @@ async function resolveAttachment(
   const found = await deps.store.getAttachment(id);
   if ("error" in found) return { failure: fail(found.error) };
   if (found.data === "not_found") return { failure: fail(`Attachment not found: ${id}.`) };
-  if (found.data === "ambiguous") return { failure: fail(`Ambiguous attachment id: ${id} matches more than one attachment; use the full id.`) };
+  if (found.data === "ambiguous") return { failure: fail(`Attachment id ${id} is ambiguous: it matches more than one attachment; use the full id.`) };
   return { row: found.data };
 }
 
