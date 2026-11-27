@@ -205,8 +205,6 @@ async function resolveAttachment(
   return { row: found.data };
 }
 
-const NOT_YET = () => ({ content: [{ type: "text" as const, text: "" }] });
-
 /** A tool result: the text for the AI, plus the structured fields. */
 function reply(text: string, data: Record<string, unknown> = {}, isError = false) {
   return { content: [{ type: "text" as const, text }], structuredContent: data, ...(isError ? { isError: true } : {}) };
