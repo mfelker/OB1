@@ -81,7 +81,7 @@ async function attachFile(deps: Deps, args: AttachArgs) {
     : null;
   if (file) {
     const refusal = checkDeclared(file, deps.settings);
-    if (refusal) return fail(refusal.message);
+    if (refusal) return fail(refusal.message, refusal.code);
   }
   let parentId: string;
   let parentCreated = false;
@@ -212,7 +212,7 @@ function reply(text: string, data: Record<string, unknown> = {}, isError = false
   return { content: [{ type: "text" as const, text }], structuredContent: data, ...(isError ? { isError: true } : {}) };
 }
 
-const fail = (message: string) => reply(message, { error: message }, true);
+const fail = (message: string, code?: string) => reply(message, { error: message, ...(code ? { code } : {}) }, true);
 
 export function buildServer(deps: Deps, services: Services): McpServer {
   const server = new McpServer({ name: "thought-attachments", version: "0.1.0" });

@@ -941,3 +941,12 @@ Deno.test("U243 every tool taking attachment_id accepts the short id and reports
   assertEquals(h.finish.calls.map((c) => c.id), [row.id, one.id]);
   assertEquals(h.store.attachments.length, 3);
 });
+
+Deno.test("U232b attach_file passes the refusal code through", async () => {
+  const h = await harness();
+  const parent = await seed(h, "dishwasher");
+  const code = async (details: Record<string, unknown>) => (await call(h, "attach_file", { thought_id: parent.id, ...details })).data.code;
+  assertEquals(await code({ file_name: "a.heic", declared_type: "image/heic", declared_size: 1 }), "heic");
+  assertEquals(await code({ file_name: "a.txt", declared_type: "text/plain", declared_size: 1 }), "unsupported_type");
+  assertEquals(await code({ ...PDF, declared_size: 26 * 1024 * 1024 }), "too_large");
+});
