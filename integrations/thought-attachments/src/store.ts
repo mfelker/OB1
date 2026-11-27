@@ -128,7 +128,11 @@ export function createSupabaseStore(
       if (error) return { error: scrub(error.message) };
       return { data: new Uint8Array(await data.arrayBuffer()) };
     },
-    deleteObject: notYet,
+    async deleteObject(path) {
+      const { error } = await db.storage.from(settings.attachmentsBucket).remove([path]);
+      if (error) return { error: scrub(error.message) };
+      return { data: null };
+    },
     signDownload: notYet,
   };
 

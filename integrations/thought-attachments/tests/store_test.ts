@@ -286,3 +286,11 @@ Deno.test("U81 download returns the stored bytes", async () => {
   if (!("data" in r)) throw new Error(JSON.stringify(r));
   assertEquals([...r.data], [...bytes]);
 });
+
+Deno.test("U82 deleteObject deletes that path and no other", async () => {
+  const { store, ff } = setup();
+  ff.on("DELETE", `${STORAGE}/object/ob1-files`, { body: [{ name: BUCKET_PATH }] });
+  assertEquals(await store.deleteObject(BUCKET_PATH), { data: null });
+  assertEquals(ff.requests.length, 1);
+  assertEquals(ff.requests[0].body, { prefixes: [BUCKET_PATH] });
+});
