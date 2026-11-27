@@ -630,3 +630,12 @@ Deno.test("U252 get_attachment on pending_upload returns no download_link", asyn
   assertEquals(h.store.signedDownloads, []);
   assert(!out.text.includes("Download link"));
 });
+
+Deno.test("U253 get_attachment on refused returns no download_link", async () => {
+  const h = await harness();
+  const row = await storedRow(h, { state: "refused", state_reason: "the file is image/png, not the declared application/pdf" });
+  const out = await call(h, "get_attachment", { attachment_id: row.id });
+  assertEquals(out.data.state, "refused");
+  assertEquals(out.data.download_link, undefined);
+  assertEquals(h.store.signedDownloads, []);
+});
