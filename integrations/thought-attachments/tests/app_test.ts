@@ -42,3 +42,19 @@ Deno.test("U294 the correct key as ?key= lets an MCP initialize succeed", async 
   assertEquals(message?.error, undefined);
   assert((message?.result as { serverInfo?: unknown })?.serverInfo !== undefined, "no serverInfo");
 });
+
+/** The core server's authorization error (W/server/index.ts): a JSON-RPC error, code -32001, echoing the request id. */
+const UNAUTHORIZED = { code: -32001, message: "Unauthorized: missing or invalid authentication." };
+
+Deno.test("U295 a wrong key gets an authorization error, and the store is never called", async () => {
+  const { app, store } = rig();
+  const { message } = await mcpCall(app.fetch, "tools/call", {
+    name: "list_attachments",
+    arguments: { thought_id: "00000001-0000-4000-9000-000000000000" },
+  }, "not-the-brain-key", { id: 41 });
+  assertEquals({ error: message?.error, id: message?.id, calls: store.callNames() }, {
+    error: UNAUTHORIZED,
+    id: 41,
+    calls: [],
+  });
+});
