@@ -361,3 +361,15 @@ Deno.test("U280 a /page/finish refused as busy returns the busy outcome and leav
   assertEquals([later.status, (await later.json()).state], [200, "processed"]);
   assertEquals([r.finishCalls, r.store.attachment(row.id)!.page_token_hash], [[row.id, row.id], null]);
 });
+
+Deno.test("U340 a /page/finish with no file uploaded yet returns it and leaves the token valid", async () => {
+  const r = await rig();
+  const row = await r.seed();
+  r.outcomes.push({ state: "pending_upload", derived_count: 0, reason: "no file uploaded yet" });
+  const none = await r.post("/page/finish", { token: TOKEN });
+  assertEquals([none.status, await none.json()], [200, { state: "pending_upload", derived_count: 0, reason: "no file uploaded yet" }]);
+  assertEquals(r.store.attachment(row.id)!.page_token_hash, await sha256Hex(TOKEN));
+  const start = await r.post("/page/start", { token: TOKEN, ...PICK });
+  const again = await r.post("/page/finish", { token: TOKEN });
+  assertEquals([start.status, again.status, (await again.json()).state], [200, 200, "processed"]);
+});

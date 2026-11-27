@@ -102,8 +102,9 @@ export function pageRoutes(deps: Deps, services: Services): Hono {
     const row = await attachmentFor(body);
     if (!row) return c.json({ error: EXPIRED }, 410);
     const outcome = await services.finish(row.id, {});
-    // Busy leaves the token valid, so the page can retry (T005 Q5).
-    if (outcome.busy === undefined) await deps.store.consumePageToken(row.id, await sha256Hex(body.token));
+    // Busy and "no file uploaded yet" leave the token valid, so the page can retry (T005 Q5).
+    const reachedOutcome = outcome.busy === undefined && outcome.state !== "pending_upload";
+    if (reachedOutcome) await deps.store.consumePageToken(row.id, await sha256Hex(body.token));
     return c.json(outcome);
   });
 
