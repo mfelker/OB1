@@ -574,3 +574,18 @@ Deno.test("U210 a vector length different from embeddingDimension() ends failed 
     assertEquals(r.store.derivedOf(att.id).length, 0);
   }
 });
+
+Deno.test("U211 a failed attachment finished again with the services working ends processed", async () => {
+  const r = await rig();
+  r.ff.on("POST", EMBED_URL, () => ({ status: 500, body: "embeddings down" }));
+  const att = pending(r, await textPdf(["alpha beta gamma delta epsilon zeta"]));
+  assertEquals((await r.finish(att.id, {})).state, "failed");
+  r.ff.on("POST", EMBED_URL, embeddingResponder());
+  const out = await r.finish(att.id, {});
+  assertEquals(out.state, "processed");
+  assertEquals(out.derived_count, 1);
+  const row = r.store.attachment(att.id) as AttachmentRow;
+  assertEquals(row.state, "processed");
+  assertEquals(row.state_reason, null);
+  assertEquals(r.store.derivedOf(att.id).length, 1);
+});
