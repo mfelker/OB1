@@ -53,3 +53,12 @@ Deno.test("U164 with batch size 1 each text goes in its own request", async () =
   assert("data" in out);
   assertEquals(ff.requests.map((r) => (r.body as { input: string[] }).input), [["text 0"], ["text 1"], ["text 2"]]);
 });
+
+Deno.test("U165 each request carries Authorization Bearer with the configured embedding key", async () => {
+  const ff = new FakeFetch().on("POST", URL_, embeddingResponder(8));
+  const client = createEmbeddingClient(settingsWith({ EMBEDDING_BATCH_SIZE: "2" }), ff.fetch);
+  const out = await client.embed(texts(3));
+  assert("data" in out);
+  assertEquals(ff.requests.length, 2);
+  for (const r of ff.requests) assertEquals(r.headers["authorization"], `Bearer ${EMBEDDING_API_KEY}`);
+});

@@ -5,7 +5,10 @@ export function createEmbeddingClient(settings: Settings, fetch: typeof globalTh
   async function embedBatch(batch: string[]): Promise<number[][]> {
     const response = await fetch(`${settings.embeddingApiBase}/embeddings`, {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers: {
+        "content-type": "application/json",
+        ...(settings.embeddingApiKey ? { authorization: `Bearer ${settings.embeddingApiKey}` } : {}),
+      },
       body: JSON.stringify({ model: settings.embeddingModel, input: batch }),
     });
     const body = await response.json();
