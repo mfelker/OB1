@@ -335,6 +335,21 @@ test("U17 an over-limit transcript has the marker between the kept start and end
   assert.ok(marker > text.indexOf("FIRST-TURN") && marker < text.indexOf("LAST-TURN"));
 });
 
+test("U41 a transcript one character under the limit is sent whole and one character over is trimmed to fit", { skip }, async () => {
+  seedSession({}, longConversation(4, 1000));
+  // Measure the full capture once, with a limit far above it, then put the limit
+  // one character either side of that size.
+  const fullLength = parsePayload(await dryRun(SESSION_ID, { OB_CAPTURE_MAX_CHARS: "100000" })).text.length;
+
+  const under = parsePayload(await dryRun(SESSION_ID, { OB_CAPTURE_MAX_CHARS: String(fullLength + 1) })).text;
+  assert.equal(under.length, fullLength, "one character under the limit: sent whole");
+  assert.equal(under.includes(TRUNCATION_MARKER), false, "one character under the limit: no marker");
+
+  const over = parsePayload(await dryRun(SESSION_ID, { OB_CAPTURE_MAX_CHARS: String(fullLength - 1) })).text;
+  assert.ok(over.length <= fullLength - 1, `one character over the limit: ${over.length} chars exceeds ${fullLength - 1}`);
+  assert.equal(over.includes(TRUNCATION_MARKER), true, "one character over the limit: marker present");
+});
+
 test("U18 import_key has the form hermes:<session id>:<8 hex>", { skip }, async () => {
   seedSession();
   assert.match(parsePayload(await dryRun()).import_key, /^hermes:session-1:[0-9a-f]{8}$/);
