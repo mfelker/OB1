@@ -182,3 +182,13 @@ Deno.test("U323 the same bytes on an attachment of another parent don't refuse t
   assertEquals(out.state, "processed");
   assertEquals(r.store.attachment(mine.id)?.state, "processed");
 });
+
+Deno.test("U324 a first attachment with those bytes in state failed still counts: the second ends refused, naming it", async () => {
+  const r = await rig();
+  const bytes = await textPdf(["alpha beta gamma"]);
+  const first = pending(r, bytes, { file_name: "first.pdf", state: "failed", content_hash: await contentHash(bytes) });
+  const second = pending(r, bytes, { file_name: "second.pdf" });
+  const out = await r.finish(second.id, {});
+  assertEquals(out.state, "refused");
+  assertStringIncludes(out.reason ?? "", shortId(first.id));
+});
