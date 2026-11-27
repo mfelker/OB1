@@ -553,3 +553,19 @@ begin
     raise exception 'U66: dimension is %', attachment_embedding_dimension();
   end if;
 end $$;
+
+-- U67: the exact-text find returns id, first line and capture date for a thought whose content contains the query
+do $$
+declare tag text := 'u67' || replace(gen_random_uuid()::text, '-', ''); t uuid; r record; n int := 0;
+begin
+  insert into thoughts (content) values (E'Line one ' || tag || E' middle\nsecond line') returning id into t;
+  for r in select * from attachment_find_thoughts_exact(tag, 20) loop
+    n := n + 1;
+    if r.id <> t or r.first_line <> 'Line one ' || tag || ' middle' or r.captured is null then
+      delete from thoughts where id = t;
+      raise exception 'U67: unexpected match %', r;
+    end if;
+  end loop;
+  delete from thoughts where id = t;
+  if n <> 1 then raise exception 'U67: % matches', n; end if;
+end $$;
