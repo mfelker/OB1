@@ -616,9 +616,10 @@ begin
   if n <> 1 or hit <> yes then raise exception 'U314: % matches, first %', n, hit; end if;
 end $$;
 
--- U84: inserting a note whose text is new adds a thought with the note's content and metadata, reported as created
+-- U84: inserting a note whose text is new adds a thought with the note's content and metadata, reported as created,
+-- and stores the literal hex digest of the fixed non-ASCII text (U55's text and digest; the "é" pins UTF-8)
 do $$
-declare txt text := 'U84 note ' || gen_random_uuid(); r jsonb; t thoughts;
+declare txt text := E'  U55   Mixed CASE\ntext\tfor the café fingerprint  '; r jsonb; t thoughts;
 begin
   r := attachment_insert_note(txt, array_fill(0, array[1536])::vector::text,
     '{"type":"observation","source":"thought-attachments","source_type":"thought_attachments_note"}'::jsonb);
@@ -626,20 +627,25 @@ begin
   delete from thoughts where id = (r->>'id')::uuid;
   if (r->>'created')::boolean is not true then raise exception 'U84: not reported as created: %', r; end if;
   if t.content <> txt or t.metadata->>'source_type' <> 'thought_attachments_note' or t.metadata->>'type' <> 'observation'
-     or t.embedding is null or t.content_fingerprint is null then
+     or t.embedding is null then
     raise exception 'U84: stored row differs: %', t;
+  end if;
+  if t.content_fingerprint is distinct from 'b05af88c83ebf399bbc3012d5224c51fe75dfcc25e5770b76e9087faab0b470d' then
+    raise exception 'U84: fingerprint is %, want the literal digest', t.content_fingerprint;
   end if;
 end $$;
 
--- U85: a note whose fingerprint exists returns that thought as not created, and leaves it unchanged
+-- U85: a note whose fingerprint exists returns that thought as not created, and leaves it unchanged.
+-- The existing thought is seeded with the literal digest of the normalised text, not the code's own expression.
 do $$
-declare txt text := 'U85 note ' || gen_random_uuid(); o uuid; r jsonb; t thoughts;
+declare txt text := 'U85 note: an existing thought with a literal fingerprint'; o uuid; r jsonb; t thoughts;
 begin
   insert into thoughts (content, content_fingerprint, metadata)
-    values (txt, encode(sha256(convert_to(lower(trim(regexp_replace(txt, '\s+', ' ', 'g'))), 'UTF8')), 'hex'), '{"owner":true}') returning id into o;
+    values (txt, '53fcfb6e6b1ad09def85040d6dcd92ce263be88826862f0e2dcce397f9ed7983', '{"owner":true}') returning id into o;
   r := attachment_insert_note('  ' || upper(txt), array_fill(0, array[1536])::vector::text, '{"type":"observation"}'::jsonb);
   select * into t from thoughts where id = o;
   delete from thoughts where id = o;
+  if r->>'created' = 'true' then delete from thoughts where id = (r->>'id')::uuid; end if;
   if (r->>'id')::uuid <> o or (r->>'created')::boolean is not false then raise exception 'U85: got %', r; end if;
   if t.content <> txt or t.metadata <> '{"owner":true}'::jsonb or t.embedding is not null then raise exception 'U85: thought changed: %', t; end if;
 end $$;
