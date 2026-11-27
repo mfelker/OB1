@@ -28,7 +28,17 @@ export function createFinisher(deps: Deps): Services {
     }
   }
 
+  /** The outcome a stored row reports (what a plain repeat finish returns). */
+  function outcomeOf(row: AttachmentRow): FinishOutcome {
+    const out: FinishOutcome = { state: row.state, derived_count: row.derived_count };
+    if (row.state_reason) out.reason = row.state_reason;
+    if (row.page_count !== null) out.page_count = row.page_count;
+    if (row.last_rebuild_error) out.last_rebuild_error = row.last_rebuild_error;
+    return out;
+  }
+
   async function run(row: AttachmentRow, token: string): Promise<FinishOutcome> {
+    if (row.state === "processed") return outcomeOf(row);
     const path = row.storage_path as string;
     const info = await store.objectInfo(path);
     if ("error" in info || info.data === null) throw new Error("no object");

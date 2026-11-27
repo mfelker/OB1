@@ -131,3 +131,17 @@ Deno.test("U186 an owner thought equal to a passage's body is unchanged after th
   assertEquals(r.store.derivedOf(att.id).length, 1);
   assertStringIncludes(r.store.derivedOf(att.id)[0].content, "alpha beta gamma");
 });
+
+Deno.test("U187 a plain finish on processed returns the existing outcome with no embedding or vision request and no write", async () => {
+  const r = await rig();
+  const att = pending(r, await textPdf(["alpha beta gamma", "delta epsilon"]));
+  const first = await r.finish(att.id, {});
+  assertEquals(first.state, "processed");
+  const requests = r.ff.requests.length;
+  const writes = () => r.store.callNames().filter((m) => m === "writeDerived" || m === "setState").length;
+  const writesBefore = writes();
+  const again = await r.finish(att.id, {});
+  assertEquals(again, first);
+  assertEquals(r.ff.requests.length, requests);
+  assertEquals(writes(), writesBefore);
+});
