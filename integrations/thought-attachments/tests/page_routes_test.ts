@@ -248,3 +248,21 @@ Deno.test("U275 CORS allows the origin of UPLOAD_PAGE_URL and gives no allow-ori
   );
   assertStringIncludes(preflight.headers.get("access-control-allow-headers") ?? "", "content-type");
 });
+
+Deno.test("U276 CORS allows the same origin when the page is served by the function", async () => {
+  const r = await rig({ UPLOAD_PAGE_URL: undefined });
+  await r.seed();
+  const call = (url: string, origin: string) =>
+    r.app.request(url, {
+      method: "POST",
+      headers: { "content-type": "application/json", origin },
+      body: JSON.stringify({ token: TOKEN, ...PICK }),
+    });
+  const viaPublic = await call("http://supabase.internal:8000/page/start", PUBLIC_BASE_URL);
+  const sameOrigin = await call("https://other-host.example.test/page/start", "https://other-host.example.test");
+  const foreign = await call("http://supabase.internal:8000/page/start", "https://evil.example.test");
+  assertEquals(
+    [viaPublic, sameOrigin, foreign].map((x) => x.headers.get("access-control-allow-origin")),
+    [PUBLIC_BASE_URL, "https://other-host.example.test", null],
+  );
+});
