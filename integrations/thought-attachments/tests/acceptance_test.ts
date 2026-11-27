@@ -659,7 +659,7 @@ Deno.test(
   },
 );
 
-todo(
+Deno.test(
   "A17 HEIC bytes uploaded under a JPEG declaration are refused at finishing with the share-it-as-JPEG message, the object deleted and the row refused",
   async () => {
     const w = world();
