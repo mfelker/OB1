@@ -13,17 +13,14 @@ export async function fingerprint(content: string): Promise<string> {
   return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-export function passageRow(
+export async function passageRow(
   row: AttachmentRow,
   passage: Passage,
   embedding: number[],
   now: Date,
 ): Promise<DerivedRow> {
   const content = sourceLine(row.file_name ?? "", locatorFor(passage.pages), row.id.slice(0, 8)) + "\n" + passage.text;
-  return Promise.resolve({ content, fingerprint: "", metadata: {}, embedding }).then(async (derived) => ({
-    ...derived,
-    fingerprint: await fingerprint(content),
-  }));
+  return { content, fingerprint: await fingerprint(content), metadata: {}, embedding };
 }
 
 /** `page 12` for one page, `pages 12–13` across pages (data-model.md). */
