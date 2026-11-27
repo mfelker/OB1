@@ -41,8 +41,16 @@ function post(path, body) {
 
 var fileEl = document.getElementById("file");
 
+function show(text) {
+  statusEl.textContent = text;
+}
+
 function start(file) {
-  return post("/page/start", { token: token, name: file.name, type: file.type, size: file.size });
+  return post("/page/start", { token: token, name: file.name, type: file.type, size: file.size }).then(function (res) {
+    return res.json().then(function (body) {
+      if (res.status === 400) show("Refused: " + body.message);
+    });
+  });
 }
 
 var token = readToken();

@@ -71,3 +71,13 @@ Deno.test("U285 the page shows the accepted types", async () => {
   const types = page.text("types");
   for (const word of ["JPEG", "PNG", "WebP", "PDF"]) assertStringIncludes(types, word);
 });
+
+Deno.test("U286 a refusal from /page/start is shown, and no PUT happens", async () => {
+  const f = net().on("POST", `${BASE}/page/start`, { status: 400, body: REFUSAL });
+  const page = await loadPage({ href: `${PAGE_AT}#t=tok`, fetch: f.fetch });
+  await page.pick({ name: "big.jpg", type: "image/jpeg", size: 20_000_000 });
+  await settle();
+  assertStringIncludes(page.text("status"), REFUSAL.message);
+  assertEquals(f.requests.filter((r) => r.method === "PUT"), []);
+  assertEquals(f.requests.map((r) => r.url.slice(BASE.length)), ["/page/info", "/page/start"]);
+});
