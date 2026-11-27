@@ -864,3 +864,10 @@ declare r jsonb := pg_temp.orphan_case('refused', interval '1 hour', true);
 begin
   if r is null or r->>'why' <> 'refused' then raise exception 'U108: %', r; end if;
 end $$;
+
+-- U109: orphans omits a processed row whose parent exists
+do $$
+declare r jsonb := pg_temp.orphan_case('processed', interval '1 hour', true);
+begin
+  if r is not null then raise exception 'U109: %', r; end if;
+end $$;
