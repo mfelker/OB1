@@ -419,3 +419,27 @@ begin
     raise exception 'U57: state fields not set: %', r;
   end if;
 end $$;
+
+-- U58: a write that fails partway (its second row conflicts) leaves the previous set, state and derived_count
+do $$
+declare p uuid := pg_temp.mk_parent(); a uuid := pg_temp.mk_att(p); o uuid; txt text := 'U58 owner ' || gen_random_uuid();
+        raised boolean := false; old_n bigint; new_n bigint; st text; dc int;
+begin
+  insert into thoughts (content, content_fingerprint)
+    values (txt, encode(sha256(convert_to(lower(trim(regexp_replace(txt, '\s+', ' ', 'g'))), 'UTF8')), 'hex')) returning id into o;
+  perform attachment_write_derived(a, 'tok', pg_temp.rows_json('u58 old one ' || a, 'u58 old two ' || a), '{"state":"processed"}'::jsonb);
+  begin
+    perform attachment_write_derived(a, 'tok', pg_temp.rows_json('u58 new ' || a, txt), '{"state":"failed"}'::jsonb);
+  exception when unique_violation then raised := true;
+  end;
+  select count(*) filter (where content like 'u58 old%'), count(*) filter (where content like 'u58 new%') into old_n, new_n
+    from thoughts where metadata->>'attachment_id' = a::text;
+  select state, derived_count into st, dc from thought_attachments where id = a;
+  delete from thoughts where id = o;
+  delete from thoughts where metadata->>'attachment_id' = a::text;
+  delete from thought_attachments where id = a;
+  delete from thoughts where id = p;
+  if not raised then raise exception 'U58: the conflicting write did not raise'; end if;
+  if old_n <> 2 or new_n <> 0 then raise exception 'U58: set changed (% old, % new)', old_n, new_n; end if;
+  if st <> 'processed' or dc <> 2 then raise exception 'U58: state % derived_count %', st, dc; end if;
+end $$;
