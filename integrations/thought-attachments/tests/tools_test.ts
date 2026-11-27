@@ -169,3 +169,9 @@ Deno.test("U222 find_thought with no limit asks for 5 matches", async () => {
   await call(h, "find_thought", { query: "filters", mode: "exact" });
   assertEquals(h.store.calls.find((c) => c.method === "findThoughtsExact")?.args, ["filters", 5]);
 });
+
+Deno.test("U223 find_thought with limit 20 asks for 20 matches", async () => {
+  const h = await harness();
+  await call(h, "find_thought", { query: "filters", mode: "exact", limit: 20 });
+  assertEquals(h.store.calls.find((c) => c.method === "findThoughtsExact")?.args, ["filters", 20]);
+});
