@@ -893,3 +893,26 @@ Deno.test("U354 a confirmed remove proceeds on an attachment whose earlier remov
   assertEquals(h.store.attachments, []);
   assertEquals(h.store.derivedOf(row.id), []);
 });
+
+// ---------- find_orphan_attachments (T064) ----------
+
+Deno.test("U261 find_orphan_attachments lists each orphan's id, file name, why it is listed and derived_count", async () => {
+  const h = await harness();
+  const live = await seed(h, "live parent");
+  const past = new Date(h.clock.now().getTime() - 1000).toISOString();
+  const gone = h.store.seedAttachment({ parent_thought_id: "00000000-0000-4000-9000-00000000dead", file_name: "gone.pdf", declared_type: "application/pdf", declared_size: 1, state: "processed", derived_count: 4 });
+  const expired = h.store.seedAttachment({ parent_thought_id: live.id, file_name: "late.jpg", declared_type: "image/jpeg", declared_size: 1, upload_deadline: past });
+  const refused = h.store.seedAttachment({ parent_thought_id: live.id, file_name: "bad.png", declared_type: "image/png", declared_size: 1, state: "refused" });
+  h.store.seedAttachment({ parent_thought_id: live.id, file_name: "fine.pdf", declared_type: "application/pdf", declared_size: 1, state: "processed" });
+  const out = await call(h, "find_orphan_attachments");
+  assertEquals(out.isError, false);
+  const short = (id: string) => id.replace(/-/g, "").slice(0, 8);
+  assertEquals(out.data.orphans, [
+    { attachment_id: gone.id, short_id: short(gone.id), file_name: "gone.pdf", why: "parent_gone", derived_count: 4 },
+    { attachment_id: expired.id, short_id: short(expired.id), file_name: "late.jpg", why: "upload_expired", derived_count: 0 },
+    { attachment_id: refused.id, short_id: short(refused.id), file_name: "bad.png", why: "refused", derived_count: 0 },
+  ]);
+  assertStringIncludes(out.text, "gone.pdf");
+  assertStringIncludes(out.text, "parent_gone");
+  assertEquals(h.store.calls.find((c) => c.method === "orphans")?.args, [h.clock.now()]);
+});

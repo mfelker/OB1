@@ -386,7 +386,19 @@ export function buildServer(deps: Deps, services: Services): McpServer {
   server.registerTool("find_orphan_attachments", {
     description: "List attachments whose parent is gone, uploads that expired, and refused files.",
     annotations: READ_ONLY,
-  }, NOT_YET);
+  }, async () => {
+    const found = await deps.store.orphans(deps.now());
+    if ("error" in found) return fail(found.error);
+    const orphans = found.data.map(({ row, why }) => ({
+      attachment_id: row.id,
+      short_id: shortId(row.id),
+      file_name: row.file_name,
+      why,
+      derived_count: row.derived_count,
+    }));
+    const lines = orphans.map((o) => `${o.attachment_id} (${o.short_id})  ${o.file_name}  ${o.why}  ${o.derived_count} derived thoughts`);
+    return reply(lines.join("\n"), { orphans });
+  });
 
   return server;
 }
