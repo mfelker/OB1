@@ -373,3 +373,13 @@ Deno.test("U340 a /page/finish with no file uploaded yet returns it and leaves t
   const again = await r.post("/page/finish", { token: TOKEN });
   assertEquals([start.status, again.status, (await again.json()).state], [200, 200, "processed"]);
 });
+
+Deno.test("U341 a /page/finish whose outcome is refused uses the token up", async () => {
+  const r = await rig();
+  const row = await r.seed();
+  r.outcomes.push({ state: "refused", derived_count: 0, reason: "The file is image/png, not the declared image/jpeg." });
+  const first = await r.post("/page/finish", { token: TOKEN });
+  const second = await r.post("/page/finish", { token: TOKEN });
+  assertEquals([first.status, (await first.json()).state, second.status], [200, "refused", 410]);
+  assertEquals([r.finishCalls.length, r.store.attachment(row.id)!.page_token_hash], [1, null]);
+});
