@@ -237,16 +237,35 @@ begin
 end $$;
 
 -- U47: the fingerprint column and idx_thoughts_fingerprint are added on a thoughts table without them.
--- fork-ci's bootstrap creates thoughts without the column, so the first run on a database exercises the add;
--- later runs find them present (U48 covers that case). verify.sql has no DROP to undo it.
+-- Proven on every run, not only the first: inside a transaction that is rolled back, a scratch schema holds a
+-- core thoughts table as the bootstrap creates it (no fingerprint column, no index); with that schema first on
+-- the search_path, schema.sql runs against it. The recorded pre-run state is asserted, then the add.
+begin;
+create schema u47_scratch;
+create table u47_scratch.thoughts (
+  id uuid default gen_random_uuid() primary key,
+  content text not null,
+  embedding vector(1536),
+  metadata jsonb default '{}'::jsonb,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+create temp table u47_before as
+  select exists (select 1 from information_schema.columns where table_schema = 'u47_scratch' and table_name = 'thoughts' and column_name = 'content_fingerprint') as has_col,
+         exists (select 1 from pg_indexes where schemaname = 'u47_scratch' and indexname = 'idx_thoughts_fingerprint') as has_idx;
+set local search_path = u47_scratch, public;
+\i schema.sql
 do $$
-declare has_col boolean; has_idx boolean;
+declare before u47_before; has_col boolean; has_idx boolean;
 begin
-  select exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'thoughts' and column_name = 'content_fingerprint') into has_col;
-  select exists (select 1 from pg_indexes where tablename = 'thoughts' and indexname = 'idx_thoughts_fingerprint') into has_idx;
-  if not has_col then raise exception 'U47: thoughts.content_fingerprint missing'; end if;
-  if not has_idx then raise exception 'U47: idx_thoughts_fingerprint missing'; end if;
+  select * into before from u47_before;
+  if before.has_col or before.has_idx then raise exception 'U47: the scratch thoughts table already had the column or index'; end if;
+  select exists (select 1 from information_schema.columns where table_schema = 'u47_scratch' and table_name = 'thoughts' and column_name = 'content_fingerprint') into has_col;
+  select exists (select 1 from pg_indexes where schemaname = 'u47_scratch' and tablename = 'thoughts' and indexname = 'idx_thoughts_fingerprint') into has_idx;
+  if not has_col then raise exception 'U47: thoughts.content_fingerprint was not added'; end if;
+  if not has_idx then raise exception 'U47: idx_thoughts_fingerprint was not added'; end if;
 end $$;
+rollback;
 
 -- U48: where the column and index exist, the file adds no second column or index
 -- (a second run of schema.sql leaves the index count on thoughts unchanged)
