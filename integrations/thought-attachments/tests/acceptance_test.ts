@@ -1123,7 +1123,7 @@ Deno.test(
   },
 );
 
-todo(
+Deno.test(
   "A36 corrupt bytes declared as a PDF end failed with a readable reason, the file still fetchable and no passages",
   async () => {
     const w = world();
