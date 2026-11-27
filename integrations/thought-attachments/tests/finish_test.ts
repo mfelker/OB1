@@ -242,3 +242,15 @@ Deno.test("U192 with vision not configured, the photo ends not_captioned with th
   assertEquals(r.store.derivedOf(att.id).length, 0);
   assertEquals(r.ff.requests.filter((q) => q.url === VISION_URL).length, 0);
 });
+
+Deno.test("U193 with the vision call failing, the photo ends not_captioned with the vision error's reason, and the object is kept", async () => {
+  const r = await rig();
+  r.ff.on("POST", VISION_URL, () => ({ status: 503, body: "vision is down" }));
+  const att = pending(r, jpegBytes(2000));
+  const out = await r.finish(att.id, {});
+  assertEquals(out.state, "not_captioned");
+  assertStringIncludes(out.reason ?? "", "503");
+  assertEquals(r.store.attachment(att.id)?.state_reason, out.reason);
+  assertEquals(r.store.objects.has(att.storage_path as string), true);
+  assertEquals(r.store.derivedOf(att.id).length, 0);
+});

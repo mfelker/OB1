@@ -113,7 +113,7 @@ export function createFinisher(deps: Deps): Services {
       return await notCaptioned(row, token, actual, "vision is not configured (set VISION_API_BASE and VISION_MODEL)");
     }
     const caption = await deps.vision.caption(bytes, row.declared_type as AcceptedType);
-    if ("error" in caption) throw new Error(caption.error);
+    if ("error" in caption) return await notCaptioned(row, token, actual, caption.error);
     const embedded = await deps.embeddings.embed([caption.data.text]);
     if ("error" in embedded) throw new Error(embedded.error);
     const now = deps.now();
