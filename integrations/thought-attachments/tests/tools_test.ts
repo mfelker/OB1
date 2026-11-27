@@ -321,3 +321,18 @@ Deno.test("U235 a successful start writes a row with the parent, base name, decl
   assertEquals(row.storage_path, `attachments/${row.id}/manual.pdf`);
   assertEquals(row.state, "pending_upload");
 });
+
+Deno.test("U234 the same name and type with a different size on the parent creates a new attachment", async () => {
+  const h = await harness();
+  const parent = await seed(h, "dishwasher");
+  const pending = h.store.seedAttachment({
+    parent_thought_id: parent.id,
+    ...{ file_name: "manual.pdf", declared_type: "application/pdf", declared_size: 1000 },
+    upload_deadline: new Date(h.clock.now().getTime() + 60_000).toISOString(),
+  });
+  const out = await call(h, "attach_file", { thought_id: parent.id, ...PDF, declared_size: 2000 });
+  assertEquals(out.isError, false);
+  assertEquals(h.store.attachments.length, 2);
+  assert(out.data.attachment_id !== pending.id);
+  assertEquals(h.store.attachment(out.data.attachment_id as string)?.declared_size, 2000);
+});
