@@ -8,6 +8,7 @@ Environment variables for the Edge Function (constitution Principle II: secrets 
 | `EMBEDDING_API_BASE` | `https://openrouter.ai/api/v1` | OpenAI-compatible embeddings endpoint; same name as specs 004 and 006 | FR-007, R3 |
 | `EMBEDDING_API_KEY` | `OPENROUTER_API_KEY` | Key for it | R3 |
 | `EMBEDDING_MODEL` | `openai/text-embedding-3-small` | Must be the brain's model (the core default) | FR-007 |
+| `EMBEDDING_DIMENSIONS` | 1536 | Vector size requested from the embedding endpoint (`dimensions`), matching the brain's `thoughts.embedding` (the core contract is 1536). Sent on every request; if the endpoint rejects the parameter, one retry without it (as spec 004 does). Found by the self-hosted live run: `qwen3-embedding:4b` returns 2560 unless asked | FR-007, FR-019, R3, T077 |
 | `EMBEDDING_BATCH_SIZE` | 64 | Passages per embedding request; 1 disables batching | R3 |
 | `VISION_API_BASE`, `VISION_API_KEY`, `VISION_MODEL` | unset | OpenAI-compatible vision endpoint. If unset, photos end `not_captioned` | FR-006, R4 |
 | `ATTACHMENTS_BUCKET` | `ob1-files` | Private bucket | R12 |
