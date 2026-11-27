@@ -660,3 +660,36 @@ Deno.test("U215 after a killed rebuild has expired, the attachment is processed 
   assertEquals(r.store.derivedOf(att.id).map((t) => t.id), oldIds);
   assertEquals(r.store.attachment(att.id)?.state, "processed");
 });
+
+Deno.test("U216 a finish whose claim expired and was taken over has its write refused, and the newer run's result stands", async () => {
+  const r = await rig();
+  const att = pending(r, await textPdf(["alpha beta gamma delta epsilon zeta"]));
+  const path = att.storage_path as string;
+  // The first run stalls in Storage after taking its claim; later calls pass straight through.
+  let stalled = false;
+  let go: () => void = () => {};
+  const gate = new Promise<void>((resolve) => go = resolve);
+  r.store.override.objectInfo = async (p: string) => {
+    if (!stalled) {
+      stalled = true;
+      await gate;
+    }
+    const o = r.store.objects.get(p);
+    return { data: o ? { size: o.bytes.length, createdAt: o.createdAt } : null };
+  };
+  const older = r.finish(att.id, {});
+  for (let i = 0; i < 200 && !stalled; i++) await new Promise((resolve) => setTimeout(resolve, 5));
+  assert(stalled);
+  r.clock.advanceSeconds(411);
+  const newer = await r.finish(att.id, {});
+  assertEquals(newer.state, "processed");
+  const newerIds = r.store.derivedOf(att.id).map((t) => t.id);
+  assertEquals(newerIds.length, newer.derived_count);
+  go();
+  const late = await older;
+  assertEquals(late.state, "processed");
+  assertEquals(late.derived_count, newer.derived_count);
+  assertEquals(r.store.derivedOf(att.id).map((t) => t.id), newerIds);
+  assertEquals(r.store.attachment(att.id)?.state, "processed");
+  assertEquals(r.store.objects.has(path), true);
+});

@@ -42,6 +42,13 @@ export function createFinisher(deps: Deps): Services {
     const token = claim.data.token;
     try {
       return await run(row, token, rebuild);
+    } catch (error) {
+      // A write refused because the claim was taken over leaves the newer run's result standing (FR-026).
+      const fresh = await store.getAttachment(row.id);
+      if (!("error" in fresh) && typeof fresh.data !== "string" && fresh.data.busy_token !== token) {
+        return currentOutcome(fresh.data);
+      }
+      throw error;
     } finally {
       await store.release(row.id, token);
     }
@@ -57,6 +64,17 @@ export function createFinisher(deps: Deps): Services {
     if (row.page_count !== null) out.page_count = row.page_count;
     if (row.last_rebuild_error) out.last_rebuild_error = row.last_rebuild_error;
     return out;
+  }
+
+  /** What the stored row reports now: busy while another run's claim is live, else its state. */
+  function currentOutcome(row: AttachmentRow): FinishOutcome {
+    const live = row.busy_op !== null && row.busy_until !== null && new Date(row.busy_until).getTime() > deps.now().getTime();
+    if (!live) return outcomeOf(row);
+    return {
+      ...outcomeOf(row),
+      reason: "busy (" + BUSY_WORDS[row.busy_op as BusyOp] + "), try again shortly",
+      busy: row.busy_op as BusyOp,
+    };
   }
 
   /** The file is deleted at once and the attachment ends `refused` (FR-004). */
