@@ -777,7 +777,7 @@ Deno.test(
   },
 );
 
-todo(
+Deno.test(
   "A23 a not_captioned photo finished again after the vision model is back ends processed with exactly one caption thought",
   async () => {
     const w = world({ vision: [{ status: 500 }, () => chatReply(CAPTION, VISION_MODEL)] });
