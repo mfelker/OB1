@@ -235,7 +235,7 @@ Streams code against these. The signatures are the only shared contract. Behavio
 
 ### Stream Q: data (`ta-data`, wave 1)
 
-- [ ] T014 [P] [US1] [U34] [U35] [U36] [U37] [U38] [U39] [U40] [U41] [U42] [U43] [U44] [U45] [U46] [U47] [U48] [U49] [U50] [U51] [U52] Tests first in `F/tests/verify.sql`, then `F/schema.sql` (fork-ci SQL runtime, after `bootstrap.sql`). Assert:
+- [X] T014 [P] [US1] [U34] [U35] [U36] [U37] [U38] [U39] [U40] [U41] [U42] [U43] [U44] [U45] [U46] [U47] [U48] [U49] [U50] [U51] [U52] Tests first in `F/tests/verify.sql`, then `F/schema.sql` (fork-ci SQL runtime, after `bootstrap.sql`). Assert:
   - the table `thought_attachments` with every column, type, default and not-null rule of `data-model.md` `thought_attachments` (`thought_attachments.id`, `thought_attachments.parent_thought_id` with **no** foreign key, `thought_attachments.parent_created_here`, `thought_attachments.file_name`, `thought_attachments.declared_type`, `thought_attachments.declared_size`, `thought_attachments.expected_kind`, `thought_attachments.actual_type`, `thought_attachments.actual_size`, `thought_attachments.page_count`, `thought_attachments.content_hash`, `thought_attachments.storage_path`, `thought_attachments.sensitivity_tier`, `thought_attachments.state`, `thought_attachments.state_reason`, `thought_attachments.last_rebuild_error`, `thought_attachments.caption_model`, `thought_attachments.derived_count`, `thought_attachments.upload_deadline`, `thought_attachments.page_token_hash`, `thought_attachments.busy_op`, `thought_attachments.busy_until`, `thought_attachments.busy_token`, `thought_attachments.created_at`, `thought_attachments.updated_at` with its trigger, `thought_attachments.processed_at`)
   - the value rules that data-model.md states for `thought_attachments.declared_type`, `thought_attachments.expected_kind`, `thought_attachments.sensitivity_tier`, `thought_attachments.state` and `thought_attachments.busy_op`
   - the indexes on `parent_thought_id` and `content_hash`, and the partial unique `(parent_thought_id, content_hash)` index that excludes `refused` (FR-012)
@@ -244,21 +244,21 @@ Streams code against these. The signatures are the only shared contract. Behavio
   - when a `storage` schema exists, the bucket `ATTACHMENTS_BUCKET` (`ob1-files`) is private, limited to the four accepted MIME types and has no size limit of its own (R12); skipped when the schema is absent
   - the whole file runs twice on the same database
   - no `DROP`, `TRUNCATE` or unqualified `DELETE` in either file (CLAUDE.md guard rails)
-- [ ] T015 [P] [US1] [U53] [U54] [U55] [U56] [U57] [U58] [U59] [U60] Tests first in `F/tests/verify.sql`, then the write-derived function in `F/schema.sql` (`data-model.md` "Database functions"; R9, R10):
+- [X] T015 [P] [US1] [U53] [U54] [U55] [U56] [U57] [U58] [U59] [U60] Tests first in `F/tests/verify.sql`, then the write-derived function in `F/schema.sql` (`data-model.md` "Database functions"; R9, R10):
   - it succeeds only with the caller's unexpired claim token
   - it inserts rows with `upsert_thought`'s fingerprint normalisation (fork-ci's bootstrap has no `upsert_thought`, so the test compares against the expression in `docs/01-getting-started.md` step 2.6)
   - a fingerprint conflict raises, and the existing thought (an owner thought with identical text) is unchanged (US1 #4, FR-022)
   - it replaces the attachment's previous derived set and sets the state fields and `thought_attachments.derived_count` in one transaction
   - a failure partway leaves the old set (FR-011, FR-027)
   - the duplicate-content outcome per T005.4
-- [ ] T016 [P] [US1] [U61] [U62] [U63] [U64] [U65] [U66] [U67] [U68] [U314] Tests first in `F/tests/verify.sql`, then the claim and release, dimension and exact-text functions in `F/schema.sql`:
+- [X] T016 [P] [US1] [U61] [U62] [U63] [U64] [U65] [U66] [U67] [U68] [U314] Tests first in `F/tests/verify.sql`, then the claim and release, dimension and exact-text functions in `F/schema.sql`:
   - a claim is refused while unexpired, returning the running `thought_attachments.busy_op`
   - a claim succeeds after `thought_attachments.busy_until`, with a new `thought_attachments.busy_token` (FR-026, R10)
   - the dimension function returns `vector(1536)`'s 1536 on fork-ci's bootstrap (FR-007, R3)
   - the exact-text find takes the text as a parameter: a query containing `%`, `,`, `)` and `'` matches literally, and the function returns id, first line and date (FR-023, R11)
-- [ ] T017 [P] [US1] [U69] [U70] [U71] [U72] [U73] [U74] [U75] [U76] [U77] [U78] [U315] [U316] [U317] [U318] [U319] Tests first in `F/tests/store_test.ts`, then the database half of `createSupabaseStore` in `F/src/store.ts`: supabase-js with the fake fetch injected; each thought, attachment and claim method from **Seams** sends its RPC or PostgREST request; errors map to `{ error }` with no key in the text (FR-009). `matchThoughts` calls the base `match_thoughts` (R11). `getAttachment` accepts the 8-character short id and reports `not_found` and `ambiguous` (contracts/mcp-tools.md; `data-model.md` `thought_attachments.id`).
-- [ ] T018 [P] [US1] [U79] [U80] [U81] [U82] Tests first in `F/tests/store_test.ts`, then the Storage half of `F/src/store.ts`: `signUpload`, `objectInfo` (size and creation time), `download` and `deleteObject` on the bucket `ATTACHMENTS_BUCKET` at `attachments/<id>/<file_name>` (`data-model.md` `thought_attachments.storage_path`; R12). `signUpload`'s URL comes back unchanged; rewriting is `links.ts`'s job.
-- [ ] T019 [P] [US1] [U83] Tests first in `F/tests/schema_drift_test.ts`: every RPC name and named parameter that `F/src/store.ts` sends exists in `F/schema.sql` (read with `--allow-read`).
+- [X] T017 [P] [US1] [U69] [U70] [U71] [U72] [U73] [U74] [U75] [U76] [U77] [U78] [U315] [U316] [U317] [U318] [U319] [U357] [U358] [U359] [U360] [U361] Tests first in `F/tests/store_test.ts`, then the database half of `createSupabaseStore` in `F/src/store.ts`: supabase-js with the fake fetch injected; each thought, attachment and claim method from **Seams** sends its RPC or PostgREST request; errors map to `{ error }` with no key in the text (FR-009). `matchThoughts` calls the base `match_thoughts` (R11). `getAttachment` accepts the 8-character short id and reports `not_found` and `ambiguous` (contracts/mcp-tools.md; `data-model.md` `thought_attachments.id`).
+- [X] T018 [P] [US1] [U79] [U80] [U81] [U82] Tests first in `F/tests/store_test.ts`, then the Storage half of `F/src/store.ts`: `signUpload`, `objectInfo` (size and creation time), `download` and `deleteObject` on the bucket `ATTACHMENTS_BUCKET` at `attachments/<id>/<file_name>` (`data-model.md` `thought_attachments.storage_path`; R12). `signUpload`'s URL comes back unchanged; rewriting is `links.ts`'s job.
+- [X] T019 [P] [US1] [U83] Tests first in `F/tests/schema_drift_test.ts`: every RPC name and named parameter that `F/src/store.ts` sends exists in `F/schema.sql` (read with `--allow-read`).
 
 ### Stream X: files (`ta-files`, wave 1)
 
@@ -366,7 +366,7 @@ Streams code against these. The signatures are the only shared contract. Behavio
 
 ### Stream Q: data (`ta-data`, wave 1)
 
-- [ ] T038 [P] [US2] [U84] [U85] [U86] [U87] [U88] Tests first in `F/tests/verify.sql` and `F/tests/store_test.ts`, then note insertion and page tokens in `F/schema.sql` and `F/src/store.ts`:
+- [X] T038 [P] [US2] [U84] [U85] [U86] [U87] [U88] Tests first in `F/tests/verify.sql` and `F/tests/store_test.ts`, then note insertion and page tokens in `F/schema.sql` and `F/src/store.ts`:
   - `insertNote` inserts a new thought with `data-model.md` `Parent note.content` and `Parent note.metadata` and returns `created: true`
   - a note whose fingerprint exists returns that thought with `created: false`, unchanged (R17; `data-model.md` `thought_attachments.parent_created_here`)
   - `attachmentForPageToken` finds a row by `thought_attachments.page_token_hash` only
@@ -436,7 +436,7 @@ Streams code against these. The signatures are the only shared contract. Behavio
 
 ### Stream Q: data (`ta-data`, wave 1)
 
-- [ ] T048 [P] [US3] [U89] [U90] [U91] [U92] Tests first in `F/tests/store_test.ts` (and `F/tests/verify.sql` for any SQL used), then `signDownload(path, seconds)`, `listByParent` and `attachmentForDerived` in `F/src/store.ts`. `attachmentForDerived` resolves through `data-model.md` `Derived thought.metadata.attachment_id` (FR-015).
+- [X] T048 [P] [US3] [U89] [U90] [U91] [U92] Tests first in `F/tests/store_test.ts` (and `F/tests/verify.sql` for any SQL used), then `signDownload(path, seconds)`, `listByParent` and `attachmentForDerived` in `F/src/store.ts`. `attachmentForDerived` resolves through `data-model.md` `Derived thought.metadata.attachment_id` (FR-015).
 
 ### Stream T: tools (`ta-tools`, wave 2)
 
@@ -476,7 +476,7 @@ Streams code against these. The signatures are the only shared contract. Behavio
 
 ### Stream Q: data (`ta-data`, wave 1)
 
-- [ ] T055 [P] [US4] [U43] [U93] [U94] Tests first in `F/tests/verify.sql`, then in `F/schema.sql`:
+- [X] T055 [P] [US4] [U43] [U93] [U94] Tests first in `F/tests/verify.sql`, then in `F/schema.sql`:
   - a write or state change with a stale token, after a newer claim took over, is refused and changes nothing (R10, SC-019)
   - a `refused` row does not block a new attachment of the same content on the same parent (`data-model.md` `thought_attachments.content_hash` index; SC-013)
   - a set-state under a valid claim records `thought_attachments.state` and `thought_attachments.state_reason` without touching derived thoughts
@@ -514,12 +514,12 @@ Streams code against these. The signatures are the only shared contract. Behavio
 
 ### Stream Q: data (`ta-data`, wave 1)
 
-- [ ] T061 [P] [US5] [U95] [U96] [U97] [U98] [U99] [U100] [U101] [U102] [U103] [U104] [U105] [U106] [U107] [U108] [U109] Tests first in `F/tests/verify.sql`, then the remove, preview and orphan functions in `F/schema.sql`:
+- [X] T061 [P] [US5] [U95] [U96] [U97] [U98] [U99] [U100] [U101] [U102] [U103] [U104] [U105] [U106] [U107] [U108] [U109] Tests first in `F/tests/verify.sql`, then the remove, preview and orphan functions in `F/schema.sql`:
   - remove deletes only that attachment's derived thoughts and its row, scoped by its id, in one transaction, under a valid claim; the parent and another attachment of the same PDF on another thought keep everything (FR-016, FR-022, SC-012)
   - the parent note goes too only when `thought_attachments.parent_created_here` is true, the attachment ended `refused` or expired without an upload, and no other attachment points to it (FR-016, SC-020)
   - the preview reports the same counts and deletes nothing
   - orphans lists a parent gone, `pending_upload` past `thought_attachments.upload_deadline` and `refused`, each with why and `derived_count` (FR-021)
-- [ ] T062 [P] [US5] [U110] [U111] [U112] Tests first in `F/tests/store_test.ts`, then `removalPreview`, `removeAttachment` and `orphans` in `F/src/store.ts`.
+- [X] T062 [P] [US5] [U110] [U111] [U112] Tests first in `F/tests/store_test.ts`, then `removalPreview`, `removeAttachment` and `orphans` in `F/src/store.ts`.
 
 ### Stream T: tools (`ta-tools`, wave 2)
 

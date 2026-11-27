@@ -212,63 +212,63 @@ Test file: `tests/verify.sql` (one assertion block per behavior), except U52.
 
 | id  | behavior | traces | kind | state | test |
 | --- | -------- | ------ | ---- | ----- | ---- |
-| U34 | `thought_attachments` has every column of `data-model.md` with its type, default and not-null rule, and `parent_thought_id` has no foreign key | FR-020, FR-016 | example | PENDING | |
-| U35 | `declared_type` accepts each of `application/pdf`, `image/jpeg`, `image/png` and `image/webp`, and rejects any other value | FR-003 | example | PENDING | |
-| U36 | `expected_kind` accepts `photo`, `pdf` and empty, and rejects any other value | FR-001 | example | PENDING | |
-| U37 | `sensitivity_tier` accepts `standard`, `personal` and `restricted`, defaults to `personal`, and rejects any other value | FR-008 | example | PENDING | |
-| U38 | `state` accepts the six states of `data-model.md` and rejects any other value | FR-004 | example | PENDING | |
-| U39 | `busy_op` accepts `finish`, `rebuild` and `remove`, and rejects any other value | FR-026 | example | PENDING | |
-| U40 | An update to a row advances its `updated_at` through the trigger | FR-020 | example | PENDING | |
-| U41 | Indexes on `parent_thought_id` and on `content_hash` exist | FR-020 | example | PENDING | |
-| U42 | A second non-`refused` row with the same `parent_thought_id` and `content_hash` is rejected by the unique index | FR-012 | example | PENDING | |
-| U43 | A `refused` row with the same parent and `content_hash` doesn't block a new row (the index excludes `refused`) | FR-004, SC-013 | example | PENDING | |
-| U44 | Two rows on the same parent with no `content_hash` yet are both allowed (the index covers only set hashes) | FR-012 | example | PENDING | |
-| U45 | RLS is enabled on `thought_attachments`, with no policy for `anon` or `authenticated` | FR-018 | example | PENDING | |
-| U46 | `service_role` has select, insert, update and delete on `thought_attachments` | FR-020 | example | PENDING | |
-| U47 | On a `thoughts` table without `content_fingerprint`, the file adds the column and `idx_thoughts_fingerprint` | FR-020 | example | PENDING | |
-| U48 | On a `thoughts` table that already has them, the file adds no second column or index (the index count on `thoughts` is unchanged) | FR-020 | example | PENDING | |
-| U49 | With a minimal stub `storage` schema that `tests/verify.sql` creates before including `schema.sql` (a `storage.buckets` table with only the columns `schema.sql` writes), the `ATTACHMENTS_BUCKET` bucket (`ob1-files`) row exists, is not public, and allows exactly the four accepted MIME types (and, if `schema.sql` writes `file_size_limit`, it is null). U50's no-storage run comes earlier in the file, before the stub exists | FR-018, FR-020 | example | PENDING | |
-| U50 | Where no `storage` schema exists, the file runs without error and skips the bucket (asserted before `tests/verify.sql` creates the U49 stub) | FR-019, FR-020 | example | PENDING | |
-| U51 | Running the whole file twice on the same database raises nothing and leaves one of each object | FR-020 | example | PENDING | |
-| U52 | Neither `schema.sql` nor `tests/verify.sql` contains `DROP`, `TRUNCATE` or an unqualified `DELETE` (a static scan in `tests/schema_drift_test.ts`) | INV-2, FR-016 | example | PENDING | |
-| U53 | The write-derived function, with the caller's unexpired claim token, inserts the given rows | FR-011, FR-026 | example | PENDING | |
-| U54 | The write-derived function with a matching token whose `busy_until` has passed is refused, and writes nothing | FR-026 | example | PENDING | |
-| U55 | Inserted rows' `content_fingerprint` equals the expression of `W/docs/01-getting-started.md` step 2.6 applied to their content | FR-022, FR-012 | example | PENDING | |
-| U56 | A row whose fingerprint equals an existing owner thought's raises, and that thought's content and metadata are unchanged | FR-022, US1.4 | example | PENDING | |
-| U57 | A write replaces the attachment's previous derived set and sets its state fields and `derived_count` in the same call | FR-027, FR-011 | example | PENDING | |
-| U58 | A write that fails partway (its second row conflicts) leaves the previous set, state and `derived_count` | FR-011, FR-027 | example | PENDING | |
-| U59 | A write for one attachment leaves another attachment's derived thoughts untouched | FR-022 | example | PENDING | |
-| U60 | Setting `content_hash` on a second non-`refused` attachment of a parent to the hash another non-`refused` attachment of that parent already holds raises (the unique index of `data-model.md`) and changes nothing; the finish avoids reaching it by refusing first (U188) | FR-012, US1.3 | example | PENDING | |
-| U61 | A claim while an unexpired claim exists is refused and returns the running `busy_op` | FR-026 | example | PENDING | |
-| U62 | A claim after `busy_until` succeeds, with a `busy_token` different from the previous one | FR-026 | example | PENDING | |
-| U63 | A claim on one attachment doesn't block a claim on another | FR-026 | example | PENDING | |
-| U64 | Release with the holder's token clears the claim, so an immediate claim succeeds | FR-026 | example | PENDING | |
-| U65 | Release with another token leaves the claim in place | FR-026 | example | PENDING | |
-| U66 | The dimension function returns 1536 on fork-ci's bootstrap (`vector(1536)`) | FR-007 | example | PENDING | |
-| U67 | The exact-text find returns id, first line and capture date for a thought whose content contains the query | FR-023 | example | PENDING | |
-| U68 | A query containing `%`, `,`, `)` and `'` matches only content that contains those characters literally (no wildcard, no injected filter) | FR-023 | example | PENDING | |
-| U314 | The exact-text find ignores letter case: `FURNACE Filters` finds a thought containing `furnace filters`, and a thought without the text in any case is not returned | FR-023, edge case "exact-text lookup finds thoughts containing the given text, ignoring letter case" | example | PENDING | |
-| U84 | Inserting a note whose text is new adds a thought with the note's content and `data-model.md` "Parent note" metadata, and reports it as created | FR-001 | example | PENDING | |
-| U85 | Inserting a note whose fingerprint exists returns that thought's id as not created, and leaves it unchanged | FR-001, FR-016 | example | PENDING | |
-| U86 | The page-token lookup finds a row by `page_token_hash` only | FR-002, FR-024 | example | PENDING | |
-| U87 | Consuming a page token succeeds once and clears the hash; a second consume fails | FR-002, FR-024 | example | PENDING | |
-| U93 | A write or set-state with an old token, after a newer claim took over, is refused and changes nothing | FR-026, SC-019 | example | PENDING | |
-| U94 | A set-state under a valid claim records `state` and `state_reason` and leaves the derived thoughts | FR-004, FR-010 | example | PENDING | |
-| U95 | Remove under a valid claim deletes that attachment's derived thoughts and its row, scoped by its id, in one transaction | FR-016 | example | PENDING | |
-| U96 | Remove leaves the parent thought, and another attachment of the same file on another thought with all its derived thoughts | FR-016, FR-022, SC-012 | example | PENDING | |
-| U97 | Remove without a valid claim is refused and deletes nothing | FR-026 | example | PENDING | |
-| U98 | Remove deletes the parent note when `parent_created_here` is true, the attachment ended `refused`, and no other attachment points to the note | FR-016, SC-020 | example | PENDING | |
-| U99 | Remove deletes the parent note when `parent_created_here` is true, the attachment is `pending_upload` past its deadline, and no other attachment points to the note | FR-016, SC-020 | example | PENDING | |
-| U100 | Remove keeps the note when another attachment points to it | FR-016, SC-020 | example | PENDING | |
-| U101 | Remove keeps the parent when `parent_created_here` is false | FR-016 | example | PENDING | |
-| U102 | Remove keeps the note when the attachment is `processed` | FR-016 | example | PENDING | |
-| U103 | Remove keeps the note when the attachment is `pending_upload` before its deadline | FR-016 | example | PENDING | |
-| U104 | The preview reports the same derived count and note flag the remove would, and deletes nothing | FR-016, US5.2 | example | PENDING | |
-| U105 | Orphans lists a row whose parent thought is gone, with why and `derived_count` | FR-021 | example | PENDING | |
-| U106 | Orphans lists a `pending_upload` row past its `upload_deadline` | FR-021, SC-017 | example | PENDING | |
-| U107 | Orphans omits a `pending_upload` row before its `upload_deadline` | FR-021, SC-017 | example | PENDING | |
-| U108 | Orphans lists a `refused` row | FR-021, SC-013 | example | PENDING | |
-| U109 | Orphans omits a `processed` row whose parent exists | FR-021 | example | PENDING | |
+| U34 | `thought_attachments` has every column of `data-model.md` with its type, default and not-null rule, and `parent_thought_id` has no foreign key | FR-020, FR-016 | example | DONE | `tests/verify.sql` (U34 block) |
+| U35 | `declared_type` accepts each of `application/pdf`, `image/jpeg`, `image/png` and `image/webp`, and rejects any other value | FR-003 | example | DONE | `tests/verify.sql` (U35 block) |
+| U36 | `expected_kind` accepts `photo`, `pdf` and empty, and rejects any other value | FR-001 | example | DONE | `tests/verify.sql` (U36 block) |
+| U37 | `sensitivity_tier` accepts `standard`, `personal` and `restricted`, defaults to `personal`, and rejects any other value | FR-008 | example | DONE | `tests/verify.sql` (U37 block) |
+| U38 | `state` accepts the six states of `data-model.md` and rejects any other value | FR-004 | example | DONE | `tests/verify.sql` (U38 block) |
+| U39 | `busy_op` accepts `finish`, `rebuild` and `remove`, and rejects any other value | FR-026 | example | DONE | `tests/verify.sql` (U39 block) |
+| U40 | An update to a row advances its `updated_at` through the trigger | FR-020 | example | DONE | `tests/verify.sql` (U40 block) |
+| U41 | Indexes on `parent_thought_id` and on `content_hash` exist | FR-020 | example | DONE | `tests/verify.sql` (U41 block) |
+| U42 | A second non-`refused` row with the same `parent_thought_id` and `content_hash` is rejected by the unique index | FR-012 | example | DONE | `tests/verify.sql` (U42 block) |
+| U43 | A `refused` row with the same parent and `content_hash` doesn't block a new row (the index excludes `refused`) | FR-004, SC-013 | example | DONE | `tests/verify.sql` (U43 block) |
+| U44 | Two rows on the same parent with no `content_hash` yet are both allowed (the index covers only set hashes) | FR-012 | example | DONE | `tests/verify.sql` (U44 block) |
+| U45 | RLS is enabled on `thought_attachments`, with no policy for `anon` or `authenticated` | FR-018 | example | DONE | `tests/verify.sql` (U45 block) |
+| U46 | `service_role` has select, insert, update and delete on `thought_attachments` | FR-020 | example | DONE | `tests/verify.sql` (U46 block) |
+| U47 | On a `thoughts` table without `content_fingerprint`, the file adds the column and `idx_thoughts_fingerprint` | FR-020 | example | DONE | `tests/verify.sql` (U47 block) |
+| U48 | On a `thoughts` table that already has them, the file adds no second column or index (the index count on `thoughts` is unchanged) | FR-020 | example | DONE | `tests/verify.sql` (U48 block) |
+| U49 | With a minimal stub `storage` schema that `tests/verify.sql` creates before including `schema.sql` (a `storage.buckets` table with only the columns `schema.sql` writes), the `ATTACHMENTS_BUCKET` bucket (`ob1-files`) row exists, is not public, and allows exactly the four accepted MIME types (and, if `schema.sql` writes `file_size_limit`, it is null). U50's no-storage run comes earlier in the file, before the stub exists | FR-018, FR-020 | example | DONE | `tests/verify.sql` (U49 block) |
+| U50 | Where no `storage` schema exists, the file runs without error and skips the bucket (asserted before `tests/verify.sql` creates the U49 stub) | FR-019, FR-020 | example | DONE | `tests/verify.sql` (U50 block) |
+| U51 | Running the whole file twice on the same database raises nothing and leaves one of each object | FR-020 | example | DONE | `tests/verify.sql` (U51 block) |
+| U52 | Neither `schema.sql` nor `tests/verify.sql` contains `DROP`, `TRUNCATE` or an unqualified `DELETE` (a static scan in `tests/schema_drift_test.ts`) | INV-2, FR-016 | example | DONE | `tests/schema_drift_test.ts::U52 neither schema.sql nor tests/verify.sql contains DROP, TRUNCATE or an unqualified DELETE` |
+| U53 | The write-derived function, with the caller's unexpired claim token, inserts the given rows | FR-011, FR-026 | example | DONE | `tests/verify.sql` (U53 block) |
+| U54 | The write-derived function with a matching token whose `busy_until` has passed is refused, and writes nothing | FR-026 | example | DONE | `tests/verify.sql` (U54 block) |
+| U55 | Inserted rows' `content_fingerprint` equals the expression of `W/docs/01-getting-started.md` step 2.6 applied to their content | FR-022, FR-012 | example | DONE | `tests/verify.sql` (U55 block) |
+| U56 | A row whose fingerprint equals an existing owner thought's raises, and that thought's content and metadata are unchanged | FR-022, US1.4 | example | DONE | `tests/verify.sql` (U56 block) |
+| U57 | A write replaces the attachment's previous derived set and sets its state fields and `derived_count` in the same call | FR-027, FR-011 | example | DONE | `tests/verify.sql` (U57 block) |
+| U58 | A write that fails partway (its second row conflicts) leaves the previous set, state and `derived_count` | FR-011, FR-027 | example | DONE | `tests/verify.sql` (U58 block) |
+| U59 | A write for one attachment leaves another attachment's derived thoughts untouched | FR-022 | example | DONE | `tests/verify.sql` (U59 block) |
+| U60 | Setting `content_hash` on a second non-`refused` attachment of a parent to the hash another non-`refused` attachment of that parent already holds raises (the unique index of `data-model.md`) and changes nothing; the finish avoids reaching it by refusing first (U188) | FR-012, US1.3 | example | DONE | `tests/verify.sql` (U60 block) |
+| U61 | A claim while an unexpired claim exists is refused and returns the running `busy_op` | FR-026 | example | DONE | `tests/verify.sql` (U61 block) |
+| U62 | A claim after `busy_until` succeeds, with a `busy_token` different from the previous one | FR-026 | example | DONE | `tests/verify.sql` (U62 block) |
+| U63 | A claim on one attachment doesn't block a claim on another | FR-026 | example | DONE | `tests/verify.sql` (U63 block) |
+| U64 | Release with the holder's token clears the claim, so an immediate claim succeeds | FR-026 | example | DONE | `tests/verify.sql` (U64 block) |
+| U65 | Release with another token leaves the claim in place | FR-026 | example | DONE | `tests/verify.sql` (U65 block) |
+| U66 | The dimension function returns 1536 on fork-ci's bootstrap (`vector(1536)`) | FR-007 | example | DONE | `tests/verify.sql` (U66 block) |
+| U67 | The exact-text find returns id, first line and capture date for a thought whose content contains the query | FR-023 | example | DONE | `tests/verify.sql` (U67 block) |
+| U68 | A query containing `%`, `,`, `)` and `'` matches only content that contains those characters literally (no wildcard, no injected filter) | FR-023 | example | DONE | `tests/verify.sql` (U68 block) |
+| U314 | The exact-text find ignores letter case: `FURNACE Filters` finds a thought containing `furnace filters`, and a thought without the text in any case is not returned | FR-023, edge case "exact-text lookup finds thoughts containing the given text, ignoring letter case" | example | DONE | `tests/verify.sql` (U314 block) |
+| U84 | Inserting a note whose text is new adds a thought with the note's content and `data-model.md` "Parent note" metadata, and reports it as created | FR-001 | example | DONE | `tests/verify.sql` (U84 block) |
+| U85 | Inserting a note whose fingerprint exists returns that thought's id as not created, and leaves it unchanged | FR-001, FR-016 | example | DONE | `tests/verify.sql` (U85 block) |
+| U86 | The page-token lookup finds a row by `page_token_hash` only | FR-002, FR-024 | example | DONE | `tests/verify.sql` (U86 block) |
+| U87 | Consuming a page token succeeds once and clears the hash; a second consume fails | FR-002, FR-024 | example | DONE | `tests/verify.sql` (U87 block) |
+| U93 | A write or set-state with an old token, after a newer claim took over, is refused and changes nothing | FR-026, SC-019 | example | DONE | `tests/verify.sql` (U93 block) |
+| U94 | A set-state under a valid claim records `state` and `state_reason` and leaves the derived thoughts | FR-004, FR-010 | example | DONE | `tests/verify.sql` (U94 block) |
+| U95 | Remove under a valid claim deletes that attachment's derived thoughts and its row, scoped by its id, in one transaction | FR-016 | example | DONE | `tests/verify.sql` (U95 block) |
+| U96 | Remove leaves the parent thought, and another attachment of the same file on another thought with all its derived thoughts | FR-016, FR-022, SC-012 | example | DONE | `tests/verify.sql` (U96 block) |
+| U97 | Remove without a valid claim is refused and deletes nothing | FR-026 | example | DONE | `tests/verify.sql` (U97 block) |
+| U98 | Remove deletes the parent note when `parent_created_here` is true, the attachment ended `refused`, and no other attachment points to the note | FR-016, SC-020 | example | DONE | `tests/verify.sql` (U98 block) |
+| U99 | Remove deletes the parent note when `parent_created_here` is true, the attachment is `pending_upload` past its deadline, and no other attachment points to the note | FR-016, SC-020 | example | DONE | `tests/verify.sql` (U99 block) |
+| U100 | Remove keeps the note when another attachment points to it | FR-016, SC-020 | example | DONE | `tests/verify.sql` (U100 block) |
+| U101 | Remove keeps the parent when `parent_created_here` is false | FR-016 | example | DONE | `tests/verify.sql` (U101 block) |
+| U102 | Remove keeps the note when the attachment is `processed` | FR-016 | example | DONE | `tests/verify.sql` (U102 block) |
+| U103 | Remove keeps the note when the attachment is `pending_upload` before its deadline | FR-016 | example | DONE | `tests/verify.sql` (U103 block) |
+| U104 | The preview reports the same derived count and note flag the remove would, and deletes nothing | FR-016, US5.2 | example | DONE | `tests/verify.sql` (U104 block) |
+| U105 | Orphans lists a row whose parent thought is gone, with why and `derived_count` | FR-021 | example | DONE | `tests/verify.sql` (U105 block) |
+| U106 | Orphans lists a `pending_upload` row past its `upload_deadline` | FR-021, SC-017 | example | DONE | `tests/verify.sql` (U106 block) |
+| U107 | Orphans omits a `pending_upload` row before its `upload_deadline` | FR-021, SC-017 | example | DONE | `tests/verify.sql` (U107 block) |
+| U108 | Orphans lists a `refused` row | FR-021, SC-013 | example | DONE | `tests/verify.sql` (U108 block) |
+| U109 | Orphans omits a `processed` row whose parent exists | FR-021 | example | DONE | `tests/verify.sql` (U109 block) |
 
 #### `src/store.ts` (T017, T018, T038, T048, T062)
 
@@ -276,39 +276,44 @@ Test file: `tests/store_test.ts` (supabase-js over the fake fetch).
 
 | id  | behavior | traces | kind | state | test |
 | --- | -------- | ------ | ---- | ----- | ---- |
-| U69 | `thoughtExists` is true for an existing id and false for an unknown one | FR-001 | example | PENDING | |
-| U70 | `matchThoughts` sends the embedding and limit to the base `match_thoughts` and maps the reply to `ThoughtMatch` | FR-023 | example | PENDING | |
-| U71 | `findThoughtsExact` sends the text as an RPC parameter, never inside a filter string | FR-023 | example | PENDING | |
-| U72 | `embeddingDimension` returns the dimension function's number | FR-007 | example | PENDING | |
-| U73 | `claim` maps a refused claim to `{ busy: op }` and a success to `{ token }` | FR-026 | example | PENDING | |
-| U74 | `getAttachment` with a full id returns the row | FR-015 | example | PENDING | |
-| U75 | `getAttachment` with an 8-character short id returns the row when exactly one matches | FR-025 | example | PENDING | |
-| U76 | `getAttachment` with a short id that matches two rows returns `ambiguous` | FR-025 | example | PENDING | |
-| U77 | `getAttachment` with an unknown id returns `not_found` | FR-014 | example | PENDING | |
-| U78 | A database error maps to `{ error }` whose text contains no service-role key | FR-009 | example | PENDING | |
-| U79 | `signUpload` targets `ATTACHMENTS_BUCKET` at `attachments/<id>/<file_name>` and returns Storage's URL unchanged | FR-001, FR-018 | example | PENDING | |
-| U80 | `objectInfo` returns the object's size and creation time, and `null` when there is no object | FR-004 | example | PENDING | |
-| U81 | `download` returns the stored bytes | FR-004 | example | PENDING | |
-| U82 | `deleteObject` deletes that path and no other | FR-004, FR-016 | example | PENDING | |
-| U88 | `insertNote`, `attachmentForPageToken` and `consumePageToken` map the RPC replies to `{ id, created }`, the row and a boolean | FR-001, FR-024 | example | PENDING | |
-| U89 | `signDownload` passes the path and the seconds to Storage and returns the signed URL | FR-014 | example | PENDING | |
-| U90 | `listByParent` returns that parent's attachments only | FR-015 | example | PENDING | |
-| U91 | `attachmentForDerived` returns the attachment named by the thought's `metadata.attachment_id` | FR-015 | example | PENDING | |
-| U92 | `attachmentForDerived` on a thought without `attachment_id` returns `null` | FR-015 | example | PENDING | |
-| U110 | `removalPreview` maps the preview reply to `{ derived, noteWouldGo }` | FR-016 | example | PENDING | |
-| U111 | `removeAttachment` passes the claim token and maps the reply to `{ derived, noteRemoved }` | FR-016 | example | PENDING | |
-| U112 | `orphans` passes the current time and maps the reply to `{ row, why }[]` | FR-021 | example | PENDING | |
-| U315 | `findByHash(parentId, contentHash)` returns the non-`refused` attachment on that parent with that hash (T005 Q4) | FR-012 | example | PENDING | |
-| U316 | `findByHash` returns `null` when the only attachment with that hash on that parent is `refused` | FR-012, FR-004 | example | PENDING | |
-| U317 | `findByHash` returns `null` when the hash belongs only to an attachment of another parent | FR-012, edge case "same file attached to two different thoughts" | example | PENDING | |
-| U318 | `findPending(parentId, name, type, size, now)` returns the `pending_upload` row with that name, type and size on that parent while `now` is before its `upload_deadline` | FR-012 | example | PENDING | |
-| U319 | `findPending` returns `null` for that row once `now` is past its `upload_deadline` | FR-012, FR-021, edge case "pending upload past its deadline no longer counts as pending" | example | PENDING | |
+| U69 | `thoughtExists` is true for an existing id and false for an unknown one | FR-001 | example | DONE | `tests/store_test.ts::U69 thoughtExists is true for an existing id and false for an unknown one` |
+| U70 | `matchThoughts` sends the embedding and limit to the base `match_thoughts` and maps the reply to `ThoughtMatch` | FR-023 | example | DONE | `tests/store_test.ts::U70 matchThoughts sends the embedding and limit to the base match_thoughts and maps the reply to ThoughtMatch` |
+| U71 | `findThoughtsExact` sends the text as an RPC parameter, never inside a filter string | FR-023 | example | DONE | `tests/store_test.ts::U71 findThoughtsExact sends the text as an RPC parameter, never inside a filter string` |
+| U72 | `embeddingDimension` returns the dimension function's number | FR-007 | example | DONE | `tests/store_test.ts::U72 embeddingDimension returns the dimension function's number` |
+| U73 | `claim` maps a refused claim to `{ busy: op }` and a success to `{ token }` | FR-026 | example | DONE | `tests/store_test.ts::U73 claim maps a refused claim to busy and a success to a token` |
+| U74 | `getAttachment` with a full id returns the row | FR-015 | example | DONE | `tests/store_test.ts::U74 getAttachment with a full id returns the row` |
+| U75 | `getAttachment` with an 8-character short id returns the row when exactly one matches | FR-025 | example | DONE | `tests/store_test.ts::U75 getAttachment with an 8-character short id returns the row when exactly one matches` |
+| U76 | `getAttachment` with a short id that matches two rows returns `ambiguous` | FR-025 | example | DONE | `tests/store_test.ts::U76 getAttachment with a short id that matches two rows returns ambiguous` |
+| U77 | `getAttachment` with an unknown id returns `not_found` | FR-014 | example | DONE | `tests/store_test.ts::U77 getAttachment with an unknown id returns not_found` |
+| U78 | A database error maps to `{ error }` whose text contains no service-role key | FR-009 | example | DONE | `tests/store_test.ts::U78 a database error maps to { error } whose text contains no service-role key` |
+| U79 | `signUpload` targets `ATTACHMENTS_BUCKET` at `attachments/<id>/<file_name>` and returns Storage's URL unchanged | FR-001, FR-018 | example | DONE | `tests/store_test.ts::U79 signUpload targets ATTACHMENTS_BUCKET at attachments/<id>/<file_name> and returns Storage's URL unchanged` |
+| U80 | `objectInfo` returns the object's size and creation time, and `null` when there is no object | FR-004 | example | DONE | `tests/store_test.ts::U80 objectInfo returns the object's size and creation time, and null when there is no object` |
+| U81 | `download` returns the stored bytes | FR-004 | example | DONE | `tests/store_test.ts::U81 download returns the stored bytes` |
+| U82 | `deleteObject` deletes that path and no other | FR-004, FR-016 | example | DONE | `tests/store_test.ts::U82 deleteObject deletes that path and no other` |
+| U88 | `insertNote`, `attachmentForPageToken` and `consumePageToken` map the RPC replies to `{ id, created }`, the row and a boolean | FR-001, FR-024 | example | DONE | `tests/store_test.ts::U88 insertNote, attachmentForPageToken and consumePageToken map the RPC replies to { id, created }, the row and a boolean` |
+| U89 | `signDownload` passes the path and the seconds to Storage and returns the signed URL | FR-014 | example | DONE | `tests/store_test.ts::U89 signDownload passes the path and the seconds to Storage and returns the signed URL` |
+| U90 | `listByParent` returns that parent's attachments only | FR-015 | example | DONE | `tests/store_test.ts::U90 listByParent returns that parent's attachments only` |
+| U91 | `attachmentForDerived` returns the attachment named by the thought's `metadata.attachment_id` | FR-015 | example | DONE | `tests/store_test.ts::U91 attachmentForDerived returns the attachment named by the thought's metadata.attachment_id` |
+| U92 | `attachmentForDerived` on a thought without `attachment_id` returns `null` | FR-015 | example | DONE | `tests/store_test.ts::U92 attachmentForDerived on a thought without attachment_id returns null` |
+| U110 | `removalPreview` maps the preview reply to `{ derived, noteWouldGo }` | FR-016 | example | DONE | `tests/store_test.ts::U110 removalPreview maps the preview reply to { derived, noteWouldGo }` |
+| U111 | `removeAttachment` passes the claim token and maps the reply to `{ derived, noteRemoved }` | FR-016 | example | DONE | `tests/store_test.ts::U111 removeAttachment passes the claim token and maps the reply to { derived, noteRemoved }` |
+| U112 | `orphans` passes the current time and maps the reply to `{ row, why }[]` | FR-021 | example | DONE | `tests/store_test.ts::U112 orphans passes the current time and maps the reply to { row, why }[]` |
+| U315 | `findByHash(parentId, contentHash)` returns the non-`refused` attachment on that parent with that hash (T005 Q4) | FR-012 | example | DONE | `tests/store_test.ts::U315 findByHash returns the non-refused attachment on that parent with that hash` |
+| U316 | `findByHash` returns `null` when the only attachment with that hash on that parent is `refused` | FR-012, FR-004 | example | DONE | `tests/store_test.ts::U316 findByHash returns null when the only attachment with that hash on that parent is refused` |
+| U317 | `findByHash` returns `null` when the hash belongs only to an attachment of another parent | FR-012, edge case "same file attached to two different thoughts" | example | DONE | `tests/store_test.ts::U317 findByHash returns null when the hash belongs only to an attachment of another parent` |
+| U318 | `findPending(parentId, name, type, size, now)` returns the `pending_upload` row with that name, type and size on that parent while `now` is before its `upload_deadline` | FR-012 | example | DONE | `tests/store_test.ts::U318 findPending returns the pending_upload row with that name, type and size while now is before its deadline` |
+| U319 | `findPending` returns `null` for that row once `now` is past its `upload_deadline` | FR-012, FR-021, edge case "pending upload past its deadline no longer counts as pending" | example | DONE | `tests/store_test.ts::U319 findPending returns null for that row once now is past its deadline` |
 
 #### `tests/schema_drift_test.ts` (T019; `src/store.ts` against `schema.sql`)
 
 | id  | behavior | traces | kind | state | test |
 | --- | -------- | ------ | ---- | ----- | ---- |
-| U83 | Every RPC name and named parameter that `src/store.ts` sends exists in `schema.sql`, or is the base `match_thoughts` | INV-3 | example | PENDING | |
+| U83 | Every RPC name and named parameter that `src/store.ts` sends exists in `schema.sql`, or is the base `match_thoughts` | INV-3 | example | DONE | `tests/schema_drift_test.ts::U83 every RPC name and named parameter that src/store.ts sends exists in schema.sql, or is the base match_thoughts` |
+| U357 | `createAttachment` inserts a `pending_upload` row with the given fields and returns it | FR-001, data-model.md `thought_attachments` | example | DONE | `tests/store_test.ts::U357 createAttachment inserts a pending_upload row with the given fields and returns it` |
+| U358 | `setDeclaration` updates the declared fields of that attachment only | FR-001, FR-002, data-model.md `thought_attachments.declared_type` | example | DONE | `tests/store_test.ts::U358 setDeclaration updates the declared fields of that attachment only and returns the row` |
+| U359 | `release` passes the claim token | FR-026, R10 | example | DONE | `tests/store_test.ts::U359 release passes the claim token` |
+| U360 | `writeDerived` sends the rows (content, metadata, embedding) and the state patch under the claim token | FR-011, FR-027, R9 | example | DONE | `tests/store_test.ts::U360 writeDerived sends the rows (content, metadata, embedding) and the state patch under the claim token` |
+| U361 | `setState` sends the patch under the claim token and returns the row | FR-026, data-model.md states | example | DONE | `tests/store_test.ts::U361 setState sends the patch under the claim token and returns the row` |
 
 ### Stream X: files (wave 1, `ta-files`)
 
