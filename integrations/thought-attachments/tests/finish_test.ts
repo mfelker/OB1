@@ -693,3 +693,18 @@ Deno.test("U216 a finish whose claim expired and was taken over has its write re
   assertEquals(r.store.attachment(att.id)?.state, "processed");
   assertEquals(r.store.objects.has(path), true);
 });
+
+Deno.test("U214 once BUSY_SECONDS has passed by the clock, the next finish proceeds and completes", async () => {
+  const r = await rig();
+  const att = pending(r, await textPdf(["alpha beta gamma delta epsilon zeta"]));
+  const killed = await r.store.claim(att.id, "finish", r.settings.busySeconds);
+  assert("data" in killed && "token" in killed.data);
+  r.clock.advanceSeconds(r.settings.busySeconds - 1);
+  assertEquals((await r.finish(att.id, {})).busy, "finish");
+  r.clock.advanceSeconds(1);
+  const out = await r.finish(att.id, {});
+  assertEquals(out.busy, undefined);
+  assertEquals(out.state, "processed");
+  assertEquals(r.store.derivedOf(att.id).length, out.derived_count);
+  assert(out.derived_count >= 1);
+});
