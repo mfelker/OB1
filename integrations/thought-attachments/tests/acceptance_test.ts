@@ -696,7 +696,7 @@ Deno.test(
   },
 );
 
-todo(
+Deno.test(
   "A19 after a page upload, /page/finish alone returns processed with the caption, and the caption thought exists",
   async () => {
     const w = world();
