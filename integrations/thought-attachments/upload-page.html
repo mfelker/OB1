@@ -59,8 +59,9 @@ var progressEl = document.getElementById("progress");
 function upload(file, target) {
   show("Uploading " + file.name + "…");
   progressEl.hidden = false;
-  return fetch(target.url, { method: target.method, headers: target.headers, body: file }).then(function () {
+  return fetch(target.url, { method: target.method, headers: target.headers, body: file }).then(function (res) {
     progressEl.hidden = true;
+    if (!res.ok) return show("Failed: the upload was not accepted (" + res.status + ").");
     return finish();
   });
 }
@@ -113,6 +114,9 @@ function start(file) {
     if (!r) return;
     if (r.status === 400) return show("Refused: " + r.body.message);
     return upload(file, r.body.upload);
+  }).catch(function () {
+    progressEl.hidden = true;
+    show("Failed: could not reach the server.");
   });
 }
 
