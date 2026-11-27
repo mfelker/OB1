@@ -62,3 +62,10 @@ Deno.test("U4 with both set EMBEDDING_API_KEY wins over OPENROUTER_API_KEY", () 
   const s = settingsWith({ EMBEDDING_API_KEY: EMBEDDING_API_KEY, OPENROUTER_API_KEY: OPENROUTER_KEY });
   assertEquals(s.embeddingApiKey, EMBEDDING_API_KEY);
 });
+
+const SUPABASE_PUBLIC = "http://192.168.1.20:8000";
+
+Deno.test("U5 with PUBLIC_BASE_URL unset the public base is SUPABASE_PUBLIC_URL", () => {
+  const s = settingsWith({ PUBLIC_BASE_URL: undefined, SUPABASE_PUBLIC_URL: SUPABASE_PUBLIC });
+  assertEquals(s.publicBaseUrl, SUPABASE_PUBLIC);
+});
