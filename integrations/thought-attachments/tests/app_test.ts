@@ -150,3 +150,12 @@ Deno.test("U347 createApp with settings not ok answers an MCP tools/call with th
     { message: PAGES_INVALID, id: 5, result: undefined },
   );
 });
+
+Deno.test("U348 the settings error names the setting and what it must be, never the value given", async () => {
+  const app = brokenApp({ MAX_PDF_PAGES: "abc", MAX_IMAGE_MB: "-3.5" });
+  const { response } = await mcpCall(app.fetch, "tools/call", { name: "find_thought", arguments: { query: "x" } }, BRAIN_KEY);
+  const text = await response.text();
+  assertStringIncludes(text, PAGES_INVALID);
+  assertStringIncludes(text, "setting MAX_IMAGE_MB is invalid: must be a positive number");
+  assertEquals([text.includes("abc"), text.includes("-3.5")], [false, false]);
+});
