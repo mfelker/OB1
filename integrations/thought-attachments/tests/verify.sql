@@ -79,3 +79,25 @@ begin
   exception when check_violation then null;
   end;
 end $$;
+
+-- U37: sensitivity_tier accepts the three tiers, defaults to personal and rejects any other value
+do $$
+declare t text; v_id uuid; d text;
+begin
+  foreach t in array array['standard', 'personal', 'restricted'] loop
+    insert into thought_attachments (parent_thought_id, sensitivity_tier, state, upload_deadline)
+      values (gen_random_uuid(), t, 'pending_upload', now()) returning id into v_id;
+    delete from thought_attachments where id = v_id;
+  end loop;
+  insert into thought_attachments (parent_thought_id, state, upload_deadline)
+    values (gen_random_uuid(), 'pending_upload', now()) returning id, sensitivity_tier into v_id, d;
+  delete from thought_attachments where id = v_id;
+  if d <> 'personal' then raise exception 'U37: default tier is %', d; end if;
+  begin
+    insert into thought_attachments (parent_thought_id, sensitivity_tier, state, upload_deadline)
+      values (gen_random_uuid(), 'secret', 'pending_upload', now()) returning id into v_id;
+    delete from thought_attachments where id = v_id;
+    raise exception 'U37: secret was accepted';
+  exception when check_violation then null;
+  end;
+end $$;

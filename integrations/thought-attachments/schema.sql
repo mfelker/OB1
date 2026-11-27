@@ -45,3 +45,10 @@ begin
       check (expected_kind in ('photo', 'pdf', ''));
   end if;
 end $$;
+do $$
+begin
+  if not exists (select 1 from pg_constraint where conname = 'thought_attachments_sensitivity_tier_check') then
+    alter table thought_attachments add constraint thought_attachments_sensitivity_tier_check
+      check (sensitivity_tier in ('standard', 'personal', 'restricted'));
+  end if;
+end $$;
