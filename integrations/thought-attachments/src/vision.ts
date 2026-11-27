@@ -12,7 +12,10 @@ export function createVisionClient(settings: Settings, fetch: typeof globalThis.
     async caption(bytes: Uint8Array, type: AcceptedType): Promise<R<{ text: string; model: string }>> {
       const response = await fetch(`${settings.visionApiBase}/chat/completions`, {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: {
+          "content-type": "application/json",
+          ...(settings.visionApiKey ? { authorization: `Bearer ${settings.visionApiKey}` } : {}),
+        },
         body: JSON.stringify({
           model: settings.visionModel,
           messages: [{

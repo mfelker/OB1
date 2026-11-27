@@ -49,3 +49,9 @@ Deno.test("U174 the prompt asks for the visible objects, places, labels and text
   const prompt = body.messages.flatMap((m) => m.content).find((p) => p.type === "text")?.text ?? "";
   for (const word of ["objects", "places", "labels", "text"]) assertStringIncludes(prompt.toLowerCase(), word);
 });
+
+Deno.test("U175 with VISION_API_KEY set the request carries it as a bearer token", async () => {
+  const ff = new FakeFetch().on("POST", URL_, visionResponder("a red door"));
+  await createVisionClient(settingsWith(), ff.fetch).caption(BYTES, "image/jpeg");
+  assertEquals(ff.requests[0].headers["authorization"], `Bearer ${VISION_API_KEY}`);
+});
