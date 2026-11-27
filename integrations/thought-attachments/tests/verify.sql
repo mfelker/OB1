@@ -107,7 +107,7 @@ begin
   insert into thought_attachments (parent_thought_id, state, upload_deadline)
     values (gen_random_uuid(), 'pending_upload', now()) returning id, sensitivity_tier into v_id, d;
   delete from thought_attachments where id = v_id;
-  if d <> 'personal' then raise exception 'U37: default tier is %', d; end if;
+  if d is distinct from 'personal' then raise exception 'U37: default tier is %', d; end if;
   begin
     insert into thought_attachments (parent_thought_id, sensitivity_tier, state, upload_deadline)
       values (gen_random_uuid(), 'secret', 'pending_upload', now()) returning id into v_id;
@@ -306,7 +306,7 @@ declare b record;
 begin
   select * into b from storage.buckets where id = 'ob1-files';
   if not found then raise exception 'U49: bucket ob1-files missing'; end if;
-  if b.name <> 'ob1-files' then raise exception 'U49: bucket name is %', b.name; end if;
+  if b.name is distinct from 'ob1-files' then raise exception 'U49: bucket name is %', b.name; end if;
   if b.public is distinct from false then raise exception 'U49: bucket is public'; end if;
   if b.file_size_limit is not null then raise exception 'U49: bucket sets its own size limit %', b.file_size_limit; end if;
   if (select array_agg(m order by m) from unnest(b.allowed_mime_types) m)
@@ -417,7 +417,7 @@ begin
   delete from thought_attachments where id = a;
   delete from thoughts where id = p;
   if not raised then raise exception 'U56: a fingerprint conflict did not raise'; end if;
-  if c <> txt or m <> '{"owner":true}'::jsonb then raise exception 'U56: owner thought changed: % %', c, m; end if;
+  if c is distinct from txt or m is distinct from '{"owner":true}'::jsonb then raise exception 'U56: owner thought changed: % %', c, m; end if;
 end $$;
 
 -- U57: a write replaces the previous derived set and sets the state fields and derived_count together
@@ -434,9 +434,9 @@ begin
   delete from thought_attachments where id = a;
   delete from thoughts where id = p;
   if n <> 1 or old_left <> 0 then raise exception 'U57: set not replaced (% rows, % old)', n, old_left; end if;
-  if r.derived_count <> 1 then raise exception 'U57: derived_count %', r.derived_count; end if;
-  if r.state <> 'processed' or r.caption_model <> 'vision-x' or r.page_count <> 3 or r.content_hash <> 'sha256:u57'
-     or r.actual_type <> 'application/pdf' or r.actual_size <> 10 or r.processed_at is null then
+  if r.derived_count is distinct from 1 then raise exception 'U57: derived_count %', r.derived_count; end if;
+  if r.state is distinct from 'processed' or r.caption_model is distinct from 'vision-x' or r.page_count is distinct from 3 or r.content_hash is distinct from 'sha256:u57'
+     or r.actual_type is distinct from 'application/pdf' or r.actual_size is distinct from 10 or r.processed_at is null then
     raise exception 'U57: state fields not set: %', r;
   end if;
 end $$;
@@ -462,7 +462,7 @@ begin
   delete from thoughts where id = p;
   if not raised then raise exception 'U58: the conflicting write did not raise'; end if;
   if old_n <> 2 or new_n <> 0 then raise exception 'U58: set changed (% old, % new)', old_n, new_n; end if;
-  if st <> 'processed' or dc <> 2 then raise exception 'U58: state % derived_count %', st, dc; end if;
+  if st is distinct from 'processed' or dc is distinct from 2 then raise exception 'U58: state % derived_count %', st, dc; end if;
 end $$;
 
 -- U59: a write for one attachment leaves another attachment's derived thoughts untouched
@@ -480,7 +480,7 @@ begin
   delete from thought_attachments where id = b;
   delete from thoughts where id = p;
   delete from thoughts where id = p2;
-  if n <> 1 or dc <> 1 then raise exception 'U59: the other attachment changed (% rows, derived_count %)', n, dc; end if;
+  if n is distinct from 1 or dc is distinct from 1 then raise exception 'U59: the other attachment changed (% rows, derived_count %)', n, dc; end if;
 end $$;
 
 -- U60: setting content_hash to one another non-refused attachment of the parent holds raises and changes nothing
@@ -499,7 +499,7 @@ begin
   delete from thought_attachments where id = b;
   delete from thoughts where id = p;
   if not raised then raise exception 'U60: the duplicate content_hash was accepted'; end if;
-  if n <> 0 or h is not null or st <> 'pending_upload' then raise exception 'U60: changed (% rows, hash %, state %)', n, h, st; end if;
+  if n is distinct from 0 or h is not null or st is distinct from 'pending_upload' then raise exception 'U60: changed (% rows, hash %, state %)', n, h, st; end if;
 end $$;
 
 -- U61: a claim while an unexpired claim exists is refused and returns the running busy_op
@@ -511,7 +511,7 @@ begin
   delete from thought_attachments where id = a;
   delete from thoughts where id = p;
   if r is distinct from '{"busy": "finish"}'::jsonb then raise exception 'U61: claim returned %', r; end if;
-  if tok <> 'tok' then raise exception 'U61: the holder''s token changed to %', tok; end if;
+  if tok is distinct from 'tok' then raise exception 'U61: the holder''s token changed to %', tok; end if;
 end $$;
 
 -- U62: a claim after busy_until succeeds, with a busy_token different from the previous one
@@ -523,7 +523,7 @@ begin
   delete from thought_attachments where id = a;
   delete from thoughts where id = p;
   if r->>'token' is null or r->>'token' = 'tok' then raise exception 'U62: claim returned %', r; end if;
-  if row_.busy_token is distinct from r->>'token' or row_.busy_op <> 'rebuild' or row_.busy_until <= now() then
+  if row_.busy_token is distinct from r->>'token' or row_.busy_op is distinct from 'rebuild' or row_.busy_until is null or row_.busy_until <= now() then
     raise exception 'U62: claim not recorded: %', row_;
   end if;
 end $$;
@@ -540,7 +540,7 @@ begin
   delete from thought_attachments where id = b;
   delete from thoughts where id = p;
   if ra->>'token' is null or rb->>'token' is null then raise exception 'U63: claims were % and %', ra, rb; end if;
-  if ta = tb or ta <> ra->>'token' or tb <> rb->>'token' then raise exception 'U63: tokens mixed up'; end if;
+  if ta = tb or ta is distinct from ra->>'token' or tb is distinct from rb->>'token' then raise exception 'U63: tokens mixed up'; end if;
 end $$;
 
 -- U64: release with the holder's token clears the claim, so an immediate claim succeeds
@@ -582,7 +582,7 @@ begin
   insert into thoughts (content) values (E'Line one ' || tag || E' middle\nsecond line') returning id into t;
   for r in select * from attachment_find_thoughts_exact(tag, 20) loop
     n := n + 1;
-    if r.id <> t or r.first_line <> 'Line one ' || tag || ' middle' or r.captured is null then
+    if r.id is distinct from t or r.first_line is distinct from 'Line one ' || tag || ' middle' or r.captured is null then
       delete from thoughts where id = t;
       raise exception 'U67: unexpected match %', r;
     end if;
@@ -601,7 +601,7 @@ begin
   select count(*), min(id::text)::uuid into n, hit from attachment_find_thoughts_exact(q, 20);
   delete from thoughts where id = lit;
   delete from thoughts where id = wild;
-  if n <> 1 or hit <> lit then raise exception 'U68: % matches, first %', n, hit; end if;
+  if n is distinct from 1 or hit is distinct from lit then raise exception 'U68: % matches, first %', n, hit; end if;
 end $$;
 
 -- U314: the exact-text find ignores letter case, and a thought without the text in any case is not returned
@@ -613,7 +613,7 @@ begin
   select count(*), min(id::text)::uuid into n, hit from attachment_find_thoughts_exact('FURNACE Filters ' || upper(tag), 20);
   delete from thoughts where id = yes;
   delete from thoughts where id = no;
-  if n <> 1 or hit <> yes then raise exception 'U314: % matches, first %', n, hit; end if;
+  if n is distinct from 1 or hit is distinct from yes then raise exception 'U314: % matches, first %', n, hit; end if;
 end $$;
 
 -- U84: inserting a note whose text is new adds a thought with the note's content and metadata, reported as created,
@@ -626,7 +626,7 @@ begin
   select * into t from thoughts where id = (r->>'id')::uuid;
   delete from thoughts where id = (r->>'id')::uuid;
   if (r->>'created')::boolean is not true then raise exception 'U84: not reported as created: %', r; end if;
-  if t.content <> txt or t.metadata->>'source_type' <> 'thought_attachments_note' or t.metadata->>'type' <> 'observation'
+  if t.content is distinct from txt or t.metadata->>'source_type' is distinct from 'thought_attachments_note' or t.metadata->>'type' is distinct from 'observation'
      or t.embedding is null then
     raise exception 'U84: stored row differs: %', t;
   end if;
@@ -646,8 +646,8 @@ begin
   select * into t from thoughts where id = o;
   delete from thoughts where id = o;
   if r->>'created' = 'true' then delete from thoughts where id = (r->>'id')::uuid; end if;
-  if (r->>'id')::uuid <> o or (r->>'created')::boolean is not false then raise exception 'U85: got %', r; end if;
-  if t.content <> txt or t.metadata <> '{"owner":true}'::jsonb or t.embedding is not null then raise exception 'U85: thought changed: %', t; end if;
+  if (r->>'id')::uuid is distinct from o or (r->>'created')::boolean is not false then raise exception 'U85: got %', r; end if;
+  if t.content is distinct from txt or t.metadata is distinct from '{"owner":true}'::jsonb or t.embedding is not null then raise exception 'U85: thought changed: %', t; end if;
 end $$;
 
 -- U86: the page-token lookup finds a row by page_token_hash only
@@ -693,8 +693,8 @@ begin
   delete from thoughts where metadata->>'attachment_id' = a::text;
   delete from thought_attachments where id = a;
   delete from thoughts where id = p;
-  if r.state <> 'failed' or r.state_reason <> 'the run did not finish' then raise exception 'U94: returned %', r; end if;
-  if n <> 2 or r.derived_count <> 2 then raise exception 'U94: derived thoughts changed (% rows, derived_count %)', n, r.derived_count; end if;
+  if r.state is distinct from 'failed' or r.state_reason is distinct from 'the run did not finish' then raise exception 'U94: returned %', r; end if;
+  if n is distinct from 2 or r.derived_count is distinct from 2 then raise exception 'U94: derived thoughts changed (% rows, derived_count %)', n, r.derived_count; end if;
 end $$;
 
 -- U93: a write or set-state with an old token, after a newer claim took over, is refused and changes nothing
@@ -721,7 +721,7 @@ begin
   if old_tok = new_tok then raise exception 'U93: the new claim reused the token'; end if;
   if not w_refused then raise exception 'U93: a write with the old token was not refused'; end if;
   if not s_refused then raise exception 'U93: a set-state with the old token was not refused'; end if;
-  if n <> 0 or st <> 'pending_upload' then raise exception 'U93: changed (% rows, state %)', n, st; end if;
+  if n is distinct from 0 or st is distinct from 'pending_upload' then raise exception 'U93: changed (% rows, state %)', n, st; end if;
 end $$;
 
 -- U95: remove under a valid claim deletes that attachment's derived thoughts and its row, in one transaction
@@ -733,7 +733,7 @@ begin
   select count(*) into n from thoughts where metadata->>'attachment_id' = a::text;
   select count(*) into rows_ from thought_attachments where id = a;
   delete from thoughts where id = p;
-  if (r->>'derived')::int <> 2 or (r->>'noteRemoved')::boolean is not false then raise exception 'U95: returned %', r; end if;
+  if (r->>'derived')::int is distinct from 2 or (r->>'noteRemoved')::boolean is not false then raise exception 'U95: returned %', r; end if;
   if n <> 0 or rows_ <> 0 then raise exception 'U95: % derived thoughts and % rows remain', n, rows_; end if;
 end $$;
 
@@ -848,7 +848,7 @@ begin
   delete from thoughts where id = p;
   if pre is distinct from '{"derived": 2, "noteWouldGo": true}'::jsonb then raise exception 'U104: preview %', pre; end if;
   if n_before <> n_after or rows_ <> 1 or par <> 1 then raise exception 'U104: the preview deleted something'; end if;
-  if (r->>'derived')::int <> (pre->>'derived')::int or r->'noteRemoved' <> pre->'noteWouldGo' then raise exception 'U104: remove % differs from preview %', r, pre; end if;
+  if (r->>'derived')::int is distinct from (pre->>'derived')::int or r->'noteRemoved' is distinct from pre->'noteWouldGo' then raise exception 'U104: remove % differs from preview %', r, pre; end if;
 end $$;
 
 -- Helper for the orphan checks: one attachment in a given shape, then what attachment_orphans(now()) says about it.
@@ -868,21 +868,21 @@ end $$;
 do $$
 declare r jsonb := pg_temp.orphan_case('processed', interval '1 hour', false);
 begin
-  if r is null or r->>'why' <> 'parent_gone' or (r->'attachment'->>'derived_count')::int <> 3 then raise exception 'U105: %', r; end if;
+  if r is null or r->>'why' is distinct from 'parent_gone' or (r->'attachment'->>'derived_count')::int is distinct from 3 then raise exception 'U105: %', r; end if;
 end $$;
 
 -- U106: orphans lists a pending_upload row past its upload_deadline
 do $$
 declare r jsonb := pg_temp.orphan_case('pending_upload', interval '-1 second', true);
 begin
-  if r is null or r->>'why' <> 'upload_expired' then raise exception 'U106: %', r; end if;
+  if r is null or r->>'why' is distinct from 'upload_expired' then raise exception 'U106: %', r; end if;
 end $$;
 
 -- U370: orphans lists a pending_upload row at exactly its upload_deadline (the deadline instant is past it)
 do $$
 declare r jsonb := pg_temp.orphan_case('pending_upload', interval '0', true);
 begin
-  if r is null or r->>'why' <> 'upload_expired' then raise exception 'U370: %', r; end if;
+  if r is null or r->>'why' is distinct from 'upload_expired' then raise exception 'U370: %', r; end if;
 end $$;
 
 -- U107: orphans omits a pending_upload row before its upload_deadline
@@ -896,7 +896,7 @@ end $$;
 do $$
 declare r jsonb := pg_temp.orphan_case('refused', interval '1 hour', true);
 begin
-  if r is null or r->>'why' <> 'refused' then raise exception 'U108: %', r; end if;
+  if r is null or r->>'why' is distinct from 'refused' then raise exception 'U108: %', r; end if;
 end $$;
 
 -- U109: orphans omits a processed row whose parent exists
