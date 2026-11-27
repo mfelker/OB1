@@ -31,20 +31,29 @@ function apiBase() {
   return location.origin + location.pathname.replace(/\/upload\/?$/, "");
 }
 
-function post(path, body) {
+// Sends a JSON request to the API. Resolves to { status, body }, or to null after showing the
+// expired message when the link is no longer valid (410).
+function call(path, body) {
   return fetch(apiBase() + path, {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify(body)
+  }).then(function (res) {
+    return res.json().then(function (data) {
+      if (res.status === 410) {
+        show(EXPIRED);
+        return null;
+      }
+      return { status: res.status, body: data };
+    });
   });
 }
-
-var fileEl = document.getElementById("file");
 
 function show(text) {
   statusEl.textContent = text;
 }
 
+var fileEl = document.getElementById("file");
 var progressEl = document.getElementById("progress");
 
 function upload(file, target) {
@@ -68,19 +77,16 @@ function outcomeText(o) {
 }
 
 function finish() {
-  return post("/page/finish", { token: token }).then(function (res) {
-    return res.json().then(function (body) {
-      show(outcomeText(body));
-    });
+  return call("/page/finish", { token: token }).then(function (r) {
+    if (r) show(outcomeText(r.body));
   });
 }
 
 function start(file) {
-  return post("/page/start", { token: token, name: file.name, type: file.type, size: file.size }).then(function (res) {
-    return res.json().then(function (body) {
-      if (res.status === 400) return show("Refused: " + body.message);
-      return upload(file, body.upload);
-    });
+  return call("/page/start", { token: token, name: file.name, type: file.type, size: file.size }).then(function (r) {
+    if (!r) return;
+    if (r.status === 400) return show("Refused: " + r.body.message);
+    return upload(file, r.body.upload);
   });
 }
 
@@ -88,7 +94,7 @@ var token = readToken();
 if (!token) {
   statusEl.textContent = EXPIRED;
 } else {
-  post("/page/info", { token: token });
+  call("/page/info", { token: token });
   fileEl.addEventListener("change", function () {
     var file = fileEl.files && fileEl.files[0];
     if (file) start(file);

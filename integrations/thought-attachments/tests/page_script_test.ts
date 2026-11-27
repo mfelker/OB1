@@ -143,3 +143,25 @@ Deno.test("U289 each outcome shows its text from the contract", async () => {
     assertEquals(page.text("status"), expected);
   }
 });
+
+Deno.test("U290 a 410 shows the expired message, from info, start and finish", async () => {
+  const gone = { status: 410, body: { error: EXPIRED } };
+  const onInfo = await loadPage({ href: `${PAGE_AT}#t=tok`, fetch: new FakeFetch().on("POST", `${BASE}/page/info`, gone).fetch });
+  const onStart = await loadPage({
+    href: `${PAGE_AT}#t=tok`,
+    fetch: net().on("POST", `${BASE}/page/start`, gone).fetch,
+  });
+  await onStart.pick(PICK);
+  await settle();
+  const { page: onFinish } = await (async () => {
+    const f = net()
+      .on("POST", `${BASE}/page/start`, { body: UPLOAD })
+      .on("PUT", SIGNED, { status: 200, body: {} })
+      .on("POST", `${BASE}/page/finish`, gone);
+    const page = await loadPage({ href: `${PAGE_AT}#t=tok`, fetch: f.fetch });
+    await page.pick(PICK);
+    await settle();
+    return { page };
+  })();
+  assertEquals([onInfo.text("status"), onStart.text("status"), onFinish.text("status")], [EXPIRED, EXPIRED, EXPIRED]);
+});
