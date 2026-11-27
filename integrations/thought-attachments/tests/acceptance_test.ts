@@ -559,7 +559,7 @@ Deno.test(
   },
 );
 
-todo(
+Deno.test(
   "A59 an owner thought equal to an attachment's whole derived content makes the finish fail naming the conflict, with that thought unchanged and no derived thought",
   async () => {
     const w = world();
