@@ -1,5 +1,5 @@
 /** Intake checks (T020, T035, T053): declared and actual file details. */
-import { assertEquals } from "jsr:@std/assert@1.0.19";
+import { assert, assertEquals, assertStringIncludes } from "jsr:@std/assert@1.0.19";
 import { baseName, checkDeclared } from "../src/intake.ts";
 import { loadSettings } from "../src/settings.ts";
 import type { Settings } from "../src/types.ts";
@@ -31,4 +31,11 @@ Deno.test("U116 checkDeclared accepts each of the four accepted types within its
   for (const type of ["application/pdf", "image/jpeg", "image/png", "image/webp"]) {
     assertEquals(checkDeclared({ name: "file", type, size: 1000 }, s), null, type);
   }
+});
+
+Deno.test("U117 checkDeclared refuses any other type, naming the accepted types", () => {
+  const refusal = checkDeclared({ name: "a.zip", type: "application/zip", size: 1000 }, settingsWith());
+  assert(refusal !== null);
+  assertEquals(refusal.code, "unsupported_type");
+  for (const name of ["PDF", "JPEG", "PNG", "WebP"]) assertStringIncludes(refusal.message, name);
 });
