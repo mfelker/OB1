@@ -7,8 +7,6 @@
 import { createClient } from "@supabase/supabase-js";
 import type { AttachmentRow, BusyOp, OrphanReason, R, Settings, Store, ThoughtMatch } from "./types.ts";
 
-const notYet = (): Promise<never> => Promise.reject(new Error("not implemented"));
-
 export function createSupabaseStore(
   url: string,
   serviceRoleKey: string,
