@@ -29,12 +29,12 @@ function validate(result) {
   for (const rt of result.runtimes) check(rt, SCHEMA.properties.runtimes.items, 'runtime');
 }
 
-function runFolder(fixture, { mode = 'strict', origin = 'fork', timeoutSec, path } = {}) {
+function runFolder(fixture, { mode = 'strict', origin = 'fork', timeoutSec, path, env } = {}) {
   const f = setupFolder(fixture, path);
   const out = join(mkdtempSync(join(tmpdir(), 'fork-ci-out-')), 'r.json');
   const args = [BIN, '--path', f.path, '--mode', mode, '--origin', origin, '--out', out];
   if (timeoutSec) args.push('--timeout-sec', String(timeoutSec));
-  const p = spawnSync(process.execPath, args, { cwd: f.root, encoding: 'utf8' });
+  const p = spawnSync(process.execPath, args, { cwd: f.root, encoding: 'utf8', env: env ?? process.env });
   assert.equal(p.status, 0, `run-folder exits 0 once a result is written\n${p.stderr}`);
   const result = JSON.parse(readFileSync(out, 'utf8'));
   validate(result);
@@ -132,4 +132,18 @@ test('SQL: SQL-only folder without verify script → sql-unverified even in stri
   assert.equal(r.outcome, 'sql-unverified');
   assert.equal(r.reason, 'SQL unverified (no tests/verify.sql)');
   assert.equal(r.runtimes[0].kind, 'sql');
+});
+
+test('SQL: the bootstrap is applied before any runtime runs, so node tests that use Postgres see its roles', () => {
+  // Stub psql: logs every call and succeeds, so no real Postgres is needed.
+  const bin = mkdtempSync(join(tmpdir(), 'fork-ci-psql-'));
+  const log = join(bin, 'psql.log');
+  writeFileSync(join(bin, 'psql'), '#!/bin/sh\necho "$*" >> "$PSQL_LOG"\n', { mode: 0o755 });
+  const env = { ...process.env, PATH: `${bin}:${process.env.PATH}`, PSQL_LOG: log };
+  const r = runFolder('sql-verify-node', { env });
+  const node = r.runtimes.find(rt => rt.kind === 'node-plain');
+  assert.equal(node.outcome, 'pass', node.outputExcerpt);
+  assert.equal(r.runtimes.find(rt => rt.kind === 'sql').outcome, 'pass');
+  const calls = readFileSync(log, 'utf8').trim().split('\n');
+  assert.equal(calls.filter(c => c.includes('bootstrap.sql')).length, 1, `bootstrap applied exactly once:\n${calls.join('\n')}`);
 });

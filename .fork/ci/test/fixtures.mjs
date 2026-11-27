@@ -72,6 +72,22 @@ export const fixtures = {
     'schema.sql': 'create table if not exists demo (id int primary key);\n',
     'tests/verify.sql': "\\ir ../schema.sql\ndo $$ begin\n  if to_regclass('public.demo') is null then raise exception 'demo missing'; end if;\nend $$;\n",
   },
+  // A node test that needs the SQL bootstrap (e.g. it runs psql itself). PSQL_LOG is written by
+  // the test's stub psql; the node test passes only if bootstrap.sql was applied before it ran.
+  'sql-verify-node': {
+    'schema.sql': 'create table if not exists demo (id int primary key);\n',
+    'tests/verify.sql': '\\ir ../schema.sql\n',
+    'tests/needs-bootstrap.test.mjs': [
+      "import { test } from 'node:test';",
+      "import assert from 'node:assert/strict';",
+      "import { readFileSync, existsSync } from 'node:fs';",
+      "test('bootstrap applied before node tests', () => {",
+      "  const log = process.env.PSQL_LOG;",
+      "  assert.ok(existsSync(log) && readFileSync(log, 'utf8').includes('bootstrap.sql'), 'bootstrap.sql not yet applied');",
+      '});',
+      '',
+    ].join('\n'),
+  },
 };
 
 /** Return the file map of a fixture placed under `prefix` (e.g. "recipes/x"). */
