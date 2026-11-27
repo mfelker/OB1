@@ -505,6 +505,7 @@ The fork-ci SQL runtime needs `psql` and a Postgres reachable through the `PG*` 
    - because the copy is replaced each time, `psql -f <relative path>` and `\ir ../db/ob1-schema.sql` resolve as on the host, and can never read stale bytes.
 3. Once per new container, apply fork-ci's bootstrap as CI does: `cd .fork/ci/sql && psql -v ON_ERROR_STOP=1 -X -q -f bootstrap.sql`. It creates `anon`, `authenticated` and `service_role`. The old recipe left this step out; the original container had it applied by hand.
 4. Then `PATH=<wrapper dir>:$PATH node .fork/ci/bin/tdd.mjs suite` (or `file tests/verify.sql`).
+5. After any mutant that removes or defeats a cleanup `trap` in `setup.sh`, check for and remove leaked `ob1-setup.*` and `tmp.*` folders. They are under `${TMPDIR:-/tmp}`, and on macOS also under `/tmp`, because macOS `mktemp -d` ignores `TMPDIR` (U54). Before removing them, check that their `.env` files hold only the stub's `example-placeholder-*` values. Then `rm -rf` the ones from that run, and confirm `ls -d /tmp/ob1-setup.* 2>/dev/null | wc -l` is back to its pre-mutant count. Added by T082: the first re-audit's mutants left 90 such folders.
 - Caveat: the container has no restart policy, so a Docker Desktop restart stops it (`docker start ob1-006-pgtest`).
 
 ## Remediation: T073 (re-audit Finding 1), owner decision
@@ -545,3 +546,13 @@ The fork-ci SQL runtime needs `psql` and a Postgres reachable through the `PG*` 
 - The T069 recipe above was replaced: no bind mount, and a fresh per-call copy. The container was recreated, and `bootstrap.sql` was applied once.
 - Check (no container restart): clean → pass, sha256 `1ab23bb8…` 3694 B on both sides. After the `vector(1536)` → `vector(768)` edit → `ERROR:  U41 thoughts.embedding is not vector(1536)`, `a3d4812b…` 3692 B on both sides. After `git checkout` → pass, `1ab23bb8…` 3694 B on both sides.
 - No repository code changed; the wrapper lives outside the repo, in the job scratch folder.
+
+## Remediation: T081 harness guards its POSIX-shell choice (second re-audit Finding 2, mutant G6)
+
+- test: `recipes/self-hosted-supabase-mcp/tests/harness.test.mjs::H4` and `::H5` (new; harness self-checks, as H1–H3 are, not recipe behaviors). Each gives its runner a script with a bashism (`[[ "a" == "a" ]]`) and asserts the script did not accept it. Both are skipped where `/bin/dash` is absent.
+- H4 (`runSetup`) passed on its first run, because `SETUP_SHELL` already picks dash. It is a guard: mutant G6 (`helpers/harness.mjs:193` → `export const SETUP_SHELL = "/bin/sh";`) fails H4 (`fail=1`); restored with `cp -p`, checked with `cmp`.
+- H5 red (bucket environment, `:281` ran `/bin/sh`): `The input was expected to not match the regular expression /bashism-accepted/`. To feed H5 its script, `makeBucketEnv` gained a `script` option that defaults to the recipe's `init/create-bucket.sh`.
+- commit (red + guard): `15d6a8b`
+- green: the bucket environment runs its script under `SETUP_SHELL`, so the existing `create-bucket.sh` tests now run under dash too. Suite → `tests=62 pass=62 fail=0`. Refactor: the `SETUP_SHELL` comment names both scripts.
+- commit (green): `7b0d46b`
+- T082: removed the 90 leaked `/tmp/ob1-setup.*` folders (2026-11-26 19:30–19:35; every `.env` held only stub `example-placeholder-*` values). Step 5 of the T069 recipe now names the leak check. `ls -d /tmp/ob1-setup.* 2>/dev/null | wc -l` → 0, also after the T081 suite runs.
