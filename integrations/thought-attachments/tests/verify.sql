@@ -696,3 +696,16 @@ begin
   if not s_refused then raise exception 'U93: a set-state with the old token was not refused'; end if;
   if n <> 0 or st <> 'pending_upload' then raise exception 'U93: changed (% rows, state %)', n, st; end if;
 end $$;
+
+-- U95: remove under a valid claim deletes that attachment's derived thoughts and its row, in one transaction
+do $$
+declare p uuid := pg_temp.mk_parent(); a uuid := pg_temp.mk_att(p, 'processed'); r jsonb; n bigint; rows_ bigint;
+begin
+  perform attachment_write_derived(a, 'tok', pg_temp.rows_json('u95 one ' || a, 'u95 two ' || a), '{"state":"processed"}'::jsonb);
+  r := attachment_remove(a, 'tok');
+  select count(*) into n from thoughts where metadata->>'attachment_id' = a::text;
+  select count(*) into rows_ from thought_attachments where id = a;
+  delete from thoughts where id = p;
+  if (r->>'derived')::int <> 2 or (r->>'noteRemoved')::boolean is not false then raise exception 'U95: returned %', r; end if;
+  if n <> 0 or rows_ <> 0 then raise exception 'U95: % derived thoughts and % rows remain', n, rows_; end if;
+end $$;

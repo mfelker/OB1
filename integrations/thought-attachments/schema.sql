@@ -309,3 +309,21 @@ begin
 end;
 $$;
 grant execute on function attachment_set_state(uuid, text, jsonb) to service_role;
+
+-- Remove an attachment (FR-016, SC-020): its derived thoughts and its row, all scoped by its id and the
+-- caller's claim, in one transaction. Returns { "derived": n, "noteRemoved": bool }.
+create or replace function attachment_remove(p_id uuid, p_token text)
+returns jsonb
+language plpgsql
+as $$
+declare
+  n int;
+begin
+  perform attachment_require_claim(p_id, p_token);
+  delete from thoughts where metadata->>'attachment_id' = p_id::text;
+  get diagnostics n = row_count;
+  delete from thought_attachments where id = p_id;
+  return jsonb_build_object('derived', n, 'noteRemoved', false);
+end;
+$$;
+grant execute on function attachment_remove(uuid, text) to service_role;
