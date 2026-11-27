@@ -107,7 +107,7 @@ Each item records the decision, why, and what else was considered. "Probed" mean
 - **Decision**:
   - Finish and remove first claim the attachment with a single conditional update that sets an operation name and an expiry, and that succeeds only if no unexpired claim exists (FR-026).
   - Each claim carries a random **claim token**. The write and remove functions succeed only for the caller that still holds an unexpired claim with that token, so a late run that outlived its claim can never commit over a newer one.
-  - The expiry default depends on the platform: **160 s on Supabase Cloud** (just over Free's 150 s wall clock) and **410 s elsewhere** (just over the self-hosted router's 400 s worker timeout, read: official `volumes/functions/main/index.ts`). Paid-plan Cloud owners set 410 s.
+  - The expiry defaults to **410 s on every platform** (owner decision, T005 Q1): just over the self-hosted router's 400 s worker timeout (read: official `volumes/functions/main/index.ts`) and Cloud's paid-plan 400 s. On Cloud Free, a killed run therefore blocks retries on that attachment for up to about 7 minutes. Owners can lower the setting to 160 s.
 - **Why**: a conditional update is atomic in Postgres without holding locks across a long call; an expired claim makes a killed run recoverable (Round 2, Q2); the claim token closes the gap between a claim expiring and a slow run finishing.
 
 ## R11: The thought lookup is safe from filter injection

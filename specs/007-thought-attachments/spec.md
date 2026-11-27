@@ -53,6 +53,10 @@
 - Q: Where does the phone upload page live, given that Supabase Cloud's default domain rewrites HTML from Edge Functions and Storage to plain text and allows XHTML only with the paid custom-domain add-on (probed and read at planning; plan R5)? → A: One static HTML file in the integration folder: on the self-hosted stack the function serves it itself (probed: the self-hosted runtime serves HTML unchanged); on Supabase Cloud the owner publishes the same file once to any free static host, and the upload link points there with its one-time token in the URL fragment, the page calling only the integration's JSON interface.
 - Q: For a phone upload the AI starts the attachment before the photo exists; where does the file's name, type and size come from, and what counts as a match? → A: The page declares the picked file: the AI gives only the parent (and optionally the expected kind, photo or PDF); before any bytes are sent the page reports the picked file's name, type and size, which are checked against the caps and the HEIC rule; at finishing, a match means the exact byte size and the real type equal that declaration. Command uploads still declare in the attach call.
 
+### Session 2026-11-26 (implementation, T005)
+
+- Q: How does the busy-mark expiry default know which platform it runs on? → A: It doesn't need to: the default is 410 seconds everywhere (just over the self-hosted router's 400-second worker timeout); an explicit setting overrides it. A run killed on Supabase Cloud therefore locks its attachment for up to about 7 minutes before a retry can proceed.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Attach a service manual and find it later (Priority: P1)
