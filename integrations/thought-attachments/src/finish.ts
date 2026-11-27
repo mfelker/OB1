@@ -3,13 +3,15 @@ import { checkActual, sniffType } from "./intake.ts";
 import { captionRow, passageRow, sourceLine } from "./derived.ts";
 import { toPassages } from "./passages.ts";
 import { isScanned, openPdf } from "./pdf.ts";
-import type { AcceptedType, AttachmentRow, Deps, FinishOutcome, PdfDoc, R, Services, StatePatch } from "./types.ts";
+import type { AcceptedType, AttachmentRow, BusyOp, Deps, FinishOutcome, PdfDoc, R, Services, StatePatch } from "./types.ts";
 
 /** `sha256:<hex>` of the bytes, as `content_hash` stores it. */
 async function sha256(bytes: Uint8Array): Promise<string> {
   const digest = await crypto.subtle.digest("SHA-256", bytes as Uint8Array<ArrayBuffer>);
   return "sha256:" + [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
+
+const BUSY_WORDS: Record<BusyOp, string> = { finish: "finishing", rebuild: "rebuilding", remove: "removing" };
 
 export function createFinisher(deps: Deps): Services {
   const { store, settings } = deps;
@@ -27,7 +29,16 @@ export function createFinisher(deps: Deps): Services {
     }
     const rebuild = opts.rebuild === true && row.state === "processed";
     const claim = await store.claim(row.id, rebuild ? "rebuild" : "finish", settings.busySeconds);
-    if ("error" in claim || !("token" in claim.data)) throw new Error("claim failed");
+    if ("error" in claim) throw new Error(claim.error);
+    if (!("token" in claim.data)) {
+      const op = claim.data.busy;
+      return {
+        state: row.state,
+        reason: "busy (" + BUSY_WORDS[op] + "), try again shortly",
+        derived_count: row.derived_count,
+        busy: op,
+      };
+    }
     const token = claim.data.token;
     try {
       return await run(row, token, rebuild);

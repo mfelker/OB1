@@ -604,3 +604,22 @@ Deno.test("U327 a fingerprint conflict with an existing thought ends failed nami
   assertEquals(r.store.derivedOf(att.id).length, 0);
   assertEquals(r.store.thought(existing.id), before);
 });
+
+Deno.test("U212 a finish while another finish, rebuild or remove holds an unexpired claim returns busy naming that operation, and changes nothing", async () => {
+  const words: Record<string, string> = { finish: "finishing", rebuild: "rebuilding", remove: "removing" };
+  for (const op of ["finish", "rebuild", "remove"] as const) {
+    const r = await rig();
+    const att = pending(r, await textPdf(["alpha beta gamma delta epsilon zeta"]));
+    const held = await r.store.claim(att.id, op, 410);
+    assert("data" in held && "token" in held.data);
+    const before = structuredClone(r.store.attachment(att.id));
+    const out = await r.finish(att.id, {});
+    assertEquals(out.busy, op);
+    assertStringIncludes(out.reason ?? "", "busy (" + words[op] + "), try again shortly");
+    assertEquals(out.state, "pending_upload");
+    assertEquals(r.store.attachment(att.id), before);
+    assertEquals(r.store.derivedOf(att.id).length, 0);
+    assertEquals(r.store.objects.has(att.storage_path as string), true);
+    assertEquals(r.ff.requests.length, 0);
+  }
+});
