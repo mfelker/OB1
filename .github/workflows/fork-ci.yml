@@ -154,6 +154,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '26'
+      # A folder with tests/verify.sql runs only here (detect.mjs puts it in sql_matrix alone), and
+      # strict mode runs every runtime it has. Spec 007's integration has deno tests too, so the SQL
+      # job needs deno as well; the deno-only job never sees such a folder.
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.9.x
       - name: Ensure psql
         run: command -v psql || (sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-client)
       - name: Run folder SQL verification

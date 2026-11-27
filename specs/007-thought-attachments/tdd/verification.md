@@ -1,6 +1,6 @@
 ---
 feature: 007-thought-attachments
-verdict: FAIL
+verdict: PASS_WITH_GAPS # integrator addendum (owner rule 2026-11-27): the final audit's one HIGH (N21) was killed by U394; MED/LOW survivors are recorded follow-ups T118–T120 (plan Complexity Tracking). The audit itself graded FAIL before U394.
 standard: .specify/templates/overrides/tdd-test-quality-rubric.md # fork override of spec-kit-tdd 2.0.1; lane is "upstream-bound feature", so the staged-PR S1–S4 rules do not apply and the base classes are used
 verified_at: a6168ba1 # worktree .worktrees/contrib-thought-attachments, branch contrib/mfelker/thought-attachments; final scoped re-audit of 293dee5..HEAD (8 commits, test files only) on top of the full range upstream/main..HEAD
 behaviors: 454 # DONE rows (391 U + 63 A); U14 DROPPED; L1–L7 live rows not on the loop

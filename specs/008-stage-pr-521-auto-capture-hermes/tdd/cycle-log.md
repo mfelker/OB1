@@ -19,7 +19,7 @@ Append only. Newest last. On this feature no base-red is possible (add-only PR; 
 ## Cycle 2: A2 tool-call-only steps and compaction summaries are absent from the capture
 
 - test: `capture-hermes-session.test.mjs::A2 tool-call-only steps and compaction summaries are absent from the capture` (new)
-- red: none possible (add-only PR; plan Complexity Tracking, TEST_AFTER by owner decision). Detection check, not S1: mutant "drop the _compressed_summary filter" (evidence/detection/mutants-*.json), `node .fork/ci/bin/tdd.mjs single capture-hermes-session.test.mjs "A2 tool-call-only steps and compaction summaries are absent from the capture"` -> `AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:` (exit 1); author script restored, `git diff --quiet` clean: true
+- red: none possible (add-only PR; plan Complexity Tracking, TEST_AFTER by owner decision). Detection check, not S1: mutant "drop the `_compressed_summary` filter" (evidence/detection/mutants-*.json), `node .fork/ci/bin/tdd.mjs single capture-hermes-session.test.mjs "A2 tool-call-only steps and compaction summaries are absent from the capture"` -> `AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:` (exit 1); author script restored, `git diff --quiet` clean: true
 - green: no source change (author's code at `b9cbd68`). `[tdd] single node-test feature=specs/008-stage-pr-521-auto-capture-hermes folder=skills/auto-capture-hermes: tests=1 pass=1 fail=0 → pass`; suite at commit -> 37 passed, 0 failed
 - refactor: none needed
 - commit: `5e5853b`
@@ -83,7 +83,7 @@ Append only. Newest last. On this feature no base-red is possible (add-only PR; 
 ## Cycle 10: U2 a compaction summary row contributes nothing
 
 - test: `capture-hermes-session.test.mjs::U2 a compaction summary row contributes nothing` (new)
-- red: none possible (add-only PR; plan Complexity Tracking, TEST_AFTER by owner decision). Detection check, not S1: mutant "drop the _compressed_summary filter" (evidence/detection/mutants-*.json), `node .fork/ci/bin/tdd.mjs single capture-hermes-session.test.mjs "U2 a compaction summary row contributes nothing"` -> `AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:` (exit 1); author script restored, `git diff --quiet` clean: true
+- red: none possible (add-only PR; plan Complexity Tracking, TEST_AFTER by owner decision). Detection check, not S1: mutant "drop the `_compressed_summary` filter" (evidence/detection/mutants-*.json), `node .fork/ci/bin/tdd.mjs single capture-hermes-session.test.mjs "U2 a compaction summary row contributes nothing"` -> `AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:` (exit 1); author script restored, `git diff --quiet` clean: true
 - green: no source change (author's code at `b9cbd68`). `[tdd] single node-test feature=specs/008-stage-pr-521-auto-capture-hermes folder=skills/auto-capture-hermes: tests=1 pass=1 fail=0 → pass`; suite at commit -> 37 passed, 0 failed
 - refactor: none needed
 - commit: `5e5853b`
