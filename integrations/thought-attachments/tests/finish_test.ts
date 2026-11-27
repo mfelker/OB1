@@ -457,3 +457,21 @@ Deno.test("U203 with no object after the deadline, the outcome is 'upload window
   assertStringIncludes(out.reason ?? "", "upload window expired");
   assertEquals(r.store.attachment(att.id), before);
 });
+
+Deno.test("U204 after a refused or no-file outcome, a new claim succeeds at once", async () => {
+  const r = await rig();
+  const refused = pending(r, await textPdf(["alpha beta gamma"]), { declared_size: 5 });
+  assertEquals((await r.finish(refused.id, {})).state, "refused");
+  const claimRefused = await r.store.claim(refused.id, "remove", 60);
+  assert("data" in claimRefused && "token" in claimRefused.data);
+  const none = r.store.seedAttachment({
+    parent_thought_id: r.parent,
+    file_name: "later.pdf",
+    declared_type: "application/pdf",
+    declared_size: 1000,
+    storage_path: "attachments/y/later.pdf",
+  });
+  assertEquals((await r.finish(none.id, {})).state, "pending_upload");
+  const claimNone = await r.store.claim(none.id, "finish", 60);
+  assert("data" in claimNone && "token" in claimNone.data);
+});
