@@ -51,3 +51,23 @@ Deno.test("U26 a claim after the holder's expiry by the injected clock succeeds 
   const second = data(await store.claim(att.id, "finish", BUSY_SECONDS));
   assertEquals("token" in second && second.token !== first.token, true, `got ${JSON.stringify(second)}`);
 });
+
+Deno.test("U27 writeDerived or setState with a stale or foreign claim token returns an error and changes nothing", async () => {
+  const { store, clock, att } = await setup();
+  const { token } = data(await store.claim(att.id, "finish", BUSY_SECONDS)) as { token: string };
+  const before = structuredClone({ thoughts: store.thoughts, attachments: store.attachments });
+  const rows = [await derivedRow(`From manual.pdf, page 1 (attachment ${att.id.slice(0, 8)})\nStep one.`)];
+  const foreign = await store.writeDerived(att.id, "claim-not-mine", rows, { state: "processed" });
+  const foreignState = await store.setState(att.id, "claim-not-mine", { state: "failed" });
+  clock.advanceSeconds(BUSY_SECONDS);
+  const stale = await store.writeDerived(att.id, token, rows, { state: "processed" });
+  const staleState = await store.setState(att.id, token, { state: "failed" });
+  assertEquals(
+    {
+      errors: [foreign, foreignState, stale, staleState].map((r) => "error" in r),
+      thoughts: store.thoughts,
+      attachments: store.attachments,
+    },
+    { errors: [true, true, true, true], ...before },
+  );
+});
