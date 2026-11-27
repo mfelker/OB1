@@ -210,3 +210,12 @@ Deno.test("U226 find_thought's first_line is the content up to its first line br
   const out = await call(h, "find_thought", { query: "x", mode: "exact" });
   assertEquals((out.data.matches as { first_line: string }[])[0].first_line, "Garage shelf");
 });
+
+Deno.test("U227 each find_thought match has id, first_line and captured", async () => {
+  const h = await harness();
+  const a = await seed(h, "first thought\nmore", null, "2026-03-01T10:00:00.000Z");
+  const out = await call(h, "find_thought", { query: "thought", mode: "exact" });
+  assertEquals(out.data.matches, [{ id: a.id, first_line: "first thought", captured: "2026-03-01T10:00:00.000Z" }]);
+  assertStringIncludes(out.text, a.id);
+  assertStringIncludes(out.text, "2026-03-01");
+});
