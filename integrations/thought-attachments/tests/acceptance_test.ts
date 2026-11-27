@@ -580,7 +580,7 @@ Deno.test(
 
 // ============================================================== User Story 2
 
-todo(
+Deno.test(
   "A13 a JPEG finished with a configured vision model gives one caption thought with its source line, the row processed, and caption_model and extractor_model equal to VISION_MODEL",
   async () => {
     const w = world();
