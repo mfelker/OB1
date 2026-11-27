@@ -23,7 +23,7 @@ export function createEmbeddingClient(settings: Settings, fetch: typeof globalTh
       return { error: redact(`embedding endpoint ${settings.embeddingApiBase} is unreachable: ${(e as Error).message}`) };
     }
     if (!response.ok) {
-      return { error: redact(`embedding endpoint answered HTTP ${response.status}: ${(await response.text()).slice(0, 300)}`) };
+      return { error: `embedding endpoint answered HTTP ${response.status}: ${redact(await response.text()).slice(0, 300)}` };
     }
     let vectors: number[][] | undefined;
     try {
