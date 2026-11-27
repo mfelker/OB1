@@ -82,6 +82,7 @@ export function runAdapter(sandbox, { args = [], stdin, env = {}, timeoutMs = 20
 
 /** The dry-run payload printed on stdout, parsed. */
 export function parsePayload(result) {
+  if (!result.stdout.trim()) throw new Error(`no payload printed (exit ${result.code}); stderr: ${result.stderr.trim() || "(empty)"}`);
   return JSON.parse(result.stdout);
 }
 
