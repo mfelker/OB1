@@ -789,7 +789,7 @@ Deno.test(
   },
 );
 
-todo(
+Deno.test(
   "A24 a processed photo rebuilt with a different VISION_MODEL ends with exactly one caption thought, written by the new model",
   async () => {
     const w = world();
