@@ -852,7 +852,7 @@ Deno.test(
   },
 );
 
-todo(
+Deno.test(
   "A58 after a failed rebuild, a rebuild with the vision endpoint back ends with one caption thought by the configured model and no last_rebuild_error",
   async () => {
     const w = world({
