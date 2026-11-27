@@ -1,0 +1,45 @@
+-- Verification for integrations/thought-attachments/schema.sql (spec 007).
+-- Runs on a throwaway Postgres with pgvector after .fork/ci/sql/bootstrap.sql.
+-- Each block names its behavior id in its exception message. Safe to run twice.
+\set ON_ERROR_STOP on
+
+-- A verify-only stub of the Supabase storage schema lives as storage_verify_stub between runs,
+-- so the no-storage path (U50) is exercised first on every run.
+do $$
+begin
+  if exists (select 1 from pg_namespace where nspname = 'storage')
+     and obj_description((select oid from pg_namespace where nspname = 'storage'), 'pg_namespace') = 'ob1-007-verify-stub'
+  then
+    alter schema storage rename to storage_verify_stub;
+  end if;
+end $$;
+
+\i schema.sql
+
+-- U34: every column of thought_attachments, with type, default and not-null rule; no foreign key on parent_thought_id
+do $$
+declare
+  want text[] := array[
+    'id|uuid|NO|gen_random_uuid()', 'parent_thought_id|uuid|NO|', 'parent_created_here|boolean|NO|false',
+    'file_name|text|YES|', 'declared_type|text|YES|', 'declared_size|bigint|YES|', 'expected_kind|text|YES|',
+    'actual_type|text|YES|', 'actual_size|bigint|YES|', 'page_count|integer|YES|', 'content_hash|text|YES|',
+    'storage_path|text|YES|', 'sensitivity_tier|text|NO|''personal''::text', 'state|text|NO|',
+    'state_reason|text|YES|', 'last_rebuild_error|text|YES|', 'caption_model|text|YES|',
+    'derived_count|integer|NO|0', 'upload_deadline|timestamp with time zone|NO|',
+    'page_token_hash|text|YES|', 'busy_op|text|YES|', 'busy_until|timestamp with time zone|YES|',
+    'busy_token|text|YES|', 'created_at|timestamp with time zone|YES|now()',
+    'updated_at|timestamp with time zone|YES|now()', 'processed_at|timestamp with time zone|YES|'];
+  have text[];
+begin
+  select array_agg(column_name || '|' || data_type || '|' || is_nullable || '|' || coalesce(column_default, '') order by column_name)
+    into have from information_schema.columns where table_schema = 'public' and table_name = 'thought_attachments';
+  if have is distinct from (select array_agg(w order by split_part(w, '|', 1)) from unnest(want) w) then
+    raise exception 'U34: columns differ: %', have;
+  end if;
+  if not exists (select 1 from pg_constraint where conrelid = 'public.thought_attachments'::regclass and contype = 'p') then
+    raise exception 'U34: no primary key';
+  end if;
+  if exists (select 1 from pg_constraint where conrelid = 'public.thought_attachments'::regclass and contype = 'f') then
+    raise exception 'U34: unexpected foreign key';
+  end if;
+end $$;
