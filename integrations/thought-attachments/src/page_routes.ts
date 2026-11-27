@@ -85,6 +85,7 @@ export function pageRoutes(deps: Deps, services: Services): Hono {
       declared_type: body.type as AcceptedType,
       declared_size: body.size,
       storage_path: path,
+      declared_by_page: true,
     });
     const signed = await deps.store.signUpload(path);
     if (!("data" in signed)) return c.json({ error: signed.error }, 500);

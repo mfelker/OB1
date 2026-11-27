@@ -400,3 +400,11 @@ Deno.test("U365 a second pick on a fresh instance (a new isolate) replaces a pag
     [200, 200, "image/png", 4096],
   );
 });
+
+Deno.test("U366 the declaration /page/start sends to the store carries declared_by_page: true, so the real store persists the flag", async () => {
+  const r = await rig();
+  await r.seed();
+  await r.post("/page/start", { token: TOKEN, ...PICK });
+  const call = r.store.calls.find((c) => c.method === "setDeclaration");
+  assertEquals((call?.args[1] as { declared_by_page?: boolean })?.declared_by_page, true);
+});

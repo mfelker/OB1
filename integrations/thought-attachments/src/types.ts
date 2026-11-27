@@ -123,6 +123,8 @@ export interface Declaration {
   declared_type: AcceptedType;
   declared_size: number;
   storage_path: string;
+  /** Set by the upload page so a later pick replaces this declaration (U365). */
+  declared_by_page?: boolean;
 }
 
 export type R<T> = { data: T } | { error: string };

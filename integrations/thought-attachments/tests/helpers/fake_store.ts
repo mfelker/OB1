@@ -462,7 +462,6 @@ export class FakeStore implements Store {
     return this.run("setDeclaration", [id, decl], () => {
       const row = this.mustGet(id);
       Object.assign(row, decl);
-      row.declared_by_page = true;
       row.updated_at = this.clock.iso();
       return structuredClone(row);
     });
