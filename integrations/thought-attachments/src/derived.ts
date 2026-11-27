@@ -3,7 +3,7 @@ import type { AttachmentRow, DerivedRow, Passage } from "./types.ts";
 
 /** `From <file>, <locator> (attachment <short id>)` (FR-025). */
 export function sourceLine(fileName: string, locator: string, shortId: string): string {
-  throw new Error("not implemented");
+  return "From " + fileName + ", " + locator + " (attachment " + shortId + ")";
 }
 
 /** upsert_thought's fingerprint of a thought's content (VP-004). */
