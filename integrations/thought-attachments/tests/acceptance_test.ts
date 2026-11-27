@@ -466,7 +466,7 @@ Deno.test(
   },
 );
 
-todo("A10 an MCP request with no key or a wrong key gets an authorization error and changes nothing", async () => {
+Deno.test("A10 an MCP request with no key or a wrong key gets an authorization error and changes nothing", async () => {
   const w = world();
   const parent = await ownerThought(w, "Kitchen dishwasher DW-500");
   const before = snapshot(w);
