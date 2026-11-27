@@ -121,6 +121,7 @@ export function createFinisher(deps: Deps): Services {
     const patch: StatePatch = {
       ...actual,
       state: "processed",
+      state_reason: null,
       caption_model: caption.data.model,
       processed_at: now.toISOString(),
     };

@@ -254,3 +254,19 @@ Deno.test("U193 with the vision call failing, the photo ends not_captioned with 
   assertEquals(r.store.objects.has(att.storage_path as string), true);
   assertEquals(r.store.derivedOf(att.id).length, 0);
 });
+
+Deno.test("U194 a not_captioned photo finished again with vision working ends processed with one caption", async () => {
+  const r = await rig();
+  r.ff.on("POST", VISION_URL, () => ({ status: 503, body: "vision is down" }));
+  const att = pending(r, jpegBytes(2000));
+  assertEquals((await r.finish(att.id, {})).state, "not_captioned");
+  r.ff.on("POST", VISION_URL, visionResponder("a red door"));
+  const out = await r.finish(att.id, {});
+  assertEquals(out.state, "processed");
+  assertEquals(out.derived_count, 1);
+  assertEquals(r.store.derivedOf(att.id).length, 1);
+  const row = r.store.attachment(att.id) as AttachmentRow;
+  assertEquals(row.state, "processed");
+  assertEquals(row.state_reason, null);
+  assertEquals(row.caption_model, "test/vision-model");
+});
