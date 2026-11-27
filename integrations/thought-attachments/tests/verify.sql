@@ -250,3 +250,40 @@ begin
   if (select count(*) from information_schema.columns where table_name = 'thoughts' and table_schema = 'public') <> before_cols then raise exception 'U48: column count on thoughts changed'; end if;
   if (select count(*) from pg_indexes where tablename = 'thoughts' and indexdef ~ 'content_fingerprint') <> 1 then raise exception 'U48: more than one fingerprint index'; end if;
 end $$;
+
+-- U49: with a stub storage schema, the ob1-files bucket row exists, is private, allows exactly the four
+-- accepted MIME types and sets no size limit of its own.
+do $$
+begin
+  if not exists (select 1 from pg_namespace where nspname = 'storage') then
+    if not exists (select 1 from pg_namespace where nspname = 'storage_verify_stub') then
+      create schema storage_verify_stub;
+      comment on schema storage_verify_stub is 'ob1-007-verify-stub';
+      create table storage_verify_stub.buckets (
+        id text primary key, name text not null unique, public boolean default false,
+        file_size_limit bigint, allowed_mime_types text[]);
+    end if;
+    alter schema storage_verify_stub rename to storage;
+  end if;
+end $$;
+\i schema.sql
+do $$
+declare b record;
+begin
+  select * into b from storage.buckets where id = 'ob1-files';
+  if not found then raise exception 'U49: bucket ob1-files missing'; end if;
+  if b.name <> 'ob1-files' then raise exception 'U49: bucket name is %', b.name; end if;
+  if b.public is distinct from false then raise exception 'U49: bucket is public'; end if;
+  if b.file_size_limit is not null then raise exception 'U49: bucket sets its own size limit %', b.file_size_limit; end if;
+  if (select array_agg(m order by m) from unnest(b.allowed_mime_types) m)
+     is distinct from array['application/pdf', 'image/jpeg', 'image/png', 'image/webp'] then
+    raise exception 'U49: allowed types are %', b.allowed_mime_types;
+  end if;
+end $$;
+-- put the stub back out of sight so U50's no-storage run is first next time
+do $$
+begin
+  if obj_description((select oid from pg_namespace where nspname = 'storage'), 'pg_namespace') = 'ob1-007-verify-stub' then
+    alter schema storage rename to storage_verify_stub;
+  end if;
+end $$;

@@ -104,3 +104,18 @@ alter table thoughts add column if not exists content_fingerprint text;
 create unique index if not exists idx_thoughts_fingerprint
   on thoughts (content_fingerprint)
   where content_fingerprint is not null;
+
+-- The private attachments bucket (R12), only where Supabase Storage exists. Named ob1-files, the
+-- ATTACHMENTS_BUCKET default; an owner who sets another name creates that bucket the same way.
+-- No size limit of its own: the platform's limit applies, so oversized files reach finishing.
+do $$
+begin
+  if exists (select 1 from pg_namespace where nspname = 'storage') then
+    execute $q$
+      insert into storage.buckets (id, name, public, allowed_mime_types)
+      values ('ob1-files', 'ob1-files', false,
+              array['application/pdf', 'image/jpeg', 'image/png', 'image/webp'])
+      on conflict do nothing
+    $q$;
+  end if;
+end $$;
