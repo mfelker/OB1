@@ -215,7 +215,7 @@ Streams code against these. The signatures are the only shared contract. Behavio
   - **Cross-cutting**: SC-007 (no signed link, key, token or absolute path in any fake row after a full run); FR-018 (wrong or missing key refused; page routes refuse the brain key); `tools/list` returns the 7 tools.
 
   Run with `RUN_TODO=1` and record each red (test name and decisive failure line) in `M/specs/007-thought-attachments/tdd/cycle-log.md`. Confirm the default run is green (all ignored). Commit in `W` (`[integrations] Acceptance tests as todo`) and in `M` (`[fork] Spec 007: acceptance reds`).
-- [ ] T013 From `M`, create the wave-1 stream worktrees: `git worktree add .worktrees/ta-<s> -b contrib/mfelker/thought-attachments-<s> contrib/mfelker/thought-attachments` for `s` ∈ {data, files, models, docs}. Brief and launch streams Q, X, E and D in one message (see **Parallel Example**).
+- [X] T013 From `M`, create the wave-1 stream worktrees: `git worktree add .worktrees/ta-<s> -b contrib/mfelker/thought-attachments-<s> contrib/mfelker/thought-attachments` for `s` ∈ {data, files, models, docs}. Brief and launch streams Q, X, E and D in one message (see **Parallel Example**).
 
 **Checkpoint**: test list committed on `M`; the owner decisions recorded; seams, settings, links, fakes, harness proof and acceptance todos committed on `W`; four wave-1 worktrees exist.
 
