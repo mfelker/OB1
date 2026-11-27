@@ -562,3 +562,8 @@ Commands run from the stage worktree folder `skills/auto-capture-hermes` with `e
 - **T026:** fork-ci strict `pass`.
 - **T025, T027:** scope is only the folder; 0 secret-pattern matches.
 - **T028:** OB1 Review 15/15, `failed=false`.
+
+## Fork PR opened (T030, T032)
+
+- T030 (owner): `git push -u origin stage/pr-521-auto-capture-hermes` (`a4fb349`), then `gh pr create` → https://github.com/mfelker/OB1/pull/33, title `[skills] Add auto-capture-hermes adapter (staged #521)`, base `main`, 14 commits, mergeable. The body mentions the author at the owner's request.
+- T032: `gh pr diff 33 --name-only` lists 7 files, all under `skills/auto-capture-hermes/`.
