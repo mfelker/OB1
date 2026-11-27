@@ -58,6 +58,7 @@
 - Q: How does the busy-mark expiry default know which platform it runs on? → A: It doesn't need to: the default is 410 seconds everywhere (just over the self-hosted router's 400-second worker timeout); an explicit setting overrides it. A run killed on Supabase Cloud therefore locks its attachment for up to about 7 minutes before a retry can proceed.
 - Q: How is the default phone-page address built, and what is the function called? → A: The function is always deployed as `thought-attachments`; the default page address is the public base address plus `/functions/v1/thought-attachments/upload`, which works on the self-hosted stack with no extra setting; on Supabase Cloud the README makes setting the page address to the owner's published copy a required step.
 - Q: What does a bad setting value do, and may the size caps be decimals? → A: An unparseable, zero or negative number makes every tool call and page route answer with a named error (which setting, and what it must be) and do nothing else; size caps in megabytes accept decimals, while page, character, second and minute settings must be whole numbers.
+- Q: What happens when a second attachment on the same thought is finished with exactly the same bytes as one already stored? → A: The second ends `refused` with a message naming the first attachment's short id; its stored copy is deleted and no derived thoughts are written; the owner keeps using the first (and may retry it if it had failed).
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -180,7 +181,7 @@ The owner says "that's the wrong manual, remove it". The attachment, its stored 
 - **FR-009**: Derived-thought metadata and attachment records MUST NOT contain signed links, access keys, or absolute local paths.
 - **FR-010**: A PDF with no usable text layer MUST be stored and flagged as scanned, with no passage thoughts, and the finish response MUST say text search will not cover it.
 - **FR-011**: Finishing MUST be all-or-nothing for derived thoughts: on any failure no derived thoughts from that attempt remain, the attachment records a failed state with the reason, and finishing can be retried.
-- **FR-012**: Re-finishing an attachment, or attaching the same file content to the same parent thought again, MUST NOT create duplicate attachments or derived thoughts.
+- **FR-012**: Re-finishing an attachment, or attaching the same file content to the same parent thought again, MUST NOT create duplicate attachments or derived thoughts. A second attachment finished with bytes identical to another non-refused attachment on the same parent MUST end `refused`, naming that attachment's short id, with its stored copy deleted (T005 Q4).
 - **FR-022**: Each derived thought MUST be created by, and owned by, exactly one attachment. Writing derived thoughts MUST NEVER merge into, update or take ownership of a thought that already exists (the owner's own thoughts or another attachment's), even when their text is the same; and removal MUST delete only thoughts that this integration created for that attachment.
 - **FR-013**: Extraction MUST run within one finish call; files the configured limits mark as too large for inline processing MUST be refused with a message that names the limit and the planned background processing.
 

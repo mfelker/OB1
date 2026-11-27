@@ -44,6 +44,7 @@ An attachment id may be given in full or as the 8-character short id shown in so
   - **PDF without text**: the state becomes `scanned`, with no passages, and the result says text search won't cover it yet (FR-010).
   - **Photo**: the caption is written as a derived thought and the state becomes `processed`. If the vision model fails or isn't set, the state becomes `not_captioned` with the reason (FR-006, User Story 2 #7).
   - **Failure**: on an embedding failure or a dimension mismatch, no derived thoughts from the attempt remain, and the state becomes `failed` with the reason (FR-007, FR-011).
+  - **Same bytes on the same thought**: if another non-refused attachment on the same parent already has these exact bytes, the state becomes `refused` with "already attached to this thought as <short id>", the stored copy is deleted, and no derived thoughts are written (FR-012, T005 Q4).
   - **Repeat**: a plain finish on `processed` returns the existing outcome unchanged (FR-012, SC-014), and one on `refused` is refused (FR-004).
   - **Rebuild**: `rebuild: true` on `processed` replaces the derived set only if the new set is complete; otherwise it keeps the old set and reports `last_rebuild_error` (FR-027, SC-015, SC-018).
 - **Result**: `state`, `reason`, `derived_count`, `caption` (photos, the first 300 characters), `page_count`.
