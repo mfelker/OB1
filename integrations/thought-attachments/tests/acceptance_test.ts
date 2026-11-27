@@ -745,7 +745,7 @@ Deno.test(
   },
 );
 
-todo(
+Deno.test(
   "A21 with VISION_* unset a finished photo stays stored and fetchable, is not_captioned with the reason, and has no caption thought",
   async () => {
     const w = world({ env: { VISION_API_BASE: undefined, VISION_API_KEY: undefined, VISION_MODEL: undefined } });
