@@ -110,3 +110,9 @@ Deno.test("U137 a passage row's provenance is deterministic_conversion with loca
     review_status: "unreviewed",
   });
 });
+
+Deno.test("U138 a passage row's metadata has attachment_id and parent_thought_id", async () => {
+  const row = await passageRow(rowFor(), passage("text", [1, 1]), EMBEDDING, NOW);
+  assertEquals(row.metadata.attachment_id, ID);
+  assertEquals(row.metadata.parent_thought_id, PARENT);
+});

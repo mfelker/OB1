@@ -42,6 +42,8 @@ export async function passageRow(
       artifact: row.file_name,
       review_status: "unreviewed",
     },
+    attachment_id: row.id,
+    parent_thought_id: row.parent_thought_id,
   };
   return { content, fingerprint: hash, metadata, embedding };
 }
