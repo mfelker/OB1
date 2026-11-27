@@ -364,3 +364,19 @@ begin
   if not refused then raise exception 'U54: an expired claim was not refused'; end if;
   if n <> 0 then raise exception 'U54: % rows written', n; end if;
 end $$;
+
+-- U55: inserted rows' content_fingerprint equals the guide's step 2.6 expression applied to their content
+do $$
+declare p uuid := pg_temp.mk_parent(); a uuid := pg_temp.mk_att(p); bad bigint; n bigint;
+begin
+  perform attachment_write_derived(a, 'tok', pg_temp.rows_json(E'  U55   Mixed CASE\ntext ' || a), '{}'::jsonb);
+  select count(*) into n from thoughts where metadata->>'attachment_id' = a::text;
+  select count(*) into bad from thoughts
+    where metadata->>'attachment_id' = a::text
+      and content_fingerprint is distinct from encode(sha256(convert_to(lower(trim(regexp_replace(content, '\s+', ' ', 'g'))), 'UTF8')), 'hex');
+  delete from thoughts where metadata->>'attachment_id' = a::text;
+  delete from thought_attachments where id = a;
+  delete from thoughts where id = p;
+  if n <> 1 then raise exception 'U55: % rows written, want 1', n; end if;
+  if bad <> 0 then raise exception 'U55: % rows with a different fingerprint', bad; end if;
+end $$;
