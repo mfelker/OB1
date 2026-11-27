@@ -37,3 +37,8 @@ Deno.test("U157 isScanned is false at exactly SCANNED_MIN_CHARS_PER_PAGE", () =>
   assertEquals(isScanned(["a".repeat(10), "b".repeat(30)], settingsWith()), false);
   assertEquals(isScanned(["a".repeat(5)], settingsWith({ SCANNED_MIN_CHARS_PER_PAGE: "5" })), false);
 });
+
+Deno.test("U158 whitespace-only page text counts as zero characters", () => {
+  assertEquals(isScanned([" \n\t ".repeat(50), "  ".repeat(40)], settingsWith()), true);
+  assertEquals(isScanned([" \n ".repeat(50) + "x".repeat(20)], settingsWith()), false);
+});

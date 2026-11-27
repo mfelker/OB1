@@ -13,6 +13,6 @@ export async function openPdf(bytes: Uint8Array): Promise<R<PdfDoc>> {
 }
 
 export function isScanned(pageTexts: string[], settings: Settings): boolean {
-  const chars = pageTexts.reduce((sum, text) => sum + text.length, 0);
+  const chars = pageTexts.reduce((sum, text) => sum + text.replace(/\s/g, "").length, 0);
   return chars / pageTexts.length < settings.scannedMinCharsPerPage;
 }
