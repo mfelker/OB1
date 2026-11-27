@@ -395,3 +395,40 @@ Run in a scratch checkout of the branch at `23a226c` (`/Users/mfelker/Projects/o
 - README storage check: upload 200, download identical ("storage works"), no credentials → 400.
 - torn down with `docker compose --profile ui --profile images down -v`.
 - Also: the README's unmeasured "about 2 GB of free memory" line was removed (`8c7ab08`).
+
+## Remediation (audit at `11285c0`, Phase 9)
+
+### T061 Finding 1: A9 checked a log only stubs write (tautology)
+
+- before: mutant M15 (`node -e ""` before `setup.sh`'s last line) with A9 as written → `tests=1 pass=1` (A9 passes, surviving mutant reproduced).
+- test fix (stated reason: the program check read a log only the stub `git`/`docker` write, and the restricted `PATH` held `node`): the stub `git` now copies a stand-in clone prebuilt by `makeCheckout` (plain `cp -R`, no `node`); `node` is no longer on the checkout's `PATH`; A9 asserts `node`, `python3`, `kubectl` and `helm` aren't on that `PATH`, then that setup exits 0 and reports the function link.
+- red with M15: `… single tests/acceptance.test.mjs "A9 …"` → `AssertionError [ERR_ASSERTION]: clone: completed … actual: 127, expected: 0`
+- restored `setup.sh` exactly; single → pass; suite → `tests=58 pass=58 fail=0 → pass`
+- commit: `137bafb`
+
+### T062 Finding 2: U33 couldn't tell the embedding and chat bases apart
+
+- before: mutant M6 (`lean.override.yml` `CHAT_API_BASE: ${EMBEDDING_API_BASE}`) with U33 as written → `tests=1 pass=1` (survives).
+- test fix (stated reason: the test data gave both bases the same value): `ENV_VALUES.CHAT_API_BASE` is now `http://host.docker.internal:12434/chat/v1` (distinct from the embedding base; the two keys were already distinct).
+- red with M6: `… single tests/compose.test.mjs "U33 …"` → `AssertionError [ERR_ASSERTION]: CHAT_API_BASE … actual: 'http://host.docker.internal:11434/v1', expected: 'http://host.docker.internal:12434/chat/v1'`
+- restored exactly; single → pass; suite → `tests=58 pass=58 fail=0 → pass`; commit `f5051ce`
+
+### T063 Finding 3: U36 didn't check what ob1-init runs
+
+- before: mutant M7 (entrypoint `/init/create-bucket-wrong.sh`) with U36 as written → `tests=1 pass=1` (survives).
+- test fix (stated reason: only the mount's source was asserted): U36 also asserts the mount `target` is `/init/create-bucket.sh`, `read_only` is true, and `entrypoint` equals `["sh", <that target>]`.
+- red with M7: `AssertionError [ERR_ASSERTION]: ob1-init runs the mounted script`; red with a mount-target mutant (`:/init/other.sh:ro`): `actual: '/init/other.sh', expected: '/init/create-bucket.sh'`
+- restored exactly; single → pass; suite → `tests=58 pass=58 fail=0 → pass`; commit `eb06260`
+
+### T064 Finding 4: U13 and U53 passed with the Supabase keys absent
+
+- before: mutant M18 (`setup.sh` builds `.env` from an empty file instead of `.env.example`) → U13 `pass=1`, U53 `pass=1` (both survive).
+- test fix (stated reason: `notEqual(undefined, placeholder)` passes vacuously): both now assert `env.get(k)` is present before the not-the-placeholder check, as U8 does.
+- red with M18: U13 → `AssertionError [ERR_ASSERTION]: JWT_SECRET present`; U53 → `AssertionError [ERR_ASSERTION]: JWT_SECRET present`
+- restored exactly; singles → pass; suite → `tests=58 pass=58 fail=0 → pass`; commit `c610659`
+
+### T065 Finding 5: conditional logic decided what U19 and A4 assert
+
+- test fix (stated reason: `if (v.length >= 16)` inside the loop chose which values were checked): both now loop over `SUPABASE_KEYS` and `MCP_ACCESS_KEY` with straight-line assertions (U19 also asserts each is present). No `if` remains in either test.
+- mutant M1 (generator output not silenced) still fails both: U19 → `AssertionError [ERR_ASSERTION]: JWT_SECRET value printed`; A4 → `AssertionError [ERR_ASSERTION]: JWT_SECRET not printed`
+- restored exactly; singles → pass; suite → `tests=58 pass=58 fail=0 → pass`; commit `751bd3b`

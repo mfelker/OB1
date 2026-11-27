@@ -284,20 +284,20 @@ Task: "Compose test: default service set is exactly the always-on set (T020) in 
 
 ### Blocking: HIGH findings
 
-- [ ] T061 Finding 1 (A9 tautology, SC-002), `F/tests/acceptance.test.mjs:138-139`.
+- [X] T061 Finding 1 (A9 tautology, SC-002), `F/tests/acceptance.test.mjs:138-139`.
   - Replace the stub-log program check with a real constraint. Either run `setup.sh` with a `PATH` holding only the declared tools (POSIX set, `git`, `docker`, `openssl`; no `node`, which needs the stub `git` reworked so it doesn't call `node`), or log every non-POSIX program through a shim and assert the exact set.
   - Done when mutant M15 (a bare `node -e ""` line before `setup.sh:86`) fails A9, and the suite is green.
-- [ ] T062 Finding 2 (U33 cannot discriminate), `F/tests/compose.test.mjs:22,25`.
+- [X] T062 Finding 2 (U33 cannot discriminate), `F/tests/compose.test.mjs:22,25`.
   - Give every `ENV_VALUES` entry a distinct value: at least `EMBEDDING_API_BASE` ≠ `CHAT_API_BASE` and `EMBEDDING_API_KEY` ≠ `CHAT_API_KEY`.
   - Done when mutant M6 (`lean.override.yml:37` `CHAT_API_BASE: ${EMBEDDING_API_BASE}`) fails U33, and the suite is green.
-- [ ] T063 Finding 3 (U36 entrypoint and mount target), `F/tests/compose.test.mjs:143-145`.
+- [X] T063 Finding 3 (U36 entrypoint and mount target), `F/tests/compose.test.mjs:143-145`.
   - Assert the script mount's `target` is `/init/create-bucket.sh` and `read_only` is true.
   - Assert the `entrypoint` runs that same target path.
   - Done when mutant M7 (`lean.override.yml:45` entrypoint path changed) and a mount-target mutant (`lean.override.yml:53` target changed) each fail U36, and the suite is green.
-- [ ] T064 Finding 4 (vacuous `notEqual`), `F/tests/setup.test.mjs:169` (U13) and `:299` (U53).
+- [X] T064 Finding 4 (vacuous `notEqual`), `F/tests/setup.test.mjs:169` (U13) and `:299` (U53).
   - Assert each `SUPABASE_KEYS` value is present (`assert.ok(env.get(k))`) before the not-the-placeholder check, as U8 does.
   - Done when mutant M18 (`setup.sh:56` `cp "$CLONE/docker/.env.example" "$build/.env"` → `: > "$build/.env"`) fails U13 and U53 on their own (single), and the suite is green.
-- [ ] T065 Finding 5 (conditional logic), `F/tests/setup.test.mjs:252-254` (U19) and `F/tests/acceptance.test.mjs:81` (A4).
+- [X] T065 Finding 5 (conditional logic), `F/tests/setup.test.mjs:252-254` (U19) and `F/tests/acceptance.test.mjs:81` (A4).
   - Remove the `if (v.length >= 16)` filter.
   - Assert straight-line that no value of `SUPABASE_KEYS` or `MCP_ACCESS_KEY` appears in the output.
   - Done when neither test contains an `if` that decides what to assert, mutant M1 (`setup.sh:57` drop `>/dev/null`) still fails U19, and the suite is green.
