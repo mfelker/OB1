@@ -16,6 +16,9 @@ export function createEmbeddingClient(settings: Settings, fetch: typeof globalTh
     } catch (e) {
       return { error: `embedding endpoint ${settings.embeddingApiBase} is unreachable: ${(e as Error).message}` };
     }
+    if (!response.ok) {
+      return { error: `embedding endpoint answered HTTP ${response.status}: ${(await response.text()).slice(0, 300)}` };
+    }
     const body = await response.json();
     return { data: body.data.map((d: { embedding: number[] }) => d.embedding) };
   }

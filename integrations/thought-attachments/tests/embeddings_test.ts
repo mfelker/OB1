@@ -79,3 +79,11 @@ Deno.test("U167 an unreachable endpoint fails the call with a reason naming it u
   assertStringIncludes(out.error, "unreachable");
   assertStringIncludes(out.error, EMBEDDING_API_BASE);
 });
+
+Deno.test("U168 a non-2xx status fails the call with the status in the reason", async () => {
+  const ff = new FakeFetch().on("POST", URL_, { status: 503, body: "upstream down" });
+  const client = createEmbeddingClient(settingsWith(), ff.fetch);
+  const out = await client.embed(["alpha"]);
+  assert("error" in out);
+  assertStringIncludes(out.error, "503");
+});
