@@ -57,7 +57,10 @@ export function createFinisher(deps: Deps): Services {
     if (row.state === "processed" && !rebuild) return outcomeOf(row);
     const path = row.storage_path as string;
     const info = await store.objectInfo(path);
-    if ("error" in info || info.data === null) throw new Error("no object");
+    if ("error" in info) throw new Error(info.error);
+    if (info.data === null) {
+      return { state: row.state, reason: "no file uploaded yet", derived_count: row.derived_count };
+    }
     const file = await store.download(path);
     if ("error" in file) throw new Error(file.error);
     const bytes = file.data;

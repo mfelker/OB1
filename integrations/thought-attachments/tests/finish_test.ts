@@ -423,3 +423,20 @@ Deno.test("U201 finishing a refused attachment is refused, and nothing changes",
   assertEquals(writes, []);
   assertEquals(r.ff.requests.length, 0);
 });
+
+Deno.test("U202 with no object before the deadline, the outcome is 'no file uploaded yet' and the state is unchanged", async () => {
+  const r = await rig();
+  const att = r.store.seedAttachment({
+    parent_thought_id: r.parent,
+    file_name: "manual.pdf",
+    declared_type: "application/pdf",
+    declared_size: 1000,
+    storage_path: "attachments/x/manual.pdf",
+  });
+  const before = structuredClone(r.store.attachment(att.id));
+  const out = await r.finish(att.id, {});
+  assertEquals(out.state, "pending_upload");
+  assertStringIncludes(out.reason ?? "", "no file uploaded yet");
+  assertEquals(out.derived_count, 0);
+  assertEquals(r.store.attachment(att.id), before);
+});
