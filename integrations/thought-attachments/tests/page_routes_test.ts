@@ -349,3 +349,15 @@ Deno.test("U279 a token for attachment X never finishes attachment Y", async () 
   const wrong = await r.post("/page/finish", { token: "token-z", id: y.id });
   assertEquals([wrong.status, r.finishCalls.length, r.store.attachment(y.id)], [410, 1, y]);
 });
+
+Deno.test("U280 a /page/finish refused as busy returns the busy outcome and leaves the token valid", async () => {
+  const r = await rig();
+  const row = await r.seed();
+  r.outcomes.push({ state: "pending_upload", derived_count: 0, busy: "finish", reason: "busy: finish is running" });
+  const busy = await r.post("/page/finish", { token: TOKEN });
+  assertEquals([busy.status, (await busy.json()).busy], [200, "finish"]);
+  assertEquals(r.store.attachment(row.id)!.page_token_hash, await sha256Hex(TOKEN));
+  const later = await r.post("/page/finish", { token: TOKEN });
+  assertEquals([later.status, (await later.json()).state], [200, "processed"]);
+  assertEquals([r.finishCalls, r.store.attachment(row.id)!.page_token_hash], [[row.id, row.id], null]);
+});
