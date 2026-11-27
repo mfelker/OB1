@@ -835,3 +835,16 @@ Deno.test("U259 remove_attachment with confirm claims, deletes the stored file, 
   const token = calls[2].args[1];
   assertEquals(calls[3].args, [row.id, token]);
 });
+
+Deno.test("U260 remove_attachment while busy is refused with the busy message and deletes nothing", async () => {
+  const h = await harness();
+  const row = await claimedRow(h, "finish", 100, { derived_count: 2 });
+  addDerived(h, row.id, 2);
+  const before = structuredClone({ t: h.store.thoughts, a: h.store.attachments });
+  const out = await call(h, "remove_attachment", { attachment_id: row.id, confirm: true });
+  assertEquals(out.isError, true);
+  assertEquals(out.text, "busy (finishing), try again shortly");
+  assertEquals({ t: h.store.thoughts, a: h.store.attachments }, before);
+  assertEquals(h.store.objects.has(row.storage_path as string), true);
+  assertEquals(h.store.callNames().filter((m) => ["deleteObject", "removeAttachment", "release"].includes(m)), []);
+});
