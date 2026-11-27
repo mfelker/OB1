@@ -763,3 +763,17 @@ Source: `tdd/verification.md` (verdict **FAIL** at `293dee50`, re-audit after T1
   - Optionally pin P1 (the `mcp-session-id` header removed, `src/app.ts:131`) and H2p (the "Saved 1 passage" singular, `upload-page.html:78`).
 
   Done when `grep -l 'Stub: throws' F/src` prints nothing and the suite is green. Finding 13's items stay with T100.
+
+## Phase 13: TDD remediation (third re-audit)
+
+Source: `tdd/verification.md` (verdict **FAIL** at `a6168ba1`, final scoped re-audit after T108–T115). **The feature is not done until T117 is cleared and a fresh `/speckit-tdd-verify` reports PASS or PASS_WITH_GAPS.** T118–T120 are MED and LOW follow-ups that the owner may record rather than block on. T081 depends on this phase. `F` = `W/integrations/thought-attachments`. Suite: from `F`, `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read tests/`. SQL: `verify.sql` twice on a fresh bootstrapped database. Prove each new or strengthened assertion red under the named mutant, then restore the code byte for byte. The mutant ids and edits are in the report's "Mutation results".
+
+- [ ] T117 Finding 1 (HIGH, surviving N21 inside U262, FR-001 and FR-002): in `F/tests/page_routes_test.ts` (U262 at `:79-88`, or a new row), seed an attachment with no expected kind, and pick a PDF on `/page/start` (for example `manual.pdf`, `application/pdf`, 4096 bytes). Expect 200, a signed upload link, and the row's `declared_type` `application/pdf` with the picked size. Done when N21 (`F/src/page_routes.ts:78` without `row.expected_kind !== null &&`) fails the test, and the suite is green.
+- [ ] T118 Finding 2 (MED, surviving S1 and S2, FR-026): in `F/tests/verify.sql`, add exact-instant blocks: a write-derived or set-state whose claim has `busy_until = now()` is refused and writes nothing (S1, `F/schema.sql:139` `<=` to `<`), and a claim on a row whose `busy_until = now()` succeeds with a new token (S2, `F/schema.sql:210` `<=` to `<`). Done when S1 and S2 each fail `verify.sql` on a fresh bootstrapped database.
+- [ ] T119 Finding 3 (MED, surviving S8, FR-023): in `F/tests/verify.sql` (next to U67), seed a thought whose first line has 121 or more characters, and assert that `attachment_find_thoughts_exact` returns exactly its first 120. Done when S8 (`F/schema.sql:251` `120` to `100`) fails `verify.sql` on a fresh bootstrapped database.
+- [ ] T120 Findings 6–8 (LOW, optional):
+  - Pin or record as accepted N15 (a longer-than-dimension vector reaches the store's own error; `F/src/finish.ts:155`), N12 (no background note on a photo's size refusal; `F/src/intake.ts:38`), N24 (`"database error"` for an empty message; `F/src/store.ts:25`) and S5 (exact-find order; `F/schema.sql:254`).
+  - In `tdd/test-list.md`, set U386 and U387's test reference to the generated titles (`U386 a same-length key differing only in the first, a middle or the last byte (header) …`, `U387 … (query) …`), and update U314's behavior text to the mixed-case fixture.
+  - Optionally replace U390's real-timer polling with a deterministic hand-off.
+
+  Done when the test list's `file::title` values resolve literally for every DONE row, and the suite is green. Finding 9's items stay with T116 and T100.
