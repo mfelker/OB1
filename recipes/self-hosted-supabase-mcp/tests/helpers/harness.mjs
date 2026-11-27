@@ -186,9 +186,9 @@ export function makeCheckout({ withIntegration = true, hide = [] } = {}) {
 }
 
 /**
- * Shell the setup tests run setup.sh under: dash where present, else /bin/sh. On macOS /bin/sh is
- * bash, which accepts bashisms that Debian and Ubuntu's sh (dash) rejects; dash keeps the tests
- * strict about POSIX sh on every host.
+ * Shell the tests run the recipe's scripts under (setup.sh and init/create-bucket.sh): dash where
+ * present, else /bin/sh. On macOS /bin/sh is bash, which accepts bashisms that Debian and Ubuntu's
+ * sh (dash) rejects; dash keeps the tests strict about POSIX sh on every host (H4, H5).
  */
 export const SETUP_SHELL = existsSync("/bin/dash") ? "/bin/dash" : "/bin/sh";
 
@@ -262,8 +262,9 @@ if (fmt) process.stdout.write(fmt.replace("%{http_code}", String(status)));
 /**
  * An environment for running init/create-bucket.sh: a bin directory with POSIX tools and the stub curl.
  * Returns run(env) → {code, stdout, stderr, out}, requests() → logged requests, buckets() → stateful store.
+ * `script` defaults to the recipe's init/create-bucket.sh; the harness self-test (H5) passes another.
  */
-export function makeBucketEnv() {
+export function makeBucketEnv({ script = join(RECIPE_DIR, "init", "create-bucket.sh") } = {}) {
   const root = mkdtempSync(join(tmpdir(), "ob1-006-bucket-"));
   const bin = join(root, "bin");
   mkdirSync(bin);
@@ -274,11 +275,10 @@ export function makeBucketEnv() {
   const log = join(root, "curl.log");
   const state = join(root, "buckets.json");
   writeFileSync(log, "");
-  const script = join(RECIPE_DIR, "init", "create-bucket.sh");
   return {
     root,
     run(env = {}) {
-      const r = spawnSync("/bin/sh", [script], {
+      const r = spawnSync(SETUP_SHELL, [script], {
         encoding: "utf8",
         env: { PATH: bin, STUB_CURL_LOG: log, STUB_CURL_STATE: state, ...env },
       });

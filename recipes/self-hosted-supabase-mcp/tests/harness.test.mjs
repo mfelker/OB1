@@ -1,5 +1,5 @@
 /**
- * harness.test.mjs: self-checks for tests/helpers/harness.mjs (H1–H3).
+ * harness.test.mjs: self-checks for tests/helpers/harness.mjs (H1–H5).
  * Structural, not behaviors of the recipe: they make sure a red elsewhere
  * comes from the recipe, not from a broken harness.
  *
@@ -7,10 +7,11 @@
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync, mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
-import { makeCheckout, PIN, stubCalls } from "./helpers/harness.mjs";
+import { makeCheckout, makeBucketEnv, PIN, runSetup, stubCalls } from "./helpers/harness.mjs";
 
 test("H1 makeCheckout copies the recipe, adds the integration marker, and commits a clean tree", () => {
   const co = makeCheckout();
@@ -51,4 +52,30 @@ test("H3 hidden tools are not on the checkout's PATH; kept tools are", () => {
     assert.equal(has("sed"), true);
     assert.equal(has("kubectl"), false);
   } finally { co.cleanup(); }
+});
+
+// H4/H5: the recipe's scripts must run under a strict POSIX sh. On macOS /bin/sh is bash, which
+// accepts bashisms that Debian and Ubuntu's sh (dash) rejects, so the harness runs them under dash
+// where it exists. A bashism script must fail through each runner.
+const BASHISM = '#!/bin/sh\nif [[ "a" == "a" ]]; then echo bashism-accepted; fi\n';
+const noDash = !existsSync("/bin/dash") && "no /bin/dash on this host";
+
+test("H4 runSetup runs setup.sh under a strict POSIX sh, so a bashism fails", { skip: noDash }, () => {
+  const co = makeCheckout();
+  try {
+    writeFileSync(join(co.recipe, "setup.sh"), BASHISM);
+    const r = runSetup(co);
+    assert.doesNotMatch(r.stdout, /bashism-accepted/);
+  } finally { co.cleanup(); }
+});
+
+test("H5 the bucket environment runs its script under a strict POSIX sh, so a bashism fails", { skip: noDash }, () => {
+  const dir = mkdtempSync(join(tmpdir(), "ob1-006-h5-"));
+  const script = join(dir, "bashism.sh");
+  writeFileSync(script, BASHISM);
+  const b = makeBucketEnv({ script });
+  try {
+    const r = b.run();
+    assert.doesNotMatch(r.stdout, /bashism-accepted/);
+  } finally { b.cleanup(); rmSync(dir, { recursive: true, force: true }); }
 });
