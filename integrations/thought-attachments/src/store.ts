@@ -123,7 +123,11 @@ export function createSupabaseStore(
       }
       return { data: { size: data.size as number, createdAt: data.createdAt as string } };
     },
-    download: notYet,
+    async download(path) {
+      const { data, error } = await db.storage.from(settings.attachmentsBucket).download(path);
+      if (error) return { error: scrub(error.message) };
+      return { data: new Uint8Array(await data.arrayBuffer()) };
+    },
     deleteObject: notYet,
     signDownload: notYet,
   };

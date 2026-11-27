@@ -277,3 +277,12 @@ Deno.test("U80 objectInfo returns the object's size and creation time, and null 
   assertEquals(await store.objectInfo(BUCKET_PATH), { data: { size: 4321, createdAt: "2026-01-01T00:30:00.000Z" } });
   assertEquals(await store.objectInfo("attachments/none/missing.pdf"), { data: null });
 });
+
+Deno.test("U81 download returns the stored bytes", async () => {
+  const { store, ff } = setup();
+  const bytes = new Uint8Array([37, 80, 68, 70, 0, 255, 1]);
+  ff.on("GET", `${STORAGE}/object/ob1-files/${BUCKET_PATH}`, { body: bytes, headers: { "content-type": "application/pdf" } });
+  const r = await store.download(BUCKET_PATH);
+  if (!("data" in r)) throw new Error(JSON.stringify(r));
+  assertEquals([...r.data], [...bytes]);
+});
