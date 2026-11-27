@@ -74,12 +74,26 @@ function settingsErrorApp(problems: { setting: string; reason: string }[]): Fetc
   };
 }
 
+/** The function's own path: `/functions/v1` (Cloud and the self-hosted gateway) and its name are optional prefixes. */
+function withLocalPath(request: Request): Request {
+  const url = new URL(request.url);
+  const local = url.pathname.replace(/^\/functions\/v1(?=\/|$)/, "").replace(/^\/thought-attachments(?=\/|$)/, "");
+  if (local === url.pathname) return request;
+  url.pathname = local || "/";
+  return new Request(url, request);
+}
+
+/** The phone page, served unchanged (R5, T005 Q6). */
+const UPLOAD_PAGE = new URL("../upload-page.html", import.meta.url);
+
 /** Answers every MCP call and page route with the named settings error when `input.ok` is false (T005 Q3). */
 export function createApp(input: AppInput): FetchApp {
   if (!input.ok) return settingsErrorApp(input.problems);
   const deps = input.deps;
   const services = createFinisher(deps);
   const app = new Hono();
+
+  app.get("/upload", async (c) => c.body(await Deno.readFile(UPLOAD_PAGE), 200, { "Content-Type": "text/html; charset=utf-8" }));
 
   app.options("*", (c) => c.text("ok", 200, corsHeaders));
 
@@ -111,7 +125,7 @@ export function createApp(input: AppInput): FetchApp {
     return response;
   });
 
-  return { fetch: async (request) => await app.fetch(request) };
+  return { fetch: async (request) => await app.fetch(withLocalPath(request)) };
 }
 
 /** The real dependencies from the environment; settings that are not ok give `{ ok: false, problems }` (T005 Q3). */

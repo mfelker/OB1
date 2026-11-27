@@ -228,3 +228,15 @@ Deno.test("U351 with MCP_ACCESS_KEY set a missing or wrong key is unauthorized; 
     },
   );
 });
+
+// ---------------------------------------------------------------- the page and its routes (T045)
+
+Deno.test("U305 GET /upload returns 200 with text/html, with no brain key", async () => {
+  const { app, store } = rig();
+  const response = await app.fetch(new Request(`${FUNCTION_URL}/upload`));
+  await response.body?.cancel();
+  assertEquals(
+    { status: response.status, type: response.headers.get("content-type")?.split(";")[0], calls: store.callNames() },
+    { status: 200, type: "text/html", calls: [] },
+  );
+});
