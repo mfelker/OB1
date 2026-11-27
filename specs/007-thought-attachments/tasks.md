@@ -212,7 +212,7 @@ Streams code against these. The signatures are the only shared contract. Behavio
   - `insertNote` with an existing fingerprint returns `created: false` (R17)
 
   The same rules are asserted against real SQL by stream Q (T015, T016, T038, T055, T061), so a fake that drifts shows up as a disagreement. Commit.
-- [ ] T012 [A1] [A2] [A3] [A4] [A5] [A6] [A7] [A8] [A9] [A10] [A11] [A12] [A13] [A14] [A15] [A16] [A17] [A18] [A19] [A20] [A21] [A22] [A23] [A24] [A25] [A26] [A27] [A28] [A29] [A30] [A31] [A32] [A33] [A34] [A35] [A36] [A37] [A38] [A39] [A40] [A41] [A42] [A43] [A44] [A45] [A46] [A47] [A48] [A49] [A50] [A51] [A52] [A53] [A54] [A55] [A56] [A57] [A58] [A59] [A60] [A61] [A62] [A63] Outer loop first: write `F/tests/acceptance_test.ts` with every `[A#]` behavior from `tdd/test-list.md` as a `todo(...)` test. Each drives `createApp(input).fetch(new Request(…))` with `FakeStore`, the real embedding and vision clients over `fake_fetch`, `loadSettings` over `env.ts` and the fake clock. Each asserts the full observable result: JSON-RPC result text and structured fields, page-route status and JSON, fake-store rows and objects, and the fake-fetch request log. The acceptance set, by story:
+- [X] T012 [A1] [A2] [A3] [A4] [A5] [A6] [A7] [A8] [A9] [A10] [A11] [A12] [A13] [A14] [A15] [A16] [A17] [A18] [A19] [A20] [A21] [A22] [A23] [A24] [A25] [A26] [A27] [A28] [A29] [A30] [A31] [A32] [A33] [A34] [A35] [A36] [A37] [A38] [A39] [A40] [A41] [A42] [A43] [A44] [A45] [A46] [A47] [A48] [A49] [A50] [A51] [A52] [A53] [A54] [A55] [A56] [A57] [A58] [A59] [A60] [A61] [A62] [A63] Outer loop first: write `F/tests/acceptance_test.ts` with every `[A#]` behavior from `tdd/test-list.md` as a `todo(...)` test. Each drives `createApp(input).fetch(new Request(…))` with `FakeStore`, the real embedding and vision clients over `fake_fetch`, `loadSettings` over `env.ts` and the fake clock. Each asserts the full observable result: JSON-RPC result text and structured fields, page-route status and JSON, fake-store rows and objects, and the fake-fetch request log. The acceptance set, by story:
   - **US1**: scenarios 1–4, SC-001 (each listed sample fact is in a passage whose source line names the file, page range and short id; the findability half is live), SC-009, SC-012, SC-016.
   - **US2**: scenarios 1–3 and 5–7, SC-002 (caption half), SC-010, SC-011, SC-015, SC-018; US2 #4's HEIC bytes refused with the "share as JPEG" message.
   - **US3**: scenarios 1–2, SC-003 (link lifetime and no link for `pending_upload`/`refused`; byte identity and real expiry are live).
@@ -306,17 +306,17 @@ Streams code against these. The signatures are the only shared contract. Behavio
 
 ### Stream A: app and entry (`ta-app`, wave 3)
 
-- [ ] T031 [US1] [U293] [U294] [U295] [U296] [U297] [U298] [U299] [U347] [U348] [U351] Tests first in `F/tests/app_test.ts`, then `createApp(input)` in `F/src/app.ts`:
+- [X] T031 [US1] [U293] [U294] [U295] [U296] [U297] [U298] [U299] [U347] [U348] [U351] Tests first in `F/tests/app_test.ts`, then `createApp(input)` in `F/src/app.ts`:
   - the MCP route accepts `MCP_ACCESS_KEY` from `x-brain-key` or `?key=`, compared in constant time
   - a missing or wrong key gets an authorization error and changes nothing, and an unset key refuses everything (FR-018, R13)
   - CORS and the Accept-header handling as the core does (`W/server/index.ts`)
   - it composes `createFinisher`, `buildServer` and `pageRoutes`
-- [ ] T032 [US1] [U300] [U301] [U302] [U303] [U304] Tests first in `F/tests/imports_test.ts`, then `productionDeps()` in `F/src/app.ts`:
+- [X] T032 [US1] [U300] [U301] [U302] [U303] [U304] Tests first in `F/tests/imports_test.ts`, then `productionDeps()` in `F/src/app.ts`:
   - `loadSettings(Deno.env.get)`; when settings are not `ok`, `productionDeps()` returns `{ ok: false, problems }` so `createApp` answers every call and page route with the named error (T005 Q3), and nothing else starts
   - `createSupabaseStore(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, …)` and the real clients over `globalThis.fetch`
   - `index.ts` stays the one-line entry
   - the test reads every `.ts` file outside `tests/` and fails on a bare import specifier (004 R10) or any `pdf-lib` import (R15)
-- [ ] T033 [US1] [A1] [A2] [A3] [A4] [A5] [A6] [A7] [A8] [A9] [A10] [A11] [A12] [A53] [A57] [A59] Flip the US1 acceptance tests in `F/tests/acceptance_test.ts` from `todo` to `Deno.test`, one per green commit, including the 7-tool `tools/list` and wrong-key cases.
+- [X] T033 [US1] [A1] [A2] [A3] [A4] [A5] [A6] [A7] [A8] [A9] [A10] [A11] [A12] [A53] [A57] [A59] Flip the US1 acceptance tests in `F/tests/acceptance_test.ts` from `todo` to `Deno.test`, one per green commit, including the 7-tool `tools/list` and wrong-key cases.
 
 ### Stream D: docs (`ta-docs`, wave 1)
 
@@ -412,8 +412,8 @@ Streams code against these. The signatures are the only shared contract. Behavio
 
 ### Stream A: app (`ta-app`, wave 3)
 
-- [ ] T045 [US2] [U305] [U306] [U307] [U349] Tests first in `F/tests/app_test.ts`, then `GET /upload` in `F/src/app.ts`: it serves `upload-page.html` unchanged as `text/html` for the self-hosted path (R5), and mounts the page routes outside the brain-key check.
-- [ ] T046 [US2] [A13] [A14] [A15] [A16] [A17] [A18] [A19] [A20] [A21] [A22] [A23] [A24] [A25] [A26] [A58] [A60] [A61] Flip the US2 acceptance tests in `F/tests/acceptance_test.ts`, one per green commit.
+- [X] T045 [US2] [U305] [U306] [U307] [U349] Tests first in `F/tests/app_test.ts`, then `GET /upload` in `F/src/app.ts`: it serves `upload-page.html` unchanged as `text/html` for the self-hosted path (R5), and mounts the page routes outside the brain-key check.
+- [X] T046 [US2] [A13] [A14] [A15] [A16] [A17] [A18] [A19] [A20] [A21] [A22] [A23] [A24] [A25] [A26] [A58] [A60] [A61] Flip the US2 acceptance tests in `F/tests/acceptance_test.ts`, one per green commit.
 
 ### Stream D: docs (`ta-docs`, wave 1)
 
@@ -448,7 +448,7 @@ Streams code against these. The signatures are the only shared contract. Behavio
 
 ### Stream A: app (`ta-app`, wave 3)
 
-- [ ] T051 [US3] [A27] [A28] [A29] Flip the US3 acceptance tests in `F/tests/acceptance_test.ts`, one per green commit.
+- [X] T051 [US3] [A27] [A28] [A29] Flip the US3 acceptance tests in `F/tests/acceptance_test.ts`, one per green commit.
 
 ### Stream D: docs (`ta-docs`, wave 1)
 
@@ -498,7 +498,7 @@ Streams code against these. The signatures are the only shared contract. Behavio
 
 ### Stream A: app (`ta-app`, wave 3)
 
-- [ ] T059 [US4] [A30] [A31] [A32] [A33] [A34] [A35] [A36] [A37] [A38] [A39] [A40] [A41] [A42] [A43] [A44] [A45] [A54] [A55] [A62] [A63] Flip the US4 acceptance tests in `F/tests/acceptance_test.ts`, one per green commit, including SC-014's held-vision concurrency case and SC-017's +20 and +65 minute cases.
+- [X] T059 [US4] [A30] [A31] [A32] [A33] [A34] [A35] [A36] [A37] [A38] [A39] [A40] [A41] [A42] [A43] [A44] [A45] [A54] [A55] [A62] [A63] Flip the US4 acceptance tests in `F/tests/acceptance_test.ts`, one per green commit, including SC-014's held-vision concurrency case and SC-017's +20 and +65 minute cases.
 
 ### Stream D: docs (`ta-docs`, wave 1)
 
@@ -531,7 +531,7 @@ Streams code against these. The signatures are the only shared contract. Behavio
 
 ### Stream A: app (`ta-app`, wave 3)
 
-- [ ] T065 [US5] [A46] [A47] [A48] [A49] [A50] [A51] [A52] [A56] Flip the US5 acceptance tests and the cross-cutting SC-007 test in `F/tests/acceptance_test.ts`, one per green commit. Afterwards `RUN_TODO=1` runs no ignored test.
+- [X] T065 [US5] [A46] [A47] [A48] [A49] [A50] [A51] [A52] [A56] Flip the US5 acceptance tests and the cross-cutting SC-007 test in `F/tests/acceptance_test.ts`, one per green commit. Afterwards `RUN_TODO=1` runs no ignored test.
 
 ### Stream D: docs (`ta-docs`, wave 1)
 
