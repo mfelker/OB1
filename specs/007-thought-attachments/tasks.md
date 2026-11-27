@@ -541,21 +541,21 @@ Streams code against these. The signatures are the only shared contract. Behavio
 
 ## Phase 8: Integration, live runs, gates and landing (integrator)
 
-- [ ] T067 Merge each stream into `W` only after verifying it yourself:
+- [X] T067 Merge each stream into `W` only after verifying it yourself:
   - check out each of its commits in a throwaway worktree and run the full deno suite there (and `verify.sql` for Q)
   - `git diff --name-only` touches only its owned files
   - re-apply a sample of its recorded mutants (at least one per task) and confirm each fails
   - any remediation names the mutant it kills
 
   Merge with `git -C W merge --no-ff contrib/mfelker/thought-attachments-<s>`. All of wave 1 (Q, X, E, D) merges before wave 2 starts; N, T and P before wave 3 starts. Create each wave's worktrees from the updated `contrib/mfelker/thought-attachments` and launch its streams in one message.
-- [ ] T068 Early gate run right after Q merges (spec 006's T008 precedent): run the OB1 gate's review checks (`W/.github/workflows/ob1-gate-v2.yml`) locally over `F`, with the upstream title. Confirm "No credentials" and "SQL safety" pass, and that R16's guarded `ADD COLUMN` passes rule 5. Record the result in T068's line in `M`.
-- [ ] T069 After each merge, fold `M/specs/007-thought-attachments/tdd/cycle-log.d/*.md` into `tdd/cycle-log.md` in behavior order. Tick the tasks whose behaviors are all `DONE`, then commit on fork `main`.
-- [ ] T070 Refactor with the full suite green in `W`: `deno check` and `deno lint` on `F`; `grep -rn "not implemented" F` is empty; `RUN_TODO=1` runs no ignored test.
-- [ ] T071 [P] `F/metadata.json` validates against `W/.github/metadata.schema.json`.
-- [ ] T072 [P] `npx markdownlint-cli2 --config .github/.markdownlint.jsonc "integrations/thought-attachments/**/*.md"` in `W`.
-- [ ] T073 [P] README check of `F/README.md`: Prerequisites, numbered steps for both platforms, Expected outcome; every relative link resolves in `W`; the `docs/05-tool-audit.md` link is present.
-- [ ] T074 [P] Scan `F` for secrets, binaries over 1 MB, profanity and SQL safety, and check that no file is fork-only. Then run all the OB1 gate's review checks locally with the upstream title (spec 006's T043 precedent).
-- [ ] T075 [P] Fork-ci preview from `W`'s root, with T004's `psql` wrapper on `PATH`: `node ../../.fork/ci/bin/run-folder.mjs --path integrations/thought-attachments --mode strict --origin fork --out "$TMPDIR/r.json"`. Both the deno and sql runtimes pass.
+- [X] T068 Early gate run right after Q merges (spec 006's T008 precedent): run the OB1 gate's review checks (`W/.github/workflows/ob1-gate-v2.yml`) locally over `F`, with the upstream title. Confirm "No credentials" and "SQL safety" pass, and that R16's guarded `ADD COLUMN` passes rule 5. Record the result in T068's line in `M`.
+- [X] T069 After each merge, fold `M/specs/007-thought-attachments/tdd/cycle-log.d/*.md` into `tdd/cycle-log.md` in behavior order. Tick the tasks whose behaviors are all `DONE`, then commit on fork `main`.
+- [X] T070 Refactor with the full suite green in `W`: `deno check` and `deno lint` on `F`; `grep -rn "not implemented" F` is empty; `RUN_TODO=1` runs no ignored test.
+- [X] T071 [P] `F/metadata.json` validates against `W/.github/metadata.schema.json`.
+- [X] T072 [P] `npx markdownlint-cli2 --config .github/.markdownlint.jsonc "integrations/thought-attachments/**/*.md"` in `W`.
+- [X] T073 [P] README check of `F/README.md`: Prerequisites, numbered steps for both platforms, Expected outcome; every relative link resolves in `W`; the `docs/05-tool-audit.md` link is present.
+- [X] T074 [P] Scan `F` for secrets, binaries over 1 MB, profanity and SQL safety, and check that no file is fork-only. Then run all the OB1 gate's review checks locally with the upstream title (spec 006's T043 precedent).
+- [X] T075 [P] Fork-ci preview from `W`'s root, with T004's `psql` wrapper on `PATH`: `node ../../.fork/ci/bin/run-folder.mjs --path integrations/thought-attachments --mode strict --origin fork --out "$TMPDIR/r.json"`. Both the deno and sql runtimes pass.
 - [ ] T076 **Owner-run live Cloud run** (owner present; the Supabase CLI gets `--yes` only with the owner's consent), from a scratch checkout of `W`, never inside `F`. Run quickstart scenarios 1–13 on a Cloud project. Evidence goes in `M/specs/007-thought-attachments/evidence/cloud/` with no key values. Record:
   - **SC-004 re-measure** (scenario 12): the compute and wall time of each finish for a real 50-page-or-fewer manual and the largest photo, with no `546`. If a finish fails, lower the default caps test-first in `F/src/settings.ts` and `F/tests/settings_test.ts`, update the README, and record the measured values (FR-017, R1).
   - **R3**: whether OpenRouter's embeddings route accepts an array input. If not, change `EMBEDDING_BATCH_SIZE`'s default test-first, or document `1`.
@@ -572,7 +572,7 @@ Streams code against these. The signatures are the only shared contract. Behavio
 - [ ] T079 SC-006 and SC-007 across both runs: the same behavior, differing only in settings (FR-019), and a query over every derived thought and attachment row finds no signed link, key, token or absolute path. Record the comparison in `M/specs/007-thought-attachments/evidence/sc-006-007.md`.
 - [ ] T080 Replace the README's `pending verification` cells in `F/README.md` with the recorded values (platform, runtime, models, measured SC-004 times), and set `F/metadata.json` `estimated_time` from the runs. Re-run T071–T074.
 - [ ] T081 **Cold-context TDD audit**: launch a fresh agent with no conversation context to run `/speckit-tdd-verify` in `M`. It writes `M/specs/007-thought-attachments/tdd/verification.md` with a verdict of PASS or PASS_WITH_GAPS (Quality Gate 1). The live-only criteria (SC-004, SC-006, SC-008, and the live halves of SC-001, SC-002 and SC-003) are named for an owner ruling, as in spec 006's T044. Remediation tasks it writes are appended as a new phase and done before T083.
-- [ ] T082 Scope check: `git -C W diff --stat upstream/main...HEAD` lists only `integrations/thought-attachments/`, with no `specs/`, `.specify/` or `.fork/` (Principle V).
+- [X] T082 Scope check: `git -C W diff --stat upstream/main...HEAD` lists only `integrations/thought-attachments/`, with no `specs/`, `.specify/` or `.fork/` (Principle V).
 - [ ] T083 **Fork landing, asking the owner before each push or PR**:
   1. `git -C W push -u origin contrib/mfelker/thought-attachments`.
   2. `gh pr create -R mfelker/OB1 --base main --head contrib/mfelker/thought-attachments --title "[integrations] Thought attachments (fork landing)"`. The body follows `W/.github/PULL_REQUEST_TEMPLATE.md` and ends with the "Generated with Claude Code" line only.
