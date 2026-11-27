@@ -54,9 +54,26 @@ export interface PageOptions {
   html?: string;
 }
 
-/** Let pending promise chains (and zero-delay real timers) run. */
+/** Every page made in this module, so `settle()` can wait for all of them. */
+const pages = new Set<Page>();
+
+/** The most yields `settle()` waits for a page to go quiet before it fails the test. */
+const SETTLE_LIMIT = 1000;
+
+/**
+ * Wait until every page is quiet: no fetch reply or body read is being worked through, and nothing the page
+ * shows or schedules changed across a whole turn of the event loop. A fetch the network holds or hangs stays
+ * open without making the page busy. Fails instead of returning when a page never goes quiet.
+ */
 export async function settle(): Promise<void> {
-  for (let i = 0; i < 5; i++) await new Promise<void>((go) => setTimeout(go, 0));
+  let last = "";
+  for (let i = 0; i < SETTLE_LIMIT; i++) {
+    await new Promise<void>((go) => setTimeout(go, 0));
+    const now = JSON.stringify([...pages].map((p) => p.signature()));
+    if (now === last && [...pages].every((p) => p.reading === 0)) return;
+    last = now;
+  }
+  throw new Error(`settle: a page was still changing after ${SETTLE_LIMIT} turns of the event loop`);
 }
 
 export class Page {
@@ -66,6 +83,11 @@ export class Page {
   private nextTimer = 1;
   /** Virtual milliseconds since load. */
   now = 0;
+  /** Fetches the page has started, and how many of them have answered or failed. */
+  fetchesStarted = 0;
+  fetchesSettled = 0;
+  /** Response bodies the page is still reading. */
+  reading = 0;
 
   constructor(opts: PageOptions) {
     this.source = opts.html ?? readPageSource();
@@ -93,13 +115,47 @@ export class Page {
     const clearTimer = (id: number) => {
       this.timers = this.timers.filter((t) => t.id !== id);
     };
+    // The page's fetch, counted: a started request, its answer, and each body read the page makes from it.
+    const tracked = (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+      this.fetchesStarted++;
+      return opts.fetch(input, init).then(
+        (res) => {
+          this.fetchesSettled++;
+          return this.trackBody(res);
+        },
+        (error) => {
+          this.fetchesSettled++;
+          throw error;
+        },
+      );
+    };
+    pages.add(this);
     new Function("document", "location", "fetch", "setTimeout", "clearTimeout", script)(
       document,
       location,
-      opts.fetch,
+      tracked,
       setTimer,
       clearTimer,
     );
+  }
+
+  private trackBody(res: Response): Response {
+    for (const method of ["json", "text", "arrayBuffer", "blob"] as const) {
+      const read = res[method].bind(res) as () => Promise<unknown>;
+      Object.defineProperty(res, method, {
+        value: () => {
+          this.reading++;
+          return read().finally(() => this.reading--);
+        },
+      });
+    }
+    return res;
+  }
+
+  /** What the page shows and has scheduled, and how far its requests have got. */
+  signature(): string {
+    const els = [...this.elements.values()].map((e) => [e.id, e.textContent, e.hidden, e.value]);
+    return JSON.stringify([this.fetchesStarted, this.fetchesSettled, this.reading, this.now, this.timers.map((t) => t.at), els]);
   }
 
   el(id: string): FakeElement {

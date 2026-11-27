@@ -130,6 +130,15 @@ Deno.test("H5 an McpServer behind Hono and StreamableHTTPTransport answers initi
   }
 });
 
+/** Yield to the event loop until `cond` holds; fail after a bounded number of turns instead of sleeping a fixed time. */
+async function until(cond: () => boolean, what: string): Promise<void> {
+  for (let i = 0; i < 1000; i++) {
+    if (cond()) return;
+    await new Promise((r) => setTimeout(r, 0));
+  }
+  throw new Error(`timed out waiting for ${what}`);
+}
+
 Deno.test("H6 fake fetch hang mode rejects with AbortError once the signal fires", async () => {
   const fake = new FakeFetch().on("POST", "http://embeddings.test/v1/embeddings", { hang: true });
   const controller = new AbortController();
@@ -138,7 +147,7 @@ Deno.test("H6 fake fetch hang mode rejects with AbortError once the signal fires
     body: "{}",
     signal: controller.signal,
   });
-  await new Promise((r) => setTimeout(r, 5));
+  await until(() => fake.inFlight === 1, "the hanging request to be in flight");
   assertEquals(fake.inFlight, 1);
   controller.abort();
   const err = await assertRejects(() => pending);
@@ -159,7 +168,7 @@ Deno.test("H7 fake fetch hold mode keeps replies until release()", async () => {
     settled++;
     return r;
   });
-  await new Promise((r) => setTimeout(r, 5));
+  await until(() => fake.heldCount === 2, "both replies to be held");
   assertEquals(fake.heldCount, 2);
   assertEquals(settled, 0);
   fake.release();
