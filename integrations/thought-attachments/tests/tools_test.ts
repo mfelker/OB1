@@ -749,3 +749,14 @@ Deno.test("U256 list_attachments with both or neither input is refused", async (
   }
   assertEquals(h.store.callNames().filter((m) => m === "listByParent" || m === "attachmentForDerived"), []);
 });
+
+Deno.test("U257 list_attachments with the id of a thought no attachment owns says not found", async () => {
+  const h = await harness();
+  const plain = await seed(h, "a thought with no files");
+  for (const args of [{ thought_id: plain.id }, { derived_thought_id: plain.id }]) {
+    const out = await call(h, "list_attachments", args);
+    assertEquals(out.isError, false, JSON.stringify(args));
+    assertStringIncludes(out.text, "not found");
+    assertEquals(out.data.attachments, []);
+  }
+});

@@ -331,6 +331,7 @@ export function buildServer(deps: Deps, services: Services): McpServer {
       rows = listed.data;
     }
     const attachments = rows.map((row) => summary(asReported(row, deps.now())));
+    if (attachments.length === 0) return reply("not found: no attachment belongs to that thought", { attachments });
     const lines = attachments.map((a) =>
       `${a.attachment_id} (${a.short_id})  ${a.file_name}  ${a.type}  ${a.size} bytes  ${a.state}  ${a.derived_count} derived thoughts`
     );
