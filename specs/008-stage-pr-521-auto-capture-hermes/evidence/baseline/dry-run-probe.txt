@@ -1,0 +1,21 @@
+# Dry-run probe of PR #521 head b9cbd68 against a synthetic state.db, 2026-11-27
+# Node v26.13.0; env -i (PATH, HOME, HERMES_HOME, OB_CAPTURE_ROOT only); --dry-run --session s1
+# Fixture builder:
+import { DatabaseSync } from "node:sqlite";
+const db = new DatabaseSync(process.argv[2]);
+db.exec(`CREATE TABLE sessions (id TEXT PRIMARY KEY, source TEXT, created_source TEXT, profile_name TEXT, parent_session_id TEXT, title TEXT, model TEXT, cwd TEXT, git_branch TEXT, started_at REAL, ended_at REAL, end_reason TEXT, message_count INTEGER, last_activity_at REAL);
+CREATE TABLE messages (id INTEGER PRIMARY KEY AUTOINCREMENT, session_id TEXT, role TEXT, content TEXT, timestamp REAL, _compressed_summary INTEGER DEFAULT 0);`);
+db.prepare("INSERT INTO sessions (id, source, cwd, title, started_at) VALUES (?,?,?,?,?)").run("s1","cli","/x/proj","Probe",1764200000);
+const m = db.prepare("INSERT INTO messages (session_id, role, content, timestamp, _compressed_summary) VALUES (?,?,?,?,?)");
+for (const [r,c,s] of [["user","u1",0],["assistant","",0],["assistant","a1",0],["user","[Cronjob x] cron",0],["user","u2",0],["assistant","SUMMARY",1],["user","u3",0],["assistant","a3",0]]) m.run("s1",r,c,1764200001,s);
+# stdout:
+{
+  "text": "Hermes Agent Session Transcript\nProject: proj\nSession: s1\nSource: hermes:cli\nTitle: Probe\nDate: 2025-11-26T23:33:20.000Z\nTurns: 3\n---\n\n<thought_content>\n[user]\nu1\n\n[assistant]\na1\n\n[user:cron]\n[Cronjob x] cron\n\n[user]\nu2\n\n[user]\nu3\n\n[assistant]\na3\n</thought_content>",
+  "source_label": "hermes:proj",
+  "source_type": "hermes_ambient",
+  "auto_execute": true,
+  "import_key": "hermes:s1:63df2821"
+}
+# exit=0
+# log:
+2026-11-27T06:33:28.062Z session=s1 project=proj turns=3 disposition=dry_run:chars_265

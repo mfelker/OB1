@@ -1,0 +1,17 @@
+{
+  "path": "skills/auto-capture-hermes",
+  "mode": "strict",
+  "origin": "upstream",
+  "outcome": "no-tests",
+  "reason": "no tests for node code",
+  "runtimes": [
+    {
+      "kind": "node-plain",
+      "root": "skills/auto-capture-hermes",
+      "outcome": "no-tests",
+      "reason": "no tests for node code",
+      "durationMs": 0
+    }
+  ],
+  "durationMs": 0
+}
