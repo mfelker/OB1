@@ -28,7 +28,7 @@ export function createVisionClient(settings: Settings, fetch: typeof globalThis.
         }),
       });
       const body = await response.json();
-      return { data: { text: body.choices[0].message.content, model: settings.visionModel! } };
+      return { data: { text: String(body.choices[0].message.content).trim(), model: settings.visionModel! } };
     },
   };
 }

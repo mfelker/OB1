@@ -62,3 +62,9 @@ Deno.test("U176 with VISION_API_KEY unset the request has no Authorization heade
   assertEquals(ff.requests.length, 1);
   assert(!("authorization" in ff.requests[0].headers));
 });
+
+Deno.test("U177 a successful reply gives the caption text and the configured model", async () => {
+  const ff = new FakeFetch().on("POST", URL_, visionResponder("  a red door with a brass 14  "));
+  const out = await createVisionClient(settingsWith(), ff.fetch).caption(BYTES, "image/jpeg");
+  assertEquals(out, { data: { text: "a red door with a brass 14", model: VISION_MODEL } });
+});
