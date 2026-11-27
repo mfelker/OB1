@@ -110,3 +110,12 @@ Deno.test("U184 every derived row's input_hash equals the attachment's content_h
   assertEquals(stored, await contentHash(bytes));
   for (const d of derived) assertEquals(d.metadata.input_hash, stored);
 });
+
+Deno.test("U185 after a processed finish, a new claim on the attachment succeeds at once", async () => {
+  const r = await rig();
+  const att = pending(r, await textPdf(["alpha beta gamma"]));
+  const out = await r.finish(att.id, {});
+  assertEquals(out.state, "processed");
+  const claim = await r.store.claim(att.id, "remove", 60);
+  assert("data" in claim && "token" in claim.data);
+});
