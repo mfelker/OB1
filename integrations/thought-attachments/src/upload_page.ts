@@ -1,0 +1,145 @@
+/** The phone page as a module, so it reaches the compiled function (R5, T122). It must equal `upload-page.html` byte for byte, the file Cloud owners publish (a drift test checks). */
+export const UPLOAD_PAGE_HTML = String.raw`<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Add a file to your brain</title>
+<style>
+body { font-family: system-ui, sans-serif; margin: 0 auto; max-width: 32rem; padding: 1rem; line-height: 1.4; }
+input[type=file] { width: 100%; padding: 1rem 0; font-size: 1rem; }
+progress { width: 100%; }
+#status { font-weight: 600; min-height: 1.4em; }
+</style>
+</head>
+<body>
+<h1>Add a file to your brain</h1>
+<p id="expected" hidden></p>
+<p id="types">Accepted: JPEG, PNG and WebP photos, and PDF files.</p>
+<p id="limit" hidden></p>
+<input id="file" type="file" accept="image/jpeg,image/png,image/webp,application/pdf">
+<progress id="progress" hidden></progress>
+<p id="status" role="status"></p>
+<script>
+var API_ADDRESS = "";
+
+var EXPIRED = "This link has expired or was already used. Ask your assistant for a new one";
+var statusEl = document.getElementById("status");
+
+function readToken() {
+  var match = /^#t=([^&]+)/.exec(location.hash);
+  return match ? decodeURIComponent(match[1]) : "";
+}
+
+// The API address is the line above when it is filled in; otherwise the address this page was
+// served from (without its trailing /upload). It is never taken from the link.
+function apiBase() {
+  if (API_ADDRESS) return API_ADDRESS.replace(/\/+$/, "");
+  return location.origin + location.pathname.replace(/\/upload\/?$/, "");
+}
+
+// Sends a JSON request to the API. Resolves to { status, body }, or to null after showing the
+// expired message when the link is no longer valid (410).
+function call(path, body) {
+  return fetch(apiBase() + path, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(body)
+  }).then(function (res) {
+    return res.json().then(function (data) {
+      if (res.status === 410) {
+        show(EXPIRED);
+        return null;
+      }
+      return { status: res.status, body: data };
+    });
+  });
+}
+
+function show(text) {
+  statusEl.textContent = text;
+}
+
+var fileEl = document.getElementById("file");
+var progressEl = document.getElementById("progress");
+
+function upload(file, target) {
+  show("Uploading " + file.name + "…");
+  progressEl.hidden = false;
+  return fetch(target.url, { method: target.method, headers: target.headers, body: file }).then(function (res) {
+    progressEl.hidden = true;
+    if (!res.ok) return show("Failed: the upload was not accepted (" + res.status + ").");
+    return finish();
+  });
+}
+
+function outcomeText(o) {
+  if (o.state === "processed") {
+    if (o.caption) return "Captioned: " + o.caption.slice(0, 300);
+    return "Saved " + o.derived_count + (o.derived_count === 1 ? " passage" : " passages");
+  }
+  if (o.state === "scanned") return "Scanned PDF: text search won't cover it yet";
+  if (o.state === "not_captioned") return "Not captioned: " + o.reason;
+  if (o.state === "refused") return "Refused: " + o.reason;
+  return "Failed: " + o.reason;
+}
+
+var retry = 0;
+
+function finish() {
+  return call("/page/finish", { token: token }).then(function (r) {
+    if (!r) return;
+    // Busy, or no file has arrived yet: the link is still valid, so ask again soon (T005 Q5).
+    if (r.body.busy || r.body.state === "pending_upload") {
+      show("Waiting…");
+      retry = setTimeout(finish, 10000);
+      return;
+    }
+    show(outcomeText(r.body));
+  });
+}
+
+function megabytes(bytes) {
+  return String(Math.round((bytes / 1048576) * 100) / 100) + " MB";
+}
+
+function showInfo(info) {
+  var expectedEl = document.getElementById("expected");
+  if (info.expected_kind) {
+    expectedEl.textContent = "Expected: " + (info.expected_kind === "pdf" ? "a PDF" : "a photo");
+    expectedEl.hidden = false;
+  }
+  var caps = info.caps;
+  var limitEl = document.getElementById("limit");
+  limitEl.textContent = "Size limit: " + megabytes(caps.image_bytes) + " for photos, " +
+    megabytes(caps.pdf_bytes) + " and " + caps.pdf_pages + " pages for PDFs.";
+  limitEl.hidden = false;
+}
+
+function start(file) {
+  return call("/page/start", { token: token, name: file.name, type: file.type, size: file.size }).then(function (r) {
+    if (!r) return;
+    if (r.status === 400) return show("Refused: " + r.body.message);
+    return upload(file, r.body.upload);
+  }).catch(function () {
+    progressEl.hidden = true;
+    show("Failed: could not reach the server.");
+  });
+}
+
+var token = readToken();
+if (!token) {
+  statusEl.textContent = EXPIRED;
+} else {
+  call("/page/info", { token: token }).then(function (r) {
+    if (r && r.status === 200) showInfo(r.body);
+  });
+  fileEl.addEventListener("change", function () {
+    var file = fileEl.files && fileEl.files[0];
+    if (file) start(file);
+  });
+}
+</script>
+</body>
+</html>
+`;
