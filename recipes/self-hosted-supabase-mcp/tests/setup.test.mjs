@@ -268,6 +268,7 @@ test("U20 setup fails without the checkout's integrations/self-hosted-llm-mcp an
     assert.notEqual(r1.code, 0);
     assert.match(r1.out, /integrations\/self-hosted-llm-mcp/);
     const r2 = runSetup(withIt);
+    assert.equal(r2.code, 0, r2.out);
     assert.match(r2.out, /function-link: present/);
   } finally { without.cleanup(); withIt.cleanup(); }
 });
@@ -288,6 +289,7 @@ test("U22 after a fresh run git status in the checkout is empty", () => {
   try {
     assert.equal(runSetup(co).code, 0);
     const st = spawnSync("git", ["status", "--porcelain"], { cwd: co.root, encoding: "utf8" });
+    assert.equal(st.status, 0, st.stderr);
     assert.equal(st.stdout, "");
   } finally { co.cleanup(); }
 });

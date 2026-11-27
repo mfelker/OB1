@@ -90,6 +90,7 @@ test("U29 storage depends on exactly db (service_healthy) and rest", { skip }, (
   const deps = config()["storage"].depends_on;
   assert.deepEqual(Object.keys(deps).sort(), ["db", "rest"]);
   assert.equal(deps.db.condition, "service_healthy");
+  assert.equal(deps.rest.condition, "service_started");
 });
 
 test("U30 storage has ENABLE_IMAGE_TRANSFORMATION set to \"false\"", { skip }, () => {
