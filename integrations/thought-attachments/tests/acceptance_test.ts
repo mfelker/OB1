@@ -546,7 +546,7 @@ Deno.test(
   },
 );
 
-todo(
+Deno.test(
   "A57 attach_file for the same file after the first's deadline passed unused creates a new attachment, and the orphan check still lists the first",
   async () => {
     const w = world();
