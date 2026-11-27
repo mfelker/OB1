@@ -221,3 +221,10 @@ Deno.test("U356 a trailing slash on PUBLIC_BASE_URL is dropped, so the default p
     { base: "https://brain.example", page: "https://brain.example/functions/v1/thought-attachments/upload" },
   );
 });
+
+Deno.test("U395 EMBEDDING_DIMENSIONS defaults to 1536, and a set value is used as given", () => {
+  assertEquals(
+    [settingsWith().embeddingDimensions, settingsWith({ EMBEDDING_DIMENSIONS: "1024" }).embeddingDimensions],
+    [1536, 1024],
+  );
+});

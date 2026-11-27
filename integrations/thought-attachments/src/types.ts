@@ -20,6 +20,8 @@ export interface Settings {
   embeddingModel: string;
   /** EMBEDDING_BATCH_SIZE. */
   embeddingBatchSize: number;
+  /** EMBEDDING_DIMENSIONS: the vector size requested from the endpoint (`dimensions`). */
+  embeddingDimensions: number;
   /** VISION_API_BASE (unset: vision is not configured). */
   visionApiBase: string | undefined;
   /** VISION_API_KEY. */

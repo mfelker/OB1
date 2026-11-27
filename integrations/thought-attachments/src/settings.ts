@@ -31,6 +31,7 @@ export function loadSettings(getEnv: GetEnv): SettingsResult {
     embeddingApiKey: getEnv("EMBEDDING_API_KEY") ?? getEnv("OPENROUTER_API_KEY"),
     embeddingModel: text("EMBEDDING_MODEL", "openai/text-embedding-3-small"),
     embeddingBatchSize: num("EMBEDDING_BATCH_SIZE", 64),
+    embeddingDimensions: num("EMBEDDING_DIMENSIONS", 1536),
     ...vision,
     attachmentsBucket: text("ATTACHMENTS_BUCKET", "ob1-files"),
     maxImageMb: num("MAX_IMAGE_MB", 10, true),
