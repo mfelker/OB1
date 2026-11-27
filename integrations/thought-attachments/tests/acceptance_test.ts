@@ -643,7 +643,7 @@ Deno.test(
   },
 );
 
-todo(
+Deno.test(
   "A16 /page/start with a picked HEIC file is refused with the share-it-as-JPEG message and returns no upload link",
   async () => {
     const w = world();
