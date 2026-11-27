@@ -337,3 +337,15 @@ Deno.test("U278 a second /page/finish with the same token, after processed, gets
   assertEquals([first.status, second.status, (await second.json()).error], [200, 410, EXPIRED]);
   assertEquals(r.finishCalls.length, 1);
 });
+
+Deno.test("U279 a token for attachment X never finishes attachment Y", async () => {
+  const r = await rig();
+  const x = await r.seed({}, "token-x");
+  const y = await r.seed({}, "token-y");
+  const res = await r.post("/page/finish", { token: "token-x", id: y.id, attachment_id: y.id, thought_id: y.parent_thought_id });
+  assertEquals(res.status, 200);
+  assertEquals(r.finishCalls, [x.id]);
+  assertEquals(r.store.attachment(y.id), y);
+  const wrong = await r.post("/page/finish", { token: "token-z", id: y.id });
+  assertEquals([wrong.status, r.finishCalls.length, r.store.attachment(y.id)], [410, 1, y]);
+});
