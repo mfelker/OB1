@@ -107,3 +107,13 @@ Deno.test("U170 a failure in a later batch fails the whole call with no partial 
   assert(!("data" in out));
   assertStringIncludes(out.error, "500");
 });
+
+Deno.test("U171 a key value in a server's error body is redacted from the reason", async () => {
+  const body = `invalid api key ${EMBEDDING_API_KEY} for this account`;
+  const ff = new FakeFetch().on("POST", URL_, { status: 401, body });
+  const client = createEmbeddingClient(settingsWith(), ff.fetch);
+  const out = await client.embed(["alpha"]);
+  assert("error" in out);
+  assertStringIncludes(out.error, "401");
+  assert(!out.error.includes(EMBEDDING_API_KEY), out.error);
+});

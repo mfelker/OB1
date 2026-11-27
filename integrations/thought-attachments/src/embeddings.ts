@@ -2,6 +2,12 @@
 import type { EmbeddingClient, R, Settings } from "./types.ts";
 
 export function createEmbeddingClient(settings: Settings, fetch: typeof globalThis.fetch): EmbeddingClient {
+  /** FR-009: no key value ever appears in a reason. */
+  function redact(text: string): string {
+    const key = settings.embeddingApiKey;
+    return key ? text.split(key).join("[redacted]") : text;
+  }
+
   async function embedBatch(batch: string[]): Promise<R<number[][]>> {
     let response: Response;
     try {
@@ -14,10 +20,10 @@ export function createEmbeddingClient(settings: Settings, fetch: typeof globalTh
         body: JSON.stringify({ model: settings.embeddingModel, input: batch }),
       });
     } catch (e) {
-      return { error: `embedding endpoint ${settings.embeddingApiBase} is unreachable: ${(e as Error).message}` };
+      return { error: redact(`embedding endpoint ${settings.embeddingApiBase} is unreachable: ${(e as Error).message}`) };
     }
     if (!response.ok) {
-      return { error: `embedding endpoint answered HTTP ${response.status}: ${(await response.text()).slice(0, 300)}` };
+      return { error: redact(`embedding endpoint answered HTTP ${response.status}: ${(await response.text()).slice(0, 300)}`) };
     }
     let vectors: number[][] | undefined;
     try {
