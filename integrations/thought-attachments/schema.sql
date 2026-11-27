@@ -120,6 +120,25 @@ begin
   end if;
 end $$;
 
+-- Lock the attachment row and require the caller's unexpired claim (R10).
+create or replace function attachment_require_claim(p_id uuid, p_token text)
+returns thought_attachments
+language plpgsql
+as $$
+declare
+  a thought_attachments;
+begin
+  select * into a from thought_attachments where id = p_id for update;
+  if not found then
+    raise exception 'attachment not found';
+  end if;
+  if a.busy_token is distinct from p_token or a.busy_until is null or a.busy_until <= now() then
+    raise exception 'attachment claim not held';
+  end if;
+  return a;
+end;
+$$;
+
 -- Write the derived thoughts of one attachment (R9, R10): under the caller's claim, in one transaction.
 -- p_rows is an array of { content, metadata, embedding } (a "[..]" vector text). p_patch holds the state
 -- fields to set. A fingerprint conflict raises; nothing merges.
@@ -131,6 +150,7 @@ declare
   r jsonb;
   a thought_attachments;
 begin
+  perform attachment_require_claim(p_id, p_token);
   for r in select * from jsonb_array_elements(p_rows) loop
     insert into thoughts (content, content_fingerprint, embedding, metadata)
     values (

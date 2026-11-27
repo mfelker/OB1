@@ -347,3 +347,20 @@ begin
   delete from thoughts where id = p;
   if n <> 2 then raise exception 'U53: % rows inserted, want 2', n; end if;
 end $$;
+
+-- U54: a matching token whose busy_until has passed is refused, and nothing is written
+do $$
+declare p uuid := pg_temp.mk_parent(); a uuid := pg_temp.mk_att(p, 'pending_upload', interval '-1 second'); n bigint; refused boolean := false;
+begin
+  begin
+    perform attachment_write_derived(a, 'tok', pg_temp.rows_json('u54 one ' || a), '{"state":"processed"}'::jsonb);
+  exception when others then
+    refused := sqlerrm like '%claim%';
+  end;
+  select count(*) into n from thoughts where metadata->>'attachment_id' = a::text;
+  delete from thoughts where metadata->>'attachment_id' = a::text;
+  delete from thought_attachments where id = a;
+  delete from thoughts where id = p;
+  if not refused then raise exception 'U54: an expired claim was not refused'; end if;
+  if n <> 0 then raise exception 'U54: % rows written', n; end if;
+end $$;
