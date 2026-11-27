@@ -1308,7 +1308,7 @@ Deno.test(
   },
 );
 
-todo(
+Deno.test(
   "A55 after a killed finish whose claim expired, get_attachment reports failed with the run did not finish, before any further finish",
   async () => {
     const w = world();
