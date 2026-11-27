@@ -128,3 +128,18 @@ Deno.test("U139 an attachment with tier restricted gives metadata with sensitivi
   const row = await passageRow(rowFor("a.pdf", { sensitivity_tier: "restricted" }), passage("text", [1, 1]), EMBEDDING, NOW);
   assertEquals(row.metadata.sensitivity_tier, "restricted");
 });
+
+Deno.test("U140 the metadata contains no URL, token or absolute path, even from a file name that held a path", async () => {
+  const dirty = rowFor("/Users/mfelker/private/dishwasher-manual.pdf", {
+    page_token_hash: "page-token-hash-value",
+    storage_path: "attachments/" + ID + "/https://signed.example.test/object?token=abc",
+  });
+  const row = await passageRow(dirty, passage("text", [1, 2]), EMBEDDING, NOW);
+  const json = JSON.stringify(row.metadata);
+  for (const forbidden of ["/Users", "mfelker", "private", "http", "token", "claim-token", "attachments/"]) {
+    assert(!json.includes(forbidden), `metadata holds "${forbidden}": ${json}`);
+  }
+  assertEquals(row.metadata.source_label, "dishwasher-manual.pdf");
+  assertEquals(row.metadata.topics, ["attachment", "dishwasher-manual.pdf"]);
+  assertStringIncludes(row.content, "From dishwasher-manual.pdf,");
+});
