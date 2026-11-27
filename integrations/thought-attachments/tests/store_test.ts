@@ -192,3 +192,14 @@ Deno.test("U316 findByHash returns null when the only attachment with that hash 
   });
   assertEquals(await store.findByHash(PARENT, HASH), { data: null });
 });
+
+Deno.test("U317 findByHash returns null when the hash belongs only to an attachment of another parent", async () => {
+  const { store, ff } = setup();
+  const other = attachmentRow({ parent_thought_id: "99999999-bbbb-cccc-dddd-eeeeeeeeeeee", state: "processed", content_hash: HASH });
+  ff.on("GET", `${REST}/thought_attachments*`, (req) => {
+    // a database that honours the parent filter it is sent: no filter returns the row
+    const filter = new URL(req.url).searchParams.get("parent_thought_id");
+    return { body: filter === null || filter === `eq.${other.parent_thought_id}` ? [other] : [] };
+  });
+  assertEquals(await store.findByHash(PARENT, HASH), { data: null });
+});
