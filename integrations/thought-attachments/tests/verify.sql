@@ -14,7 +14,20 @@ begin
   end if;
 end $$;
 
+select set_config('ob1.verify_real_storage', exists (select 1 from pg_namespace where nspname = 'storage')::text, false) as real_storage \gset
+
 \i schema.sql
+
+-- U50: where no storage schema exists, schema.sql ran without error above and made no bucket or storage schema
+do $$
+begin
+  if current_setting('ob1.verify_real_storage') = 'true' then
+    return; -- a real Supabase storage schema: this path is not testable here
+  end if;
+  if exists (select 1 from pg_namespace where nspname = 'storage') then
+    raise exception 'U50: a storage schema exists after the no-storage run';
+  end if;
+end $$;
 
 -- U34: every column of thought_attachments, with type, default and not-null rule; no foreign key on parent_thought_id
 do $$
