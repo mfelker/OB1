@@ -40,6 +40,8 @@ function newId(deps: Deps): string {
   return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
 }
 
+const PARTIAL_DETAILS = "Only some of file_name, declared_type and declared_size were given: give all three, or none for a phone upload.";
+
 const NOT_YET = () => ({ content: [{ type: "text" as const, text: "" }] });
 
 /** A tool result: the text for the AI, plus the structured fields. */
@@ -91,6 +93,8 @@ export function buildServer(deps: Deps, _services: Services): McpServer {
     annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: true },
   }, async ({ thought_id, note, file_name, declared_type, declared_size, sensitivity_tier }) => {
     if ((thought_id === undefined) === (note === undefined)) return fail(ONE_PARENT);
+    const given = [file_name, declared_type, declared_size].filter((v) => v !== undefined).length;
+    if (given > 0 && given < 3) return fail(PARTIAL_DETAILS);
     if (file_name !== undefined && declared_type !== undefined && declared_size !== undefined) {
       const refusal = checkDeclared({ name: baseName(file_name), type: declared_type, size: declared_size }, deps.settings);
       if (refusal) return fail(refusal.message);

@@ -417,3 +417,19 @@ Deno.test("U329 the same file pending on the parent but past its upload deadline
   assertEquals(h.store.attachments.length, 2);
   assert(out.data.attachment_id !== expired.id);
 });
+
+Deno.test("U330 attach_file with only some of file_name, declared_type and declared_size is refused, and nothing is created", async () => {
+  const h = await harness();
+  const parent = await seed(h, "dishwasher");
+  const partial = [
+    { file_name: "manual.pdf" },
+    { file_name: "manual.pdf", declared_type: "application/pdf" },
+    { declared_size: 1000 },
+  ];
+  for (const details of partial) {
+    const out = await call(h, "attach_file", { thought_id: parent.id, ...details });
+    assertEquals(out.isError, true, JSON.stringify(details));
+    assertStringIncludes(out.text, "give all three, or none for a phone upload");
+  }
+  assertNothingCreated(h);
+});
