@@ -683,31 +683,31 @@ Every merge keeps the suite green: stubs throw, and acceptance tests stay `todo`
 
 Source: `tdd/verification.md` (verdict **FAIL** at `ff4bfc1`). **The feature is not done until T086–T096 are cleared and a fresh `/speckit-tdd-verify` reports PASS or PASS_WITH_GAPS.** T081 depends on this phase. Each task is a test change in `W` made red-first where it adds a behavior. `F` = `W/integrations/thought-attachments`. Suite: from `F`, `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read tests/`; SQL: `verify.sql` on a fresh bootstrapped database.
 
-- [ ] T086 Finding 1 (HIGH, surviving mutant in U280/A62): add a test where a `not_captioned` or `failed` attachment has a live finish claim. A `/page/finish` with its page token answers busy, and the token is accepted afterwards. Prove it red by dropping `outcome.busy === undefined &&` from `src/page_routes.ts:103`, then restore. Done when that mutant fails the new test and the suite is green.
-- [ ] T087 Finding 2 (HIGH): in `tests/acceptance_test.ts:426,759,954,1081,1133,1366` (A7, A21, A27, A33, A36, A63), replace `typeof … === "string"` link checks with exact assertions: the fake store's signed URL rewritten to `PUBLIC_BASE_URL`, and for A63 the signed upload token. Done when mutant M21 (`src/links.ts:9` returning `url`) and a mutant signing the wrong path each fail an A test.
-- [ ] T088 Finding 3 (HIGH): in `tests/acceptance_test.ts:754,819-822,1103,1132` (A21, A25, A34, A36), assert the specific reason, as A22 does: vision not configured, vision endpoint unavailable, the embedding failure, and an unreadable PDF. Done when the suite is green and each assertion fails under a mutant that swaps the reason text.
-- [ ] T089 Finding 4 (HIGH): `tests/derived_test.ts:90-91` (U135) asserts `importer_version` equals `F/metadata.json`'s `version`. Done when changing `IMPORTER_VERSION` in `src/derived.ts` fails U135.
-- [ ] T090 Finding 5 (HIGH): `tests/tools_test.ts:931` (U243) drops the `?? row.id` fallback and asserts the resolved row for each tool, for example with distinct file names, or with the argument `remove_attachment` previews. Done when resolving the short id to the wrong row fails U243 for `remove_attachment`.
-- [ ] T091 Finding 6 (HIGH): `tests/acceptance_test.ts:491-499` (A11) compares each tool's whole `annotations` object, with no conditional spread. Done when marking `find_thought` `destructiveHint: true` in `src/tools.ts` fails A11.
-- [ ] T092 Finding 7 (HIGH): `tests/tools_test.ts:554-561` (U249) asserts the SDK's actual refusal (`isError` and text naming `expected_kind`), with no `try/catch`. Done when the suite is green and the test has no `catch`.
-- [ ] T093 Finding 8 (HIGH): `tests/verify.sql:24-26` (U50) no longer returns silently. Either raise a notice naming the skip, or prove the no-storage path in a scratch schema. Done with `verify.sql` passing twice on a fresh database.
-- [ ] T094 Finding 9 (HIGH): `tests/verify.sql:376` (U55) asserts a literal hex digest for a fixed content string, not the schema's own expression. Done when changing the fingerprint expression in `schema.sql:187` fails U55.
-- [ ] T095 Finding 10 (HIGH): `tests/tools_test.ts:382-383,396,488,614,691` (U238, U239, U244, U251, U353) assert literal expected strings and objects, not `curlLine`, `pageLink`, `publicUrl` or `noteMetadata` outputs. Done when the suite is green and `grep -nE 'curlLine\(|pageLink\(|publicUrl\(|noteMetadata\(' tests/tools_test.ts` returns no assertion line.
-- [ ] T096 Finding 11 (HIGH): `tests/page_routes_test.ts:309` (U339) re-reads the store's row and compares its hash with `sha256Hex("late-token")`. Drop the seeded-clone check at `:162` (U267). Done with the suite green.
-- [ ] T097 Findings 12 and 13 (MED): add exact-boundary tests.
+- [X] T086 Finding 1 (HIGH, surviving mutant in U280/A62): add a test where a `not_captioned` or `failed` attachment has a live finish claim. A `/page/finish` with its page token answers busy, and the token is accepted afterwards. Prove it red by dropping `outcome.busy === undefined &&` from `src/page_routes.ts:103`, then restore. Done when that mutant fails the new test and the suite is green.
+- [X] T087 Finding 2 (HIGH): in `tests/acceptance_test.ts:426,759,954,1081,1133,1366` (A7, A21, A27, A33, A36, A63), replace `typeof … === "string"` link checks with exact assertions: the fake store's signed URL rewritten to `PUBLIC_BASE_URL`, and for A63 the signed upload token. Done when mutant M21 (`src/links.ts:9` returning `url`) and a mutant signing the wrong path each fail an A test.
+- [X] T088 Finding 3 (HIGH): in `tests/acceptance_test.ts:754,819-822,1103,1132` (A21, A25, A34, A36), assert the specific reason, as A22 does: vision not configured, vision endpoint unavailable, the embedding failure, and an unreadable PDF. Done when the suite is green and each assertion fails under a mutant that swaps the reason text.
+- [X] T089 Finding 4 (HIGH): `tests/derived_test.ts:90-91` (U135) asserts `importer_version` equals `F/metadata.json`'s `version`. Done when changing `IMPORTER_VERSION` in `src/derived.ts` fails U135.
+- [X] T090 Finding 5 (HIGH): `tests/tools_test.ts:931` (U243) drops the `?? row.id` fallback and asserts the resolved row for each tool, for example with distinct file names, or with the argument `remove_attachment` previews. Done when resolving the short id to the wrong row fails U243 for `remove_attachment`.
+- [X] T091 Finding 6 (HIGH): `tests/acceptance_test.ts:491-499` (A11) compares each tool's whole `annotations` object, with no conditional spread. Done when marking `find_thought` `destructiveHint: true` in `src/tools.ts` fails A11.
+- [X] T092 Finding 7 (HIGH): `tests/tools_test.ts:554-561` (U249) asserts the SDK's actual refusal (`isError` and text naming `expected_kind`), with no `try/catch`. Done when the suite is green and the test has no `catch`.
+- [X] T093 Finding 8 (HIGH): `tests/verify.sql:24-26` (U50) no longer returns silently. Either raise a notice naming the skip, or prove the no-storage path in a scratch schema. Done with `verify.sql` passing twice on a fresh database.
+- [X] T094 Finding 9 (HIGH): `tests/verify.sql:376` (U55) asserts a literal hex digest for a fixed content string, not the schema's own expression. Done when changing the fingerprint expression in `schema.sql:187` fails U55.
+- [X] T095 Finding 10 (HIGH): `tests/tools_test.ts:382-383,396,488,614,691` (U238, U239, U244, U251, U353) assert literal expected strings and objects, not `curlLine`, `pageLink`, `publicUrl` or `noteMetadata` outputs. Done when the suite is green and `grep -nE 'curlLine\(|pageLink\(|publicUrl\(|noteMetadata\(' tests/tools_test.ts` returns no assertion line.
+- [X] T096 Finding 11 (HIGH): `tests/page_routes_test.ts:309` (U339) re-reads the store's row and compares its hash with `sha256Hex("late-token")`. Drop the seeded-clone check at `:162` (U267). Done with the suite green.
+- [X] T097 Findings 12 and 13 (MED): add exact-boundary tests.
   - `wrongLength`'s own message (`src/finish.ts:155`), with U210's `"8"` replaced by the full message.
   - A page token at exactly `upload_deadline` (`src/page_routes.ts:49`), after first deciding whether the page and `src/finish.ts:108` should agree at that instant.
   - An orphan at exactly the deadline (`schema.sql:386`).
   - The expired wording at exactly the deadline (`src/finish.ts:94`).
 
   Done when mutants M03, M11, M15 and S6 from the report each fail a test.
-- [ ] T098 Findings 15–17 (MED):
+- [X] T098 Findings 15–17 (MED):
   - Positive controls in `tests/imports_test.ts` (U303, U304).
   - A literal passage count in `tests/finish_test.ts:93-94` (U182).
   - U47 (`tests/verify.sql:240-247`) proves the add against a recorded pre-run state.
 
   Done when an emptied `sourceFiles()` fails U303 and U304, and a passage-split mutant fails U182.
-- [ ] T099 Findings 18–25 (MED):
+- [X] T099 Findings 18–25 (MED):
   - Replace `settle()`'s fixed yields with condition waits, and the H6/H7 sleeps.
   - Fixed random bytes in `tests/tools_test.ts:55`.
   - Split U88, U298, U83 and U52.
@@ -728,4 +728,4 @@ Source: `tdd/verification.md` (verdict **FAIL** at `ff4bfc1`). **The feature is 
 
 ## Phase 10: Live-run findings
 
-- [ ] T101 [US2] Live Cloud finding (T076, privacy, FR-009): a vision-endpoint error reason stores the provider's raw response body, which for OpenRouter includes the account's `user_id`, in `thought_attachments.state_reason` / `last_rebuild_error` and returns it in tool results. Tests first in `F/tests/vision_test.ts` (and `F/tests/embeddings_test.ts` for the same pattern), then `F/src/vision.ts` / `F/src/embeddings.ts`: an HTTP error reason keeps the status and the provider's `error.message` only (bounded length), never other body fields. Done when a fake 400 body with `"user_id":"user_x"` yields a reason with the status and message but without `user_x`, and the existing key-redaction tests still pass.
+- [X] T101 [US2] Live Cloud finding (T076, privacy, FR-009): a vision-endpoint error reason stores the provider's raw response body, which for OpenRouter includes the account's `user_id`, in `thought_attachments.state_reason` / `last_rebuild_error` and returns it in tool results. Tests first in `F/tests/vision_test.ts` (and `F/tests/embeddings_test.ts` for the same pattern), then `F/src/vision.ts` / `F/src/embeddings.ts`: an HTTP error reason keeps the status and the provider's `error.message` only (bounded length), never other body fields. Done when a fake 400 body with `"user_id":"user_x"` yields a reason with the status and message but without `user_x`, and the existing key-redaction tests still pass.
