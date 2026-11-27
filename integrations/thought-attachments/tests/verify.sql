@@ -232,3 +232,21 @@ begin
   if not has_col then raise exception 'U47: thoughts.content_fingerprint missing'; end if;
   if not has_idx then raise exception 'U47: idx_thoughts_fingerprint missing'; end if;
 end $$;
+
+-- U48: where the column and index exist, the file adds no second column or index
+-- (a second run of schema.sql leaves the index count on thoughts unchanged)
+do $$
+begin
+  create temp table if not exists u48_counts (idx bigint, cols bigint);
+  insert into u48_counts select (select count(*) from pg_indexes where tablename = 'thoughts'),
+    (select count(*) from information_schema.columns where table_name = 'thoughts' and table_schema = 'public');
+end $$;
+\i schema.sql
+do $$
+declare before_idx bigint; before_cols bigint;
+begin
+  select idx, cols into before_idx, before_cols from u48_counts;
+  if (select count(*) from pg_indexes where tablename = 'thoughts') <> before_idx then raise exception 'U48: index count on thoughts changed'; end if;
+  if (select count(*) from information_schema.columns where table_name = 'thoughts' and table_schema = 'public') <> before_cols then raise exception 'U48: column count on thoughts changed'; end if;
+  if (select count(*) from pg_indexes where tablename = 'thoughts' and indexdef ~ 'content_fingerprint') <> 1 then raise exception 'U48: more than one fingerprint index'; end if;
+end $$;
