@@ -209,3 +209,8 @@ Deno.test("U152 checkActual refuses a PDF of MAX_PDF_PAGES + 1 pages, naming MAX
   assertStringIncludes(refusal.message, "51");
   assertStringIncludes(refusal.message.toLowerCase(), "background processing");
 });
+
+Deno.test("U151 checkActual accepts a PDF of exactly MAX_PDF_PAGES pages", () => {
+  assertEquals(checkActual(rowFor("application/pdf", 5000, 50), pdfLike(5000), info(5000), settingsWith()), null);
+  assertEquals(checkActual(rowFor("application/pdf", 5000, 7), pdfLike(5000), info(5000), settingsWith({ MAX_PDF_PAGES: "7" })), null);
+});
