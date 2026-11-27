@@ -301,7 +301,7 @@ Task: "Compose test: default service set is exactly the always-on set (T020) in 
   - Remove the `if (v.length >= 16)` filter.
   - Assert straight-line that no value of `SUPABASE_KEYS` or `MCP_ACCESS_KEY` appears in the output.
   - Done when neither test contains an `if` that decides what to assert, mutant M1 (`setup.sh:57` drop `>/dev/null`) still fails U19, and the suite is green.
-- [ ] T066 Finding 6: owner decision on the 17 `TEST_AFTER` behaviors (U10, U13, U19, U22, U25–U29, U41–U46, U51, A5; first-run passes, each mutant-checked; list in `tdd/verification.md`).
+- [X] T066 Finding 6: owner decision on the 17 `TEST_AFTER` behaviors (U10, U13, U19, U22, U25–U29, U41–U46, U51, A5; first-run passes, each mutant-checked; list in `tdd/verification.md`). **Decided 2026-11-26: accepted as a recorded exception in `plan.md` Complexity Tracking.**
   - Either record an accepted exception in `plan.md` Complexity Tracking, with the reason and the mutant evidence (spec 004 T057 and spec 005 precedent), or name which behaviors must be re-driven red-first.
   - Gate 1 cannot pass without this decision.
 
