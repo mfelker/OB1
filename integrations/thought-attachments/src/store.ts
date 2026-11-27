@@ -91,7 +91,12 @@ export function createSupabaseStore(
       return { data: ((data ?? []) as AttachmentRow[])[0] ?? null };
     },
     setDeclaration: notYet,
-    listByParent: notYet,
+    async listByParent(parentId) {
+      const { data, error } = await db.from("thought_attachments").select("*")
+        .eq("parent_thought_id", parentId).order("created_at", { ascending: true });
+      if (error) return { error: scrub(error.message) };
+      return { data: (data ?? []) as AttachmentRow[] };
+    },
     attachmentForDerived: notYet,
     orphans: notYet,
     async attachmentForPageToken(hash) {

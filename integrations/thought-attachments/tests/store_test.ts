@@ -302,3 +302,16 @@ Deno.test("U89 signDownload passes the path and the seconds to Storage and retur
   assertEquals(await store.signDownload(BUCKET_PATH, 300), { data: `${STORAGE}${signed}` });
   assertEquals(ff.requests[0].body, { expiresIn: 300 });
 });
+
+Deno.test("U90 listByParent returns that parent's attachments only", async () => {
+  const { store, ff } = setup();
+  const a = attachmentRow();
+  const b = attachmentRow({ id: "22222222-2222-3333-4444-555555555555", created_at: "2026-01-02T00:00:00+00:00" });
+  const elsewhere = attachmentRow({ id: "33333333-2222-3333-4444-555555555555", parent_thought_id: "99999999-bbbb-cccc-dddd-eeeeeeeeeeee" });
+  ff.on("GET", `${REST}/thought_attachments*`, (req) => {
+    const filter = new URL(req.url).searchParams.get("parent_thought_id");
+    return { body: [a, b, elsewhere].filter((r) => filter === null || filter === `eq.${r.parent_thought_id}`) };
+  });
+  assertEquals(await store.listByParent(PARENT), { data: [a, b] });
+  assertEquals(new URL(ff.requests[0].url).searchParams.get("order"), "created_at.asc");
+});
