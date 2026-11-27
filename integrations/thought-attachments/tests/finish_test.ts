@@ -217,3 +217,13 @@ Deno.test("U191 a 301-character caption is returned as its first 300 characters,
   assertEquals(out.caption, caption.slice(0, 300));
   assertStringIncludes(r.store.derivedOf(att.id)[0].content, caption);
 });
+
+Deno.test("U190 a 300-character caption is returned whole in the outcome", async () => {
+  const r = await rig();
+  const caption = "abcdefghij".repeat(30);
+  r.ff.on("POST", VISION_URL, visionResponder(caption));
+  const att = pending(r, jpegBytes(2000));
+  const out = await r.finish(att.id, {});
+  assertEquals(caption.length, 300);
+  assertEquals(out.caption, caption);
+});
