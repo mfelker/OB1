@@ -1,5 +1,6 @@
 /** The entry and the import rules (T032): spec 004 R10 (full specifiers), R15 (pdf-lib in tests only). */
 import { assertArrayIncludes, assertEquals } from "jsr:@std/assert@1.0.19";
+import { UPLOAD_PAGE_HTML } from "../src/upload_page.ts";
 
 const ROOT = new URL("../", import.meta.url);
 
@@ -89,4 +90,11 @@ Deno.test("U400 no file in src/ reads the filesystem at run time", async () => {
     for (const read of filesystemReadsIn(await Deno.readTextFile(new URL(file, ROOT)))) offenders.push(`${file}: ${read}`);
   }
   assertEquals(offenders, []);
+});
+
+Deno.test("U402 src/upload_page.ts holds upload-page.html byte for byte (the file Cloud owners publish)", async () => {
+  const file = await Deno.readFile(new URL("upload-page.html", ROOT));
+  const module = new TextEncoder().encode(UPLOAD_PAGE_HTML);
+  const firstDifference = module.findIndex((b, i) => b !== file[i]);
+  assertEquals({ length: module.length, firstDifference }, { length: file.length, firstDifference: -1 });
 });
