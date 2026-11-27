@@ -130,18 +130,18 @@ Streams code against these. The signatures are the only shared contract. Behavio
 
 **Purpose**: the branch, the worktree, the empty folder and the local SQL runtime.
 
-- [ ] T001 In `M`, create `W`:
+- [X] T001 In `M`, create `W`:
   1. `git fetch upstream`. Note `upstream/main`'s SHA (`238df6c` at planning).
   2. `git worktree add .worktrees/contrib-thought-attachments -b contrib/mfelker/thought-attachments upstream/main`. Do **not** use the `speckit.worktree.create` hook (plan Complexity Tracking).
   3. If upstream moved past `238df6c`, check that `W/server/index.ts` (VP-001–VP-003), `W/server/deno.json`, `W/docs/01-getting-started.md` step 2.6 (VP-004, R16), `W/docs/ingestion-metadata-contract.md` and `W/integrations/_template/` are unchanged. Also search `W` for any new attachment or file feature (plan Lane). If anything changed, stop and re-plan.
-- [ ] T002 In `M`, confirm `specs/007-thought-attachments/tdd/test-list.md` and the baseline `tdd/cycle-log.md` exist (written by the `after_tasks` hook). Create `specs/007-thought-attachments/tdd/cycle-log.d/.gitkeep`, then commit on fork `main` (`[fork] Spec 007: test list`).
-- [ ] T003 Scaffold `F` from `W/integrations/_template/`:
+- [X] T002 In `M`, confirm `specs/007-thought-attachments/tdd/test-list.md` and the baseline `tdd/cycle-log.md` exist (written by the `after_tasks` hook). Create `specs/007-thought-attachments/tdd/cycle-log.d/.gitkeep`, then commit on fork `main` (`[fork] Spec 007: test list`).
+- [X] T003 Scaffold `F` from `W/integrations/_template/`:
   - `F/metadata.json` with real values: name, description, `category: "integrations"`, author `mfelker`, `requires.open_brain: true`, `requires.services` (Supabase Storage, an embedding endpoint, a vision endpoint), tags, difficulty, a placeholder `estimated_time` until T080, dates. Validate it against `W/.github/metadata.schema.json`.
   - `F/README.md`: section headings only (stream D fills it).
-  - `F/deno.json`: the five `server/deno.json` imports at the same versions, plus `unpdf` 2.2.3, `pdf-lib` 1.17.1 and **exact** versions of `@std/encoding` and `@std/assert` (record the chosen versions in T003's line in `M`); `"lock": false`; a `test` task with fork-ci's flags (plan Technical Context).
+  - `F/deno.json`: the five `server/deno.json` imports at the same versions, plus `unpdf` 2.2.3, `pdf-lib` 1.17.1 and **exact** versions of `@std/encoding` and `@std/assert` (chosen: `@std/encoding` 1.0.11 and `@std/assert` 1.0.19; scaffold commit `415ccf9`); `"lock": false`; a `test` task with fork-ci's flags (plan Technical Context).
 
   Commit in `W`: `[integrations] Scaffold thought-attachments`.
-- [ ] T004 Local SQL runtime, per spec 006's T069 recipe (`M/specs/006-self-hosted-supabase/tdd/cycle-log.md`, "T069 Finding 9"):
+- [X] T004 Local SQL runtime, per spec 006's T069 recipe (`M/specs/006-self-hosted-supabase/tdd/cycle-log.md`, "T069 Finding 9"):
   - container `ob1-007-pgtest` from `pgvector/pgvector:pg17`, no bind mount
   - a `psql` wrapper outside the repo that copies the caller's directory into the container on every call
   - `.fork/ci/sql/bootstrap.sql` applied once
