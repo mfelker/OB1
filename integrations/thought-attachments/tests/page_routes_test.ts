@@ -89,3 +89,18 @@ Deno.test("U262 /page/start with a valid token and no declaration records the ba
   assertEquals(r.store.signedUploads[0].path, stored.storage_path);
   assertStringIncludes(stored.storage_path!, `attachments/${row.id}/receipt.jpg`);
 });
+
+const DECLARED = {
+  file_name: "receipt.jpg",
+  declared_type: "image/jpeg" as const,
+  declared_size: 2048,
+  storage_path: "attachments/a0000001-0000-4000-8000-000000000000/receipt.jpg",
+};
+
+Deno.test("U263 /page/start whose pick matches the attach call's declaration confirms it and returns a link", async () => {
+  const r = await rig();
+  const row = await r.seed(DECLARED);
+  const res = await r.post("/page/start", { token: TOKEN, ...PICK });
+  assertEquals([res.status, r.store.attachment(row.id)!.storage_path, r.store.signedUploads.length], [200, DECLARED.storage_path, 1]);
+  assertEquals(r.store.signedUploads[0].path, DECLARED.storage_path);
+});
