@@ -166,7 +166,10 @@ test("U13 after a failed key generation the next run completes the secrets", () 
     runSetup(co, { STUB_GENKEYS_FAIL: "1" });
     runSetup(co);
     const env = readEnv(envPath(co));
-    for (const k of SUPABASE_KEYS) assert.notEqual(env.get(k), examplePlaceholder(k), `${k} generated`);
+    for (const k of SUPABASE_KEYS) {
+      assert.ok(env.get(k), `${k} present`);
+      assert.notEqual(env.get(k), examplePlaceholder(k), `${k} generated`);
+    }
     assert.match(env.get("MCP_ACCESS_KEY") ?? "", /^[0-9a-f]{64}$/);
   } finally { co.cleanup(); }
 });
@@ -296,6 +299,9 @@ test("U53 an empty .env left by an interrupted Compose check is completed by the
     assert.equal(r.code, 0, r.out);
     assert.match(r.out, /secrets: completed/);
     const env = readEnv(envPath(co));
-    for (const k of SUPABASE_KEYS) assert.notEqual(env.get(k), examplePlaceholder(k), `${k} generated`);
+    for (const k of SUPABASE_KEYS) {
+      assert.ok(env.get(k), `${k} present`);
+      assert.notEqual(env.get(k), examplePlaceholder(k), `${k} generated`);
+    }
   } finally { co.cleanup(); }
 });
