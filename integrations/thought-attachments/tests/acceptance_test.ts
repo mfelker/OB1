@@ -1446,7 +1446,7 @@ Deno.test(
   },
 );
 
-todo("A50 the same, with a second processed attachment pointing to that note: the note stays", async () => {
+Deno.test("A50 the same, with a second processed attachment pointing to that note: the note stays", async () => {
   const w = world();
   const note = "The spare furnace filters are on this shelf";
   const { id } = await attachPhone(w, { note, expected_kind: "photo" });
