@@ -1,5 +1,5 @@
 /** embeddings (T024): research R3, contracts/settings.md, FR-007, FR-009, FR-011. */
-import { assert, assertEquals } from "jsr:@std/assert@1.0.19";
+import { assert, assertEquals, assertStringIncludes } from "jsr:@std/assert@1.0.19";
 import { createEmbeddingClient } from "../src/embeddings.ts";
 import { loadSettings } from "../src/settings.ts";
 import type { Settings } from "../src/types.ts";
@@ -69,4 +69,13 @@ Deno.test("U166 the vectors come back in input order across batches", async () =
   const input = texts(5);
   const out = await client.embed(input);
   assertEquals(out, { data: input.map((t) => vectorFor(t, 8)) });
+});
+
+Deno.test("U167 an unreachable endpoint fails the call with a reason naming it unreachable", async () => {
+  const ff = new FakeFetch().on("POST", URL_, { networkError: "connection refused" });
+  const client = createEmbeddingClient(settingsWith(), ff.fetch);
+  const out = await client.embed(["alpha"]);
+  assert("error" in out);
+  assertStringIncludes(out.error, "unreachable");
+  assertStringIncludes(out.error, EMBEDDING_API_BASE);
 });
