@@ -402,3 +402,10 @@ Deno.test("UQ2 setDeclaration updates the declared fields of that attachment onl
   assertEquals(ff.requests[0].body, decl);
   assertEquals(new URL(ff.requests[0].url).searchParams.get("id"), `eq.${ATT_ID}`);
 });
+
+Deno.test("UQ3 release passes the claim token", async () => {
+  const { store, ff } = setup();
+  ff.on("POST", `${REST}/rpc/attachment_release`, { status: 204 });
+  assertEquals(await store.release(ATT_ID, "claim-tok"), { data: null });
+  assertEquals(ff.requests[0].body, { p_id: ATT_ID, p_token: "claim-tok" });
+});

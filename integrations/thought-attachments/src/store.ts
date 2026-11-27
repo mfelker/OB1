@@ -131,7 +131,10 @@ export function createSupabaseStore(
     claim(id, op, seconds) {
       return rpc<{ token: string } | { busy: BusyOp }>("attachment_claim", { p_id: id, p_op: op, p_seconds: seconds });
     },
-    release: notYet,
+    async release(id, token) {
+      const r = await rpc<unknown>("attachment_release", { p_id: id, p_token: token });
+      return "error" in r ? r : { data: null };
+    },
     writeDerived: notYet,
     setState: notYet,
     removalPreview(id) {
