@@ -62,7 +62,7 @@ export function buildServer(deps: Deps, _services: Services): McpServer {
     },
     annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: true },
   }, async ({ thought_id, note }) => {
-    if (thought_id !== undefined && note !== undefined) return fail(ONE_PARENT);
+    if ((thought_id === undefined) === (note === undefined)) return fail(ONE_PARENT);
     if (thought_id !== undefined) {
       const exists = await deps.store.thoughtExists(thought_id);
       if ("error" in exists) return fail(exists.error);

@@ -257,3 +257,11 @@ Deno.test("U230 attach_file with both thought_id and note is refused, and nothin
   assertNothingCreated(h);
   assertEquals(h.store.thoughts.length, 1);
 });
+
+Deno.test("U231 attach_file with neither thought_id nor note is refused, and nothing is created", async () => {
+  const h = await harness();
+  const out = await call(h, "attach_file", { ...PDF });
+  assertEquals(out.isError, true);
+  assertStringIncludes(out.text, "exactly one");
+  assertNothingCreated(h);
+});
