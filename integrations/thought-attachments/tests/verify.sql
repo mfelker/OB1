@@ -176,3 +176,15 @@ begin
   end;
   delete from thought_attachments where id = a;
 end $$;
+
+-- U43: a refused row with the same parent and content_hash doesn't block a new row
+do $$
+declare p uuid := gen_random_uuid(); a uuid; b uuid;
+begin
+  insert into thought_attachments (parent_thought_id, content_hash, state, upload_deadline)
+    values (p, 'sha256:u43', 'refused', now()) returning id into a;
+  insert into thought_attachments (parent_thought_id, content_hash, state, upload_deadline)
+    values (p, 'sha256:u43', 'processed', now()) returning id into b;
+  delete from thought_attachments where id = a;
+  delete from thought_attachments where id = b;
+end $$;
