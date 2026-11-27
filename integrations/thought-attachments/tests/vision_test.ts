@@ -41,3 +41,11 @@ Deno.test("U173 caption posts to <VISION_API_BASE>/chat/completions with the mod
   const image = body.messages.flatMap((m) => m.content).find((p) => p.type === "image_url");
   assertEquals(image?.image_url?.url, `data:image/png;base64,${encodeBase64(BYTES)}`);
 });
+
+Deno.test("U174 the prompt asks for the visible objects, places, labels and text", async () => {
+  const ff = new FakeFetch().on("POST", URL_, visionResponder("a red door"));
+  await createVisionClient(settingsWith(), ff.fetch).caption(BYTES, "image/jpeg");
+  const body = ff.requests[0].body as ChatBody;
+  const prompt = body.messages.flatMap((m) => m.content).find((p) => p.type === "text")?.text ?? "";
+  for (const word of ["objects", "places", "labels", "text"]) assertStringIncludes(prompt.toLowerCase(), word);
+});

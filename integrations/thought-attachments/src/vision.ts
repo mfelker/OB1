@@ -2,6 +2,10 @@
 import { encodeBase64 } from "jsr:@std/encoding@1.0.11/base64";
 import type { AcceptedType, R, Settings, VisionClient } from "./types.ts";
 
+const PROMPT =
+  "Describe this image in plain language so it can be found by a later search: the visible objects, places, " +
+  "labels and any text that appears in it. State only what is visible.";
+
 export function createVisionClient(settings: Settings, fetch: typeof globalThis.fetch): VisionClient {
   return {
     configured: Boolean(settings.visionApiBase && settings.visionModel),
@@ -14,7 +18,7 @@ export function createVisionClient(settings: Settings, fetch: typeof globalThis.
           messages: [{
             role: "user",
             content: [
-              { type: "text", text: "Describe this image." },
+              { type: "text", text: PROMPT },
               { type: "image_url", image_url: { url: `data:${type};base64,${encodeBase64(bytes)}` } },
             ],
           }],
