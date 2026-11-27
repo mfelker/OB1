@@ -126,3 +126,13 @@ Deno.test("U265 a picked HEIC file is refused with the share-as-JPEG message, wi
   assertStringIncludes(body.message, "JPEG");
   assertEquals([r.store.signedUploads.length, r.store.attachment(row.id)!.declared_type], [0, null]);
 });
+
+Deno.test("U266 a picked type outside the four is refused with attach_file's message, with no link", async () => {
+  const r = await rig();
+  const row = await r.seed();
+  const res = await r.post("/page/start", { token: TOKEN, name: "notes.txt", type: "text/plain", size: 100 });
+  const body = await res.json();
+  assertEquals([res.status, body.code], [400, "unsupported_type"]);
+  assertStringIncludes(body.message, "Accepted types are PDF, JPEG, PNG and WebP");
+  assertEquals([r.store.signedUploads.length, r.store.attachment(row.id)!.declared_type], [0, null]);
+});
