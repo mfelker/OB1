@@ -1,0 +1,16 @@
+[
+ {"id":"A9","name":"A9 a successful capture sends one request with the key and the dry-run payload","label":"wrong x-brain-key header","edits":[["\"x-brain-key\": mcpKey","\"x-brain-key\": \"wrong\""]]},
+ {"id":"A10","name":"A10 a temporary failure is queued and resent before the next capture","label":"retry queue not processed","edits":[["  await processRetryQueue(ingestUrl, mcpKey);\n",""]]},
+ {"id":"A11","name":"A11 a permanent failure is not queued and is logged as permanent","label":"permanent failures queued too","edits":[["if (!permanent) saveToRetryQueue(","saveToRetryQueue("]]},
+ {"id":"U25","name":"U25 an address with a trailing slash still posts to the ingest path","label":"trailing slash kept","edits":[["supabaseUrl.replace(/\\/$/, \"\")","supabaseUrl"]]},
+ {"id":"U26","name":"U26 a 2xx answer with a non-JSON body is logged captured:unknown","label":"non-JSON body throws","edits":[["const data = await response.json().catch(() => ({}));","const data = await response.json();"]]},
+ {"id":"U27","name":"U27 a 429 answer queues the payload","label":"429 not retryable","edits":[["return status >= 500 || status === 429;","return status >= 500;"]]},
+ {"id":"U28","name":"U28 a 500 answer queues the payload","label":"500 not retryable (> instead of >=)","edits":[["return status >= 500 || status === 429;","return status > 500 || status === 429;"]]},
+ {"id":"U29","name":"U29 a 400 answer is not queued and is logged as permanent","label":"4xx retryable","edits":[["return status >= 500 || status === 429;","return status >= 400 || status === 429;"]]},
+ {"id":"U30","name":"U30 a refused connection exits 0 and queues the payload","label":"failures never queued","edits":[["if (!permanent) saveToRetryQueue(","if (false) saveToRetryQueue("]]},
+ {"id":"U31","name":"U31 a queued entry failing a fourth time stays queued with attempt_count 4","label":"dead at MAX-1 attempts","edits":[["entry.attempt_count >= RETRY_MAX_ATTEMPTS","entry.attempt_count >= RETRY_MAX_ATTEMPTS - 1"]]},
+ {"id":"U32","name":"U32 a queued entry failing a fifth time moves to dead/","label":"dead only above MAX attempts","edits":[["entry.attempt_count >= RETRY_MAX_ATTEMPTS","entry.attempt_count > RETRY_MAX_ATTEMPTS"]]},
+ {"id":"U33","name":"U33 a queued entry answered with 401 moves to dead/","label":"permanent flag ignored for queued entries","edits":[["if (error?.permanent || entry.attempt_count","if (entry.attempt_count"]]},
+ {"id":"U34","name":"U34 one run resends the three oldest queued entries and keeps the newest","label":"batch size + 1","edits":[[".slice(0, RETRY_BATCH_SIZE)",".slice(0, RETRY_BATCH_SIZE + 1)"]]},
+ {"id":"U40","name":"U40 two quick on_session_end fires are captured once","label":"token supersession check disabled","edits":[["if (state.token !== token) {","if (false) {"]]}
+]

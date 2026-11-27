@@ -1,0 +1,156 @@
+[
+  {
+    "id": "A9",
+    "name": "A9 a successful capture sends one request with the key and the dry-run payload",
+    "mutant": "wrong x-brain-key header",
+    "redExit": 1,
+    "redLine": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:",
+    "redSummary": "[tdd] single node-test feature=specs/008-stage-pr-521-auto-capture-hermes folder=skills/auto-capture-hermes: tests=1 pass=0 fail=1 → fail",
+    "restoredClean": true,
+    "greenExit": 0,
+    "greenSummary": "[tdd] single node-test feature=specs/008-stage-pr-521-auto-capture-hermes folder=skills/auto-capture-hermes: tests=1 pass=1 fail=0 → pass"
+  },
+  {
+    "id": "A10",
+    "name": "A10 a temporary failure is queued and resent before the next capture",
+    "mutant": "retry queue not processed",
+    "redExit": 1,
+    "redLine": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:",
+    "redSummary": "[tdd] single node-test feature=specs/008-stage-pr-521-auto-capture-hermes folder=skills/auto-capture-hermes: tests=1 pass=0 fail=1 → fail",
+    "restoredClean": true,
+    "greenExit": 0,
+    "greenSummary": "[tdd] single node-test feature=specs/008-stage-pr-521-auto-capture-hermes folder=skills/auto-capture-hermes: tests=1 pass=1 fail=0 → pass"
+  },
+  {
+    "id": "A11",
+    "name": "A11 a permanent failure is not queued and is logged as permanent",
+    "mutant": "permanent failures queued too",
+    "redExit": 1,
+    "redLine": "AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:",
+    "redSummary": "[tdd] single node-test feature=specs/008-stage-pr-521-auto-capture-hermes folder=skills/auto-capture-hermes: tests=1 pass=0 fail=1 → fail",
+    "restoredClean": true,
+    "greenExit": 0,
+    "greenSummary": "[tdd] single node-test feature=specs/008-stage-pr-521-auto-capture-hermes folder=skills/auto-capture-hermes: tests=1 pass=1 fail=0 → pass"
+  },
+  {
+    "id": "U25",
+    "name": "U25 an address with a trailing slash still posts to the ingest path",
+    "mutant": "trailing slash kept",
+    "redExit": 1,
+    "redLine": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:",
+    "redSummary": "[tdd] single node-test feature=specs/008-stage-pr-521-auto-capture-hermes folder=skills/auto-capture-hermes: tests=1 pass=0 fail=1 → fail",
+    "restoredClean": true,
+    "greenExit": 0,
+    "greenSummary": "[tdd] single node-test feature=specs/008-stage-pr-521-auto-capture-hermes folder=skills/auto-capture-hermes: tests=1 pass=1 fail=0 → pass"
+  },
+  {
+    "id": "U26",
+    "name": "U26 a 2xx answer with a non-JSON body is logged captured:unknown",
+    "mutant": "non-JSON body throws",
+    "redExit": 1,
+    "redLine": "AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:",
+    "redSummary": "[tdd] single node-test feature=specs/008-stage-pr-521-auto-capture-hermes folder=skills/auto-capture-hermes: tests=1 pass=0 fail=1 → fail",
+    "restoredClean": true,
+    "greenExit": 0,
+    "greenSummary": "[tdd] single node-test feature=specs/008-stage-pr-521-auto-capture-hermes folder=skills/auto-capture-hermes: tests=1 pass=1 fail=0 → pass"
+  },
+  {
+    "id": "U27",
+    "name": "U27 a 429 answer queues the payload",
+    "mutant": "429 not retryable",
+    "redExit": 1,
+    "redLine": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:",
+    "redSummary": "[tdd] single node-test feature=specs/008-stage-pr-521-auto-capture-hermes folder=skills/auto-capture-hermes: tests=1 pass=0 fail=1 → fail",
+    "restoredClean": true,
+    "greenExit": 0,
+    "greenSummary": "[tdd] single node-test feature=specs/008-stage-pr-521-auto-capture-hermes folder=skills/auto-capture-hermes: tests=1 pass=1 fail=0 → pass"
+  },
+  {
+    "id": "U28",
+    "name": "U28 a 500 answer queues the payload",
+    "mutant": "500 not retryable (> instead of >=)",
+    "redExit": 1,
+    "redLine": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:",
+    "redSummary": "[tdd] single node-test feature=specs/008-stage-pr-521-auto-capture-hermes folder=skills/auto-capture-hermes: tests=1 pass=0 fail=1 → fail",
+    "restoredClean": true,
+    "greenExit": 0,
+    "greenSummary": "[tdd] single node-test feature=specs/008-stage-pr-521-auto-capture-hermes folder=skills/auto-capture-hermes: tests=1 pass=1 fail=0 → pass"
+  },
+  {
+    "id": "U29",
+    "name": "U29 a 400 answer is not queued and is logged as permanent",
+    "mutant": "4xx retryable",
+    "redExit": 1,
+    "redLine": "AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:",
+    "redSummary": "[tdd] single node-test feature=specs/008-stage-pr-521-auto-capture-hermes folder=skills/auto-capture-hermes: tests=1 pass=0 fail=1 → fail",
+    "restoredClean": true,
+    "greenExit": 0,
+    "greenSummary": "[tdd] single node-test feature=specs/008-stage-pr-521-auto-capture-hermes folder=skills/auto-capture-hermes: tests=1 pass=1 fail=0 → pass"
+  },
+  {
+    "id": "U30",
+    "name": "U30 a refused connection exits 0 and queues the payload",
+    "mutant": "failures never queued",
+    "redExit": 1,
+    "redLine": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:",
+    "redSummary": "[tdd] single node-test feature=specs/008-stage-pr-521-auto-capture-hermes folder=skills/auto-capture-hermes: tests=1 pass=0 fail=1 → fail",
+    "restoredClean": true,
+    "greenExit": 0,
+    "greenSummary": "[tdd] single node-test feature=specs/008-stage-pr-521-auto-capture-hermes folder=skills/auto-capture-hermes: tests=1 pass=1 fail=0 → pass"
+  },
+  {
+    "id": "U31",
+    "name": "U31 a queued entry failing a fourth time stays queued with attempt_count 4",
+    "mutant": "dead at MAX-1 attempts",
+    "redExit": 1,
+    "redLine": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:",
+    "redSummary": "[tdd] single node-test feature=specs/008-stage-pr-521-auto-capture-hermes folder=skills/auto-capture-hermes: tests=1 pass=0 fail=1 → fail",
+    "restoredClean": true,
+    "greenExit": 0,
+    "greenSummary": "[tdd] single node-test feature=specs/008-stage-pr-521-auto-capture-hermes folder=skills/auto-capture-hermes: tests=1 pass=1 fail=0 → pass"
+  },
+  {
+    "id": "U32",
+    "name": "U32 a queued entry failing a fifth time moves to dead/",
+    "mutant": "dead only above MAX attempts",
+    "redExit": 1,
+    "redLine": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:",
+    "redSummary": "[tdd] single node-test feature=specs/008-stage-pr-521-auto-capture-hermes folder=skills/auto-capture-hermes: tests=1 pass=0 fail=1 → fail",
+    "restoredClean": true,
+    "greenExit": 0,
+    "greenSummary": "[tdd] single node-test feature=specs/008-stage-pr-521-auto-capture-hermes folder=skills/auto-capture-hermes: tests=1 pass=1 fail=0 → pass"
+  },
+  {
+    "id": "U33",
+    "name": "U33 a queued entry answered with 401 moves to dead/",
+    "mutant": "permanent flag ignored for queued entries",
+    "redExit": 1,
+    "redLine": "AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:",
+    "redSummary": "[tdd] single node-test feature=specs/008-stage-pr-521-auto-capture-hermes folder=skills/auto-capture-hermes: tests=1 pass=0 fail=1 → fail",
+    "restoredClean": true,
+    "greenExit": 0,
+    "greenSummary": "[tdd] single node-test feature=specs/008-stage-pr-521-auto-capture-hermes folder=skills/auto-capture-hermes: tests=1 pass=1 fail=0 → pass"
+  },
+  {
+    "id": "U34",
+    "name": "U34 one run resends the three oldest queued entries and keeps the newest",
+    "mutant": "batch size + 1",
+    "redExit": 1,
+    "redLine": "AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:",
+    "redSummary": "[tdd] single node-test feature=specs/008-stage-pr-521-auto-capture-hermes folder=skills/auto-capture-hermes: tests=1 pass=0 fail=1 → fail",
+    "restoredClean": true,
+    "greenExit": 0,
+    "greenSummary": "[tdd] single node-test feature=specs/008-stage-pr-521-auto-capture-hermes folder=skills/auto-capture-hermes: tests=1 pass=1 fail=0 → pass"
+  },
+  {
+    "id": "U40",
+    "name": "U40 two quick on_session_end fires are captured once",
+    "mutant": "token supersession check disabled",
+    "redExit": 1,
+    "redLine": "Error: timed out after 5000 ms waiting for one superseded worker and one capture",
+    "redSummary": "[tdd] single node-test feature=specs/008-stage-pr-521-auto-capture-hermes folder=skills/auto-capture-hermes: tests=1 pass=0 fail=1 → fail",
+    "restoredClean": true,
+    "greenExit": 0,
+    "greenSummary": "[tdd] single node-test feature=specs/008-stage-pr-521-auto-capture-hermes folder=skills/auto-capture-hermes: tests=1 pass=1 fail=0 → pass"
+  }
+]

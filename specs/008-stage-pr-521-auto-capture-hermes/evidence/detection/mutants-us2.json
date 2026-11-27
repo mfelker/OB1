@@ -1,0 +1,417 @@
+[
+ {
+  "id": "A1",
+  "name": "A1 dry-run prints one payload with the turns, label and key, and sends nothing",
+  "label": "source_label constant \"hermes\"",
+  "edits": [
+   [
+    "source_label: `hermes:${projectName}`",
+    "source_label: \"hermes\""
+   ]
+  ]
+ },
+ {
+  "id": "A2",
+  "name": "A2 tool-call-only steps and compaction summaries are absent from the capture",
+  "label": "drop the _compressed_summary filter",
+  "edits": [
+   [
+    "AND _compressed_summary = 0",
+    ""
+   ]
+  ]
+ },
+ {
+  "id": "A3",
+  "name": "A3 a cron message is kept as user:cron and not counted as a user turn",
+  "label": "cron phase label removed",
+  "edits": [
+   [
+    "phase: isCron ? \"cron\" : \"\"",
+    "phase: \"\""
+   ]
+  ]
+ },
+ {
+  "id": "A4",
+  "name": "A4 a session below the user-turn threshold is not captured",
+  "label": "threshold lowered to MIN-1",
+  "edits": [
+   [
+    "if (parsed.userTurns < MIN_USER_TURNS) {",
+    "if (parsed.userTurns < MIN_USER_TURNS - 1) {"
+   ]
+  ]
+ },
+ {
+  "id": "A5",
+  "name": "A5 a subagent session is not captured",
+  "label": "isSubagentSession ignores parent_session_id",
+  "edits": [
+   [
+    "return Boolean(session.parent_session_id) || ",
+    "return false || "
+   ]
+  ]
+ },
+ {
+  "id": "A6",
+  "name": "A6 an over-limit transcript fits the limit and keeps the first and last turns",
+  "label": "truncation call removed",
+  "edits": [
+   [
+    "body = truncateMiddle(body, budget);",
+    ""
+   ]
+  ]
+ },
+ {
+  "id": "A7",
+  "name": "A7 two runs on the same session give the same import key",
+  "label": "import key gains a time component",
+  "edits": [
+   [
+    ".digest(\"hex\").slice(0, 8);",
+    ".digest(\"hex\").slice(0, 8) + Date.now();"
+   ]
+  ]
+ },
+ {
+  "id": "A8",
+  "name": "A8 with no address and no key nothing is sent and the run exits 0",
+  "label": "missing-config guard disabled",
+  "edits": [
+   [
+    "if (!supabaseUrl || !mcpKey) {",
+    "if (false) {"
+   ]
+  ]
+ },
+ {
+  "id": "U1",
+  "name": "U1 an assistant row with empty content contributes nothing",
+  "label": "both empty-content filters removed (parse + format)",
+  "edits": [
+   [
+    "if (!content) continue;",
+    ""
+   ],
+   [
+    ".filter((turn) => turn.content && turn.content.trim())",
+    ".filter(() => true)"
+   ]
+  ]
+ },
+ {
+  "id": "U2",
+  "name": "U2 a compaction summary row contributes nothing",
+  "label": "drop the _compressed_summary filter",
+  "edits": [
+   [
+    "AND _compressed_summary = 0",
+    ""
+   ]
+  ]
+ },
+ {
+  "id": "U3",
+  "name": "U3 tool and session_meta rows contribute nothing",
+  "label": "role filter removed",
+  "edits": [
+   [
+    "AND role IN ('user', 'assistant')",
+    ""
+   ]
+  ]
+ },
+ {
+  "id": "U4",
+  "name": "U4 turns follow insertion order even when timestamps run backwards",
+  "label": "order by timestamp",
+  "edits": [
+   [
+    "ORDER BY id ASC",
+    "ORDER BY timestamp ASC"
+   ]
+  ]
+ },
+ {
+  "id": "U5",
+  "name": "U5 a JSON array of typed parts appears as its text parts joined",
+  "label": "parts mapped to their type",
+  "edits": [
+   [
+    ".map((part) => part.text)",
+    ".map((part) => part.type)"
+   ]
+  ]
+ },
+ {
+  "id": "U6",
+  "name": "U6 a user message mentioning [Cronjob mid-text is a real user turn",
+  "label": "cron match unanchored",
+  "edits": [
+   [
+    "/^\\[Cronjob\\b/",
+    "/\\[Cronjob\\b/"
+   ]
+  ]
+ },
+ {
+  "id": "U7",
+  "name": "U7 exactly three real user turns is captured",
+  "label": "< becomes <=",
+  "edits": [
+   [
+    "if (parsed.userTurns < MIN_USER_TURNS) {",
+    "if (parsed.userTurns <= MIN_USER_TURNS) {"
+   ]
+  ]
+ },
+ {
+  "id": "U8",
+  "name": "U8 two real user turns plus a cron turn is skipped as too short",
+  "label": "cron counts as a user turn",
+  "edits": [
+   [
+    "countsAsUser: !isCron",
+    "countsAsUser: true"
+   ]
+  ]
+ },
+ {
+  "id": "U9",
+  "name": "U9 OB_CAPTURE_MIN_USER_TURNS=1 captures a one-turn session",
+  "label": "env setting ignored",
+  "edits": [
+   [
+    "Number(process.env.OB_CAPTURE_MIN_USER_TURNS || 3)",
+    "Number(3)"
+   ]
+  ]
+ },
+ {
+  "id": "U10",
+  "name": "U10 a session with a parent is skipped and nothing is sent",
+  "label": "isSubagentSession ignores parent_session_id",
+  "edits": [
+   [
+    "return Boolean(session.parent_session_id) || ",
+    "return false || "
+   ]
+  ]
+ },
+ {
+  "id": "U11",
+  "name": "U11 a title starting with Subagent: is skipped and nothing is sent",
+  "label": "title check never matches",
+  "edits": [
+   [
+    "/^Subagent:/.test(String(session.title",
+    "/^NEVER-MATCHES:/.test(String(session.title"
+   ]
+  ]
+ },
+ {
+  "id": "U12",
+  "name": "U12 a title containing Subagent: later in the text is captured",
+  "label": "title check unanchored",
+  "edits": [
+   [
+    "/^Subagent:/.test(String(session.title",
+    "/Subagent:/.test(String(session.title"
+   ]
+  ]
+ },
+ {
+  "id": "U13",
+  "name": "U13 --latest picks the newest top-level session over a newer subagent",
+  "label": "--latest drops the parent filter",
+  "edits": [
+   [
+    "WHERE parent_session_id IS NULL AND ",
+    "WHERE "
+   ]
+  ]
+ },
+ {
+  "id": "U14",
+  "name": "U14 the header names project, session, source and title",
+  "label": "source line constant",
+  "edits": [
+   [
+    "`Source: hermes:${parsed.source || \"unknown\"}`",
+    "`Source: hermes:unknown`"
+   ]
+  ]
+ },
+ {
+  "id": "U15",
+  "name": "U15 a literal thought_content tag inside a turn is escaped",
+  "label": "opening-tag escape removed",
+  "edits": [
+   [
+    ".replace(/<thought_content>/gi, \"<thought_content_escaped>\")",
+    ""
+   ]
+  ]
+ },
+ {
+  "id": "U16",
+  "name": "U16 a transcript within the limit is sent whole without a marker",
+  "label": "always truncate",
+  "edits": [
+   [
+    "text.length <= budget) return text;",
+    "text.length <= 0) return text;"
+   ]
+  ]
+ },
+ {
+  "id": "U17",
+  "name": "U17 an over-limit transcript has the marker between the kept start and end",
+  "label": "truncation keeps only the head",
+  "edits": [
+   [
+    "return text.slice(0, headLen) + marker + text.slice(text.length - tailLen);",
+    "return text.slice(0, keep) + marker;"
+   ]
+  ]
+ },
+ {
+  "id": "U18",
+  "name": "U18 import_key has the form hermes:<session id>:<8 hex>",
+  "label": "9 hex chars",
+  "edits": [
+   [
+    ".digest(\"hex\").slice(0, 8);",
+    ".digest(\"hex\").slice(0, 9);"
+   ]
+  ]
+ },
+ {
+  "id": "U19",
+  "name": "U19 changing one message changes the import key",
+  "label": "key hashes the session id only",
+  "edits": [
+   [
+    ".update(formattedText)",
+    ".update(String(sessionId))"
+   ]
+  ]
+ },
+ {
+  "id": "U20",
+  "name": "U20 a dry-run writes no session state",
+  "label": "dry-run guard in writeSessionState removed",
+  "edits": [
+   [
+    "function writeSessionState(sessionId, state) {\n  if (DRY_RUN) return;",
+    "function writeSessionState(sessionId, state) {"
+   ]
+  ]
+ },
+ {
+  "id": "U21",
+  "name": "U21 an address without a key sends nothing",
+  "label": "guard needs both missing",
+  "edits": [
+   [
+    "if (!supabaseUrl || !mcpKey) {",
+    "if (!supabaseUrl && !mcpKey) {"
+   ]
+  ]
+ },
+ {
+  "id": "U22",
+  "name": "U22 a key without an address sends nothing",
+  "label": "guard needs both missing",
+  "edits": [
+   [
+    "if (!supabaseUrl || !mcpKey) {",
+    "if (!supabaseUrl && !mcpKey) {"
+   ]
+  ]
+ },
+ {
+  "id": "U23",
+  "name": "U23 address and key from .env.local are used",
+  "label": ".env.local ignored",
+  "edits": [
+   [
+    "const env = loadEnv();",
+    "const env = {};"
+   ]
+  ]
+ },
+ {
+  "id": "U24",
+  "name": "U24 an unknown session id exits 0 and is logged",
+  "label": "no-session branch logs nothing",
+  "edits": [
+   [
+    "appendLog(sessionFlag || \"latest\", \"unknown\", 0, \"skipped:no_session\");",
+    ""
+   ]
+  ]
+ },
+ {
+  "id": "U35",
+  "name": "U35 a hook payload without session_id is skipped with the no-op reply",
+  "label": "no-session-id branch emits no reply",
+  "edits": [
+   [
+    "appendLog(\"unknown\", projectNameFromCwd(input.cwd), 0, `skipped:no_session_id:${event}`);\n    emitHookNoop();",
+    "appendLog(\"unknown\", projectNameFromCwd(input.cwd), 0, `skipped:no_session_id:${event}`);"
+   ]
+  ]
+ },
+ {
+  "id": "U36",
+  "name": "U36 a hook event other than session end is skipped and sends nothing",
+  "label": "event filter disabled",
+  "edits": [
+   [
+    "if (event !== \"on_session_end\" && event !== \"on_session_finalize\") {",
+    "if (false) {"
+   ]
+  ]
+ },
+ {
+  "id": "U37",
+  "name": "U37 unparseable hook stdin exits 0 with the no-op reply",
+  "label": "parse error rethrown",
+  "edits": [
+   [
+    "appendLog(\"unknown\", \"unknown\", 0, `error:stdin_parse:${messageOf(error)}`);\n    return {};",
+    "throw error;"
+   ]
+  ]
+ },
+ {
+  "id": "U38",
+  "name": "U38 on_session_finalize captures once and records it in session state",
+  "label": "captured_at not recorded",
+  "edits": [
+   [
+    "captured_at: new Date().toISOString(),",
+    ""
+   ]
+  ]
+ },
+ {
+  "id": "U39",
+  "name": "U39 a hook fire after a capture is skipped and sends nothing more",
+  "label": "both already-captured checks disabled (hook entry + captureIfCurrent)",
+  "edits": [
+   [
+    "  const state = readSessionState(sessionId);\n  if (state?.captured_at) {",
+    "  const state = readSessionState(sessionId);\n  if (false) {"
+   ],
+   [
+    "  if (!state) return;\n  if (state.captured_at) {",
+    "  if (!state) return;\n  if (false) {"
+   ]
+  ]
+ }
+]
