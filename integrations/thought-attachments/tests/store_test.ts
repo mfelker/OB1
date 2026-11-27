@@ -134,3 +134,11 @@ Deno.test("U75 getAttachment with an 8-character short id returns the row when e
   assertEquals(url.includes("id=gte.11111111-0000-0000-0000-000000000000"), true);
   assertEquals(url.includes("id=lte.11111111-ffff-ffff-ffff-ffffffffffff"), true);
 });
+
+Deno.test("U76 getAttachment with a short id that matches two rows returns ambiguous", async () => {
+  const { store, ff } = setup();
+  ff.on("GET", `${REST}/thought_attachments*`, {
+    body: [attachmentRow(), attachmentRow({ id: "11111111-9999-3333-4444-555555555555" })],
+  });
+  assertEquals(await store.getAttachment("11111111"), { data: "ambiguous" });
+});
