@@ -331,3 +331,18 @@ Deno.test("U197 a failed rebuild keeps the old set and processed, and the outcom
   assertEquals(r.store.derivedOf(att.id).map((t) => t.id), oldIds);
   assertEquals(row.caption_model, "test/vision-model");
 });
+
+Deno.test("U326 a successful rebuild after a failed one clears last_rebuild_error in the row and reports none in the outcome", async () => {
+  const r = await rig();
+  const att = pending(r, jpegBytes(2000));
+  await r.finish(att.id, {});
+  r.ff.on("POST", VISION_URL, () => ({ status: 503, body: "vision is down" }));
+  const failed = await r.finish(att.id, { rebuild: true });
+  assert(failed.last_rebuild_error);
+  r.ff.on("POST", VISION_URL, visionResponder("a blue door"));
+  const out = await r.finish(att.id, { rebuild: true });
+  assertEquals(out.state, "processed");
+  assertEquals(out.last_rebuild_error, undefined);
+  assertEquals(r.store.attachment(att.id)?.last_rebuild_error, null);
+  assertEquals(out.caption, "a blue door");
+});
