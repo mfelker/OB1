@@ -4,7 +4,7 @@ import { createEmbeddingClient } from "../src/embeddings.ts";
 import { loadSettings } from "../src/settings.ts";
 import type { Settings } from "../src/types.ts";
 import { EMBEDDING_API_BASE, EMBEDDING_API_KEY, EMBEDDING_MODEL, envGetter } from "./helpers/env.ts";
-import { embeddingResponder, FakeFetch } from "./helpers/fake_fetch.ts";
+import { embeddingResponder, FakeFetch, vectorFor } from "./helpers/fake_fetch.ts";
 
 function settingsWith(overrides: Record<string, string | undefined> = {}): Settings {
   const result = loadSettings(envGetter(overrides));
@@ -44,4 +44,12 @@ Deno.test("U163 65 texts at the default batch size go in two requests, 64 then 1
   const out = await client.embed(texts(65));
   assert("data" in out);
   assertEquals(ff.requests.map((r) => (r.body as { input: string[] }).input.length), [64, 1]);
+});
+
+Deno.test("U164 with batch size 1 each text goes in its own request", async () => {
+  const ff = new FakeFetch().on("POST", URL_, embeddingResponder(8));
+  const client = createEmbeddingClient(settingsWith({ EMBEDDING_BATCH_SIZE: "1" }), ff.fetch);
+  const out = await client.embed(texts(3));
+  assert("data" in out);
+  assertEquals(ff.requests.map((r) => (r.body as { input: string[] }).input), [["text 0"], ["text 1"], ["text 2"]]);
 });
