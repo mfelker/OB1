@@ -66,3 +66,23 @@ begin
       check (busy_op in ('finish', 'rebuild', 'remove'));
   end if;
 end $$;
+
+-- updated_at is maintained by a trigger.
+create or replace function thought_attachments_touch()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
+
+do $$
+begin
+  if not exists (select 1 from pg_trigger where tgname = 'thought_attachments_updated_at') then
+    create trigger thought_attachments_updated_at
+      before update on thought_attachments
+      for each row execute function thought_attachments_touch();
+  end if;
+end $$;

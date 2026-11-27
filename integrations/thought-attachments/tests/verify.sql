@@ -137,3 +137,14 @@ begin
   exception when check_violation then null;
   end;
 end $$;
+
+-- U40: an update advances updated_at through the trigger
+do $$
+declare v_id uuid; before_ts timestamptz; after_ts timestamptz;
+begin
+  insert into thought_attachments (parent_thought_id, state, upload_deadline, updated_at)
+    values (gen_random_uuid(), 'pending_upload', now(), now() - interval '1 day') returning id, updated_at into v_id, before_ts;
+  update thought_attachments set state_reason = 'x' where id = v_id returning updated_at into after_ts;
+  delete from thought_attachments where id = v_id;
+  if after_ts <= before_ts then raise exception 'U40: updated_at did not advance (% then %)', before_ts, after_ts; end if;
+end $$;
