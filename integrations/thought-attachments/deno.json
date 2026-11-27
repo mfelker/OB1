@@ -13,5 +13,12 @@
   "lock": false,
   "tasks": {
     "test": "deno test --node-modules-dir=none --no-prompt --allow-env --allow-read tests/"
+  },
+  "lint": {
+    "rules": {
+      "exclude": [
+        "no-import-prefix"
+      ]
+    }
   }
 }

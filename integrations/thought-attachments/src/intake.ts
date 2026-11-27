@@ -4,6 +4,8 @@ import type { AcceptedType, AttachmentRow, DeclaredFile, Refusal, Settings } fro
 const ACCEPTED: AcceptedType[] = ["application/pdf", "image/jpeg", "image/png", "image/webp"];
 
 export function baseName(name: string): string {
+  // Matching control characters is the point: they are stripped from file names (spec edge case, FR-009).
+  // deno-lint-ignore no-control-regex
   return (name.split(/[\\/]/).pop() ?? "").replace(/[\u0000-\u001f\u007f]/g, "");
 }
 
