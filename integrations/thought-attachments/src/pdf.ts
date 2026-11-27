@@ -1,5 +1,5 @@
 // Stub: throws until its stream replaces it (tasks.md "Seams").
-import { getDocumentProxy } from "npm:unpdf@2.2.2";
+import { extractText, getDocumentProxy } from "npm:unpdf@2.2.2";
 import type { PdfDoc, R, Settings } from "./types.ts";
 
 export async function openPdf(bytes: Uint8Array): Promise<R<PdfDoc>> {
@@ -7,9 +7,7 @@ export async function openPdf(bytes: Uint8Array): Promise<R<PdfDoc>> {
   return {
     data: {
       pageCount: pdf.numPages,
-      pageTexts: () => {
-        throw new Error("not implemented");
-      },
+      pageTexts: async () => (await extractText(pdf, { mergePages: false })).text,
     },
   };
 }

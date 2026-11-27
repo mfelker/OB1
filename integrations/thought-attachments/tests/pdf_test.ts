@@ -8,3 +8,11 @@ Deno.test("U122 openPdf of a 3-page fixture reports pageCount 3", async () => {
   assert("data" in result);
   assertEquals(result.data.pageCount, 3);
 });
+
+Deno.test("U123 pageTexts returns each page's text in page order", async () => {
+  const result = await openPdf(await textPdf(["alpha first page", "bravo second page", "charlie third page"]));
+  assert("data" in result);
+  const texts = await result.data.pageTexts();
+  assertEquals(texts.length, 3);
+  assertEquals(texts.map((t) => t.trim()), ["alpha first page", "bravo second page", "charlie third page"]);
+});
