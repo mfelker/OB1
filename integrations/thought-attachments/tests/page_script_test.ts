@@ -223,3 +223,12 @@ Deno.test("U343 when /page/finish answers busy or no file yet, the page shows Wa
     assertEquals([finishCalls(f), page.text("status")], [2, "Captioned: A receipt on a desk"]);
   }
 });
+
+Deno.test("U344 9 seconds after a busy answer, the page has not called /page/finish again", async () => {
+  const f = retrying(BUSY, PROCESSED);
+  const page = await loadPage({ href: `${PAGE_AT}#t=tok`, fetch: f.fetch });
+  await page.pick(PICK);
+  await settle();
+  await page.advance(9_000);
+  assertEquals([finishCalls(f), page.text("status")], [1, "Waiting…"]);
+});
