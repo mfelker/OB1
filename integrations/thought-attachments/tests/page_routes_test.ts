@@ -147,3 +147,17 @@ Deno.test("U268 a picked size over its cap is refused, naming the cap and the si
   assertStringIncludes(body.message, "1048576");
   assertEquals([r.store.signedUploads.length, r.store.attachment(row.id)!.declared_size], [0, null]);
 });
+
+Deno.test("U267 a pick whose kind differs from expected_kind is refused, a PDF for a photo and the reverse", async () => {
+  const r = await rig();
+  const photo = await r.seed({ expected_kind: "photo" });
+  const pdf = await r.seed({ expected_kind: "pdf" }, "token-for-pdf");
+  const pdfForPhoto = await r.post("/page/start", { token: TOKEN, name: "a.pdf", type: "application/pdf", size: 10 });
+  const photoForPdf = await r.post("/page/start", { token: "token-for-pdf", ...PICK });
+  const okPhoto = await r.post("/page/start", { token: TOKEN, ...PICK });
+  assertEquals(
+    [pdfForPhoto.status, (await pdfForPhoto.json()).code, photoForPdf.status, (await photoForPdf.json()).code, okPhoto.status],
+    [400, "wrong_type", 400, "wrong_type", 200],
+  );
+  assertEquals([r.store.attachment(pdf.id)!.declared_type, r.store.signedUploads.length, photo.expected_kind], [null, 1, "photo"]);
+});

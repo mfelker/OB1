@@ -27,6 +27,10 @@ export function pageRoutes(deps: Deps, _services: Services): Hono {
     const name = baseName(body.name);
     const refusal = checkDeclared({ name, type: body.type, size: body.size }, deps.settings);
     if (refusal) return c.json(refusal, 400);
+    if (row.expected_kind !== null && (body.type === "application/pdf") !== (row.expected_kind === "pdf")) {
+      const wanted = row.expected_kind === "pdf" ? "a PDF" : "a photo (JPEG, PNG or WebP)";
+      return c.json({ code: "wrong_type", message: "The assistant expected " + wanted + ", but the picked file is " + body.type + "." }, 400);
+    }
     const path = `attachments/${row.id}/${name}`;
     await deps.store.setDeclaration(row.id, {
       file_name: name,
