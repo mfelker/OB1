@@ -139,6 +139,31 @@ begin
 end;
 $$;
 
+-- Apply a state patch: only the keys present in p_patch change (a present null clears the field).
+create or replace function attachment_apply_patch(p_id uuid, p_patch jsonb)
+returns thought_attachments
+language plpgsql
+as $$
+declare
+  a thought_attachments;
+begin
+  update thought_attachments t set
+    state = case when p_patch ? 'state' then p_patch->>'state' else t.state end,
+    state_reason = case when p_patch ? 'state_reason' then p_patch->>'state_reason' else t.state_reason end,
+    last_rebuild_error = case when p_patch ? 'last_rebuild_error' then p_patch->>'last_rebuild_error' else t.last_rebuild_error end,
+    caption_model = case when p_patch ? 'caption_model' then p_patch->>'caption_model' else t.caption_model end,
+    derived_count = case when p_patch ? 'derived_count' then (p_patch->>'derived_count')::int else t.derived_count end,
+    actual_type = case when p_patch ? 'actual_type' then p_patch->>'actual_type' else t.actual_type end,
+    actual_size = case when p_patch ? 'actual_size' then (p_patch->>'actual_size')::bigint else t.actual_size end,
+    page_count = case when p_patch ? 'page_count' then (p_patch->>'page_count')::int else t.page_count end,
+    content_hash = case when p_patch ? 'content_hash' then p_patch->>'content_hash' else t.content_hash end,
+    processed_at = case when p_patch ? 'processed_at' then (p_patch->>'processed_at')::timestamptz else t.processed_at end
+  where t.id = p_id
+  returning * into a;
+  return a;
+end;
+$$;
+
 -- Write the derived thoughts of one attachment (R9, R10): under the caller's claim, in one transaction.
 -- p_rows is an array of { content, metadata, embedding } (a "[..]" vector text). p_patch holds the state
 -- fields to set. A fingerprint conflict raises; nothing merges.
@@ -148,9 +173,9 @@ language plpgsql
 as $$
 declare
   r jsonb;
-  a thought_attachments;
 begin
   perform attachment_require_claim(p_id, p_token);
+  delete from thoughts where metadata->>'attachment_id' = p_id::text;
   for r in select * from jsonb_array_elements(p_rows) loop
     insert into thoughts (content, content_fingerprint, embedding, metadata)
     values (
@@ -159,8 +184,7 @@ begin
       (r->>'embedding')::vector,
       coalesce(r->'metadata', '{}'::jsonb) || jsonb_build_object('attachment_id', p_id));
   end loop;
-  update thought_attachments set derived_count = jsonb_array_length(p_rows) where id = p_id returning * into a;
-  return a;
+  return attachment_apply_patch(p_id, p_patch || jsonb_build_object('derived_count', jsonb_array_length(p_rows)));
 end;
 $$;
 grant execute on function attachment_write_derived(uuid, text, jsonb, jsonb) to service_role;

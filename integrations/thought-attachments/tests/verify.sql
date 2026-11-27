@@ -398,3 +398,24 @@ begin
   if not raised then raise exception 'U56: a fingerprint conflict did not raise'; end if;
   if c <> txt or m <> '{"owner":true}'::jsonb then raise exception 'U56: owner thought changed: % %', c, m; end if;
 end $$;
+
+-- U57: a write replaces the previous derived set and sets the state fields and derived_count together
+do $$
+declare p uuid := pg_temp.mk_parent(); a uuid := pg_temp.mk_att(p); n bigint; old_left bigint; r thought_attachments;
+begin
+  perform attachment_write_derived(a, 'tok', pg_temp.rows_json('u57 old one ' || a, 'u57 old two ' || a), '{"state":"processed"}'::jsonb);
+  perform attachment_write_derived(a, 'tok', pg_temp.rows_json('u57 new ' || a),
+    '{"state":"processed","caption_model":"vision-x","page_count":3,"content_hash":"sha256:u57","actual_type":"application/pdf","actual_size":10,"processed_at":"2026-01-02T03:04:05Z","state_reason":null}'::jsonb);
+  select count(*) into n from thoughts where metadata->>'attachment_id' = a::text;
+  select count(*) into old_left from thoughts where metadata->>'attachment_id' = a::text and content like 'u57 old%';
+  select * into r from thought_attachments where id = a;
+  delete from thoughts where metadata->>'attachment_id' = a::text;
+  delete from thought_attachments where id = a;
+  delete from thoughts where id = p;
+  if n <> 1 or old_left <> 0 then raise exception 'U57: set not replaced (% rows, % old)', n, old_left; end if;
+  if r.derived_count <> 1 then raise exception 'U57: derived_count %', r.derived_count; end if;
+  if r.state <> 'processed' or r.caption_model <> 'vision-x' or r.page_count <> 3 or r.content_hash <> 'sha256:u57'
+     or r.actual_type <> 'application/pdf' or r.actual_size <> 10 or r.processed_at is null then
+    raise exception 'U57: state fields not set: %', r;
+  end if;
+end $$;
