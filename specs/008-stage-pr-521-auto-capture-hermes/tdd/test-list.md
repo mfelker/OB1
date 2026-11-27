@@ -4,7 +4,7 @@ loop: outside-in # outside-in | inside-out
 profile: .specify/memory/tdd-profile.md # stack profile the commands must read
 spec_criteria: 22 # US1.1–3, US2.1–8, US3.1–3, US4.1–2 (16 scenarios) + SC-001–SC-006; 11 on the loop (US2, US3), the rest are process checks (see "Process acceptance")
 planned_at: cddad8a # short SHA the list was derived from (fork main)
-updated_at: 4ad3e3f # short SHA of the last change to this file (U41 added by remediation T043)
+updated_at: d05470f # short SHA of the last change to this file (U42 added by remediation T049)
 suite_baseline: green # empty: skills/auto-capture-hermes has no tests at b9cbd68 (`no-tests`, adapter exit 0)
 ---
 
@@ -110,6 +110,7 @@ One per automatable acceptance scenario (US2, US3). US1 and US4 are checked by t
 | U32 | A queued entry with `attempt_count: 4` that fails again with 503 moves to `dead/` | FR-015 | example | DONE | `capture-hermes-session.test.mjs::U32 a queued entry failing a fifth time moves to dead/` |
 | U33 | A queued entry answered with 401 moves to `dead/` | FR-015 | example | DONE | `capture-hermes-session.test.mjs::U33 a queued entry answered with 401 moves to dead/` |
 | U34 | With 4 queued entries and the stand-in answering 200, one run resends the 3 oldest and leaves the newest queued | FR-015 | example | DONE | `capture-hermes-session.test.mjs::U34 one run resends the three oldest queued entries and keeps the newest` |
+| U42 | A queue entry that is not valid JSON moves to `dead/`, and the valid entries after it in the same batch are still resent | FR-015 | example | DONE | `capture-hermes-session.test.mjs::U42 an unreadable queue entry moves to dead/ and the valid entries behind it are still resent` |
 
 ### `capture-hermes-session.mjs`: hook mode
 

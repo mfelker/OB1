@@ -474,3 +474,14 @@ Commands run from the stage worktree folder `skills/auto-capture-hermes` with `e
 - green: the real script passes; suite 52 passed, 0 failed (2 runs, 4.3 s)
 - refactor: none needed
 - commit: `7cd5290`
+
+## Cycle 56: U42 an unreadable queue entry moves to dead/ and the valid entries behind it are still resent (second audit finding 2, T049)
+
+- test: `capture-hermes-session.test.mjs::U42 an unreadable queue entry moves to dead/ and the valid entries behind it are still resent` (new)
+- red: none possible (add-only PR, TEST_AFTER by owner decision). Detection checks, not S1:
+  - N7 (corrupt entry left in place: rename removed, `continue` kept) → `not ok`, `dead/` is `[]` where `['1-a.json']` was expected (exit 1).
+  - N7b (corrupt entry dead-lettered, then `return` stops the batch) → `not ok`, requests `['hermes:session-1:6521cc5e']` where `['k-2-b', 'k-3-c']` were expected (exit 1).
+  - Script restored, `git diff --quiet` clean after each, green again on the restored script.
+- green: no source change; suite 53 passed, 0 failed (2 runs, 4.3 s)
+- refactor: test-support gains `queueFiles()` (file names without parsing; `queueEntries()` would throw on the corrupt file), and `seedQueueEntry()` accepts a raw string. Existing callers are unchanged.
+- commit: `1652c3a`
