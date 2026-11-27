@@ -25,6 +25,7 @@ export function pageRoutes(deps: Deps, _services: Services): Hono {
       : null;
     if (!found || !("data" in found) || found.data === null) return c.json({ error: EXPIRED }, 410);
     const row = found.data;
+    if (deps.now().getTime() >= new Date(row.upload_deadline).getTime()) return c.json({ error: EXPIRED }, 410);
     if (!declaredByPage.has(row.id) && row.declared_type !== null && row.declared_type !== body.type) {
       return c.json({ code: "wrong_type", message: "The picked file is " + body.type + ", not the declared " + row.declared_type + "." }, 400);
     }
