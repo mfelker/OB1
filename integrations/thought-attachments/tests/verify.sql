@@ -622,3 +622,20 @@ begin
   if (r->>'id')::uuid <> o or (r->>'created')::boolean is not false then raise exception 'U85: got %', r; end if;
   if t.content <> txt or t.metadata <> '{"owner":true}'::jsonb or t.embedding is not null then raise exception 'U85: thought changed: %', t; end if;
 end $$;
+
+-- U86: the page-token lookup finds a row by page_token_hash only
+do $$
+declare p uuid := pg_temp.mk_parent(); a uuid; b uuid := pg_temp.mk_att(p); hit uuid; n_other int; n_null int; n_id int;
+begin
+  insert into thought_attachments (parent_thought_id, state, upload_deadline, page_token_hash)
+    values (p, 'pending_upload', now(), 'sha256:u86hash') returning id into a;
+  select id into hit from attachment_by_page_token('sha256:u86hash');
+  select count(*) into n_other from attachment_by_page_token('sha256:other');
+  select count(*) into n_null from attachment_by_page_token(null);
+  select count(*) into n_id from attachment_by_page_token(a::text);
+  delete from thought_attachments where id = a;
+  delete from thought_attachments where id = b;
+  delete from thoughts where id = p;
+  if hit is distinct from a then raise exception 'U86: lookup returned %', hit; end if;
+  if n_other <> 0 or n_null <> 0 or n_id <> 0 then raise exception 'U86: matched by something else (% % %)', n_other, n_null, n_id; end if;
+end $$;

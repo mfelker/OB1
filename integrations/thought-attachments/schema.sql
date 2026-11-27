@@ -274,3 +274,13 @@ begin
 end;
 $$;
 grant execute on function attachment_insert_note(text, text, jsonb) to service_role;
+
+-- Look up an attachment by the hash of its one-time page token (FR-002, FR-024).
+create or replace function attachment_by_page_token(p_hash text)
+returns setof thought_attachments
+language sql
+stable
+as $$
+  select * from thought_attachments where page_token_hash = p_hash
+$$;
+grant execute on function attachment_by_page_token(text) to service_role;
