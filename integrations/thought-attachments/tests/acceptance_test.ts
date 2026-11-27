@@ -810,7 +810,7 @@ Deno.test(
   },
 );
 
-todo(
+Deno.test(
   "A25 a rebuild that fails because the vision endpoint is down keeps the old caption thought, stays processed and reports last_rebuild_error",
   async () => {
     const w = world({ vision: [() => chatReply(CAPTION, VISION_MODEL), { status: 503 }] });
