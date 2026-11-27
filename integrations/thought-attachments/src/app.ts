@@ -63,6 +63,21 @@ export function createApp(input: AppInput): FetchApp {
   app.all("*", async (c) => {
     const given = c.req.header("x-brain-key") || new URL(c.req.url).searchParams.get("key");
     if (!given || !sameKey(given, deps.settings.mcpAccessKey)) return await unauthorized(c.req.raw);
+    // As the core server does: Claude Desktop connectors don't send the Accept header that
+    // StreamableHTTPTransport requires, so a request without it gets a patched one.
+    if (!c.req.header("accept")?.includes("text/event-stream")) {
+      const headers = new Headers(c.req.raw.headers);
+      headers.set("Accept", "application/json, text/event-stream");
+      const patched = new Request(c.req.raw.url, {
+        method: c.req.raw.method,
+        headers,
+        body: c.req.raw.body,
+        // @ts-ignore -- duplex is required for a streaming body in Deno
+        duplex: "half",
+      });
+      Object.defineProperty(c.req, "raw", { value: patched, writable: true });
+    }
+
     const server = buildServer(deps, services);
     const transport = new StreamableHTTPTransport();
     await server.connect(transport);

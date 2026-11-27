@@ -6,7 +6,7 @@ import type { Deps, FetchApp, Settings } from "../src/types.ts";
 import { Clock } from "./helpers/clock.ts";
 import { BRAIN_KEY, envGetter } from "./helpers/env.ts";
 import { FakeStore } from "./helpers/fake_store.ts";
-import { FUNCTION_URL, mcpCall } from "./helpers/mcp.ts";
+import { FUNCTION_URL, mcpCall, parseMessage } from "./helpers/mcp.ts";
 
 const INIT = {
   protocolVersion: "2025-06-18",
@@ -116,4 +116,16 @@ Deno.test("U298 an OPTIONS preflight gets the CORS headers the core server sends
     },
     { status: 200, body: "ok", preflight: CORE_CORS, reply: CORE_CORS, refused: CORE_CORS, calls: [] },
   );
+});
+
+Deno.test("U299 an MCP request with no event-stream Accept header is handled, as the core server patches it", async () => {
+  const { app } = rig();
+  const response = await app.fetch(new Request(FUNCTION_URL, {
+    method: "POST",
+    headers: { "content-type": "application/json", "x-brain-key": BRAIN_KEY },
+    body: JSON.stringify({ jsonrpc: "2.0", id: 9, method: "initialize", params: INIT }),
+  }));
+  const message = await parseMessage(response);
+  assertEquals({ status: response.status, error: message?.error, id: message?.id }, { status: 200, error: undefined, id: 9 });
+  assert((message?.result as { serverInfo?: unknown })?.serverInfo !== undefined, "no serverInfo");
 });
