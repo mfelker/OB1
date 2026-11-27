@@ -159,3 +159,20 @@ begin
     raise exception 'U41: no index on content_hash';
   end if;
 end $$;
+
+-- U42: a second non-refused row with the same parent and content_hash is rejected
+do $$
+declare p uuid := gen_random_uuid(); a uuid; b uuid;
+begin
+  insert into thought_attachments (parent_thought_id, content_hash, state, upload_deadline)
+    values (p, 'sha256:u42', 'processed', now()) returning id into a;
+  begin
+    insert into thought_attachments (parent_thought_id, content_hash, state, upload_deadline)
+      values (p, 'sha256:u42', 'processed', now()) returning id into b;
+    delete from thought_attachments where id = b;
+    delete from thought_attachments where id = a;
+    raise exception 'U42: duplicate (parent, hash) was accepted';
+  exception when unique_violation then null;
+  end;
+  delete from thought_attachments where id = a;
+end $$;

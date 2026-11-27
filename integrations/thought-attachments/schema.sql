@@ -89,3 +89,7 @@ end $$;
 
 create index if not exists thought_attachments_parent_idx on thought_attachments (parent_thought_id);
 create index if not exists thought_attachments_content_hash_idx on thought_attachments (content_hash);
+
+-- The same file on the same parent twice (FR-012).
+create unique index if not exists thought_attachments_parent_hash_uniq
+  on thought_attachments (parent_thought_id, content_hash);
