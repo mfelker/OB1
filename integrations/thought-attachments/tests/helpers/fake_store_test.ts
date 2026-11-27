@@ -166,3 +166,15 @@ Deno.test("U32 orphans lists a row whose parent is gone, an expired pending_uplo
     { id: refused.id, why: "refused" },
   ]);
 });
+
+Deno.test("U33 insertNote with a fingerprint that already exists returns that thought's id with created false and leaves it unchanged", async () => {
+  const { store, parent } = await setup();
+  const before = structuredClone(parent);
+  const count = store.thoughts.length;
+  const result = data(await store.insertNote("dishwasher dw-500,   bought in 2024 ", vectorFor("note"), { type: "observation" }));
+  assertEquals({ result, parent: store.thought(parent.id), count: store.thoughts.length }, {
+    result: { id: parent.id, created: false },
+    parent: before,
+    count,
+  });
+});
