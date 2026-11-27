@@ -51,5 +51,8 @@ export function checkActual(
   if (actual !== row.declared_type) {
     return { code: "wrong_type", message: "The file is " + actual + ", not the declared " + row.declared_type + "." };
   }
+  if (info.size !== row.declared_size) {
+    return { code: "wrong_size", message: "The file is " + info.size + " bytes, not the declared " + row.declared_size + "." };
+  }
   return null;
 }

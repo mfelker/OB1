@@ -151,3 +151,12 @@ Deno.test("U149 checkActual refuses a sniffed type that differs from the declare
   assertEquals(refusal.code, "wrong_type");
   assertStringIncludes(refusal.message, "image/webp");
 });
+
+Deno.test("U150 checkActual refuses an actual size one byte different from the declared one, naming the actual size", () => {
+  for (const actual of [4999, 5001]) {
+    const refusal = checkActual(rowFor("image/jpeg", 5000), jpegBytes(actual), info(actual), settingsWith());
+    assert(refusal !== null, String(actual));
+    assertEquals(refusal.code, "wrong_size");
+    assertStringIncludes(refusal.message, String(actual));
+  }
+});
