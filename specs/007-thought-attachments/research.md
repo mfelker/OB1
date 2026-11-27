@@ -21,7 +21,7 @@ Each item records the decision, why, and what else was considered. "Probed" mean
 
 ## R2: PDF text with `unpdf` 2.2.3 (probed)
 
-- **Decision**: use `npm:unpdf@2.2.3` (MIT): open the document, read its page count before extraction (for the cap), then extract text per page.
+- **Decision**: use `npm:unpdf@2.2.2` (MIT; the spike ran 2.2.3, the next patch release. 2.2.2 is pinned because Deno 2.9.8 refuses packages under 24 hours old, and the T010 harness proved 2.2.2 reads page count and per-page text): open the document, read its page count before extraction (for the cap), then extract text per page.
 - **Why**: runs unchanged on the Cloud runtime and on the self-hosted `edge-runtime:v1.79.2` (both probed); it bundles a serverless pdf.js; its license is compatible with FSL-1.1-MIT.
 - **Scanned detection**: a PDF whose extracted text averages under a small number of non-space characters per page (a setting, default 20) is `scanned` (FR-010).
 - **Alternatives**: `punpdf` (a fork with better reading order), deferred until real manuals show the reading order hurts search; a hand-rolled pdf.js build, more upkeep for no gain.

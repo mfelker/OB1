@@ -36,7 +36,7 @@ A new remote MCP integration, `integrations/thought-attachments/`, links real fi
 
 **Language/Version**: Deno (Supabase Edge Functions, TypeScript; `edge-runtime` v1.79.2 on self-hosted; probed on both platforms); SQL (Supabase Postgres 17); one static HTML file with inline script
 
-**Primary Dependencies**: `hono`, `@hono/mcp`, `@modelcontextprotocol/sdk`, `zod` and `@supabase/supabase-js`, at the versions upstream's `server/deno.json` pins (hono 4.9.2, @hono/mcp 0.1.1, SDK 1.24.3, zod 4.1.13, supabase-js 2.47.10); `unpdf` 2.2.3 (MIT); `@std/encoding` (base64); `pdf-lib` 1.17.1 (MIT), in tests only
+**Primary Dependencies**: `hono`, `@hono/mcp`, `@modelcontextprotocol/sdk`, `zod` and `@supabase/supabase-js`, at the versions upstream's `server/deno.json` pins (hono 4.9.2, @hono/mcp 0.1.1, SDK 1.24.3, zod 4.1.13, supabase-js 2.47.10); `unpdf` 2.2.2 (MIT; see research R2); `@std/encoding` (base64); `pdf-lib` 1.17.1 (MIT), in tests only
 
 **Storage**: Supabase Postgres + pgvector: the core `thoughts` table (derived rows added; `content_fingerprint` added only if missing, R16) plus the new `thought_attachments` table ([data-model.md](data-model.md)); Supabase Storage, private bucket `ob1-files` (R12)
 

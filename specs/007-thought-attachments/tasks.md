@@ -80,6 +80,13 @@ All paths are relative to `F`.
 
 ## Seams (written by the integrator in T006–T011, frozen during the waves)
 
+> **As built (T006 `a9a734d`, T007 `1b23b46`, T010 `d8e30fe`):** `F/src/types.ts` is now the authoritative seam. It adds to the list below:
+> - `DerivedRow.embedding: number[]` (FR-007);
+> - the types `NewAttachment`, `Declaration`, `OrphanReason`, `SensitivityTier`, `ExpectedKind`, `FetchApp`, `UploadInstructions`, `DeclaredFile`, `PdfDoc` and `Passage`;
+> - concrete parameters where this list says `…`.
+>
+> Conventions: `Settings` fields are camelCase, and `AttachmentRow` fields are snake_case (data-model.md). `findByHash` may return the caller's own row, so callers compare ids. The store returns rows as stored; **the reading layer** (stream T's tools and stream N's finisher) reports an expired `finish` claim as `failed` "the run did not finish", from `busy_op` and `busy_until` (data-model.md states). `unpdf` is pinned at 2.2.2 (`10c67a7`), because 2.2.3 was inside Deno 2.9.8's 24-hour minimum dependency age.
+
 Streams code against these. The signatures are the only shared contract. Behavior comes from the cited contract and data-model sections.
 
 - **Imports**: every source file uses a full `npm:`/`jsr:` specifier, never a bare name. The self-hosted router ignores a function's own `deno.json` import map (spec 004 `research.md` R10). `deno.json` stays for Cloud bundling and for fork-ci's deno detection.
@@ -162,8 +169,8 @@ Streams code against these. The signatures are the only shared contract. Behavio
   4. Before T013 (it affects T015 and T026): the `finish_attachment` outcome when the uploaded bytes duplicate another attachment's `content_hash` on the same parent, where the unique index of `data-model.md` `thought_attachments.content_hash` refuses the second one (US1 #3, FR-012).
   5. Before T013 (it affects T043): whether `/page/finish` uses up its token when finishing is refused as busy. If it does, the page can't retry, which conflicts with "retries" in FR-026 and quickstart scenario 8.
   6. Before T013 (it affects T044 and stream D's T047): how the copy of `upload-page.html` that the function serves on self-hosted gets its API address, given that the address is "written in the file" (R5).
-- [ ] T006 Write the seams in `F/src/types.ts` and the throwing stubs in `F/src/{settings,links,intake,pdf,passages,derived,embeddings,vision,store,finish,tools,page_routes,app}.ts`, exactly as listed under **Seams**. Write `F/index.ts` as the one-line entry, `Deno.serve(createApp(productionDeps()).fetch)`. Use full specifiers only. Run `deno check` on every file, then commit.
-- [ ] T007 Write `F/tests/helpers/{fake_fetch,fake_store,clock,fixtures,env,mcp,todo}.ts` per **Seams**. Commit.
+- [X] T006 Write the seams in `F/src/types.ts` and the throwing stubs in `F/src/{settings,links,intake,pdf,passages,derived,embeddings,vision,store,finish,tools,page_routes,app}.ts`, exactly as listed under **Seams**. Write `F/index.ts` as the one-line entry, `Deno.serve(createApp(productionDeps()).fetch)`. Use full specifiers only. Run `deno check` on every file, then commit.
+- [X] T007 Write `F/tests/helpers/{fake_fetch,fake_store,clock,fixtures,env,mcp,todo}.ts` per **Seams**. Commit.
 - [ ] T008 [U1] [U2] [U3] [U4] [U5] [U6] [U7] [U8] [U9] [U10] [U11] [U12] [U13] [U15] [U16] [U17] [U18] [U19] [U308] [U309] [U310] Tests first in `F/tests/settings_test.ts`, then `loadSettings(getEnv)` in `F/src/settings.ts`, covering every row of contracts/settings.md:
   - each default
   - `EMBEDDING_API_KEY` falls back to `OPENROUTER_API_KEY` (R3)
@@ -178,7 +185,7 @@ Streams code against these. The signatures are the only shared contract. Behavio
   - `publicUrl` rewrites the internal Supabase origin of a signed link to `PUBLIC_BASE_URL` and keeps its path and query (R6)
   - `pageLink` is `UPLOAD_PAGE_URL#t=<token>`, with the token only in the fragment (contracts/upload-page.md "The link")
   - `curlLine` is a ready-to-run `PUT` with the returned headers (FR-002a) and contains no brain key
-- [ ] T010 Harness proof in `F/tests/helpers/helpers_test.ts`, under **fork-ci's exact flags**, before any stream builds on it:
+- [X] T010 Harness proof in `F/tests/helpers/helpers_test.ts`, under **fork-ci's exact flags**, before any stream builds on it:
   - every npm and jsr import loads
   - `unpdf` reads the page count and the per-page text of a `pdf-lib`-generated 3-page PDF (R2, R15)
   - `crypto.subtle` SHA-256 of a buffer
