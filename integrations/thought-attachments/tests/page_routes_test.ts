@@ -151,7 +151,7 @@ Deno.test("U268 a picked size over its cap is refused, naming the cap and the si
 
 Deno.test("U267 a pick whose kind differs from expected_kind is refused, a PDF for a photo and the reverse", async () => {
   const r = await rig();
-  const photo = await r.seed({ expected_kind: "photo" });
+  await r.seed({ expected_kind: "photo" });
   const pdf = await r.seed({ expected_kind: "pdf" }, "token-for-pdf");
   const pdfForPhoto = await r.post("/page/start", { token: TOKEN, name: "a.pdf", type: "application/pdf", size: 10 });
   const photoForPdf = await r.post("/page/start", { token: "token-for-pdf", ...PICK });
@@ -160,7 +160,7 @@ Deno.test("U267 a pick whose kind differs from expected_kind is refused, a PDF f
     [pdfForPhoto.status, (await pdfForPhoto.json()).code, photoForPdf.status, (await photoForPdf.json()).code, okPhoto.status],
     [400, "wrong_type", 400, "wrong_type", 200],
   );
-  assertEquals([r.store.attachment(pdf.id)!.declared_type, r.store.signedUploads.length, photo.expected_kind], [null, 1, "photo"]);
+  assertEquals([r.store.attachment(pdf.id)!.declared_type, r.store.signedUploads.length], [null, 1]);
 });
 
 Deno.test("U269 a second /page/start replaces the declaration and returns a new link", async () => {
@@ -307,7 +307,7 @@ Deno.test("U339 /page/info with an unknown, used or expired token gets 410 with 
     results.push([res.status, (await res.json()).error]);
   }
   assertEquals(results, [[410, EXPIRED], [410, EXPIRED], [410, EXPIRED]]);
-  assertEquals(late.page_token_hash !== null, true);
+  assertEquals(r.store.attachment(late.id)!.page_token_hash, await sha256Hex("late-token"));
 });
 
 Deno.test("U352 /page/info returns exactly expected_kind, accepted_types and caps, with image_bytes at MAX_IMAGE_MB times 1048576", async () => {
