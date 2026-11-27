@@ -362,7 +362,7 @@ Deno.test("U112 orphans passes the current time and maps the reply to { row, why
 // UQ1 to UQ5 cover Store methods that the test list gives no row (createAttachment, setDeclaration, release,
 // writeDerived, setState). Without them the finishing and tool streams would meet a stub.
 
-Deno.test("UQ1 createAttachment inserts a pending_upload row with the given fields and returns it", async () => {
+Deno.test("U357 createAttachment inserts a pending_upload row with the given fields and returns it", async () => {
   const { store, ff } = setup();
   const row = attachmentRow();
   ff.on("POST", `${REST}/thought_attachments*`, { status: 201, body: row }); // .single(): one object
@@ -393,7 +393,7 @@ Deno.test("UQ1 createAttachment inserts a pending_upload row with the given fiel
   });
 });
 
-Deno.test("UQ2 setDeclaration updates the declared fields of that attachment only and returns the row", async () => {
+Deno.test("U358 setDeclaration updates the declared fields of that attachment only and returns the row", async () => {
   const { store, ff } = setup();
   const row = attachmentRow({ file_name: "shelf.jpg", declared_type: "image/jpeg", declared_size: 99 });
   ff.on("PATCH", `${REST}/thought_attachments*`, { body: row });
@@ -403,14 +403,14 @@ Deno.test("UQ2 setDeclaration updates the declared fields of that attachment onl
   assertEquals(new URL(ff.requests[0].url).searchParams.get("id"), `eq.${ATT_ID}`);
 });
 
-Deno.test("UQ3 release passes the claim token", async () => {
+Deno.test("U359 release passes the claim token", async () => {
   const { store, ff } = setup();
   ff.on("POST", `${REST}/rpc/attachment_release`, { status: 204 });
   assertEquals(await store.release(ATT_ID, "claim-tok"), { data: null });
   assertEquals(ff.requests[0].body, { p_id: ATT_ID, p_token: "claim-tok" });
 });
 
-Deno.test("UQ4 writeDerived sends the rows (content, metadata, embedding) and the state patch under the claim token", async () => {
+Deno.test("U360 writeDerived sends the rows (content, metadata, embedding) and the state patch under the claim token", async () => {
   const { store, ff } = setup();
   const row = attachmentRow({ state: "processed", derived_count: 1 });
   ff.on("POST", `${REST}/rpc/attachment_write_derived`, { body: row });
@@ -429,7 +429,7 @@ Deno.test("UQ4 writeDerived sends the rows (content, metadata, embedding) and th
   });
 });
 
-Deno.test("UQ5 setState sends the patch under the claim token and returns the row", async () => {
+Deno.test("U361 setState sends the patch under the claim token and returns the row", async () => {
   const { store, ff } = setup();
   const row = attachmentRow({ state: "failed", state_reason: "the file is not a valid PDF" });
   ff.on("POST", `${REST}/rpc/attachment_set_state`, { body: row });
