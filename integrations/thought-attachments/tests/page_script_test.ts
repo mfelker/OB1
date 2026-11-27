@@ -22,3 +22,24 @@ Deno.test("U281 the page reads its token only from the #t= fragment; a token in 
   assertEquals(queryOnly.requests.length, 0);
   assertStringIncludes(page.text("status"), "expired");
 });
+
+const BLANK_LINE = 'var API_ADDRESS = "";';
+
+/** The page with its API-address line filled in. */
+function withAddress(address: string): string {
+  const source = readPageSource();
+  if (!source.includes(BLANK_LINE)) throw new Error("the API-address line is not in its blank form");
+  return source.replace(BLANK_LINE, `var API_ADDRESS = "${address}";`);
+}
+
+Deno.test("U282 with its API-address line filled in, every request goes to that address, never to one taken from the link", async () => {
+  const api = "https://static.example.test/functions/v1/thought-attachments";
+  const f = new FakeFetch().on("POST", `${api}/page/info`, { body: INFO });
+  await loadPage({
+    href: `${PAGE_AT}?api=https://evil.example.test#t=tok&api=https://evil.example.test&base=https://evil.example.test`,
+    fetch: f.fetch,
+    html: withAddress(api),
+  });
+  assertEquals(f.requests.map((r) => r.url), [`${api}/page/info`]);
+  assertEquals(f.unmatched, []);
+});
