@@ -355,7 +355,7 @@ Deno.test(
   },
 );
 
-todo(
+Deno.test(
   "A4 the same bytes finished on a second attachment of the same parent end refused naming the first's short id, with its object deleted and the first unchanged",
   async () => {
     const w = world();
