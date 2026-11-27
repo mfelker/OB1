@@ -39,7 +39,6 @@ import { chatReply, embeddingResponder, FakeFetch, type Handler, vectorFor } fro
 import { FakeStore, type FakeThought, shortId } from "./helpers/fake_store.ts";
 import { corruptPdf, heicBytes, jpegBytes, scannedPdf, textPdf } from "./helpers/fixtures.ts";
 import { FUNCTION_URL, mcpCall } from "./helpers/mcp.ts";
-import { todo } from "./helpers/todo.ts";
 
 // ---------------------------------------------------------------- constants
 
@@ -284,7 +283,7 @@ const SOURCE_LINE = /^From (.+), (?:pages? (\d+)(?:–(\d+))?|photo) \(attachmen
 
 // ============================================================== User Story 1
 
-todo(
+Deno.test(
   "A1 a 3-page text PDF attached, uploaded and finished is stored, processed with page_count 3, with N passages naming the attachment and parent",
   async () => {
     const w = world();
@@ -311,7 +310,7 @@ todo(
   },
 );
 
-todo(
+Deno.test(
   "A2 every listed fact is in a passage whose source line names the file, a page range including its page and the short id, with an embedding of the brain's dimension",
   async () => {
     const w = world();
@@ -333,7 +332,7 @@ todo(
   },
 );
 
-todo(
+Deno.test(
   "A3 attach_file with the same name, type and size while the first is pending creates no second row and returns the existing id",
   async () => {
     const w = world();
@@ -355,7 +354,7 @@ todo(
   },
 );
 
-todo(
+Deno.test(
   "A4 the same bytes finished on a second attachment of the same parent end refused naming the first's short id, with its object deleted and the first unchanged",
   async () => {
     const w = world();
@@ -379,7 +378,7 @@ todo(
   },
 );
 
-todo(
+Deno.test(
   "A5 an owner thought whose text equals a passage's body is unchanged after finishing, and the passage is its own row with the attachment's metadata",
   async () => {
     const w = world();
@@ -396,7 +395,7 @@ todo(
   },
 );
 
-todo(
+Deno.test(
   "A6 find_thought (meaning) finds a thought stored as the core stores it, with first line and date, and attach_file accepts its id",
   async () => {
     const w = world();
@@ -414,7 +413,7 @@ todo(
   },
 );
 
-todo(
+Deno.test(
   "A7 the short id read from a passage's source line, given to get_attachment, returns that attachment and a download link",
   async () => {
     const w = world();
@@ -430,7 +429,7 @@ todo(
   },
 );
 
-todo(
+Deno.test(
   "A8 the same PDF on two thoughts gives two disjoint passage sets, and a confirmed removal of one leaves the other's row and passages",
   async () => {
     const w = world();
@@ -451,7 +450,7 @@ todo(
   },
 );
 
-todo(
+Deno.test(
   "A9 every passage of a processed PDF has type reference and topics attachment and the base name, and none is an observation",
   async () => {
     const w = world();
@@ -466,7 +465,7 @@ todo(
   },
 );
 
-todo("A10 an MCP request with no key or a wrong key gets an authorization error and changes nothing", async () => {
+Deno.test("A10 an MCP request with no key or a wrong key gets an authorization error and changes nothing", async () => {
   const w = world();
   const parent = await ownerThought(w, "Kitchen dishwasher DW-500");
   const before = snapshot(w);
@@ -485,7 +484,7 @@ todo("A10 an MCP request with no key or a wrong key gets an authorization error 
   });
 });
 
-todo("A11 tools/list returns exactly the seven tools with the contract's annotations", async () => {
+Deno.test("A11 tools/list returns exactly the seven tools with the contract's annotations", async () => {
   const w = world();
   const { message } = await mcpCall(w.app.fetch, "tools/list", {}, BRAIN_KEY);
   const tools = ((message?.result as any)?.tools ?? []) as any[];
@@ -509,7 +508,7 @@ todo("A11 tools/list returns exactly the seven tools with the contract's annotat
   });
 });
 
-todo("A12 attach_file with an unknown thought_id is refused, and no row, link or note is created", async () => {
+Deno.test("A12 attach_file with an unknown thought_id is refused, and no row, link or note is created", async () => {
   const w = world();
   await ownerThought(w, "Kitchen dishwasher DW-500");
   const before = snapshot(w);
@@ -522,7 +521,7 @@ todo("A12 attach_file with an unknown thought_id is refused, and no row, link or
   assertEquals({ isError: r.isError, after: snapshot(w) }, { isError: true, after: before });
 });
 
-todo(
+Deno.test(
   "A53 /page/start or /page/finish carrying the brain key but no valid page token gets 410 and changes nothing",
   async () => {
     const w = world();
@@ -546,7 +545,7 @@ todo(
   },
 );
 
-todo(
+Deno.test(
   "A57 attach_file for the same file after the first's deadline passed unused creates a new attachment, and the orphan check still lists the first",
   async () => {
     const w = world();
@@ -559,7 +558,7 @@ todo(
   },
 );
 
-todo(
+Deno.test(
   "A59 an owner thought equal to an attachment's whole derived content makes the finish fail naming the conflict, with that thought unchanged and no derived thought",
   async () => {
     const w = world();
@@ -580,7 +579,7 @@ todo(
 
 // ============================================================== User Story 2
 
-todo(
+Deno.test(
   "A13 a JPEG finished with a configured vision model gives one caption thought with its source line, the row processed, and caption_model and extractor_model equal to VISION_MODEL",
   async () => {
     const w = world();
@@ -605,7 +604,7 @@ todo(
   },
 );
 
-todo(
+Deno.test(
   "A14 with only the page token, /page/start, the PUT and /page/finish finish the photo, and a second start and finish with that token each get 410",
   async () => {
     const w = world();
@@ -626,7 +625,7 @@ todo(
   },
 );
 
-todo(
+Deno.test(
   "A15 attach_file with a HEIC declared type is refused with the share-it-as-JPEG message, and no row or link is created",
   async () => {
     const w = world();
@@ -643,7 +642,7 @@ todo(
   },
 );
 
-todo(
+Deno.test(
   "A16 /page/start with a picked HEIC file is refused with the share-it-as-JPEG message and returns no upload link",
   async () => {
     const w = world();
@@ -659,7 +658,7 @@ todo(
   },
 );
 
-todo(
+Deno.test(
   "A17 HEIC bytes uploaded under a JPEG declaration are refused at finishing with the share-it-as-JPEG message, the object deleted and the row refused",
   async () => {
     const w = world();
@@ -674,7 +673,7 @@ todo(
   },
 );
 
-todo(
+Deno.test(
   "A18 attach_file with note and no thought id creates one observation thought with an embedding of the brain's dimension, as the attachment's parent created here",
   async () => {
     const w = world();
@@ -696,7 +695,7 @@ todo(
   },
 );
 
-todo(
+Deno.test(
   "A19 after a page upload, /page/finish alone returns processed with the caption, and the caption thought exists",
   async () => {
     const w = world();
@@ -717,7 +716,7 @@ todo(
   },
 );
 
-todo(
+Deno.test(
   "A20 a page token for attachment X never signs an upload for Y nor finishes Y; Y's row and object are unchanged",
   async () => {
     const w = world();
@@ -745,7 +744,7 @@ todo(
   },
 );
 
-todo(
+Deno.test(
   "A21 with VISION_* unset a finished photo stays stored and fetchable, is not_captioned with the reason, and has no caption thought",
   async () => {
     const w = world({ env: { VISION_API_BASE: undefined, VISION_API_KEY: undefined, VISION_MODEL: undefined } });
@@ -766,7 +765,7 @@ todo(
   },
 );
 
-todo(
+Deno.test(
   "A22 with the vision endpoint answering 500 a finished photo is not_captioned with that reason and has no caption thought",
   async () => {
     const w = world({ vision: [{ status: 500, body: { error: "model crashed" } }] });
@@ -777,7 +776,7 @@ todo(
   },
 );
 
-todo(
+Deno.test(
   "A23 a not_captioned photo finished again after the vision model is back ends processed with exactly one caption thought",
   async () => {
     const w = world({ vision: [{ status: 500 }, () => chatReply(CAPTION, VISION_MODEL)] });
@@ -789,7 +788,7 @@ todo(
   },
 );
 
-todo(
+Deno.test(
   "A24 a processed photo rebuilt with a different VISION_MODEL ends with exactly one caption thought, written by the new model",
   async () => {
     const w = world();
@@ -810,7 +809,7 @@ todo(
   },
 );
 
-todo(
+Deno.test(
   "A25 a rebuild that fails because the vision endpoint is down keeps the old caption thought, stays processed and reports last_rebuild_error",
   async () => {
     const w = world({ vision: [() => chatReply(CAPTION, VISION_MODEL), { status: 503 }] });
@@ -825,7 +824,7 @@ todo(
   },
 );
 
-todo(
+Deno.test(
   "A26 with a LAN PUBLIC_BASE_URL every returned link starts with it and none carries the internal origin; page_link defaults to the function's upload page",
   async () => {
     const w = world({ env: { PUBLIC_BASE_URL: LAN, UPLOAD_PAGE_URL: undefined } });
@@ -852,7 +851,7 @@ todo(
   },
 );
 
-todo(
+Deno.test(
   "A58 after a failed rebuild, a rebuild with the vision endpoint back ends with one caption thought by the configured model and no last_rebuild_error",
   async () => {
     const w = world({
@@ -880,7 +879,7 @@ todo(
   },
 );
 
-todo(
+Deno.test(
   "A60 with only the page token, /page/info returns the expected kind, accepted types and caps, changes nothing, and /page/start still returns an upload link",
   async () => {
     const w = world();
@@ -915,7 +914,7 @@ todo(
   },
 );
 
-todo(
+Deno.test(
   "A61 /page/finish before any PUT says no file uploaded yet and keeps the token: after a PUT a second finish finishes it, and a third gets 410",
   async () => {
     const w = world();
@@ -937,7 +936,7 @@ todo(
 
 // ============================================================== User Story 3
 
-todo(
+Deno.test(
   "A27 get_attachment on a processed attachment returns name, type, size and state, and a download link signed for 600 seconds with that lifetime stated",
   async () => {
     const w = world();
@@ -960,7 +959,7 @@ todo(
   },
 );
 
-todo(
+Deno.test(
   "A28 list_attachments for a thought with two attachments in different states returns both with name, type, size, state and derived_count",
   async () => {
     const w = world();
@@ -986,7 +985,7 @@ todo(
   },
 );
 
-todo("A29 get_attachment on a pending_upload and on a refused attachment returns no download link", async () => {
+Deno.test("A29 get_attachment on a pending_upload and on a refused attachment returns no download link", async () => {
   const w = world();
   const parent = await ownerThought(w, "The garage shelf by the side door");
   const pending = await attachCommand(w, parent.id, "manual.pdf", "application/pdf", 4096);
@@ -1005,7 +1004,7 @@ todo("A29 get_attachment on a pending_upload and on a refused attachment returns
 
 // ============================================================== User Story 4
 
-todo(
+Deno.test(
   "A30 attach_file for a PDF declared over MAX_PDF_MB is refused naming the limit and the declared size, with no row and no link",
   async () => {
     const w = world();
@@ -1024,7 +1023,7 @@ todo(
   },
 );
 
-todo(
+Deno.test(
   "A31 an uploaded PDF over MAX_PDF_PAGES is refused at finishing with the page count and the planned background processing, object deleted and no derived thought",
   async () => {
     const w = world({ env: { MAX_PDF_PAGES: "3" } });
@@ -1049,7 +1048,7 @@ todo(
   },
 );
 
-todo(
+Deno.test(
   "A32 a 40 MB upload declared as a 4 MB JPEG is refused at finishing with the actual size, object deleted, no derived thought, and listed as an orphan",
   async () => {
     const w = world();
@@ -1071,7 +1070,7 @@ todo(
   },
 );
 
-todo(
+Deno.test(
   "A33 a text-less PDF ends scanned with no passages, says text search won't cover it yet, and still has a download link",
   async () => {
     const w = world();
@@ -1087,7 +1086,7 @@ todo(
   },
 );
 
-todo(
+Deno.test(
   "A34 when embeddings fail on the second batch no derived thought remains and the row is failed; finishing again after recovery ends processed",
   async () => {
     const pages = MANUAL_PAGES.map((p) => `${p} ${"More detail on this step follows here. ".repeat(3)}`);
@@ -1112,7 +1111,7 @@ todo(
   },
 );
 
-todo(
+Deno.test(
   "A35 a file declared image/png whose bytes are a JPEG of that size is refused at finishing naming the actual type",
   async () => {
     const w = world();
@@ -1123,7 +1122,7 @@ todo(
   },
 );
 
-todo(
+Deno.test(
   "A36 corrupt bytes declared as a PDF end failed with a readable reason, the file still fetchable and no passages",
   async () => {
     const w = world();
@@ -1139,7 +1138,7 @@ todo(
   },
 );
 
-todo("A37 finish_attachment before any upload says no file uploaded yet and the row stays pending_upload", async () => {
+Deno.test("A37 finish_attachment before any upload says no file uploaded yet and the row stays pending_upload", async () => {
   const w = world();
   const parent = await ownerThought(w, "Kitchen dishwasher DW-500");
   const a = await attachCommand(w, parent.id, "manual.pdf", "application/pdf", 4096);
@@ -1148,7 +1147,7 @@ todo("A37 finish_attachment before any upload says no file uploaded yet and the 
   assertEquals(row(w, a.id)?.state, "pending_upload");
 });
 
-todo(
+Deno.test(
   "A38 finish_attachment after the upload deadline with no upload says upload window expired and leaves the row unchanged",
   async () => {
     const w = world();
@@ -1162,7 +1161,7 @@ todo(
   },
 );
 
-todo(
+Deno.test(
   "A39 768-number vectors for a 1536-dimension brain make finishing fail naming both lengths, with no derived thought",
   async () => {
     const w = world({ embeddings: [embeddingResponder(768)] });
@@ -1196,7 +1195,7 @@ async function heldPhotoFinish() {
   return { w, id, token, release };
 }
 
-todo(
+Deno.test(
   "A40 while a photo finish is held at the vision call, a second finish and a confirmed remove each return busy naming finishing, and nothing changes",
   async () => {
     const { w, id, release } = await heldPhotoFinish();
@@ -1213,7 +1212,7 @@ todo(
   },
 );
 
-todo(
+Deno.test(
   "A41 after that finish completes, a repeat finish returns the existing outcome with no new derived thought and no embedding or vision request",
   async () => {
     const { w, id, release } = await heldPhotoFinish();
@@ -1233,7 +1232,7 @@ todo(
   },
 );
 
-todo("A42 after that, a confirmed remove_attachment succeeds", async () => {
+Deno.test("A42 after that, a confirmed remove_attachment succeeds", async () => {
   const { w, id, release } = await heldPhotoFinish();
   await release();
   const removed = await tool(w, "remove_attachment", { attachment_id: id, confirm: true });
@@ -1244,7 +1243,7 @@ todo("A42 after that, a confirmed remove_attachment succeeds", async () => {
   });
 });
 
-todo("A43 with default settings /page/start 20 minutes after attach_file returns an upload link", async () => {
+Deno.test("A43 with default settings /page/start 20 minutes after attach_file returns an upload link", async () => {
   const w = world();
   const parent = await ownerThought(w, "The garage shelf by the side door");
   const { token } = await attachPhone(w, { thought_id: parent.id, expected_kind: "photo" });
@@ -1253,7 +1252,7 @@ todo("A43 with default settings /page/start 20 minutes after attach_file returns
   assertEquals({ status: start.status, link: typeof uploadLinkIn(start.json) }, { status: 200, link: "string" });
 });
 
-todo(
+Deno.test(
   "A44 /page/start 65 minutes after attach_file gets 410 with the expired message, and the orphan check lists that pending attachment",
   async () => {
     const w = world();
@@ -1267,7 +1266,7 @@ todo(
   },
 );
 
-todo(
+Deno.test(
   "A45 after a killed finish, a finish before BUSY_SECONDS is busy, and one after it proceeds with no leftover derived thought and ends processed",
   async () => {
     const w = world();
@@ -1289,7 +1288,7 @@ todo(
   },
 );
 
-todo(
+Deno.test(
   "A54 with MAX_PDF_PAGES=abc, attach_file and /page/start each answer the named settings error, create nothing and never echo abc",
   async () => {
     const loaded = loadSettings(envGetter({ MAX_PDF_PAGES: "abc" }));
@@ -1308,7 +1307,7 @@ todo(
   },
 );
 
-todo(
+Deno.test(
   "A55 after a killed finish whose claim expired, get_attachment reports failed with the run did not finish, before any further finish",
   async () => {
     const w = world();
@@ -1324,7 +1323,7 @@ todo(
   },
 );
 
-todo(
+Deno.test(
   "A62 a /page/finish refused as busy leaves the token valid; once the held finish completes, /page/finish returns processed, and a further one gets 410",
   async () => {
     const { w, token, release } = await heldPhotoFinish();
@@ -1345,7 +1344,7 @@ todo(
   },
 );
 
-todo(
+Deno.test(
   "A63 a JPEG declared at exactly 10,485,760 bytes gets an upload link, and one at 10,485,761 bytes is refused naming the limit and the declared size",
   async () => {
     const w = world();
@@ -1373,7 +1372,7 @@ todo(
 
 // ============================================================== User Story 5
 
-todo(
+Deno.test(
   "A46 a confirmed removal deletes the object, row and every derived thought; get_attachment then says not found; the parent and its other attachment are unchanged",
   async () => {
     const w = world();
@@ -1400,7 +1399,7 @@ todo(
   },
 );
 
-todo("A47 a removal without confirm deletes nothing and lists the file and its derived-thought count", async () => {
+Deno.test("A47 a removal without confirm deletes nothing and lists the file and its derived-thought count", async () => {
   const w = world();
   const parent = await ownerThought(w, "Kitchen dishwasher DW-500");
   const { id } = await uploadAndFinish(w, parent.id, "manual.pdf", "application/pdf", await textPdf(MANUAL_PAGES));
@@ -1412,7 +1411,7 @@ todo("A47 a removal without confirm deletes nothing and lists the file and its d
   assertEquals(snapshot(w), before);
 });
 
-todo(
+Deno.test(
   "A48 an attachment whose parent was deleted elsewhere is listed as an orphan with its file name and derived count, and a confirmed removal removes it",
   async () => {
     const w = world();
@@ -1431,7 +1430,7 @@ todo(
   },
 );
 
-todo(
+Deno.test(
   "A49 an attachment started with note whose link expired unused is an orphan, and its confirmed removal removes the note too",
   async () => {
     const w = world();
@@ -1446,7 +1445,7 @@ todo(
   },
 );
 
-todo("A50 the same, with a second processed attachment pointing to that note: the note stays", async () => {
+Deno.test("A50 the same, with a second processed attachment pointing to that note: the note stays", async () => {
   const w = world();
   const note = "The spare furnace filters are on this shelf";
   const { id } = await attachPhone(w, { note, expected_kind: "photo" });
@@ -1458,7 +1457,7 @@ todo("A50 the same, with a second processed attachment pointing to that note: th
   assertEquals({ row: row(w, id), note: w.store.thought(noteId)?.content }, { row: undefined, note });
 });
 
-todo("A51 attach_file with note and a HEIC declared type saves no thought and makes no embedding request", async () => {
+Deno.test("A51 attach_file with note and a HEIC declared type saves no thought and makes no embedding request", async () => {
   const w = world();
   const before = snapshot(w);
   const r = await tool(w, "attach_file", {
@@ -1474,7 +1473,7 @@ todo("A51 attach_file with note and a HEIC declared type saves no thought and ma
   });
 });
 
-todo(
+Deno.test(
   "A52 after a full run no thought or attachment row holds a signed URL, a key, a page token or an absolute path",
   async () => {
     const w = world({ vision: [() => chatReply(CAPTION, VISION_MODEL)] });
@@ -1517,7 +1516,7 @@ todo(
   },
 );
 
-todo(
+Deno.test(
   "A56 a confirmed removal whose record deletion fails after the file was deleted leaves it listed; a repeat confirmed removal succeeds and treats the missing file as removed",
   async () => {
     const w = world();
