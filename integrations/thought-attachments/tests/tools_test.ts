@@ -725,3 +725,16 @@ Deno.test("U254 list_attachments with thought_id returns each attachment's id, s
     assertStringIncludes(out.text, shown);
   }
 });
+
+Deno.test("U255 list_attachments with derived_thought_id returns the attachment that owns it", async () => {
+  const h = await harness();
+  const row = await storedRow(h);
+  const derivedId = "00000000-0000-4000-9000-0000000000d1";
+  const parentless = await seed(h, "another thought");
+  h.store.thoughts.push({ ...parentless, id: derivedId, content: "From manual.pdf, page 1", content_fingerprint: "fp-derived", attachment_id: row.id });
+  const out = await call(h, "list_attachments", { derived_thought_id: derivedId });
+  assertEquals(out.isError, false);
+  assertEquals((out.data.attachments as { attachment_id: string }[]).map((a) => a.attachment_id), [row.id]);
+  assertStringIncludes(out.text, "manual.pdf");
+  assertEquals(h.store.callNames().includes("listByParent"), false);
+});

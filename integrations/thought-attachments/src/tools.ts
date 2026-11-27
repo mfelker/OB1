@@ -316,10 +316,18 @@ export function buildServer(deps: Deps, services: Services): McpServer {
     description: "List the attachments of a thought, or the attachment behind a derived thought.",
     inputSchema: { thought_id: z.string().optional(), derived_thought_id: z.string().optional() },
     annotations: READ_ONLY,
-  }, async ({ thought_id }) => {
-    const listed = await deps.store.listByParent(thought_id as string);
-    if ("error" in listed) return fail(listed.error);
-    const attachments = listed.data.map((row) => summary(asReported(row, deps.now())));
+  }, async ({ thought_id, derived_thought_id }) => {
+    let rows: AttachmentRow[];
+    if (derived_thought_id !== undefined) {
+      const owner = await deps.store.attachmentForDerived(derived_thought_id);
+      if ("error" in owner) return fail(owner.error);
+      rows = owner.data ? [owner.data] : [];
+    } else {
+      const listed = await deps.store.listByParent(thought_id as string);
+      if ("error" in listed) return fail(listed.error);
+      rows = listed.data;
+    }
+    const attachments = rows.map((row) => summary(asReported(row, deps.now())));
     const lines = attachments.map((a) =>
       `${a.attachment_id} (${a.short_id})  ${a.file_name}  ${a.type}  ${a.size} bytes  ${a.state}  ${a.derived_count} derived thoughts`
     );
