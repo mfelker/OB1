@@ -153,3 +153,16 @@ Deno.test("U145 a caption row's content is the source line with photo, a line br
   assertEquals(row.embedding, EMBEDDING);
   assertEquals(row.fingerprint, await fingerprint(row.content));
 });
+
+Deno.test("U146 a caption row's provenance is llm_extraction with locator photo and the extractor model", async () => {
+  const row = await captionRow(SHELF, CAPTION, EMBEDDING, NOW);
+  assertEquals(row.metadata.provenance, {
+    method: "llm_extraction",
+    source_locator: "photo",
+    artifact: "shelf.jpg",
+    extractor_model: "test/vision-model",
+    review_status: "unreviewed",
+  });
+  assertEquals(row.metadata.attachment_id, SHELF.id);
+  assertEquals(row.metadata.type, "reference");
+});
