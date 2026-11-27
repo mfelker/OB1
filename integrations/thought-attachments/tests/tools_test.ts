@@ -196,3 +196,10 @@ Deno.test("U225 find_thought cuts a 121-character first line to 120 characters",
   const out = await call(h, "find_thought", { query: "x", mode: "exact" });
   assertEquals((out.data.matches as { first_line: string }[])[0].first_line, "x".repeat(120));
 });
+
+Deno.test("U224 find_thought returns a 120-character first line whole", async () => {
+  const h = await harness();
+  storeReturns(h, "x".repeat(120));
+  const out = await call(h, "find_thought", { query: "x", mode: "exact" });
+  assertEquals((out.data.matches as { first_line: string }[])[0].first_line, "x".repeat(120));
+});
