@@ -18,3 +18,9 @@ Deno.test("U20 publicUrl replaces a signed link's internal origin with PUBLIC_BA
   const settings = settingsWith({ SUPABASE_URL: "http://api-gw:8000", PUBLIC_BASE_URL: "http://192.168.1.20:8000" });
   assertEquals(publicUrl(settings, `http://api-gw:8000${SIGNED_PATH}`), `http://192.168.1.20:8000${SIGNED_PATH}`);
 });
+
+Deno.test("U21 publicUrl returns the link unchanged when PUBLIC_BASE_URL is already its origin", () => {
+  const cloud = "https://abcdefghijklmnop.supabase.co";
+  const settings = settingsWith({ SUPABASE_URL: cloud, PUBLIC_BASE_URL: undefined, SUPABASE_PUBLIC_URL: undefined });
+  assertEquals(publicUrl(settings, `${cloud}${SIGNED_PATH}`), `${cloud}${SIGNED_PATH}`);
+});
