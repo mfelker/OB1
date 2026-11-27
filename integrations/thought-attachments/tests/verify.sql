@@ -198,3 +198,14 @@ begin
   delete from thought_attachments where id = a;
   delete from thought_attachments where id = b;
 end $$;
+
+-- U45: RLS is enabled with no policy for anon or authenticated
+do $$
+begin
+  if not (select relrowsecurity from pg_class where oid = 'public.thought_attachments'::regclass) then
+    raise exception 'U45: RLS is not enabled';
+  end if;
+  if exists (select 1 from pg_policies where tablename = 'thought_attachments' and (roles && array['anon', 'authenticated', 'public']::name[])) then
+    raise exception 'U45: a policy exists for anon, authenticated or public';
+  end if;
+end $$;

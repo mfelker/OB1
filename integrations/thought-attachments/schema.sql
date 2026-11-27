@@ -94,3 +94,6 @@ create index if not exists thought_attachments_content_hash_idx on thought_attac
 create unique index if not exists thought_attachments_parent_hash_uniq
   on thought_attachments (parent_thought_id, content_hash)
   where state <> 'refused';
+
+-- Access: RLS on, no policy for anon or authenticated.
+alter table thought_attachments enable row level security;
