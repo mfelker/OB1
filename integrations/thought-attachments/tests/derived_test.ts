@@ -116,3 +116,15 @@ Deno.test("U138 a passage row's metadata has attachment_id and parent_thought_id
   assertEquals(row.metadata.attachment_id, ID);
   assertEquals(row.metadata.parent_thought_id, PARENT);
 });
+
+Deno.test("U350 passageRow records provenance.source_locator page 12 for one page and pages 12–13 across two", async () => {
+  const one = await passageRow(rowFor(), passage("text", [12, 12]), EMBEDDING, NOW);
+  assertEquals((one.metadata.provenance as { source_locator: string }).source_locator, "page 12");
+  const two = await passageRow(rowFor(), passage("text", [12, 13]), EMBEDDING, NOW);
+  assertEquals((two.metadata.provenance as { source_locator: string }).source_locator, "pages 12–13");
+});
+
+Deno.test("U139 an attachment with tier restricted gives metadata with sensitivity_tier restricted", async () => {
+  const row = await passageRow(rowFor("a.pdf", { sensitivity_tier: "restricted" }), passage("text", [1, 1]), EMBEDDING, NOW);
+  assertEquals(row.metadata.sensitivity_tier, "restricted");
+});
