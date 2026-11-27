@@ -103,19 +103,17 @@ Deno.test("U298 an OPTIONS preflight gets the CORS headers the core server sends
     method: "OPTIONS",
     headers: { origin: "https://claude.ai", "access-control-request-method": "POST" },
   }));
+  assertEquals(
+    { status: preflight.status, body: await preflight.text(), preflight: corsOf(preflight), calls: store.callNames() },
+    { status: 200, body: "ok", preflight: CORE_CORS, calls: [] },
+  );
+});
+
+Deno.test("U374 an MCP reply and a refused MCP request carry the CORS headers the core server sends", async () => {
+  const { app } = rig();
   const { response } = await mcpCall(app.fetch, "tools/list", {}, BRAIN_KEY);
   const refused = await mcpCall(app.fetch, "tools/list", {}, "wrong");
-  assertEquals(
-    {
-      status: preflight.status,
-      body: await preflight.text(),
-      preflight: corsOf(preflight),
-      reply: corsOf(response),
-      refused: corsOf(refused.response),
-      calls: store.callNames(),
-    },
-    { status: 200, body: "ok", preflight: CORE_CORS, reply: CORE_CORS, refused: CORE_CORS, calls: [] },
-  );
+  assertEquals({ reply: corsOf(response), refused: corsOf(refused.response) }, { reply: CORE_CORS, refused: CORE_CORS });
 });
 
 Deno.test("U299 an MCP request with no event-stream Accept header is handled, as the core server patches it", async () => {

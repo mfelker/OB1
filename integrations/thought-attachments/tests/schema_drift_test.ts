@@ -79,8 +79,9 @@ Deno.test("U83 every RPC name and named parameter that src/store.ts sends exists
   assertEquals(calls.length >= 13, true, `only ${calls.length} rpc calls found`);
   assertEquals(calls.filter((c) => c.name === "attachment_claim")[0].keys, ["p_id", "p_op", "p_seconds"]);
   assertEquals(driftProblems(store, schema), []);
+});
 
-  // the checker catches both kinds of drift
+Deno.test("U375 the drift checker flags an unknown parameter and an undefined function", () => {
   assertEquals(
     driftProblems(`rpc("attachment_claim", { p_id: 1, p_nope: 2 })`, "create or replace function attachment_claim(p_id uuid, p_op text)"),
     ["rpc attachment_claim sends p_nope, which the function does not take"],
@@ -103,7 +104,9 @@ export function guardRailProblems(sql: string, file: string): string[] {
 Deno.test("U52 neither schema.sql nor tests/verify.sql contains DROP, TRUNCATE or an unqualified DELETE", () => {
   assertEquals(guardRailProblems(read("../schema.sql"), "schema.sql"), []);
   assertEquals(guardRailProblems(read("verify.sql"), "tests/verify.sql"), []);
-  // the scan sees each kind of violation, and ignores comments
+});
+
+Deno.test("U376 the guard-rail scan flags DROP, TRUNCATE and an unqualified DELETE, and ignores comments", () => {
   assertEquals(guardRailProblems("drop index x;", "f"), ["f contains DROP"]);
   assertEquals(guardRailProblems("TRUNCATE t;", "f"), ["f contains TRUNCATE"]);
   assertEquals(guardRailProblems("delete from t;", "f").length, 1);
