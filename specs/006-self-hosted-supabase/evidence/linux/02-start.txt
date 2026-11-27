@@ -1,0 +1,77 @@
+# V2 start
+start: 2026-11-27T01:31:51Z
+model settings: EMBEDDING_API_BASE=http://host.docker.internal:11434/v1, EMBEDDING_MODEL=qwen3-embedding:4b, CHAT_MODEL=llama3.1:8b. Model server: the owner's Mac Ollama (same models as the Mac run), carried into the CT by an SSH reverse tunnel listening on the docker bridge address 172.17.0.1:11434 (no Ollama on this Linux host).
+
+$ host-gateway probe (R12), from a container:
+Unable to find image 'curlimages/curl:8.11.1' locally
+Digest: sha256:c1fe1679c34d9784c1b0d1e5f62ac0a79fca01fb6377cdd33e90473c6f9f9a69
+Status: Downloaded newer image for curlimages/curl:8.11.1
+GET http://host.docker.internal:11434/api/tags -> 200
+
+$ docker compose up -d   (2192 image-pull progress lines removed; images pulled 01:31-01:33Z, 4.65 GB stored)
+ Volume self-hosted-supabase-mcp_deno-cache Creating 
+ Volume self-hosted-supabase-mcp_ob1-storage Creating 
+ Network self-hosted-supabase-mcp_default Creating 
+ Volume self-hosted-supabase-mcp_db-config Creating 
+ Volume self-hosted-supabase-mcp_deno-cache Created 
+ Volume self-hosted-supabase-mcp_ob1-storage Created 
+ Volume self-hosted-supabase-mcp_db-config Created 
+ Network self-hosted-supabase-mcp_default Created 
+ Container supabase-db Creating 
+ Container supabase-envoy Creating 
+ Container supabase-envoy Created 
+ Container supabase-edge-functions Creating 
+ Container supabase-db Created 
+ Container supabase-rest Creating 
+ Container supabase-edge-functions Created 
+ Container supabase-rest Created 
+ Container supabase-storage Creating 
+ Container supabase-storage Created 
+ Container self-hosted-supabase-mcp-ob1-init-1 Creating 
+ Container self-hosted-supabase-mcp-ob1-init-1 Created 
+ Container supabase-envoy Starting 
+ Container supabase-db Starting 
+ Container supabase-envoy Started 
+ Container supabase-db Started 
+ Container supabase-db Healthy 
+ Container supabase-rest Starting 
+ Container supabase-rest Started 
+ Container supabase-storage Starting 
+ Container supabase-storage Started 
+ Container supabase-envoy Healthy 
+ Container supabase-edge-functions Starting 
+ Container supabase-edge-functions Started 
+ Container supabase-storage Healthy 
+ Container self-hosted-supabase-mcp-ob1-init-1 Starting 
+ Container self-hosted-supabase-mcp-ob1-init-1 Started 
+exit=0
+up finished: 2026-11-27T01:33:22Z
+
+$ docker compose ps -a
+SERVICE     STATE     <no value>   <no value>
+ob1-init    running                0
+db          running   healthy      0
+functions   running   starting     0
+api-gw      running   healthy      0
+rest        running   healthy      0
+storage     running   healthy      0
+
+$ docker compose logs ob1-init
+create-bucket.sh: bucket ob1-files is ready
+
+$ db first-boot schema
+/docker-entrypoint-initdb.d/migrate.sh: running /docker-entrypoint-initdb.d/migrations/99-ob1-schema.sql
+
+$ docker system df (images)
+TYPE            TOTAL     ACTIVE    SIZE      RECLAIMABLE
+Images          7         6         4.651GB   25.87kB (0%)
+V2-DONE
+
+$ docker compose ps -a (settled, 01:33:36Z)
+SERVICE     STATE     <no value>   <no value>
+ob1-init    exited                 0
+db          running   healthy      0
+functions   running   healthy      0
+api-gw      running   healthy      0
+rest        running   healthy      0
+storage     running   healthy      0

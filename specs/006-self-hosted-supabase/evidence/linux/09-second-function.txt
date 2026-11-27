@@ -1,0 +1,7 @@
+# V9 a second function next to 004's (throwaway, scratch override outside the repo, /root/scratch-v9)
+$ docker compose -f docker-compose.yml -f <scratch override mounting hello-ob1> up -d --force-recreate functions
+1 started
+hello-ob1: {"hello":"ob1"}
+004 setup check: ok
+after removing the scratch override: hello-ob1 HTTP 503, 004 setup check ok
+$ git status --porcelain (checkout): 0 lines

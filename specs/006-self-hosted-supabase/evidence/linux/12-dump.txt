@@ -1,0 +1,7 @@
+# V12 backup with pg_dump
+$ docker compose exec db pg_dump -U postgres postgres > backup.sql   (written to /root, outside the checkout)
+exit=0
+size: 289861 bytes
+CREATE TABLE public.thoughts: 1
+thoughts data rows (COPY block): 1
+git status --porcelain (checkout): 0 lines

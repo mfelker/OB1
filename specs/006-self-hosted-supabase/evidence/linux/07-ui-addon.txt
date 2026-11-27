@@ -1,0 +1,29 @@
+# V7 optional web dashboard
+$ docker compose ps --services --status running (before)
+db functions api-gw rest storage 
+$ docker compose --profile ui up -d
+ Container supabase-envoy Healthy 
+ Container supabase-db Healthy 
+ Container supabase-storage Healthy 
+ Container supabase-studio Started 
+ Container supabase-meta Started 
+ Container self-hosted-supabase-mcp-ob1-init-1 Started 
+api-gw healthy db healthy functions healthy meta healthy rest healthy storage healthy studio healthy 
+Studio without login: 401
+Studio with dashboard login: 200
+Studio tables (public): ['thoughts']
+Studio buckets: ['ob1-files']
+
+$ docker compose --profile ui stop studio meta
+2 stopped
+running now: db functions api-gw rest storage 
+setup check after stopping the UI: ok
+
+# OS-009: start the UI while the always-on services are stopped
+running after docker compose stop: [  ]
+$ docker compose --profile ui up -d studio meta
+ Container supabase-studio Started 
+ Container supabase-db Started 
+ Container supabase-meta Started 
+running now: db meta studio 
+restored with docker compose up -d: db functions api-gw rest storage ; setup check: ok

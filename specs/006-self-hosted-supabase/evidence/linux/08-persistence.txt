@@ -1,0 +1,20 @@
+# V8 persistence
+$ docker compose down
+7 removed
+$ docker compose up -d
+6 started
+running: db functions api-gw rest storage 
+thoughts rows: 1
+setup check: ok
+reworded search: ['--- Result 1 (76.6% match) ---'] True
+manual-sample.pdf: byte-identical
+DefaultBackground.jpg: byte-identical
+
+$ reboot of the whole CT (pct reboot 135 from the Proxmox host), requested at 01:37:45Z
+CT back up: 2026-11-27 01:38:05 (systemctl: running); SSH model tunnel re-established; no manual docker command after the reboot
+running: db functions api-gw rest storage 
+thoughts rows: 1
+setup check: ok
+reworded search: ['--- Result 1 (76.6% match) ---'] True
+manual-sample.pdf: byte-identical
+DefaultBackground.jpg: byte-identical

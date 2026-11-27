@@ -1,0 +1,19 @@
+# V11 OB1 gate review checks (run on this Linux host with bash, upstream title, at 0c357be; changed files = the recipe folder, as after the T047 rebase)
+tools: jq-1.7, check-jsonschema check-jsonschema, version 0.39.0 (a first run without them reported metadata.json as not valid JSON: the script treats a missing jq as invalid JSON; host tooling, not the recipe)
+failed=false
+✅ **Folder structure**
+✅ **Required files**
+✅ **Metadata valid**
+✅ **No credentials**
+✅ **SQL safety**
+✅ **Category artifacts**
+✅ **PR format**
+✅ **No binary blobs**
+✅ **README completeness**
+✅ **Contribution dependencies**
+✅ **LLM clarity review**
+✅ **Remote MCP pattern**
+✅ **Tool audit link**
+✅ **Scope check**
+✅ **Internal links**
+passed: 15, failed: 0

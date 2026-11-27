@@ -1,0 +1,38 @@
+# V1 setup (fresh)
+start: 2026-11-27T01:20:19Z
+host: Proxmox VE 9.2.10 LXC CT 135 (unprivileged, features nesting=1), Debian GNU/Linux 13 (trixie), kernel 6.17.4-2-pve, 4 vCPU / 4 GB
+docker: Docker Engine 29.10.1 / compose 5.8.0; /bin/sh -> /usr/bin/dash
+branch commit: 0c357be (shallow clone of origin)
+
+$ sh setup.sh
+Note: switching to '0ee83da5e5c5c406747ffc35d293c81c144ba61f'.
+
+You are in 'detached HEAD' state. You can look around, make experimental
+changes and commit them, and you can discard any commits you make in this
+state without impacting any branches by switching back to a branch.
+
+If you want to create a new branch to retain commits you create, you may
+do so (now or later) by using -c with the switch command. Example:
+
+  git switch -c <new-branch-name>
+
+Or undo this operation with:
+
+  git switch -
+
+Turn off this advice by setting config variable advice.detachedHead to false
+
+clone: completed
+secrets: completed
+model-settings: completed
+function-link: present
+exit=0
+
+$ git status --porcelain (checkout)
+(empty = clean)
+
+$ ls -a supabase/docker | grep .env
+.env
+.env.example
+docker-compose.envoy.yml
+V1-DONE

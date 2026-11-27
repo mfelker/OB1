@@ -1,0 +1,16 @@
+# V5 storage (README storage check, with a real PDF and a real photo, copied from the owner's Mac)
+file: manual-sample.pdf (1931957 bytes, application/pdf)
+  upload (service role): 200
+  upload again without upsert: {"statusCode":"409","error":"Duplicate","message":"The resource already exists","code":"KeyAlreadyExists"} 400
+  upload with x-upsert: true: 200
+  download: byte-identical
+  no credentials: 400
+  public URL: 400
+file: DefaultBackground.jpg (4744778 bytes, image/jpeg)
+  upload (service role): 200
+  upload again without upsert: {"statusCode":"409","error":"Duplicate","message":"The resource already exists","code":"KeyAlreadyExists"} 400
+  upload with x-upsert: true: 200
+  download: byte-identical
+  no credentials: 400
+  public URL: 400
+buckets (service role): ob1-files|private

@@ -1,0 +1,30 @@
+# V4 real MCP client and round trip (Claude Code on the owner's Mac, reaching CT 135's gateway through an SSH tunnel, local port 18000 -> CT localhost:8000)
+$ claude mcp add --transport http ob1-006-linux "http://127.0.0.1:18000/functions/v1/self-hosted-llm-mcp?key=<key>"
+Added HTTP MCP server ob1-006-linux with URL: http://127.0.0.1:18000/functions/v1/self-hosted-llm-mcp to local config
+File modified: /Users/mfelker/.claude.json [project: /Users/mfelker/.claude/jobs/4ac8d127/tmp/linux135/claudeproj]
+$ claude mcp get ob1-006-linux
+ob1-006-linux:
+  Scope: Local config (private to you in this project)
+  Status: ✔ Connected
+  Type: http
+
+
+tools/list:
+['search', 'fetch', 'search_thoughts', 'list_thoughts', 'thought_stats', 'capture_thought']
+capture_thought:
+None Captured as task — repair, household | Actions: Find dishwasher manual; Find it before the repair visit
+search_thoughts (reworded: where is the guide for my dish washing machine):
+Found 1 thought(s):
+
+--- Result 1 (76.6% match) ---
+Captured: 11/27/2026
+Type: task
+Topics: repair, household
+Actions: Find dishwasher manual; Find it before the repair visit
+
+The dishwasher manual is in the blue binder above the fridge; find it before the repair visit.
+
+stored row:
+1536|qwen3-embedding:4b|mcp
+elapsed since V1 start: 855 s (includes the Supabase clone at ~1 MB/s from GitHub, about 9 min, and the first image pull)
+01:34:34
