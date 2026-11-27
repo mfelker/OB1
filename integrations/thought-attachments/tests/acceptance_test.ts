@@ -1196,7 +1196,7 @@ async function heldPhotoFinish() {
   return { w, id, token, release };
 }
 
-todo(
+Deno.test(
   "A40 while a photo finish is held at the vision call, a second finish and a confirmed remove each return busy naming finishing, and nothing changes",
   async () => {
     const { w, id, release } = await heldPhotoFinish();
