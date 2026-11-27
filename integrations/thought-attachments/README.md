@@ -242,9 +242,74 @@ Tested with: Supabase Cloud ____ (placeholder), self-hosted stack from spec 006 
 
 Related reading: the [ingestion metadata contract](../../docs/ingestion-metadata-contract.md), [Getting Started](../../docs/01-getting-started.md) and the [self-hosted Supabase recipe](../../recipes/self-hosted-supabase-mcp/).
 
+## Limits
+
+The defaults are 25 MB and 50 pages for a PDF and 10 MB for an image. A PDF or image over its cap is refused when you start the attachment, and again at finishing if the stored file turns out larger than declared.
+
+They exist because the file is processed inside one request. On Supabase Cloud the binding limit is the 2-second CPU budget per request, not time or memory. A dense 50-page PDF used about half of it in testing, and a 100-page PDF reached the limit. Larger files need background processing, which is planned and not built yet. You can raise the caps on the self-hosted stack with the settings above, but measure first; Cloud owners should keep the defaults.
+
+Other limits: PDF, JPEG, PNG and WebP only; one file per attachment; one finish, rebuild or remove at a time per attachment.
+
 ## Troubleshooting
 
-See the entries below once this section is complete.
+**Issue: every call returns a settings error naming `MCP_ACCESS_KEY` or another setting**
+Solution: that setting is missing or invalid. A numeric setting must be a positive number, and a whole number for page, character, batch and time settings. The message never shows the value; check the one it names.
+
+**Issue: authorization error**
+Solution: the `key` in the URL or the `x-brain-key` header does not match `MCP_ACCESS_KEY`.
+
+**Issue: "share it as JPEG" (HEIC refused)**
+Solution: re-export the photo as JPEG as described under [Upload from your phone](#upload-from-your-phone) and try again.
+
+**Issue: refused for type or size at attach time**
+Solution: the message names the cap and the declared size. Use PDF, JPEG, PNG or WebP within the caps, and give the exact size in bytes. Give all of file name, type and size, or none of them for a phone upload. Give exactly one of a thought id or a note.
+
+**Issue: "the same file is already pending on this thought"**
+Solution: an upload for that name, type and size is still open. Use the link it points to, or wait for it to expire and start again.
+
+**Issue: finish says "no file uploaded yet" or "upload window expired"**
+Solution: run the upload first, or ask for a new link after the window passed. Nothing is changed by the failed finish.
+
+**Issue: attachment is `refused`**
+Solution: the stored file's real type, size or page count broke a limit or did not match the declaration. The state shows the actual values and the file is already deleted. Start a new attachment with the right file. A refused attachment cannot be finished again, and the orphan check lists it until you remove it.
+
+**Issue: "already attached to this thought as ..."**
+Solution: the same bytes are already attached to that thought. Use the one it names, or attach to a different thought.
+
+**Issue: "busy (finishing / rebuilding / removing), try again shortly"**
+Solution: another operation is running on that attachment. Wait and retry; the phone page retries by itself. If a run was killed, the busy mark expires after `BUSY_SECONDS` (410 s by default) and the attachment then reads as `failed` ("the run did not finish"); finish it again.
+
+**Issue: state `scanned`**
+Solution: the PDF has no usable text layer, so text search will not cover it. The file is stored and downloadable, but there are no passages. Reading scanned pages with OCR is not built yet (fork issue 30).
+
+**Issue: state `not_captioned`**
+Solution: the vision model is not set, or it failed; the reason is shown. Set or fix `VISION_*`, then run `finish_attachment` again for the same attachment.
+
+**Issue: state `failed` with an embedding error, or a vector size mismatch**
+Solution: nothing from the attempt was kept. Check `EMBEDDING_API_BASE`, `EMBEDDING_API_KEY` and `EMBEDDING_MODEL`. The model must return the same vector size as your brain's `thoughts` table; a brain built at another size needs the model that matches it. Then run `finish_attachment` again. If the endpoint rejects batched requests, set `EMBEDDING_BATCH_SIZE=1`.
+
+**Issue: a rebuild reports `last_rebuild_error`**
+Solution: the old derived thoughts were kept and the attachment is still `processed`. Fix the cause and rebuild again with `finish_attachment` and `rebuild: true`.
+
+**Issue: the phone page says the link has expired or was already used**
+Solution: ask your assistant for a new link. A link works once and for `UPLOAD_LINK_MINUTES`.
+
+**Issue: the phone cannot open the page or the upload fails (self-hosted)**
+Solution: `PUBLIC_BASE_URL` must be an address the phone reaches, not `localhost`. Recreate the functions service after changing it.
+
+**Issue: the page shows plain text instead of a page (Cloud)**
+Solution: Cloud cannot serve HTML from the function. Publish `upload-page.html` to a static host as described above and set `UPLOAD_PAGE_URL`.
+
+**Issue: a PDF is corrupt or encrypted**
+Solution: it is stored and marked `failed` with a readable reason, and no passages are written.
+
+## Known limitations
+
+- Scanned PDFs are stored but not searchable by text until OCR is added (fork issue 30).
+- Files over the caps need background processing, which is not built (fork issue 31).
+- Phone upload on the self-hosted stack works on the same network or tailnet; access from anywhere else is not built (fork issue 29).
+- Fork issue 26 and issue 32 are also open against this integration; see the fork's issue list for their scope.
+- Cloud owners publish the upload page themselves once, because of how Cloud serves HTML.
 
 ## Tool Surface Area
 
