@@ -150,3 +150,19 @@ Deno.test("U31 removeAttachment removes the parent note only under FR-016's exce
     ],
   );
 });
+
+Deno.test("U32 orphans lists a row whose parent is gone, an expired pending_upload row and a refused row, each with why", async () => {
+  const { store, clock, parent, att } = await setup();
+  const deadline = (minutes: number) => new Date(clock.now().getTime() + minutes * 60_000).toISOString();
+  const gone = store.seedAttachment({ parent_thought_id: "00000000-0000-4000-9000-00000000dead", state: "processed" });
+  const expired = store.seedAttachment({ parent_thought_id: parent.id, upload_deadline: deadline(-1) });
+  const refused = store.seedAttachment({ parent_thought_id: parent.id, state: "refused" });
+  store.seedAttachment({ parent_thought_id: parent.id, upload_deadline: deadline(1) }); // still pending: not an orphan
+  void att; // pending with the default 60-minute deadline: not an orphan
+  const listed = data(await store.orphans(clock.now())).map(({ row, why }) => ({ id: row.id, why }));
+  assertEquals(listed, [
+    { id: gone.id, why: "parent_gone" },
+    { id: expired.id, why: "upload_expired" },
+    { id: refused.id, why: "refused" },
+  ]);
+});
