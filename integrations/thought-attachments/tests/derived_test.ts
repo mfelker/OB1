@@ -46,3 +46,12 @@ Deno.test("U131 sourceLine for a passage on pages 12–13 is the data-model exam
     "From dishwasher-manual.pdf, pages 12–13 (attachment a1b2c3d4)",
   );
 });
+
+Deno.test("U133 fingerprint equals upsert_thought's normalisation: collapse whitespace runs, trim, lowercase, sha256 hex", async () => {
+  const hex = async (s: string) =>
+    [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s)))]
+      .map((b) => b.toString(16).padStart(2, "0")).join("");
+  assertEquals(await fingerprint("  Hello \n\tWORLD   again  "), await hex("hello world again"));
+  assertEquals(await fingerprint("hello world again"), await fingerprint("HELLO\n\nWorld  AGAIN\n"));
+  assertEquals(await fingerprint("abc"), "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad");
+});
