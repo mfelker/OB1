@@ -206,3 +206,21 @@ Deno.test("U312 findPending returns null for such a row whose deadline is one se
   pendingDueIn(store, clock, parent.id, -1);
   assertEquals(data(await store.findPending(parent.id, "manual.pdf", "application/pdf", 4096, clock.now())), null);
 });
+
+Deno.test("U313 findByHash returns a non-refused attachment on that parent with that hash, and null when the only match is refused or on another parent", async () => {
+  const store = new FakeStore({ clock: new Clock() });
+  const parent = await store.seedThought({ content: "Dishwasher DW-500" });
+  const otherParent = await store.seedThought({ content: "Garage shelf" });
+  const hash = "sha256:" + "ab".repeat(32);
+  const lonely = "sha256:" + "cd".repeat(32);
+  const kept = store.seedAttachment({ parent_thought_id: parent.id, content_hash: hash, state: "processed" });
+  store.seedAttachment({ parent_thought_id: parent.id, content_hash: lonely, state: "refused" });
+  store.seedAttachment({ parent_thought_id: otherParent.id, content_hash: lonely, state: "processed" });
+  assertEquals(
+    [
+      (data(await store.findByHash(parent.id, hash)))?.id,
+      data(await store.findByHash(parent.id, lonely)),
+    ],
+    [kept.id, null],
+  );
+});
