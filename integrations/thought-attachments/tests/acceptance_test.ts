@@ -1233,7 +1233,7 @@ Deno.test(
   },
 );
 
-todo("A42 after that, a confirmed remove_attachment succeeds", async () => {
+Deno.test("A42 after that, a confirmed remove_attachment succeeds", async () => {
   const { w, id, release } = await heldPhotoFinish();
   await release();
   const removed = await tool(w, "remove_attachment", { attachment_id: id, confirm: true });
