@@ -333,7 +333,7 @@ Deno.test(
   },
 );
 
-todo(
+Deno.test(
   "A3 attach_file with the same name, type and size while the first is pending creates no second row and returns the existing id",
   async () => {
     const w = world();
