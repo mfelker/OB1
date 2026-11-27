@@ -395,3 +395,10 @@ Deno.test("U239 upload.url is the signed link passed through publicUrl", async (
   assertEquals(url, publicUrl(h.settings, signed.url));
   assert(url.startsWith("https://brain.example.test/storage/v1/object/upload/sign/ob1-files/attachments/"));
 });
+
+Deno.test("U240 a given sensitivity_tier of restricted is stored on the row", async () => {
+  const h = await harness();
+  const parent = await seed(h, "dishwasher");
+  await call(h, "attach_file", { thought_id: parent.id, ...PDF, sensitivity_tier: "restricted" });
+  assertEquals(h.store.attachments[0].sensitivity_tier, "restricted");
+});

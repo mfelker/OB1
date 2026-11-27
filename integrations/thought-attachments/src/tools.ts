@@ -89,7 +89,7 @@ export function buildServer(deps: Deps, _services: Services): McpServer {
       sensitivity_tier: z.enum(["standard", "personal", "restricted"]).optional(),
     },
     annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: true },
-  }, async ({ thought_id, note, file_name, declared_type, declared_size }) => {
+  }, async ({ thought_id, note, file_name, declared_type, declared_size, sensitivity_tier }) => {
     if ((thought_id === undefined) === (note === undefined)) return fail(ONE_PARENT);
     if (file_name !== undefined && declared_type !== undefined && declared_size !== undefined) {
       const refusal = checkDeclared({ name: baseName(file_name), type: declared_type, size: declared_size }, deps.settings);
@@ -140,6 +140,7 @@ export function buildServer(deps: Deps, _services: Services): McpServer {
       file_name: name,
       declared_type: declared_type as AcceptedType,
       declared_size,
+      sensitivity_tier,
       storage_path: storagePath,
       upload_deadline: new Date(deps.now().getTime() + deps.settings.uploadLinkMinutes * 60_000).toISOString(),
       page_token_hash: await sha256Hex(pageToken),
