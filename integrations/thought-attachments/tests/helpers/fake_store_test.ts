@@ -123,3 +123,30 @@ Deno.test("U30 removeAttachment removes only that attachment's derived thoughts 
     { removed: { derived: 2, noteRemoved: false }, gone: undefined, ...keep },
   );
 });
+
+Deno.test("U31 removeAttachment removes the parent note only under FR-016's exception", async () => {
+  /** Removes one attachment on a fresh note; returns whether the note went and whether it is still stored. */
+  async function removeOn(opts: { createdHere: boolean; state: AttachmentRow["state"]; sibling: boolean }) {
+    const store = new FakeStore({ clock: new Clock() });
+    const note = await store.seedThought({ content: "Photo of the garage shelf" });
+    const row = store.seedAttachment({ parent_thought_id: note.id, parent_created_here: opts.createdHere, state: opts.state });
+    if (opts.sibling) store.seedAttachment({ parent_thought_id: note.id, state: "processed" });
+    const { token } = data(await store.claim(row.id, "remove", BUSY_SECONDS)) as { token: string };
+    const { noteRemoved } = data(await store.removeAttachment(row.id, token));
+    return { noteRemoved, noteStored: store.thought(note.id) !== undefined };
+  }
+  assertEquals(
+    [
+      await removeOn({ createdHere: true, state: "refused", sibling: false }),
+      await removeOn({ createdHere: true, state: "processed", sibling: false }),
+      await removeOn({ createdHere: true, state: "refused", sibling: true }),
+      await removeOn({ createdHere: false, state: "refused", sibling: false }),
+    ],
+    [
+      { noteRemoved: true, noteStored: false },
+      { noteRemoved: false, noteStored: true },
+      { noteRemoved: false, noteStored: true },
+      { noteRemoved: false, noteStored: true },
+    ],
+  );
+});
