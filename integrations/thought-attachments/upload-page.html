@@ -52,7 +52,12 @@ function upload(file, target) {
   progressEl.hidden = false;
   return fetch(target.url, { method: target.method, headers: target.headers, body: file }).then(function () {
     progressEl.hidden = true;
+    return finish();
   });
+}
+
+function finish() {
+  return post("/page/finish", { token: token });
 }
 
 function start(file) {

@@ -94,3 +94,24 @@ Deno.test("U287 upload progress is shown during the PUT", async () => {
   assertStringIncludes(page.text("status"), "Uploading");
   assertEquals(page.el("progress").hidden, false);
 });
+
+const PROCESSED = { state: "processed", derived_count: 1, caption: "A receipt on a desk" };
+
+Deno.test("U288 the page PUTs the one file to the returned link, then calls /page/finish", async () => {
+  const f = net()
+    .on("POST", `${BASE}/page/start`, { body: UPLOAD })
+    .on("PUT", SIGNED, { status: 200, body: {} })
+    .on("POST", `${BASE}/page/finish`, { body: PROCESSED });
+  const page = await loadPage({ href: `${PAGE_AT}#t=tok`, fetch: f.fetch });
+  await page.pick(PICK);
+  await settle();
+  assertEquals(f.requests.map((r) => `${r.method} ${r.url.slice(BASE.length)}`), [
+    "POST /page/info",
+    "POST /page/start",
+    `PUT ${SIGNED.slice(BASE.length)}`,
+    "POST /page/finish",
+  ]);
+  const put = f.requests[2];
+  assertEquals([put.headers["content-type"], put.headers["x-upsert"], (put.body as string).length], ["image/jpeg", "true", PICK.size]);
+  assertEquals(f.requests[3].body, { token: "tok" });
+});
