@@ -178,3 +178,23 @@ Deno.test("U33 insertNote with a fingerprint that already exists returns that th
     count,
   });
 });
+
+/** A pending_upload for manual.pdf on `parent` whose deadline is `seconds` from now. */
+function pendingDueIn(store: FakeStore, clock: Clock, parent: string, seconds: number): AttachmentRow {
+  return store.seedAttachment({
+    parent_thought_id: parent,
+    file_name: "manual.pdf",
+    declared_type: "application/pdf",
+    declared_size: 4096,
+    upload_deadline: new Date(clock.now().getTime() + seconds * 1000).toISOString(),
+  });
+}
+
+Deno.test("U311 findPending returns a matching pending_upload whose deadline is one second after now", async () => {
+  const clock = new Clock();
+  const store = new FakeStore({ clock });
+  const parent = await store.seedThought({ content: "Dishwasher DW-500" });
+  const row = pendingDueIn(store, clock, parent.id, 1);
+  const found = data(await store.findPending(parent.id, "manual.pdf", "application/pdf", 4096, clock.now()));
+  assertEquals(found?.id, row.id);
+});
