@@ -207,3 +207,13 @@ Deno.test("U189 a photo with a caption gives one derived thought, processed, wit
   assertEquals(row.caption_model, "test/vision-model");
   assertEquals(row.actual_type, "image/jpeg");
 });
+
+Deno.test("U191 a 301-character caption is returned as its first 300 characters, while the derived thought keeps the full caption", async () => {
+  const r = await rig();
+  const caption = "abcdefghij".repeat(30) + "k";
+  r.ff.on("POST", VISION_URL, visionResponder(caption));
+  const att = pending(r, jpegBytes(2000));
+  const out = await r.finish(att.id, {});
+  assertEquals(out.caption, caption.slice(0, 300));
+  assertStringIncludes(r.store.derivedOf(att.id)[0].content, caption);
+});

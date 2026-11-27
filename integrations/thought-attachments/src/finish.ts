@@ -116,7 +116,7 @@ export function createFinisher(deps: Deps): Services {
     };
     const written = await store.writeDerived(row.id, token, [derived], patch);
     if ("error" in written) throw new Error(written.error);
-    return { state: "processed", derived_count: 1, caption: caption.data.text };
+    return { state: "processed", derived_count: 1, caption: caption.data.text.slice(0, 300) };
   }
 
   return { finish };
