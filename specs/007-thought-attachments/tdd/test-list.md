@@ -655,6 +655,12 @@ Test files: `tests/app_test.ts` (U293–U301, U305–U307, U347–U349) and `tes
 | U377 | deleteObject on a missing object succeeds: Storage answers 200 with an empty list | FR-016 | example | DONE | `tests/store_test.ts::U377 deleteObject on a missing object succeeds: Storage answers 200 with an empty list` |
 | U378 | an HTTP error keeps the status and the provider's error.message, never other body fields such as an account id | FR-009, T101 | example | DONE | `tests/vision_test.ts::U378 an HTTP error keeps the status and the provider's error.message, never other body fields such as an account id` |
 | U379 | an HTTP error keeps the status and the provider's error.message, never other body fields such as an account id | FR-009, T101 | example | DONE | `tests/embeddings_test.ts::U379 an HTTP error keeps the status and the provider's error.message, never other body fields such as an account id` |
+| U380 | a non-JSON HTTP error body keeps its text in the reason | FR-009, T104 | example | DONE | `tests/vision_test.ts::U380 a non-JSON HTTP error body keeps its text in the reason` |
+| U381 | an HTTP error body longer than 300 characters is cut to its first 300 | FR-009, T104 | example | DONE | `tests/vision_test.ts::U381 an HTTP error body longer than 300 characters is cut to its first 300` |
+| U382 | a JSON error body whose error.message is not a string gives { error } with the body text, without throwing | FR-009, T104 | example | DONE | `tests/vision_test.ts::U382 a JSON error body whose error.message is not a string gives { error } with the body text, without throwing` |
+| U383 | a non-JSON HTTP error body keeps its text in the reason | FR-009, T104 | example | DONE | `tests/embeddings_test.ts::U383 a non-JSON HTTP error body keeps its text in the reason` |
+| U384 | an HTTP error body longer than 300 characters is cut to its first 300 | FR-009, T104 | example | DONE | `tests/embeddings_test.ts::U384 an HTTP error body longer than 300 characters is cut to its first 300` |
+| U385 | a JSON error body whose error.message is not a string gives { error } with the body text, without throwing | FR-009, T104 | example | DONE | `tests/embeddings_test.ts::U385 a JSON error body whose error.message is not a string gives { error } with the body text, without throwing` |
 
 ## Invariants and edge cases still to place
 
