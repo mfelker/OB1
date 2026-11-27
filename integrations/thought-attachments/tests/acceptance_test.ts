@@ -284,7 +284,7 @@ const SOURCE_LINE = /^From (.+), (?:pages? (\d+)(?:–(\d+))?|photo) \(attachmen
 
 // ============================================================== User Story 1
 
-todo(
+Deno.test(
   "A1 a 3-page text PDF attached, uploaded and finished is stored, processed with page_count 3, with N passages naming the attachment and parent",
   async () => {
     const w = world();
