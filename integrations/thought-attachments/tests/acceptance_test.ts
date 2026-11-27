@@ -986,7 +986,7 @@ Deno.test(
   },
 );
 
-todo("A29 get_attachment on a pending_upload and on a refused attachment returns no download link", async () => {
+Deno.test("A29 get_attachment on a pending_upload and on a refused attachment returns no download link", async () => {
   const w = world();
   const parent = await ownerThought(w, "The garage shelf by the side door");
   const pending = await attachCommand(w, parent.id, "manual.pdf", "application/pdf", 4096);
