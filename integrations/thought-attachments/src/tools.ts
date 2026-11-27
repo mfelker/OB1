@@ -273,7 +273,8 @@ export function buildServer(deps: Deps, services: Services): McpServer {
     if (data.page_count !== null) lines.push(`Pages: ${data.page_count}.`);
     if (data.caption_model) lines.push(`Caption model: ${data.caption_model}.`);
     const seconds = deps.settings.downloadLinkSeconds;
-    const signed = row.storage_path ? await deps.store.signDownload(row.storage_path, seconds) : null;
+    const stored = row.storage_path && row.state !== "pending_upload" && row.state !== "refused";
+    const signed = stored ? await deps.store.signDownload(row.storage_path as string, seconds) : null;
     if (signed && "data" in signed) {
       const download_link = publicUrl(deps.settings, signed.data);
       lines.push(`Download link (valid for ${seconds} seconds): ${download_link}`);

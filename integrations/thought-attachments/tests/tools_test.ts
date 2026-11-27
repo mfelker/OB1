@@ -618,3 +618,15 @@ Deno.test("U251 get_attachment gives a stored file a download link through publi
     assertStringIncludes(out.text, "300 seconds");
   }
 });
+
+Deno.test("U252 get_attachment on pending_upload returns no download_link", async () => {
+  const h = await harness();
+  const row = await pendingRow(h);
+  h.store.putObject(row.storage_path as string, new Uint8Array(10));
+  const out = await call(h, "get_attachment", { attachment_id: row.id });
+  assertEquals(out.isError, false);
+  assertEquals(out.data.state, "pending_upload");
+  assertEquals(out.data.download_link, undefined);
+  assertEquals(h.store.signedDownloads, []);
+  assert(!out.text.includes("Download link"));
+});
