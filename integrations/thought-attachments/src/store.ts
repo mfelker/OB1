@@ -109,7 +109,11 @@ export function createSupabaseStore(
     setState: notYet,
     removalPreview: notYet,
     removeAttachment: notYet,
-    signUpload: notYet,
+    async signUpload(path) {
+      const { data, error } = await db.storage.from(settings.attachmentsBucket).createSignedUploadUrl(path);
+      if (error) return { error: scrub(error.message) };
+      return { data: { url: data.signedUrl, token: data.token } };
+    },
     objectInfo: notYet,
     download: notYet,
     deleteObject: notYet,

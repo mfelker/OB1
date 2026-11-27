@@ -256,3 +256,14 @@ Deno.test("U88 insertNote, attachmentForPageToken and consumePageToken map the R
   assertEquals(ff.requests[3].body, { p_id: ATT_ID, p_hash: "sha256:tokenhash" });
   assertEquals(await store.consumePageToken(ATT_ID, "sha256:tokenhash"), { data: false });
 });
+
+const BUCKET_PATH = `attachments/${ATT_ID}/manual.pdf`;
+
+Deno.test("U79 signUpload targets ATTACHMENTS_BUCKET at attachments/<id>/<file_name> and returns Storage's URL unchanged", async () => {
+  const { store, ff } = setup({ ATTACHMENTS_BUCKET: "custom-files" });
+  const signed = `/object/upload/sign/custom-files/${BUCKET_PATH}?token=signed-token-1`;
+  ff.on("POST", `${STORAGE}/object/upload/sign/custom-files/${BUCKET_PATH}`, { body: { url: signed } });
+  assertEquals(await store.signUpload(BUCKET_PATH), { data: { url: `${STORAGE}${signed}`, token: "signed-token-1" } });
+  assertEquals(ff.requests.length, 1);
+  assertEquals(ff.requests[0].method, "POST");
+});
