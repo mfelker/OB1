@@ -181,3 +181,14 @@ Deno.test("U315 findByHash returns the non-refused attachment on that parent wit
   assertEquals(url.includes(`content_hash=eq.${HASH}`), true);
   assertEquals(url.includes("state=neq.refused"), true);
 });
+
+Deno.test("U316 findByHash returns null when the only attachment with that hash on that parent is refused", async () => {
+  const { store, ff } = setup();
+  const refused = attachmentRow({ state: "refused", content_hash: HASH });
+  // a database that honours the filters it is sent
+  ff.on("GET", `${REST}/thought_attachments*`, (req) => {
+    const url = decodeURIComponent(req.url);
+    return { body: url.includes("state=neq.refused") ? [] : [refused] };
+  });
+  assertEquals(await store.findByHash(PARENT, HASH), { data: null });
+});
