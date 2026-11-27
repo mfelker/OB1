@@ -1,9 +1,9 @@
 /** finish_attachment's engine (T025 and later): claim, verify, extract, embed, write (contracts/mcp-tools.md). */
 import { checkActual, sniffType } from "./intake.ts";
-import { passageRow, sourceLine } from "./derived.ts";
+import { captionRow, passageRow, sourceLine } from "./derived.ts";
 import { toPassages } from "./passages.ts";
 import { openPdf } from "./pdf.ts";
-import type { AttachmentRow, Deps, FinishOutcome, Services, StatePatch } from "./types.ts";
+import type { AcceptedType, AttachmentRow, Deps, FinishOutcome, Services, StatePatch } from "./types.ts";
 
 /** `sha256:<hex>` of the bytes, as `content_hash` stores it. */
 async function sha256(bytes: Uint8Array): Promise<string> {
@@ -64,6 +64,18 @@ export function createFinisher(deps: Deps): Services {
         { actual_type: sniffType(bytes), actual_size: info.data.size },
       );
     }
+    const actual: StatePatch = {
+      actual_type: sniffType(bytes),
+      actual_size: info.data.size,
+      content_hash: hash,
+    };
+    const stored = { ...row, content_hash: hash };
+    return actual.actual_type === "application/pdf"
+      ? await pdfPath(stored, token, bytes, actual)
+      : await photoPath(stored, token, bytes, actual);
+  }
+
+  async function pdfPath(row: AttachmentRow, token: string, bytes: Uint8Array, actual: StatePatch): Promise<FinishOutcome> {
     const pdf = await openPdf(bytes);
     if ("error" in pdf) throw new Error(pdf.error);
     const pageTexts = await pdf.data.pageTexts();
@@ -77,18 +89,34 @@ export function createFinisher(deps: Deps): Services {
     const embedded = await deps.embeddings.embed(passages.map((p) => p.text));
     if ("error" in embedded) throw new Error(embedded.error);
     const now = deps.now();
-    const rows = await Promise.all(passages.map((p, i) => passageRow({ ...row, content_hash: hash }, p, embedded.data[i], now)));
-    const patch = {
-      state: "processed" as const,
-      actual_type: sniffType(bytes),
-      actual_size: info.data.size,
+    const rows = await Promise.all(passages.map((p, i) => passageRow(row, p, embedded.data[i], now)));
+    const patch: StatePatch = {
+      ...actual,
+      state: "processed",
       page_count: pdf.data.pageCount,
-      content_hash: hash,
       processed_at: now.toISOString(),
     };
     const written = await store.writeDerived(row.id, token, rows, patch);
     if ("error" in written) throw new Error(written.error);
     return { state: "processed", derived_count: rows.length, page_count: pdf.data.pageCount };
+  }
+
+  async function photoPath(row: AttachmentRow, token: string, bytes: Uint8Array, actual: StatePatch): Promise<FinishOutcome> {
+    const caption = await deps.vision.caption(bytes, row.declared_type as AcceptedType);
+    if ("error" in caption) throw new Error(caption.error);
+    const embedded = await deps.embeddings.embed([caption.data.text]);
+    if ("error" in embedded) throw new Error(embedded.error);
+    const now = deps.now();
+    const derived = await captionRow(row, caption.data, embedded.data[0], now);
+    const patch: StatePatch = {
+      ...actual,
+      state: "processed",
+      caption_model: caption.data.model,
+      processed_at: now.toISOString(),
+    };
+    const written = await store.writeDerived(row.id, token, [derived], patch);
+    if ("error" in written) throw new Error(written.error);
+    return { state: "processed", derived_count: 1, caption: caption.data.text };
   }
 
   return { finish };

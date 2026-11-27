@@ -9,7 +9,7 @@ import { Clock } from "./helpers/clock.ts";
 import { envGetter, EMBEDDING_API_BASE, VISION_API_BASE } from "./helpers/env.ts";
 import { embeddingResponder, FakeFetch, visionResponder } from "./helpers/fake_fetch.ts";
 import { FakeStore, shortId } from "./helpers/fake_store.ts";
-import { contentHash, textPdf } from "./helpers/fixtures.ts";
+import { contentHash, jpegBytes, textPdf } from "./helpers/fixtures.ts";
 
 function settingsWith(overrides: Record<string, string | undefined> = {}): Settings {
   const result = loadSettings(envGetter(overrides));
@@ -191,4 +191,19 @@ Deno.test("U324 a first attachment with those bytes in state failed still counts
   const out = await r.finish(second.id, {});
   assertEquals(out.state, "refused");
   assertStringIncludes(out.reason ?? "", shortId(first.id));
+});
+
+Deno.test("U189 a photo with a caption gives one derived thought, processed, with caption_model set", async () => {
+  const r = await rig();
+  const att = pending(r, jpegBytes(2000));
+  const out = await r.finish(att.id, {});
+  assertEquals(out.state, "processed");
+  assertEquals(out.derived_count, 1);
+  const derived = r.store.derivedOf(att.id);
+  assertEquals(derived.length, 1);
+  assertStringIncludes(derived[0].content, "a red door");
+  const row = r.store.attachment(att.id) as AttachmentRow;
+  assertEquals(row.state, "processed");
+  assertEquals(row.caption_model, "test/vision-model");
+  assertEquals(row.actual_type, "image/jpeg");
 });
