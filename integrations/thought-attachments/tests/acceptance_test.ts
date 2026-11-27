@@ -626,7 +626,7 @@ Deno.test(
   },
 );
 
-todo(
+Deno.test(
   "A15 attach_file with a HEIC declared type is refused with the share-it-as-JPEG message, and no row or link is created",
   async () => {
     const w = world();
