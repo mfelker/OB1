@@ -202,3 +202,11 @@ Deno.test("U272 a token one second after upload_deadline gets 410", async () => 
   assertEquals([res.status, (await res.json()).error], [410, EXPIRED]);
   assertEquals(r.store.signedUploads.length, 0);
 });
+
+Deno.test("U273 a token one second before upload_deadline is accepted", async () => {
+  const r = await rig();
+  const row = await r.seed();
+  r.clock.set(new Date(new Date(row.upload_deadline).getTime() - 1000));
+  const res = await r.post("/page/start", { token: TOKEN, ...PICK });
+  assertEquals([res.status, r.store.signedUploads.length], [200, 1]);
+});
