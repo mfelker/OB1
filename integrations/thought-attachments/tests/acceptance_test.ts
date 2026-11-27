@@ -1071,7 +1071,7 @@ Deno.test(
   },
 );
 
-todo(
+Deno.test(
   "A33 a text-less PDF ends scanned with no passages, says text search won't cover it yet, and still has a download link",
   async () => {
     const w = world();
