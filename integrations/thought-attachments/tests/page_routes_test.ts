@@ -4,7 +4,7 @@ import { pageRoutes } from "../src/page_routes.ts";
 import { loadSettings } from "../src/settings.ts";
 import type { AttachmentRow, Deps, FinishOutcome, Services } from "../src/types.ts";
 import { Clock } from "./helpers/clock.ts";
-import { envGetter, PUBLIC_BASE_URL, SUPABASE_URL } from "./helpers/env.ts";
+import { BRAIN_KEY, envGetter, PUBLIC_BASE_URL, SUPABASE_URL } from "./helpers/env.ts";
 import { FakeStore } from "./helpers/fake_store.ts";
 
 const PAGE = "https://pages.example.test/ob1/upload-page.html";
@@ -209,4 +209,15 @@ Deno.test("U273 a token one second before upload_deadline is accepted", async ()
   r.clock.set(new Date(new Date(row.upload_deadline).getTime() - 1000));
   const res = await r.post("/page/start", { token: TOKEN, ...PICK });
   assertEquals([res.status, r.store.signedUploads.length], [200, 1]);
+});
+
+Deno.test("U274 the page routes need no brain key, and a brain key without a valid token gets 410", async () => {
+  const r = await rig();
+  const row = await r.seed();
+  const keyHeaders = { "x-brain-key": BRAIN_KEY, authorization: `Bearer ${BRAIN_KEY}` };
+  const keyOnly = await r.post("/page/start", { ...PICK }, keyHeaders);
+  const keyAsToken = await r.post("/page/start", { token: BRAIN_KEY, ...PICK }, keyHeaders);
+  const noKey = await r.post("/page/start", { token: TOKEN, ...PICK });
+  assertEquals([keyOnly.status, keyAsToken.status, noKey.status], [410, 410, 200]);
+  assertEquals(r.store.attachment(row.id)!.declared_size, 2048);
 });
