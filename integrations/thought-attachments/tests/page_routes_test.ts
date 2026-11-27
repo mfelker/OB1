@@ -266,3 +266,22 @@ Deno.test("U276 CORS allows the same origin when the page is served by the funct
     [PUBLIC_BASE_URL, "https://other-host.example.test", null],
   );
 });
+
+const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
+const MUTATORS = ["setDeclaration", "consumePageToken", "signUpload", "createAttachment", "claim", "writeDerived", "setState"];
+
+Deno.test("U337 /page/info returns the expected kind, the four accepted types and the caps, and changes nothing", async () => {
+  const r = await rig();
+  const row = await r.seed({ expected_kind: "photo" });
+  const before = structuredClone(r.store.attachments);
+  r.store.calls.length = 0;
+  const res = await r.post("/page/info", { token: TOKEN });
+  const body = await res.json();
+  assertEquals(res.status, 200);
+  assertEquals(body.expected_kind, "photo");
+  assertEquals([...body.accepted_types].sort(), [...ACCEPTED_TYPES].sort());
+  assertEquals(body.caps.pdf_pages, r.deps.settings.maxPdfPages);
+  assertEquals(r.store.attachments, before);
+  assertEquals(r.store.callNames().filter((m) => MUTATORS.includes(m)), []);
+  assertEquals(r.store.attachment(row.id)!.page_token_hash !== null, true);
+});

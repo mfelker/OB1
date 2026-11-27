@@ -2,12 +2,16 @@
 import { Hono } from "npm:hono@4.9.2";
 import { baseName, checkDeclared } from "./intake.ts";
 import { publicUrl } from "./links.ts";
-import type { AcceptedType, Deps, Services } from "./types.ts";
+import type { AcceptedType, AttachmentRow, Deps, Services } from "./types.ts";
 
 async function sha256Hex(text: string): Promise<string> {
   const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
   return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
+
+const ACCEPTED_TYPES: AcceptedType[] = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
+
+const megabytes = (mb: number) => Math.floor(mb * 1024 * 1024);
 
 const EXPIRED = "This link has expired or was already used. Ask your assistant for a new one";
 
@@ -40,14 +44,31 @@ export function pageRoutes(deps: Deps, _services: Services): Hono {
   // from the attach call is confirmed, never replaced. (No column tells them apart.)
   const declaredByPage = new Set<string>();
 
+  /** The attachment a request's token is for, or null when the token is unknown, used or past its deadline. */
+  async function attachmentFor(body: { token?: unknown }): Promise<AttachmentRow | null> {
+    if (typeof body.token !== "string" || body.token === "") return null;
+    const found = await deps.store.attachmentForPageToken(await sha256Hex(body.token));
+    if (!("data" in found) || found.data === null) return null;
+    if (deps.now().getTime() >= new Date(found.data.upload_deadline).getTime()) return null;
+    return found.data;
+  }
+
+  app.post("/page/info", async (c) => {
+    const body = await c.req.json().catch(() => ({}));
+    const row = await attachmentFor(body);
+    if (!row) return c.json({ error: EXPIRED }, 410);
+    const { maxImageMb, maxPdfMb, maxPdfPages } = deps.settings;
+    return c.json({
+      expected_kind: row.expected_kind,
+      accepted_types: ACCEPTED_TYPES,
+      caps: { image_bytes: megabytes(maxImageMb), pdf_bytes: megabytes(maxPdfMb), pdf_pages: maxPdfPages },
+    });
+  });
+
   app.post("/page/start", async (c) => {
     const body = await c.req.json().catch(() => ({}));
-    const found = typeof body.token === "string" && body.token !== ""
-      ? await deps.store.attachmentForPageToken(await sha256Hex(body.token))
-      : null;
-    if (!found || !("data" in found) || found.data === null) return c.json({ error: EXPIRED }, 410);
-    const row = found.data;
-    if (deps.now().getTime() >= new Date(row.upload_deadline).getTime()) return c.json({ error: EXPIRED }, 410);
+    const row = await attachmentFor(body);
+    if (!row) return c.json({ error: EXPIRED }, 410);
     if (!declaredByPage.has(row.id) && row.declared_type !== null && row.declared_type !== body.type) {
       return c.json({ code: "wrong_type", message: "The picked file is " + body.type + ", not the declared " + row.declared_type + "." }, 400);
     }
