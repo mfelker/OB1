@@ -396,3 +396,13 @@ Deno.test("U199 an object created after upload_deadline is refused and deleted",
   assertEquals(r.store.objects.has(att.storage_path as string), false);
   assertEquals(r.store.derivedOf(att.id).length, 0);
 });
+
+Deno.test("U200 an object created exactly at upload_deadline is not refused for its timing", async () => {
+  const r = await rig();
+  const bytes = await textPdf(["alpha beta gamma"]);
+  const deadline = new Date(r.clock.now().getTime() + 10 * 60_000);
+  const att = pending(r, bytes, { upload_deadline: deadline.toISOString() }, deadline.toISOString());
+  r.clock.advanceMinutes(5);
+  const out = await r.finish(att.id, {});
+  assertEquals(out.state, "processed");
+});
