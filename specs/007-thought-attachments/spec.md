@@ -203,7 +203,7 @@ The owner says "that's the wrong manual, remove it". The attachment, its stored 
 
 ### Key Entities
 
-- **Attachment**: One stored file linked to one parent thought. Attributes: base file name, type, size, content hash, page count (PDFs), storage location, processing state (pending upload, processed, scanned, uncaptioned, failed, refused) with a reason, the model used for captions, created and processed times.
+- **Attachment**: One stored file linked to one parent thought. Attributes: base file name, type, size, content hash, page count (PDFs), storage location, processing state (pending upload, processed, scanned, not captioned, failed, refused) with a reason, the model used for captions, created and processed times.
 - **Derived thought**: An ordinary thought created from an attachment: a PDF passage or a photo caption. It carries the ingestion-contract metadata and points to its attachment and parent thought.
 - **Parent thought**: The thought the file belongs to: either an existing thought, or a note this integration saved when the attachment was started with note text. Once it exists, this feature never modifies it.
 

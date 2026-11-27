@@ -96,7 +96,7 @@ A new remote MCP integration, `integrations/thought-attachments/`, links real fi
 ```text
 specs/007-thought-attachments/
 ├── plan.md              # This file
-├── research.md          # Phase 0 (R1–R16)
+├── research.md          # Phase 0 (R1–R17)
 ├── data-model.md        # Phase 1
 ├── quickstart.md        # Phase 1: live acceptance runs
 ├── contracts/
@@ -118,7 +118,7 @@ Specs live on fork `main` only. They are never copied onto the `contrib/` branch
 integrations/thought-attachments/
 ├── README.md
 ├── metadata.json
-├── deno.json            # import map (npm: and jsr: specifiers, pinned)
+├── deno.json            # for Cloud bundling and fork-ci detection only; sources use full npm:/jsr: specifiers (the self-hosted router ignores a function's import map, spec 004 R10)
 ├── index.ts             # entry: MCP route, GET /upload, POST /page/start, POST /page/finish
 ├── upload-page.html     # the phone page (served on self-hosted; published on Cloud)
 ├── schema.sql           # thought_attachments, functions, grants, RLS, guarded column and bucket

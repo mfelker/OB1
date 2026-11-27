@@ -1,0 +1,666 @@
+---
+
+description: "Tasks for thought attachments (spec 007), structured for parallel Sonnet-class stream agents coordinated by an integrator"
+---
+
+# Tasks: Thought attachments (files linked to thoughts)
+
+**Input**: Design documents from `specs/007-thought-attachments/`
+
+**Prerequisites**: plan.md, spec.md (US1–US5, FR-001–FR-028, SC-001–SC-020), research.md (R1–R17), data-model.md, contracts/mcp-tools.md, contracts/upload-page.md, contracts/settings.md, quickstart.md (scenarios 1–13)
+
+**Tests**: MANDATORY (constitution Principle IV, upstream-bound lane: red-green-refactor). This feature runs through the installed spec-kit-tdd loop:
+
+- After this file is written, the `after_tasks` hook (`tdd.plan`) writes `tdd/test-list.md` and adds the `[U#]`/`[A#]` behavior markers to these tasks. **Never tick a marked task by hand.** The integrator ticks it when all of its behaviors are `DONE`.
+- One behavior per cycle:
+  1. Write the test first, named with its behavior id prefix (`"U7 …"`, `"A3 …"`).
+  2. **Watch it fail for the right reason**, and record the decisive failure line.
+  3. Make the smallest change that turns it green.
+  4. Run the full suite.
+  5. Refactor.
+- Never commit on red. Commit at green, with test and implementation together, one cycle per commit. Never weaken a test.
+- A test that passes on its first run gets a deliberate mutant (the playbook rule), and that is recorded.
+- **Streams run `deno test` directly in their own worktree**, from `integrations/thought-attachments/`:
+  - single: `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^<id> /" tests/`. The slashes are required: an unslashed filter is a literal substring, matches **zero tests and still exits ok**. Every single run must report exactly `1 passed` or `1 failed`. A `0 passed | 0 failed` run proves nothing and is never recorded.
+  - full: the same command without `--filter`.
+
+  These are fork-ci's flags. There is **no `--allow-net`**, so Storage, the database, embeddings and vision are always injected fakes (research R15). Streams never use `tdd.mjs`, which resolves the plan's Worktree `W` rather than the stream's tree. The integrator uses the profile commands in `W`.
+- **SQL behaviors** live in `tests/verify.sql`. `tdd.mjs single` doesn't support SQL (exit 4), so a SQL cycle adds one assertion block and runs the whole file with `psql -v ON_ERROR_STOP=1 -X -q -f tests/verify.sql` from the folder, through the local SQL runtime set up by T004 (spec 006's T069 recipe). Record the decisive `ERROR:` or `raise exception` line as the red.
+
+**Single writers**:
+
+- `tasks.md`, `tdd/test-list.md` and `tdd/cycle-log.md` live only on fork `main` (`M`), never on a `contrib/` branch (Principle V). Only the integrator (the main session) edits them.
+- Each stream appends its cycle entries to **`M/specs/007-thought-attachments/tdd/cycle-log.d/<stream>.md`**, an absolute path outside its worktree. That is the only `M` file a stream writes, and it reports which behaviors are `DONE`.
+
+**Stream agents**: each stream is one Sonnet subagent (`Agent` with `model: "sonnet"`). Its brief contains:
+
+- its worktree, branch and task IDs
+- the TDD rules above, the single-writer rule and the **Seams** section
+- the contract, data-model and research sections its tasks cite
+
+A stream edits only the files listed for it in the ownership table. It never edits `src/types.ts`, `src/settings.ts`, `src/links.ts`, `deno.json` or `tests/helpers/*` (except a helper the table gives it). If a seam must change, the stream stops and reports to the integrator.
+
+**Rules every stream brief must repeat**:
+
+- **Working directory**: the shell resets to `M` after every tool call. Start every command with `cd <stream worktree> &&`, or use `git -C <stream worktree>`. **Never run git in `M`.** The stream writes its `cycle-log.d/<stream>.md` with the file tools and never stages or commits it.
+- **Design documents are read-only, at absolute paths**: the stream worktree has no `specs/`. Every citation here (`data-model.md` …, `contracts/…`, `research.md` R…, `tdd/test-list.md`) means `/Users/mfelker/Projects/ob1/specs/007-thought-attachments/<file>`.
+- **Commit messages**: `[integrations] <behavior id>: <short description>`. These commits go into the upstream PR, so a stream branch never uses `[fork]`.
+- **No live services, no secrets**: never call a real endpoint, never write a real key, and use only the placeholder values from `tests/helpers/env.ts`.
+- **Contracts state behavior, not implementation**: build only what a failing test demands.
+
+## Path Conventions
+
+- `M` = `/Users/mfelker/Projects/ob1`: the fork-`main` checkout. Every `/speckit-*` command and every `specs/` edit happens here.
+- `W` = `/Users/mfelker/Projects/ob1/.worktrees/contrib-thought-attachments`: the integration worktree on `contrib/mfelker/thought-attachments`, cut from `upstream/main` (plan **Worktree**). It is the only branch that becomes the upstream PR.
+- `F` = `W/integrations/thought-attachments`: the contribution folder. **Inside a stream, `F` means that stream's own copy**: `/Users/mfelker/Projects/ob1/.worktrees/ta-<stream>/integrations/thought-attachments`.
+- Stream worktrees: `/Users/mfelker/Projects/ob1/.worktrees/ta-<stream>` on local branches `contrib/mfelker/thought-attachments-<stream>`, cut from `contrib/mfelker/thought-attachments`. Use a hyphen, never `/<stream>`: a ref can't be both a branch and a directory.
+- Core parity reference: `W/server/index.ts` and `W/docs/01-getting-started.md` (upstream at T001).
+
+## Streams and file ownership
+
+All paths are relative to `F`.
+
+| Stream | Worktree | Wave | Owns (and only these) |
+|--------|----------|------|------------------------|
+| Q (data: SQL + adapter) | `ta-data` | 1 | `schema.sql`, `tests/verify.sql`, `src/store.ts`, `tests/store_test.ts`, `tests/schema_drift_test.ts` |
+| X (files: intake + extraction + derived content) | `ta-files` | 1 | `src/intake.ts`, `src/pdf.ts`, `src/passages.ts`, `src/derived.ts`, `tests/intake_test.ts`, `tests/pdf_test.ts`, `tests/passages_test.ts`, `tests/derived_test.ts` |
+| E (model clients) | `ta-models` | 1 | `src/embeddings.ts`, `src/vision.ts`, `tests/embeddings_test.ts`, `tests/vision_test.ts` |
+| D (docs) | `ta-docs` | 1 | `README.md` |
+| N (finishing) | `ta-finish` | 2, after Q, X and E merge | `src/finish.ts`, `tests/finish_test.ts` |
+| T (tools) | `ta-tools` | 2, after Q, X and E merge | `src/tools.ts`, `tests/tools_test.ts` |
+| P (phone page) | `ta-page` | 2, after Q, X and E merge | `upload-page.html`, `src/page_routes.ts`, `tests/page_routes_test.ts`, `tests/page_script_test.ts`, `tests/helpers/page_dom.ts` |
+| A (app + entry) | `ta-app` | 3, after N, T and P merge | `src/app.ts`, `index.ts`, `tests/app_test.ts`, `tests/imports_test.ts`, `tests/acceptance_test.ts` (only to flip `todo` → `Deno.test`) |
+
+- Each stream also writes `M/specs/007-thought-attachments/tdd/cycle-log.d/<stream>.md`.
+- Wave 1 runs four agents at once, wave 2 three, and wave 3 one, because `createApp` composes everything.
+- **Why Q owns both SQL and its TypeScript caller**: the database function names, parameters and return shapes are then a private detail of one stream. `tests/schema_drift_test.ts` (deno, `--allow-read`) checks every RPC name and parameter that `src/store.ts` sends against `schema.sql`, so a mismatch fails in CI rather than on the live run.
+- N, T and P run in parallel because tools and page routes reach finishing only through the injected `Services.finish` (Seams). Their tests use a scripted finish; A composes the real one.
+- D runs in wave 1 because the README depends only on the design documents. The live runs fill in its "Tested with" values later (T080).
+- The integrator owns `deno.json`, `metadata.json`, `src/types.ts`, `src/settings.ts`, `src/links.ts`, `tests/settings_test.ts`, `tests/links_test.ts`, `tests/helpers/*` (except `page_dom.ts`) and the todo form of `tests/acceptance_test.ts`.
+
+## Seams (written by the integrator in T006–T011, frozen during the waves)
+
+Streams code against these. The signatures are the only shared contract. Behavior comes from the cited contract and data-model sections.
+
+- **Imports**: every source file uses a full `npm:`/`jsr:` specifier, never a bare name. The self-hosted router ignores a function's own `deno.json` import map (spec 004 `research.md` R10). `deno.json` stays for Cloud bundling and for fork-ci's deno detection.
+- `src/types.ts`:
+  - `GetEnv = (name: string) => string | undefined`
+  - `Settings`: one field per row of contracts/settings.md. `SettingsResult = { ok: true; settings: Settings } | { ok: false; problems: { setting: string; reason: string }[] }`
+  - `AcceptedType = "application/pdf" | "image/jpeg" | "image/png" | "image/webp"`. `AttachmentState = "pending_upload" | "processed" | "scanned" | "not_captioned" | "failed" | "refused"`. `BusyOp = "finish" | "rebuild" | "remove"`
+  - `AttachmentRow`: one field per `data-model.md` `thought_attachments` column
+  - `R<T> = { data: T } | { error: string }`. `Refusal = { code: string; message: string }`
+  - `ThoughtMatch { id; first_line; captured }`
+  - `DerivedRow { content; fingerprint; metadata }`. `StatePatch`: the subset of `AttachmentRow` that finishing sets
+  - `Store`, every method async and returning `R<…>`:
+    - thoughts: `thoughtExists(id)`, `insertNote(content, embedding, metadata) → { id; created }`, `matchThoughts(embedding, limit) → ThoughtMatch[]`, `findThoughtsExact(text, limit) → ThoughtMatch[]`, `embeddingDimension() → number`
+    - attachments: `createAttachment(fields) → AttachmentRow`, `getAttachment(idOrShortId) → AttachmentRow | "not_found" | "ambiguous"`, `findPending(parentId, name, type, size) → AttachmentRow | null`, `setDeclaration(id, decl)`, `listByParent(parentId)`, `attachmentForDerived(thoughtId)`, `orphans(now) → { row; why }[]`, `attachmentForPageToken(hash)`, `consumePageToken(id, hash) → boolean`
+    - claims and writes: `claim(id, op, seconds) → { token } | { busy: BusyOp }`, `release(id, token)`, `writeDerived(id, token, rows: DerivedRow[], patch: StatePatch)`, `setState(id, token, patch)`, `removalPreview(id) → { derived; noteWouldGo }`, `removeAttachment(id, token) → { derived; noteRemoved }`
+    - Storage: `signUpload(path) → { url; token }`, `objectInfo(path) → { size; createdAt } | null`, `download(path) → Uint8Array`, `deleteObject(path)`, `signDownload(path, seconds) → string`
+  - `EmbeddingClient { embed(texts: string[]): Promise<R<number[][]>> }`. `VisionClient { configured: boolean; caption(bytes, type): Promise<R<{ text; model }>> }`
+  - `FinishOutcome { state; reason?; derived_count; caption?; page_count?; busy?: BusyOp; last_rebuild_error? }`. `Services { finish(id, opts: { rebuild?: boolean }): Promise<FinishOutcome> }`
+  - `Deps { settings; store; embeddings; vision; now: () => Date; randomBytes: (n: number) => Uint8Array }`
+- Stub exports (each throws `new Error("not implemented")` until its stream replaces it):
+  - `settings.ts`: `loadSettings(getEnv)`. `links.ts`: `publicUrl(settings, url)`, `pageLink(settings, token)`, `curlLine(upload, filePath)`
+  - `intake.ts`: `baseName(name)`, `checkDeclared(decl, settings)`, `sniffType(bytes)`, `checkActual(row, bytes, info, settings)`
+  - `pdf.ts`: `openPdf(bytes)` → `R<{ pageCount; pageTexts(): Promise<string[]> }>`, `isScanned(pageTexts, settings)`
+  - `passages.ts`: `toPassages(pageTexts, sourceLineFor, settings)` → `{ text; pages: [number, number] }[]`
+  - `derived.ts`: `sourceLine(fileName, locator, shortId)`, `fingerprint(content)`, `passageRow(…)`, `captionRow(…)`, `noteMetadata(now)`
+  - `embeddings.ts`: `createEmbeddingClient(settings, fetch)`. `vision.ts`: `createVisionClient(settings, fetch)`
+  - `store.ts`: `createSupabaseStore(url, serviceRoleKey, settings, fetch)`
+  - `finish.ts`: `createFinisher(deps)` → `Services`
+  - `tools.ts`: `buildServer(deps, services)`. `page_routes.ts`: `pageRoutes(deps, services)` (a Hono sub-app)
+  - `app.ts`: `createApp(deps)`, `productionDeps()`
+- `tests/helpers/` (integrator):
+  - `fake_fetch.ts`: a scripted `fetch`. Routes are keyed by method and URL. It records every request (URL, method, headers, parsed body). A route can reply with a status and body, throw a network error, hang until its `AbortSignal` fires, or hold its reply until released. It also has embedding and vision responders: a deterministic vector of a chosen length per input text, and a scripted caption.
+  - `fake_store.ts`: an in-memory `Store`.
+    - Thought rows carry `content_fingerprint` with `upsert_thought`'s normalisation (VP-004) and a unique fingerprint.
+    - Attachment rows follow data-model.md. Claims expire by the injected clock and check the claim token.
+    - `writeDerived` and `removeAttachment` are all-or-nothing, and a fingerprint conflict is an error, never a merge.
+    - Storage objects carry bytes and `createdAt`.
+    - It records calls. Failure can be injected per method, and a method can be held until released.
+  - `clock.ts`: a settable clock for `Deps.now`.
+  - `fixtures.ts`: text PDFs with given page texts, generated with `pdf-lib` at test time (R15); an image-only PDF (scanned); corrupt PDF bytes; minimal JPEG, PNG, WebP and HEIC byte headers; buffers of a chosen size. No binary fixture is committed.
+  - `env.ts`: a baseline environment with placeholder values only.
+  - `mcp.ts`: `mcpCall(fetchFn, method, params, key)` (a JSON-RPC `Request` for `app.fetch`) and `inMemoryClient(server)` (the SDK `Client` over `InMemoryTransport`).
+  - `todo.ts`: `todo(name, fn)` registers `Deno.test({ name, ignore: Deno.env.get("RUN_TODO") !== "1", fn })`. Reds are recorded with `RUN_TODO=1`.
+
+---
+
+## Phase 1: Setup (integrator, in `M` then `W`)
+
+**Purpose**: the branch, the worktree, the empty folder and the local SQL runtime.
+
+- [ ] T001 In `M`, create `W`:
+  1. `git fetch upstream`. Note `upstream/main`'s SHA (`238df6c` at planning).
+  2. `git worktree add .worktrees/contrib-thought-attachments -b contrib/mfelker/thought-attachments upstream/main`. Do **not** use the `speckit.worktree.create` hook (plan Complexity Tracking).
+  3. If upstream moved past `238df6c`, check that `W/server/index.ts` (VP-001–VP-003), `W/server/deno.json`, `W/docs/01-getting-started.md` step 2.6 (VP-004, R16), `W/docs/ingestion-metadata-contract.md` and `W/integrations/_template/` are unchanged. Also search `W` for any new attachment or file feature (plan Lane). If anything changed, stop and re-plan.
+- [ ] T002 In `M`, confirm `specs/007-thought-attachments/tdd/test-list.md` and the baseline `tdd/cycle-log.md` exist (written by the `after_tasks` hook). Create `specs/007-thought-attachments/tdd/cycle-log.d/.gitkeep`, then commit on fork `main` (`[fork] Spec 007: test list`).
+- [ ] T003 Scaffold `F` from `W/integrations/_template/`:
+  - `F/metadata.json` with real values: name, description, `category: "integrations"`, author `mfelker`, `requires.open_brain: true`, `requires.services` (Supabase Storage, an embedding endpoint, a vision endpoint), tags, difficulty, a placeholder `estimated_time` until T080, dates. Validate it against `W/.github/metadata.schema.json`.
+  - `F/README.md`: section headings only (stream D fills it).
+  - `F/deno.json`: the five `server/deno.json` imports at the same versions, plus `unpdf` 2.2.3, `pdf-lib` 1.17.1 and **exact** versions of `@std/encoding` and `@std/assert` (record the chosen versions in T003's line in `M`); `"lock": false`; a `test` task with fork-ci's flags (plan Technical Context).
+
+  Commit in `W`: `[integrations] Scaffold thought-attachments`.
+- [ ] T004 Local SQL runtime, per spec 006's T069 recipe (`M/specs/006-self-hosted-supabase/tdd/cycle-log.md`, "T069 Finding 9"):
+  - container `ob1-007-pgtest` from `pgvector/pgvector:pg17`, no bind mount
+  - a `psql` wrapper outside the repo that copies the caller's directory into the container on every call
+  - `.fork/ci/sql/bootstrap.sql` applied once
+
+  Record the recipe, including the wrapper's path, at the top of `M/specs/007-thought-attachments/tdd/cycle-log.md`, so stream Q's brief can point to it. Then check `node M/.fork/ci/bin/tdd.mjs where` resolves `W` and `F`.
+
+---
+
+## Phase 2: Foundational (integrator, blocking)
+
+**Purpose**: seams, settings, links, fakes and the outer loop. **No stream starts before T013.**
+
+- [ ] T005 Owner decisions, **asked one question at a time** (say how many remain). Record each answer in `M/specs/007-thought-attachments/spec.md` Clarifications and the contract it affects, then commit on fork `main`. Each one must be answered before the task named, and all six before T013:
+  1. Before T008: how `BUSY_SECONDS` picks "160 on Supabase Cloud, 410 elsewhere" (contracts/settings.md), with no platform signal named.
+  2. Before T008: how `UPLOAD_PAGE_URL`'s default `<function URL>/upload` is built (from `PUBLIC_BASE_URL` plus `/functions/v1/<name>`?), and the function's name.
+  3. Before T008: whether a bad setting value (`MAX_PDF_PAGES=abc`, `0`) is a named error or falls back to the default, and whether the MB caps accept decimals.
+  4. Before T013 (it affects T015 and T026): the `finish_attachment` outcome when the uploaded bytes duplicate another attachment's `content_hash` on the same parent, where the unique index of `data-model.md` `thought_attachments.content_hash` refuses the second one (US1 #3, FR-012).
+  5. Before T013 (it affects T043): whether `/page/finish` uses up its token when finishing is refused as busy. If it does, the page can't retry, which conflicts with "retries" in FR-026 and quickstart scenario 8.
+  6. Before T013 (it affects T044 and stream D's T047): how the copy of `upload-page.html` that the function serves on self-hosted gets its API address, given that the address is "written in the file" (R5).
+- [ ] T006 Write the seams in `F/src/types.ts` and the throwing stubs in `F/src/{settings,links,intake,pdf,passages,derived,embeddings,vision,store,finish,tools,page_routes,app}.ts`, exactly as listed under **Seams**. Write `F/index.ts` as the one-line entry, `Deno.serve(createApp(productionDeps()).fetch)`. Use full specifiers only. Run `deno check` on every file, then commit.
+- [ ] T007 Write `F/tests/helpers/{fake_fetch,fake_store,clock,fixtures,env,mcp,todo}.ts` per **Seams**. Commit.
+- [ ] T008 Tests first in `F/tests/settings_test.ts`, then `loadSettings(getEnv)` in `F/src/settings.ts`, covering every row of contracts/settings.md:
+  - each default
+  - `EMBEDDING_API_KEY` falls back to `OPENROUTER_API_KEY` (R3)
+  - `PUBLIC_BASE_URL` falls back to `SUPABASE_PUBLIC_URL`, then `SUPABASE_URL` (R6)
+  - `BUSY_SECONDS` per T005.1, and bad values per T005.3
+  - `MCP_ACCESS_KEY` is required
+  - `VISION_*` unset means vision is not configured (FR-006)
+  - no setting value appears in any problem's reason (FR-009)
+
+  FR-017, R10, R13.
+- [ ] T009 Tests first in `F/tests/links_test.ts`, then `F/src/links.ts`:
+  - `publicUrl` rewrites the internal Supabase origin of a signed link to `PUBLIC_BASE_URL` and keeps its path and query (R6)
+  - `pageLink` is `UPLOAD_PAGE_URL#t=<token>`, with the token only in the fragment (contracts/upload-page.md "The link")
+  - `curlLine` is a ready-to-run `PUT` with the returned headers (FR-002a) and contains no brain key
+- [ ] T010 Harness proof in `F/tests/helpers/helpers_test.ts`, under **fork-ci's exact flags**, before any stream builds on it:
+  - every npm and jsr import loads
+  - `unpdf` reads the page count and the per-page text of a `pdf-lib`-generated 3-page PDF (R2, R15)
+  - `crypto.subtle` SHA-256 of a buffer
+  - supabase-js `createClient(url, key, { global: { fetch: fake } })` sends an RPC and a Storage `createSignedUploadUrl` request to the fake fetch
+  - a throwaway `McpServer` behind Hono and `StreamableHTTPTransport` answers `initialize`, `tools/list` and `tools/call` through `app.fetch` via `mcpCall`, and `inMemoryClient` lists the same tool
+  - the fake fetch's hang-until-abort and hold modes
+  - `--filter "/^<name> /"` on this file runs exactly one test
+
+  Commit.
+- [ ] T011 Fake-store self-tests in `F/tests/helpers/fake_store_test.ts`. The fake re-implements database semantics that acceptance tests rely on, so each rule gets its own test:
+  - a claim is refused while unexpired, naming the running operation
+  - a claim succeeds after its expiry by the clock
+  - a write with a stale or foreign claim token is refused
+  - `writeDerived` failing partway leaves the old set and state unchanged
+  - a fingerprint conflict with an existing thought is an error and leaves that thought unchanged
+  - `removeAttachment` removes only that attachment's rows, plus the note under the FR-016 exception
+  - `orphans` lists a gone parent, an expired `pending_upload` and a `refused` row
+  - `insertNote` with an existing fingerprint returns `created: false` (R17)
+
+  The same rules are asserted against real SQL by stream Q (T015, T016, T038, T055, T061), so a fake that drifts shows up as a disagreement. Commit.
+- [ ] T012 Outer loop first: write `F/tests/acceptance_test.ts` with every `[A#]` behavior from `tdd/test-list.md` as a `todo(...)` test. Each drives `createApp(deps).fetch(new Request(…))` with `FakeStore`, the real embedding and vision clients over `fake_fetch`, `loadSettings` over `env.ts` and the fake clock. Each asserts the full observable result: JSON-RPC result text and structured fields, page-route status and JSON, fake-store rows and objects, and the fake-fetch request log. The acceptance set, by story:
+  - **US1**: scenarios 1–4, SC-001 (each listed sample fact is in a passage whose source line names the file, page range and short id; the findability half is live), SC-009, SC-012, SC-016.
+  - **US2**: scenarios 1–3 and 5–7, SC-002 (caption half), SC-010, SC-011, SC-015, SC-018; US2 #4's HEIC bytes refused with the "share as JPEG" message.
+  - **US3**: scenarios 1–2, SC-003 (link lifetime and no link for `pending_upload`/`refused`; byte identity and real expiry are live).
+  - **US4**: scenarios 1–3, SC-005, SC-013, SC-014, SC-017 (+20 min accepted, +65 min refused by the clock), SC-019; the edge cases "declared one type, uploaded another", "corrupt PDF", "no file uploaded", "dimension mismatch".
+  - **US5**: scenarios 1–4, SC-020.
+  - **Cross-cutting**: SC-007 (no signed link, key, token or absolute path in any fake row after a full run); FR-018 (wrong or missing key refused; page routes refuse the brain key); `tools/list` returns the 7 tools.
+
+  Run with `RUN_TODO=1` and record each red (test name and decisive failure line) in `M/specs/007-thought-attachments/tdd/cycle-log.md`. Confirm the default run is green (all ignored). Commit in `W` (`[integrations] Acceptance tests as todo`) and in `M` (`[fork] Spec 007: acceptance reds`).
+- [ ] T013 From `M`, create the wave-1 stream worktrees: `git worktree add .worktrees/ta-<s> -b contrib/mfelker/thought-attachments-<s> contrib/mfelker/thought-attachments` for `s` ∈ {data, files, models, docs}. Brief and launch streams Q, X, E and D in one message (see **Parallel Example**).
+
+**Checkpoint**: test list committed on `M`; the owner decisions recorded; seams, settings, links, fakes, harness proof and acceptance todos committed on `W`; four wave-1 worktrees exist.
+
+---
+
+## Phase 3: User Story 1 - Attach a service manual and find it later (Priority: P1) 🎯 MVP
+
+**Goal**: a text-layer PDF attached to a thought becomes passage thoughts that the unchanged core search finds.
+
+**Independent Test**: the US1 acceptance tests pass through `createApp`. Live: quickstart scenarios 1–3.
+
+### Stream Q: data (`ta-data`, wave 1)
+
+- [ ] T014 [P] [US1] Tests first in `F/tests/verify.sql`, then `F/schema.sql` (fork-ci SQL runtime, after `bootstrap.sql`). Assert:
+  - the table `thought_attachments` with every column, type, default and not-null rule of `data-model.md` `thought_attachments` (`thought_attachments.id`, `thought_attachments.parent_thought_id` with **no** foreign key, `thought_attachments.parent_created_here`, `thought_attachments.file_name`, `thought_attachments.declared_type`, `thought_attachments.declared_size`, `thought_attachments.expected_kind`, `thought_attachments.actual_type`, `thought_attachments.actual_size`, `thought_attachments.page_count`, `thought_attachments.content_hash`, `thought_attachments.storage_path`, `thought_attachments.sensitivity_tier`, `thought_attachments.state`, `thought_attachments.state_reason`, `thought_attachments.last_rebuild_error`, `thought_attachments.caption_model`, `thought_attachments.derived_count`, `thought_attachments.upload_deadline`, `thought_attachments.page_token_hash`, `thought_attachments.busy_op`, `thought_attachments.busy_until`, `thought_attachments.busy_token`, `thought_attachments.created_at`, `thought_attachments.updated_at` with its trigger, `thought_attachments.processed_at`)
+  - the value rules that data-model.md states for `thought_attachments.declared_type`, `thought_attachments.expected_kind`, `thought_attachments.sensitivity_tier`, `thought_attachments.state` and `thought_attachments.busy_op`
+  - the indexes on `parent_thought_id` and `content_hash`, and the partial unique `(parent_thought_id, content_hash)` index that excludes `refused` (FR-012)
+  - RLS on with no `anon`/`authenticated` policy, and `service_role` select, insert, update and delete (FR-018, FR-020)
+  - `thoughts.content_fingerprint` and `idx_thoughts_fingerprint` added only if missing, with no second index on a brain that has them (R16; `data-model.md` `Derived thought.content_fingerprint`)
+  - when a `storage` schema exists, the bucket `ATTACHMENTS_BUCKET` (`ob1-files`) is private, limited to the four accepted MIME types and has no size limit of its own (R12); skipped when the schema is absent
+  - the whole file runs twice on the same database
+  - no `DROP`, `TRUNCATE` or unqualified `DELETE` in either file (CLAUDE.md guard rails)
+- [ ] T015 [P] [US1] Tests first in `F/tests/verify.sql`, then the write-derived function in `F/schema.sql` (`data-model.md` "Database functions"; R9, R10):
+  - it succeeds only with the caller's unexpired claim token
+  - it inserts rows with `upsert_thought`'s fingerprint normalisation (fork-ci's bootstrap has no `upsert_thought`, so the test compares against the expression in `docs/01-getting-started.md` step 2.6)
+  - a fingerprint conflict raises, and the existing thought (an owner thought with identical text) is unchanged (US1 #4, FR-022)
+  - it replaces the attachment's previous derived set and sets the state fields and `thought_attachments.derived_count` in one transaction
+  - a failure partway leaves the old set (FR-011, FR-027)
+  - the duplicate-content outcome per T005.4
+- [ ] T016 [P] [US1] Tests first in `F/tests/verify.sql`, then the claim and release, dimension and exact-text functions in `F/schema.sql`:
+  - a claim is refused while unexpired, returning the running `thought_attachments.busy_op`
+  - a claim succeeds after `thought_attachments.busy_until`, with a new `thought_attachments.busy_token` (FR-026, R10)
+  - the dimension function returns `vector(1536)`'s 1536 on fork-ci's bootstrap (FR-007, R3)
+  - the exact-text find takes the text as a parameter: a query containing `%`, `,`, `)` and `'` matches literally, and the function returns id, first line and date (FR-023, R11)
+- [ ] T017 [P] [US1] Tests first in `F/tests/store_test.ts`, then the database half of `createSupabaseStore` in `F/src/store.ts`: supabase-js with the fake fetch injected; each thought, attachment and claim method from **Seams** sends its RPC or PostgREST request; errors map to `{ error }` with no key in the text (FR-009). `matchThoughts` calls the base `match_thoughts` (R11). `getAttachment` accepts the 8-character short id and reports `not_found` and `ambiguous` (contracts/mcp-tools.md; `data-model.md` `thought_attachments.id`).
+- [ ] T018 [P] [US1] Tests first in `F/tests/store_test.ts`, then the Storage half of `F/src/store.ts`: `signUpload`, `objectInfo` (size and creation time), `download` and `deleteObject` on the bucket `ATTACHMENTS_BUCKET` at `attachments/<id>/<file_name>` (`data-model.md` `thought_attachments.storage_path`; R12). `signUpload`'s URL comes back unchanged; rewriting is `links.ts`'s job.
+- [ ] T019 [P] [US1] Tests first in `F/tests/schema_drift_test.ts`: every RPC name and named parameter that `F/src/store.ts` sends exists in `F/schema.sql` (read with `--allow-read`).
+
+### Stream X: files (`ta-files`, wave 1)
+
+- [ ] T020 [P] [US1] Tests first in `F/tests/intake_test.ts`, then `baseName` and `checkDeclared` in `F/src/intake.ts`:
+  - `baseName` keeps only the base name, without path parts or control characters (`data-model.md` `thought_attachments.file_name`; spec edge case; FR-009)
+  - `checkDeclared` refuses a type outside the four accepted types (`data-model.md` `thought_attachments.declared_type`) and a size over the cap for its type, naming the cap and the declared size (`data-model.md` `thought_attachments.declared_size`; `MAX_IMAGE_MB`, `MAX_PDF_MB`; FR-003)
+- [ ] T021 [P] [US1] Tests first in `F/tests/pdf_test.ts`, then `openPdf` in `F/src/pdf.ts` with `unpdf` (R2): the page count is available before any text is extracted (R1), and per-page text comes back in page order for `pdf-lib` fixtures.
+- [ ] T022 [P] [US1] Tests first in `F/tests/passages_test.ts`, then `toPassages` in `F/src/passages.ts`:
+  - every passage, its source line included, is at most `PASSAGE_MAX_CHARS` (FR-005, FR-025)
+  - passages keep reading order and cover all the text
+  - each records the page range it spans, including a passage that crosses a page boundary
+  - a single over-long run of text is still split
+- [ ] T023 [P] [US1] Tests first in `F/tests/derived_test.ts`, then `sourceLine`, `fingerprint` and `passageRow` in `F/src/derived.ts`:
+  - the source line has the format of the data-model examples, with the page range and the short id (`data-model.md` `Derived thought.content`; FR-025)
+  - `fingerprint` equals `upsert_thought`'s normalisation (VP-004; `data-model.md` `Derived thought.content_fingerprint`)
+  - the metadata has every key of `data-model.md` `Derived thought.metadata`: `Derived thought.metadata.source`, `Derived thought.metadata.source_type`, `Derived thought.metadata.source_label`, `Derived thought.metadata.importer_name`, `Derived thought.metadata.importer_version`, `Derived thought.metadata.imported_at`, `Derived thought.metadata.input_hash`, `Derived thought.metadata.content_fingerprint`, `Derived thought.metadata.sensitivity_tier`, `Derived thought.metadata.type` (`reference`), `Derived thought.metadata.topics`, `Derived thought.metadata.provenance` (`deterministic_conversion`, `source_locator`, `artifact`, `review_status`), `Derived thought.metadata.attachment_id` and `Derived thought.metadata.parent_thought_id` (FR-008, FR-028)
+  - no signed link, token or absolute path can enter the metadata (FR-009)
+
+### Stream E: model clients (`ta-models`, wave 1)
+
+- [ ] T024 [P] [US1] Tests first in `F/tests/embeddings_test.ts`, then `createEmbeddingClient` in `F/src/embeddings.ts` (R3; contracts/settings.md):
+  - `POST <EMBEDDING_API_BASE>/embeddings` with `EMBEDDING_MODEL` and an array input of at most `EMBEDDING_BATCH_SIZE` texts; with `1`, one text per request
+  - `Authorization: Bearer` with `EMBEDDING_API_KEY` (or its fallback)
+  - vectors come back in input order across batches
+  - an unreachable server, a non-2xx status or a malformed body fails the whole call with a reason naming the cause
+  - any key value in an error is redacted (FR-009)
+
+### Stream N: finishing (`ta-finish`, wave 2)
+
+- [ ] T025 [P] [US1] Tests first in `F/tests/finish_test.ts`, then the PDF path of `createFinisher` in `F/src/finish.ts`, using the merged X and E modules with `FakeStore` and `fake_fetch` (contracts/mcp-tools.md `finish_attachment`):
+  - claim → verify the stored file → extract → embed → write → `processed`, with `derived_count` and `page_count`
+  - `thought_attachments.actual_type`, `thought_attachments.actual_size`, `thought_attachments.page_count`, `thought_attachments.content_hash` (`sha256:<hex>`, the `input_hash`) and `thought_attachments.processed_at` set
+  - the claim is released on every exit
+  - an existing owner thought with the same text as a passage is untouched (US1 #4, FR-022)
+- [ ] T026 [P] [US1] Tests first in `F/tests/finish_test.ts`, then repeat finishes in `F/src/finish.ts`: a plain finish on `processed` returns the existing outcome with no embedding call and no write (FR-012); the duplicate-content outcome per T005.4 (US1 #3).
+
+### Stream T: tools (`ta-tools`, wave 2)
+
+- [ ] T027 [P] [US1] Tests first in `F/tests/tools_test.ts`, then tool registration in `F/src/tools.ts`: `tools/list` returns exactly `find_thought`, `attach_file`, `finish_attachment`, `get_attachment`, `list_attachments`, `remove_attachment` and `find_orphan_attachments`, each with the input schema, defaults and annotations of contracts/mcp-tools.md.
+- [ ] T028 [P] [US1] Tests first in `F/tests/tools_test.ts`, then `find_thought` in `F/src/tools.ts`: `meaning` (default) embeds the query and calls `matchThoughts`, `exact` calls `findThoughtsExact`; `limit` defaults to 5 and is at most 20; each match has `id`, `first_line` (at most 120 characters) and `captured`; an empty result says "no matching thought" (FR-023, SC-009, R11).
+- [ ] T029 [P] [US1] Tests first in `F/tests/tools_test.ts`, then, in `F/src/tools.ts`, `attach_file` with `thought_id` and the command-upload details. Refusals, each before any row, note or link (FR-003, contracts/mcp-tools.md): an unknown `thought_id`; both or neither of `thought_id` and `note`; `checkDeclared`'s refusals; the same name, type and size already pending on the parent (pointing to it). On success:
+  - a row with `thought_attachments.parent_thought_id`, `thought_attachments.file_name`, `thought_attachments.declared_type`, `thought_attachments.declared_size`, `thought_attachments.sensitivity_tier` (default `personal`), `thought_attachments.storage_path`, `thought_attachments.upload_deadline` (now + `UPLOAD_LINK_MINUTES`; R8), `thought_attachments.page_token_hash` (a hash only, never the token) and `thought_attachments.state` `pending_upload`
+  - a result with `attachment_id` and its short id, `parent_thought_id`, `upload_deadline`, `upload { url, method: "PUT", headers }` through `publicUrl`, the `curl` line, `page_link` and `limits` (FR-001, FR-002, R6)
+- [ ] T030 [P] [US1] Tests first in `F/tests/tools_test.ts`, then, in `F/src/tools.ts`, `finish_attachment` over `services.finish` (scripted in this stream's tests): `attachment_id` and optional `rebuild`; the result text and the structured `state`, `reason`, `derived_count`, `caption`, `page_count`; the busy message "busy (finishing / rebuilding / removing), try again shortly" (FR-026).
+
+### Stream A: app and entry (`ta-app`, wave 3)
+
+- [ ] T031 [US1] Tests first in `F/tests/app_test.ts`, then `createApp(deps)` in `F/src/app.ts`:
+  - the MCP route accepts `MCP_ACCESS_KEY` from `x-brain-key` or `?key=`, compared in constant time
+  - a missing or wrong key gets an authorization error and changes nothing, and an unset key refuses everything (FR-018, R13)
+  - CORS and the Accept-header handling as the core does (`W/server/index.ts`)
+  - it composes `createFinisher`, `buildServer` and `pageRoutes`
+- [ ] T032 [US1] Tests first in `F/tests/imports_test.ts`, then `productionDeps()` in `F/src/app.ts`:
+  - `loadSettings(Deno.env.get)`, with startup refused, naming the problems, when settings are not `ok`
+  - `createSupabaseStore(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, …)` and the real clients over `globalThis.fetch`
+  - `index.ts` stays the one-line entry
+  - the test reads every `.ts` file outside `tests/` and fails on a bare import specifier (004 R10) or any `pdf-lib` import (R15)
+- [ ] T033 [US1] Flip the US1 acceptance tests in `F/tests/acceptance_test.ts` from `todo` to `Deno.test`, one per green commit, including the 7-tool `tools/list` and wrong-key cases.
+
+### Stream D: docs (`ta-docs`, wave 1)
+
+- [ ] T034 [P] [US1] Write `F/README.md` per the spec's README Contract (docs only; gated by markdownlint, the link check and the live runs). Sections:
+  - **What it does**
+  - a link to `../../docs/05-tool-audit.md`
+  - **Prerequisites** (both platforms)
+  - a credential tracker (names only)
+  - **Configure**: a table of every setting in contracts/settings.md
+  - **Set up the database**: `schema.sql` in the SQL editor on Cloud, or through 006's `psql` route on self-hosted, plus the verification query (R12, R16)
+  - **Deploy to Supabase Cloud**: `supabase functions deploy thought-attachments --no-verify-jwt` and `supabase secrets set` (R13)
+  - **Deploy on spec 006's stack**: a `docker-compose.override.yml` that mounts the folder into `functions` and passes 007's settings, then `docker compose up -d --force-recreate functions` (R14); no 006 file changes
+  - **Connect your AI client**: the URL with `?key=`
+  - **Attach a manual**: `find_thought`, `attach_file`, the `curl` upload, `finish_attachment`, then search with the core connector
+  - **Expected outcome**
+  - links to `docs/ingestion-metadata-contract.md`, `docs/01-getting-started.md` and `../../recipes/self-hosted-supabase-mcp/`
+  - a **"Tested with"** table whose value cells read `pending verification` until T080
+
+**Checkpoint**: US1 works end to end through `createApp` with fakes.
+
+---
+
+## Phase 4: User Story 2 - Photograph where something is stored (Priority: P1)
+
+**Goal**: a phone photo, uploaded through the one-time page, becomes a searchable caption.
+
+**Independent Test**: the US2 acceptance tests pass. Live: quickstart scenarios 4, 7 and 8 (SC-008 is live-only).
+
+### Stream X: files (`ta-files`, wave 1)
+
+- [ ] T035 [P] [US2] Tests first in `F/tests/intake_test.ts`, then HEIC handling and `sniffType` in `F/src/intake.ts`:
+  - a HEIC name or declared type gets "share it as JPEG", with the steps on iPhone and Android (FR-003, US2 #3 and #4)
+  - `sniffType` identifies PDF, JPEG, PNG, WebP and HEIC from the first bytes, never from a name or declared type (R7), and returns `null` for anything else
+- [ ] T036 [P] [US2] Tests first in `F/tests/derived_test.ts`, then `captionRow` and `noteMetadata` in `F/src/derived.ts`:
+  - the caption's source line uses "photo" (FR-025), and `data-model.md` `Derived thought.metadata.provenance` has `method: "llm_extraction"`, `source_locator: "photo"` and `extractor_model` (FR-006, FR-008)
+  - `noteMetadata` gives `data-model.md` `Parent note.metadata` (`type: "observation"`, `source: "thought-attachments"`, `source_type: "thought_attachments_note"`, `imported_at`; FR-001)
+
+### Stream E: model clients (`ta-models`, wave 1)
+
+- [ ] T037 [P] [US2] Tests first in `F/tests/vision_test.ts`, then `createVisionClient` in `F/src/vision.ts` (R4):
+  - `configured` is false when `VISION_API_BASE` or `VISION_MODEL` is unset
+  - `POST <VISION_API_BASE>/chat/completions` with `VISION_MODEL`, the image as a base64 `data:` URL of its real type, and a prompt asking for visible objects, places, labels and text
+  - `VISION_API_KEY` as a bearer token only when set
+  - the result has the caption text and the model
+  - an unreachable server, a non-2xx status or an empty caption fails with a reason
+  - keys are redacted (FR-009)
+
+### Stream Q: data (`ta-data`, wave 1)
+
+- [ ] T038 [P] [US2] Tests first in `F/tests/verify.sql` and `F/tests/store_test.ts`, then note insertion and page tokens in `F/schema.sql` and `F/src/store.ts`:
+  - `insertNote` inserts a new thought with `data-model.md` `Parent note.content` and `Parent note.metadata` and returns `created: true`
+  - a note whose fingerprint exists returns that thought with `created: false`, unchanged (R17; `data-model.md` `thought_attachments.parent_created_here`)
+  - `attachmentForPageToken` finds a row by `thought_attachments.page_token_hash` only
+  - `consumePageToken` clears it once and fails a second time (FR-002, FR-024)
+
+### Stream N: finishing (`ta-finish`, wave 2)
+
+- [ ] T039 [P] [US2] Tests first in `F/tests/finish_test.ts`, then the photo path in `F/src/finish.ts`:
+  - a caption becomes one derived thought, the state becomes `processed`, and `thought_attachments.caption_model` is set (FR-006, US2 #1)
+  - with vision not configured or failing: `not_captioned` with the reason in `thought_attachments.state_reason`, the file kept, no caption (US2 #7)
+  - `not_captioned` finished again writes the caption (SC-015)
+- [ ] T040 [P] [US2] Tests first in `F/tests/finish_test.ts`, then rebuilds in `F/src/finish.ts` (FR-027):
+  - `rebuild: true` on a `processed` photo replaces the caption with exactly one caption by the newly configured model (SC-015)
+  - a failed rebuild keeps the old set and `processed`, and sets `thought_attachments.last_rebuild_error` with the reason (SC-018)
+  - a plain finish never rebuilds
+
+### Stream T: tools (`ta-tools`, wave 2)
+
+- [ ] T041 [P] [US2] Tests first in `F/tests/tools_test.ts`, then `attach_file`'s `note` and phone-upload paths in `F/src/tools.ts`:
+  - `note` embeds the text and saves it through `insertNote` as the parent; `parent_created_here` follows `created`, and an existing note gets "attached to your existing thought" (FR-001, R17, SC-010)
+  - a HEIC or over-cap declaration with `note` saves no thought (FR-003, SC-020)
+  - with the file details omitted, the row has no declaration and carries `thought_attachments.expected_kind` when given (planning clarification)
+
+### Stream P: phone page (`ta-page`, wave 2)
+
+- [ ] T042 [P] [US2] Tests first in `F/tests/page_routes_test.ts`, then `POST /page/start` in `F/src/page_routes.ts` (contracts/upload-page.md):
+  - a valid, unused token before `thought_attachments.upload_deadline` records the picked name, type and exact size as the declaration, or confirms they match the one the attach call gave
+  - it refuses HEIC, other types, an `expected_kind` mismatch or an over-cap size, with `attach_file`'s messages, before any link is made
+  - otherwise it returns a fresh signed upload link through `publicUrl`
+  - a second `/page/start` replaces the declaration
+  - an invalid, used or expired token gets `410` with "This link has expired or was already used. Ask your assistant for a new one"
+  - a brain key is neither needed nor accepted, and CORS allows only the `UPLOAD_PAGE_URL` origin (or same-origin)
+- [ ] T043 [P] [US2] Tests first in `F/tests/page_routes_test.ts`, then `POST /page/finish` in `F/src/page_routes.ts`: it uses up the token and finishes **only** its own attachment through `services.finish`, returning the outcome as JSON; a second call gets `410`; a token for another attachment changes nothing (FR-024, SC-011); busy handling per T005.5.
+- [ ] T044 [P] [US2] Tests first in `F/tests/page_script_test.ts` (with `F/tests/helpers/page_dom.ts`, a minimal DOM, `location` and `fetch` stand-in that runs the file's inline script), then `F/upload-page.html`:
+  - it reads the token only from the fragment and calls only the API address fixed in the file, per T005.6 (R5)
+  - the file input accepts `image/jpeg,image/png,image/webp,application/pdf` (R7)
+  - it shows the expected kind, accepted types and size limit
+  - a refusal from `/page/start` shows before any upload
+  - it `PUT`s the one file to the returned link, then calls `/page/finish` and shows each outcome text of contracts/upload-page.md "What the owner sees"
+  - a `410` shows the expired message
+  - the file contains no key, token or project address other than its API-address setting
+  - it has no external script or style
+
+### Stream A: app (`ta-app`, wave 3)
+
+- [ ] T045 [US2] Tests first in `F/tests/app_test.ts`, then `GET /upload` in `F/src/app.ts`: it serves `upload-page.html` unchanged as `text/html` for the self-hosted path (R5), and mounts the page routes outside the brain-key check.
+- [ ] T046 [US2] Flip the US2 acceptance tests in `F/tests/acceptance_test.ts`, one per green commit.
+
+### Stream D: docs (`ta-docs`, wave 1)
+
+- [ ] T047 [P] [US2] In `F/README.md`, add:
+  - **Upload from your phone**: on self-hosted, `PUBLIC_BASE_URL` set to an address the phone reaches (LAN or tailnet), with the same-network limit until fork issue #29 (R6)
+  - **On Supabase Cloud, publish the page once**: set the API address in `upload-page.html`, publish it to any free static host, set `UPLOAD_PAGE_URL`, and why (Cloud serves HTML as plain text; R5)
+  - **Vision model**: `VISION_*` for Ollama `qwen2.5vl:7b` or an OpenRouter vision model (R4)
+  - HEIC and "share as JPEG" (R7)
+  - starting with a note
+
+**Checkpoint**: US1 and US2 both work through `createApp`.
+
+---
+
+## Phase 5: User Story 3 - Get the original file back (Priority: P2)
+
+**Goal**: the AI gets an attachment's details and a short-lived download link, by attachment or by parent thought.
+
+**Independent Test**: the US3 acceptance tests pass. Live: quickstart scenario 3.
+
+### Stream Q: data (`ta-data`, wave 1)
+
+- [ ] T048 [P] [US3] Tests first in `F/tests/store_test.ts` (and `F/tests/verify.sql` for any SQL used), then `signDownload(path, seconds)`, `listByParent` and `attachmentForDerived` in `F/src/store.ts`. `attachmentForDerived` resolves through `data-model.md` `Derived thought.metadata.attachment_id` (FR-015).
+
+### Stream T: tools (`ta-tools`, wave 2)
+
+- [ ] T049 [P] [US3] Tests first in `F/tests/tools_test.ts`, then `get_attachment` in `F/src/tools.ts`:
+  - it accepts a full or short id, with "not found" and "ambiguous" errors
+  - it returns file name, type, size, page count, state, reason, `derived_count`, `caption_model` and parent id
+  - it gives a `download_link` valid for `DOWNLOAD_LINK_SECONDS`, through `publicUrl` and with the lifetime stated, only when the file is stored; never for `pending_upload` or `refused` (FR-014, SC-003, SC-012)
+- [ ] T050 [P] [US3] Tests first in `F/tests/tools_test.ts`, then `list_attachments` in `F/src/tools.ts`: exactly one of `thought_id` or `derived_thought_id`; each attachment's id, short id, file name, type, size, state and `derived_count` (FR-015, US3 #2).
+
+### Stream A: app (`ta-app`, wave 3)
+
+- [ ] T051 [US3] Flip the US3 acceptance tests in `F/tests/acceptance_test.ts`, one per green commit.
+
+### Stream D: docs (`ta-docs`, wave 1)
+
+- [ ] T052 [P] [US3] In `F/README.md`, add **Get a file back**: `get_attachment` by the short id in a search result's source line, `list_attachments`, and the 10-minute link lifetime (FR-014).
+
+---
+
+## Phase 6: User Story 4 - Clear limits and honest failure (Priority: P2)
+
+**Goal**: every refusal and failure names its cause and leaves no half-written data. Finish and remove run one at a time.
+
+**Independent Test**: the US4 acceptance tests pass. Live: quickstart scenarios 5, 6, 7, 8, 9 and 12.
+
+### Stream X: files (`ta-files`, wave 1)
+
+- [ ] T053 [P] [US4] Tests first in `F/tests/intake_test.ts`, then `checkActual` in `F/src/intake.ts` (FR-004, FR-013):
+  - it refuses when the sniffed type or the exact size differs from the declaration, or when the size or page count is over its cap
+  - the reason names the actual type, size or page count (`data-model.md` `thought_attachments.actual_type`, `thought_attachments.actual_size`, `thought_attachments.page_count`)
+  - a page-cap refusal names `MAX_PDF_PAGES` and the planned background processing (fork issue #26)
+  - HEIC bytes get the "share as JPEG" message (US2 #4)
+- [ ] T054 [P] [US4] Tests first in `F/tests/pdf_test.ts`, then in `F/src/pdf.ts`:
+  - `isScanned` is true below `SCANNED_MIN_CHARS_PER_PAGE` non-space characters per page on average (R2, FR-010)
+  - corrupt bytes fail `openPdf` with a readable reason (spec edge case)
+  - an encrypted fixture, if one can be generated without a committed binary (`pdf-lib` cannot encrypt); otherwise the encrypted case is a live check in T077
+
+### Stream Q: data (`ta-data`, wave 1)
+
+- [ ] T055 [P] [US4] Tests first in `F/tests/verify.sql`, then in `F/schema.sql`:
+  - a write or state change with a stale token, after a newer claim took over, is refused and changes nothing (R10, SC-019)
+  - a `refused` row does not block a new attachment of the same content on the same parent (`data-model.md` `thought_attachments.content_hash` index; SC-013)
+  - a set-state under a valid claim records `thought_attachments.state` and `thought_attachments.state_reason` without touching derived thoughts
+
+### Stream N: finishing (`ta-finish`, wave 2)
+
+- [ ] T056 [P] [US4] Tests first in `F/tests/finish_test.ts`, then refusals in `F/src/finish.ts` (FR-004, SC-013):
+  - on `checkActual`'s refusal, or an object created after `thought_attachments.upload_deadline` (R8), the file is deleted at once, the state becomes `refused` with the actual values, and no derived thoughts are written
+  - finishing `refused` again is refused
+  - no object gives "no file uploaded yet", or "upload window expired" after the deadline, with the state unchanged
+- [ ] T057 [P] [US4] Tests first in `F/tests/finish_test.ts`, then failures in `F/src/finish.ts`:
+  - a text-less PDF ends `scanned` with "text search won't cover it yet" and no passages, and `scanned` finished again re-checks (FR-010, US4 #2)
+  - a corrupt PDF ends `failed` with the reason
+  - an embedding failure partway, or a vector length different from `embeddingDimension()`, ends `failed` with no derived thoughts from that attempt, and a later finish succeeds (`data-model.md` `Derived thought.embedding`; FR-007, FR-011, US4 #3, SC-005)
+- [ ] T058 [P] [US4] Tests first in `F/tests/finish_test.ts`, then the claim in `F/src/finish.ts` (FR-026, R10):
+  - a finish while another finish, rebuild or remove holds an unexpired claim returns `busy` with the running operation and changes nothing (SC-014)
+  - once `BUSY_SECONDS` has passed by the clock, the next finish proceeds and completes (SC-019)
+  - a cut-off rebuild keeps the old set
+
+### Stream A: app (`ta-app`, wave 3)
+
+- [ ] T059 [US4] Flip the US4 acceptance tests in `F/tests/acceptance_test.ts`, one per green commit, including SC-014's held-vision concurrency case and SC-017's +20 and +65 minute cases.
+
+### Stream D: docs (`ta-docs`, wave 1)
+
+- [ ] T060 [P] [US4] In `F/README.md`, add **Limits** (the caps and why: Cloud's 2 s CPU budget, R1), **Troubleshooting** (one entry per refusal and failure in contracts/mcp-tools.md, including busy, scanned with OCR deferred to fork issue #30, an embedding size mismatch, and `EMBEDDING_BATCH_SIZE=1` if the endpoint rejects batches, R3) and **Known limitations** (fork issues #26, #30, #31 and #32).
+
+---
+
+## Phase 7: User Story 5 - Remove an attachment (Priority: P3)
+
+**Goal**: confirmed removal deletes the file, the record and its derived thoughts, and never the owner's own thoughts.
+
+**Independent Test**: the US5 acceptance tests pass. Live: quickstart scenario 10, plus T078's note-exception check.
+
+### Stream Q: data (`ta-data`, wave 1)
+
+- [ ] T061 [P] [US5] Tests first in `F/tests/verify.sql`, then the remove, preview and orphan functions in `F/schema.sql`:
+  - remove deletes only that attachment's derived thoughts and its row, scoped by its id, in one transaction, under a valid claim; the parent and another attachment of the same PDF on another thought keep everything (FR-016, FR-022, SC-012)
+  - the parent note goes too only when `thought_attachments.parent_created_here` is true, the attachment ended `refused` or expired without an upload, and no other attachment points to it (FR-016, SC-020)
+  - the preview reports the same counts and deletes nothing
+  - orphans lists a parent gone, `pending_upload` past `thought_attachments.upload_deadline` and `refused`, each with why and `derived_count` (FR-021)
+- [ ] T062 [P] [US5] Tests first in `F/tests/store_test.ts`, then `removalPreview`, `removeAttachment` and `orphans` in `F/src/store.ts`.
+
+### Stream T: tools (`ta-tools`, wave 2)
+
+- [ ] T063 [P] [US5] Tests first in `F/tests/tools_test.ts`, then `remove_attachment` in `F/src/tools.ts`:
+  - without `confirm`, nothing is deleted, and the result lists the file, N derived thoughts and the parent note when it would go (US5 #2)
+  - with `confirm`, it claims, deletes the stored file, removes through the store and releases (US5 #1, #4)
+  - while busy, it is refused as in `finish_attachment` (SC-014)
+- [ ] T064 [P] [US5] Tests first in `F/tests/tools_test.ts`, then `find_orphan_attachments` in `F/src/tools.ts`: each orphan's id, file name, why it is listed and `derived_count` (FR-021, US5 #3, SC-013, SC-017).
+
+### Stream A: app (`ta-app`, wave 3)
+
+- [ ] T065 [US5] Flip the US5 acceptance tests and the cross-cutting SC-007 test in `F/tests/acceptance_test.ts`, one per green commit. Afterwards `RUN_TODO=1` runs no ignored test.
+
+### Stream D: docs (`ta-docs`, wave 1)
+
+- [ ] T066 [P] [US5] In `F/README.md`, add **Remove an attachment** (dry run, then `confirm`; what goes and what never does) and **Orphan check**.
+
+---
+
+## Phase 8: Integration, live runs, gates and landing (integrator)
+
+- [ ] T067 Merge each stream into `W` only after verifying it yourself:
+  - check out each of its commits in a throwaway worktree and run the full deno suite there (and `verify.sql` for Q)
+  - `git diff --name-only` touches only its owned files
+  - re-apply a sample of its recorded mutants (at least one per task) and confirm each fails
+  - any remediation names the mutant it kills
+
+  Merge with `git -C W merge --no-ff contrib/mfelker/thought-attachments-<s>`. All of wave 1 (Q, X, E, D) merges before wave 2 starts; N, T and P before wave 3 starts. Create each wave's worktrees from the updated `contrib/mfelker/thought-attachments` and launch its streams in one message.
+- [ ] T068 Early gate run right after Q merges (spec 006's T008 precedent): run the OB1 gate's review checks (`W/.github/workflows/ob1-gate-v2.yml`) locally over `F`, with the upstream title. Confirm "No credentials" and "SQL safety" pass, and that R16's guarded `ADD COLUMN` passes rule 5. Record the result in T068's line in `M`.
+- [ ] T069 After each merge, fold `M/specs/007-thought-attachments/tdd/cycle-log.d/*.md` into `tdd/cycle-log.md` in behavior order. Tick the tasks whose behaviors are all `DONE`, then commit on fork `main`.
+- [ ] T070 Refactor with the full suite green in `W`: `deno check` and `deno lint` on `F`; `grep -rn "not implemented" F` is empty; `RUN_TODO=1` runs no ignored test.
+- [ ] T071 [P] `F/metadata.json` validates against `W/.github/metadata.schema.json`.
+- [ ] T072 [P] `npx markdownlint-cli2 --config .github/.markdownlint.jsonc "integrations/thought-attachments/**/*.md"` in `W`.
+- [ ] T073 [P] README check of `F/README.md`: Prerequisites, numbered steps for both platforms, Expected outcome; every relative link resolves in `W`; the `docs/05-tool-audit.md` link is present.
+- [ ] T074 [P] Scan `F` for secrets, binaries over 1 MB, profanity and SQL safety, and check that no file is fork-only. Then run all the OB1 gate's review checks locally with the upstream title (spec 006's T043 precedent).
+- [ ] T075 [P] Fork-ci preview from `W`'s root, with T004's `psql` wrapper on `PATH`: `node ../../.fork/ci/bin/run-folder.mjs --path integrations/thought-attachments --mode strict --origin fork --out "$TMPDIR/r.json"`. Both the deno and sql runtimes pass.
+- [ ] T076 **Owner-run live Cloud run** (owner present; the Supabase CLI gets `--yes` only with the owner's consent), from a scratch checkout of `W`, never inside `F`. Run quickstart scenarios 1–13 on a Cloud project. Evidence goes in `M/specs/007-thought-attachments/evidence/cloud/` with no key values. Record:
+  - **SC-004 re-measure** (scenario 12): the compute and wall time of each finish for a real 50-page-or-fewer manual and the largest photo, with no `546`. If a finish fails, lower the default caps test-first in `F/src/settings.ts` and `F/tests/settings_test.ts`, update the README, and record the measured values (FR-017, R1).
+  - **R3**: whether OpenRouter's embeddings route accepts an array input. If not, change `EMBEDDING_BATCH_SIZE`'s default test-first, or document `1`.
+  - **R5**: the page published to a static host and `UPLOAD_PAGE_URL` set; SC-008's default-camera photo from the phone, off-network.
+  - SC-001 and SC-002 pass/fail per sample question and photo (lists written before the run), SC-003, SC-007, SC-009 through SC-017.
+- [ ] T077 **Owner-run live self-hosted run** on spec 006's stack, from a scratch checkout. Use the README's `docker-compose.override.yml` (R14) and `PUBLIC_BASE_URL` set to the Mac's LAN or tailnet address (R6). Run quickstart scenarios 1–11 and 13. Evidence goes in `M/specs/007-thought-attachments/evidence/self-hosted/`. Record:
+  - **R4**: Ollama `qwen2.5vl:7b` captions a photo sent as a `data:` URL
+  - **R5**: 006's gateway serves `GET /upload` as `text/html`, unchanged
+  - SC-008 with the phone on the same network
+  - an encrypted PDF ends `failed` with a readable reason (spec edge case), if T054 couldn't cover it
+- [ ] T078 Live checks the quickstart lacks, in both runs, with the evidence next to T076 and T077:
+  - **SC-020**: start with a `note`, let the link expire unused, remove it, and see the note gone; repeat with a second, processed attachment on the note and see the note stay (quickstart scenario 10 only removes a processed manual)
+  - **SC-018**: a rebuild with the vision model stopped keeps the old caption
+- [ ] T079 SC-006 and SC-007 across both runs: the same behavior, differing only in settings (FR-019), and a query over every derived thought and attachment row finds no signed link, key, token or absolute path. Record the comparison in `M/specs/007-thought-attachments/evidence/sc-006-007.md`.
+- [ ] T080 Replace the README's `pending verification` cells in `F/README.md` with the recorded values (platform, runtime, models, measured SC-004 times), and set `F/metadata.json` `estimated_time` from the runs. Re-run T071–T074.
+- [ ] T081 **Cold-context TDD audit**: launch a fresh agent with no conversation context to run `/speckit-tdd-verify` in `M`. It writes `M/specs/007-thought-attachments/tdd/verification.md` with a verdict of PASS or PASS_WITH_GAPS (Quality Gate 1). The live-only criteria (SC-004, SC-006, SC-008, and the live halves of SC-001, SC-002 and SC-003) are named for an owner ruling, as in spec 006's T044. Remediation tasks it writes are appended as a new phase and done before T083.
+- [ ] T082 Scope check: `git -C W diff --stat upstream/main...HEAD` lists only `integrations/thought-attachments/`, with no `specs/`, `.specify/` or `.fork/` (Principle V).
+- [ ] T083 **Fork landing, asking the owner before each push or PR**:
+  1. `git -C W push -u origin contrib/mfelker/thought-attachments`.
+  2. `gh pr create -R mfelker/OB1 --base main --head contrib/mfelker/thought-attachments --title "[integrations] Thought attachments (fork landing)"`. The body follows `W/.github/PULL_REQUEST_TEMPLATE.md` and ends with the "Generated with Claude Code" line only.
+  3. When `fork-ci-verdict` and `OB1 Review` are green, the **owner** merges with `--merge`.
+  4. Add the ledger row in `M/.fork/staged-prs.md`, kind `own`, upstream PR "to be opened".
+- [ ] T084 **Upstream PR, after T083. Ask the owner first.** `gh pr create -R NateBJones-Projects/OB1 --head mfelker:contrib/mfelker/thought-attachments --title "[integrations] Thought attachments: files linked to thoughts"`, with the body from `W/.github/PULL_REQUEST_TEMPLATE.md`, ending with the "Generated with Claude Code" line only. Update the ledger row in `M/.fork/staged-prs.md`.
+- [ ] T085 Cleanup:
+  - after T083 merges: remove the eight `ta-*` worktrees and their local branches (`git worktree remove`, after checking `git status --short` is clean), the scratch checkouts, and the `ob1-007-pgtest` container
+  - after the upstream PR merges or closes: remove `W` and its local branch, and reconcile the ledger
+
+---
+
+## Success criteria coverage
+
+| SC | Deno acceptance (T012) | `verify.sql` | Live (quickstart #, task) | Notes |
+|----|------------------------|--------------|---------------------------|-------|
+| SC-001 | passages with source lines | — | 2, T076/T077 | findability is live |
+| SC-002 | caption written | — | 4, T076/T077 | findability is live |
+| SC-003 | link lifetime; no link when not stored | — | 3, T076/T077 | byte identity and real expiry are live |
+| SC-004 | — | — | 12, T076 | **live-only**; evidenced, not met (R1) |
+| SC-005 | yes | T015 | 5–7 | |
+| SC-006 | — | — | both runs, T079 | **live-only** |
+| SC-007 | yes | — | 13, T079 | |
+| SC-008 | — | — | 4, T076/T077 | **live-only** (phone) |
+| SC-009 | yes | T016 | 1 | |
+| SC-010 | yes | T038 | 4 | |
+| SC-011 | yes | T038 | 4 | |
+| SC-012 | yes | T061 | 2, 3 | |
+| SC-013 | yes | T055, T061 | 6 | |
+| SC-014 | yes | T016 | 8 | |
+| SC-015 | yes | T015 | 7 | |
+| SC-016 | yes | — | 11 | |
+| SC-017 | yes | T061 | 9 | |
+| SC-018 | yes | T015 | T078 | not in quickstart |
+| SC-019 | yes | T016, T055 | — | simulated only |
+| SC-020 | yes | T061 | T078 | quickstart 10 doesn't exercise it |
+
+---
+
+## Dependencies & Execution Order
+
+### Phase and wave dependencies
+
+```text
+T001 → T002 → T003 → T004 → T005 (all six questions) → T006 → T007 → T008 → T009 → T010 → T011 → T012 → T013
+   wave 1 (parallel): Q[T014–T019, T038, T048, T055, T061, T062]  X[T020–T023, T035, T036, T053, T054]
+                      E[T024, T037]  D[T034, T047, T052, T060, T066]
+   → T067 (merge Q, X, E, D) → T068 (early gate) → T069
+   wave 2 (parallel): N[T025, T026, T039, T040, T056–T058]  T[T027–T030, T041, T049, T050, T063, T064]
+                      P[T042–T044]
+   → T067 (merge N, T, P) → T069
+   wave 3: A[T031–T033, T045, T046, T051, T059, T065]
+   → T067 (merge A) → T069 → T070 → T071 ∥ T072 ∥ T073 ∥ T074 ∥ T075
+   → T076 ∥ T077 (owner) → T078 → T079 → T080 → T081 → T082 → T083 → T084 → T085
+```
+
+- **Why these waves**: N, T and P call the real Q, X and E modules (only Storage, the database and the model servers are faked), so they wait for wave 1. A composes N, T and P. D depends only on the design documents.
+- **User stories vs waves**: streams own files, not stories, so each wave contributes to several stories. Stories complete in priority order at wave 3: US1 at T033, US2 at T046, US3 at T051, US4 at T059 and US5 at T065.
+- **Within a stream**: tasks run in their listed order, which matches the test-list order once `tdd.plan` adds markers. One behavior per commit.
+- **Owner-gated**: T005 (decisions), T076–T078 (live runs), every push and PR (T083, T084), and any Supabase CLI `--yes`.
+
+### Parallel Opportunities
+
+- Wave 1: four Sonnet agents at once (Q, X, E, D).
+- Wave 2: three Sonnet agents at once (N, T, P).
+- The integrator gates T071–T075 can run in parallel. The two live runs T076 and T077 are independent of each other.
+
+## Parallel Example: Wave 1
+
+```text
+Agent(model: "sonnet", description: "Stream Q data", prompt: <brief: worktree /Users/mfelker/Projects/ob1/.worktrees/ta-data, branch contrib/mfelker/thought-attachments-data, tasks T014–T019 T038 T048 T055 T061 T062, TDD rules, single-writer rule, Seams, the SQL runtime recipe from tdd/cycle-log.md (T004), data-model.md (table, states, functions), research R9 R10 R11 R12 R16 R17, T005.4 answer, log to M/specs/007-thought-attachments/tdd/cycle-log.d/data.md>)
+Agent(model: "sonnet", description: "Stream X files", prompt: <… ta-files, T020–T023 T035 T036 T053 T054, data-model.md derived thought and parent note, contracts/mcp-tools.md refusals, research R1 R2 R7 R15 …>)
+Agent(model: "sonnet", description: "Stream E model clients", prompt: <… ta-models, T024 T037, contracts/settings.md, research R3 R4 …>)
+Agent(model: "sonnet", description: "Stream D README", prompt: <… ta-docs, T034 T047 T052 T060 T066, spec README Contract, contracts/*, research R1 R3 R4 R5 R6 R7 R12 R13 R14 R16 …>)
+```
+
+## Parallel Example: Wave 2
+
+```text
+Agent(model: "sonnet", description: "Stream N finishing", prompt: <… ta-finish, T025 T026 T039 T040 T056–T058, contracts/mcp-tools.md finish_attachment, data-model.md states, research R8 R9 R10, T005.4 answer …>)
+Agent(model: "sonnet", description: "Stream T tools", prompt: <… ta-tools, T027–T030 T041 T049 T050 T063 T064, contracts/mcp-tools.md, research R6 R11 R17 …>)
+Agent(model: "sonnet", description: "Stream P phone page", prompt: <… ta-page, T042–T044, contracts/upload-page.md, research R5 R7, T005.5 and T005.6 answers …>)
+```
+
+## Implementation Strategy
+
+### MVP (User Story 1)
+
+Setup → Foundational → wave 1 limited to Q's T014–T019, X's T020–T023, T035 (`sniffType`) and T053 (`checkActual`), and E's T024 → wave 2 limited to N's T025–T026 and T's T027–T030 → wave 3 limited to T031–T033. The result attaches a PDF by command upload and writes searchable passages. **Stop and validate** with quickstart scenarios 1–3 before the phone path.
+
+### Incremental delivery
+
+Every merge keeps the suite green: stubs throw, and acceptance tests stay `todo` until flipped. So `W` is always shippable as far as it goes. The fork PR opens only after T080 fills the README's "Tested with" table and T081's audit passes.
+
+## Notes
+
+- `[P]` = parallel with the other streams of its wave (different files). Tasks inside one stream run in order.
+- Never tick a `[U#]`/`[A#]`-marked task by hand.
+- Streams write nothing in `M` except their own `cycle-log.d/<stream>.md`. The Principle V guard allows that path on fork `main`.
+- Lessons applied from specs 004–006:
+  - the outer loop opens first (T012)
+  - the shared seams and fakes land before any stream, and the fakes get their own self-tests (T011)
+  - the integrator verifies every stream before merging, re-applying mutants (T067)
+  - contracts state behavior, not implementation, so behavior is built test-first inside streams
+  - the only prescribed structure is the seams
