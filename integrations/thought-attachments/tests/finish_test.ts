@@ -90,8 +90,9 @@ Deno.test("U182 a pending PDF with a matching upload ends processed, with derive
   assertEquals(out.state, "processed");
   assertEquals(out.page_count, 2);
   const derived = r.store.derivedOf(att.id);
-  assert(derived.length >= 1);
-  assertEquals(out.derived_count, derived.length);
+  // Both short pages fit one passage at the default PASSAGE_MAX_CHARS (1500), so there is exactly one.
+  assertEquals(derived.length, 1);
+  assertEquals(out.derived_count, 1);
   assertEquals(r.store.attachment(att.id)?.state, "processed");
   assertEquals(r.store.attachment(att.id)?.page_count, 2);
 });
@@ -516,7 +517,7 @@ Deno.test("U206 a scanned PDF finished again after SCANNED_MIN_CHARS_PER_PAGE is
   const lowered = reconfigured(r, { SCANNED_MIN_CHARS_PER_PAGE: "5" });
   const out = await lowered(att.id, {});
   assertEquals(out.state, "processed");
-  assert(out.derived_count >= 1);
+  assertEquals(out.derived_count, 1);
   const row = r.store.attachment(att.id) as AttachmentRow;
   assertEquals(row.state, "processed");
   assertEquals(row.state_reason, null);
@@ -723,5 +724,5 @@ Deno.test("U214 once BUSY_SECONDS has passed by the clock, the next finish proce
   assertEquals(out.busy, undefined);
   assertEquals(out.state, "processed");
   assertEquals(r.store.derivedOf(att.id).length, out.derived_count);
-  assert(out.derived_count >= 1);
+  assertEquals(out.derived_count, 1);
 });
