@@ -73,7 +73,7 @@ export function createFinisher(deps: Deps): Services {
     const stored = { ...row, content_hash: hash };
     return actual.actual_type === "application/pdf"
       ? await pdfPath(stored, token, bytes, actual)
-      : await photoPath(stored, token, bytes, actual);
+      : await photoPath(stored, token, bytes, actual, rebuild);
   }
 
   async function pdfPath(row: AttachmentRow, token: string, bytes: Uint8Array, actual: StatePatch): Promise<FinishOutcome> {
@@ -102,19 +102,33 @@ export function createFinisher(deps: Deps): Services {
     return { state: "processed", derived_count: rows.length, page_count: pdf.data.pageCount };
   }
 
+  /** A failed rebuild keeps the old set and the `processed` state, and reports why (FR-027). */
+  async function rebuildFailed(row: AttachmentRow, token: string, reason: string): Promise<FinishOutcome> {
+    const set = await store.setState(row.id, token, { last_rebuild_error: reason });
+    if ("error" in set) throw new Error(set.error);
+    return outcomeOf(set.data);
+  }
+
   /** The file is kept, with no caption, so a later finish can caption it (FR-006). */
-  async function notCaptioned(row: AttachmentRow, token: string, actual: StatePatch, reason: string): Promise<FinishOutcome> {
+  async function notCaptioned(
+    row: AttachmentRow,
+    token: string,
+    actual: StatePatch,
+    rebuild: boolean,
+    reason: string,
+  ): Promise<FinishOutcome> {
+    if (rebuild) return await rebuildFailed(row, token, reason);
     const set = await store.setState(row.id, token, { ...actual, state: "not_captioned", state_reason: reason });
     if ("error" in set) throw new Error(set.error);
     return { state: "not_captioned", reason, derived_count: 0 };
   }
 
-  async function photoPath(row: AttachmentRow, token: string, bytes: Uint8Array, actual: StatePatch): Promise<FinishOutcome> {
+  async function photoPath(row: AttachmentRow, token: string, bytes: Uint8Array, actual: StatePatch, rebuild: boolean): Promise<FinishOutcome> {
     if (!deps.vision.configured) {
-      return await notCaptioned(row, token, actual, "vision is not configured (set VISION_API_BASE and VISION_MODEL)");
+      return await notCaptioned(row, token, actual, rebuild, "vision is not configured (set VISION_API_BASE and VISION_MODEL)");
     }
     const caption = await deps.vision.caption(bytes, row.declared_type as AcceptedType);
-    if ("error" in caption) return await notCaptioned(row, token, actual, caption.error);
+    if ("error" in caption) return await notCaptioned(row, token, actual, rebuild, caption.error);
     const embedded = await deps.embeddings.embed([caption.data.text]);
     if ("error" in embedded) throw new Error(embedded.error);
     const now = deps.now();

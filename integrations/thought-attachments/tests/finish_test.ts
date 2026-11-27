@@ -314,3 +314,20 @@ Deno.test("U196 rebuild on a processed PDF replaces the passage set, and derived
   assertEquals(r.store.attachment(att.id)?.derived_count, derived.length);
   for (const t of derived) assertEquals(oldIds.includes(t.id), false);
 });
+
+Deno.test("U197 a failed rebuild keeps the old set and processed, and the outcome and row carry last_rebuild_error with the reason", async () => {
+  const r = await rig();
+  const att = pending(r, jpegBytes(2000));
+  assertEquals((await r.finish(att.id, {})).state, "processed");
+  const oldIds = r.store.derivedOf(att.id).map((t) => t.id);
+  r.ff.on("POST", VISION_URL, () => ({ status: 503, body: "vision is down" }));
+  const out = await r.finish(att.id, { rebuild: true });
+  assertEquals(out.state, "processed");
+  assertEquals(out.derived_count, 1);
+  assertStringIncludes(out.last_rebuild_error ?? "", "503");
+  const row = r.store.attachment(att.id) as AttachmentRow;
+  assertEquals(row.state, "processed");
+  assertEquals(row.last_rebuild_error, out.last_rebuild_error);
+  assertEquals(r.store.derivedOf(att.id).map((t) => t.id), oldIds);
+  assertEquals(row.caption_model, "test/vision-model");
+});
