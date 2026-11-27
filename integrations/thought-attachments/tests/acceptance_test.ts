@@ -451,7 +451,7 @@ Deno.test(
   },
 );
 
-todo(
+Deno.test(
   "A9 every passage of a processed PDF has type reference and topics attachment and the base name, and none is an observation",
   async () => {
     const w = world();
