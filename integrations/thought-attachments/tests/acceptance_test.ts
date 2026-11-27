@@ -311,7 +311,7 @@ Deno.test(
   },
 );
 
-todo(
+Deno.test(
   "A2 every listed fact is in a passage whose source line names the file, a page range including its page and the short id, with an embedding of the brain's dimension",
   async () => {
     const w = world();
