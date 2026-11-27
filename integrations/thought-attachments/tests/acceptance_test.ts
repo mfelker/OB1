@@ -1400,7 +1400,7 @@ Deno.test(
   },
 );
 
-todo("A47 a removal without confirm deletes nothing and lists the file and its derived-thought count", async () => {
+Deno.test("A47 a removal without confirm deletes nothing and lists the file and its derived-thought count", async () => {
   const w = world();
   const parent = await ownerThought(w, "Kitchen dishwasher DW-500");
   const { id } = await uploadAndFinish(w, parent.id, "manual.pdf", "application/pdf", await textPdf(MANUAL_PAGES));
