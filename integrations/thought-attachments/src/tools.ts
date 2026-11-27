@@ -176,6 +176,7 @@ function asReported(row: AttachmentRow, now: Date): AttachmentRow {
   const expired = row.busy_op !== null && row.busy_until !== null && new Date(row.busy_until).getTime() <= now.getTime();
   if (!expired) return row;
   if (row.busy_op === "finish") return { ...row, state: "failed", state_reason: DID_NOT_FINISH };
+  if (row.busy_op === "rebuild") return { ...row, last_rebuild_error: DID_NOT_FINISH };
   return row;
 }
 
@@ -277,6 +278,7 @@ export function buildServer(deps: Deps, services: Services): McpServer {
       reason: row.state_reason,
       derived_count: row.derived_count,
       caption_model: row.caption_model,
+      last_rebuild_error: row.last_rebuild_error,
       parent_thought_id: row.parent_thought_id,
     };
     const lines = [
@@ -285,6 +287,7 @@ export function buildServer(deps: Deps, services: Services): McpServer {
     ];
     if (data.page_count !== null) lines.push(`Pages: ${data.page_count}.`);
     if (data.caption_model) lines.push(`Caption model: ${data.caption_model}.`);
+    if (data.last_rebuild_error) lines.push(`Last rebuild error: ${data.last_rebuild_error}.`);
     const seconds = deps.settings.downloadLinkSeconds;
     const stored = row.storage_path && row.state !== "pending_upload" && row.state !== "refused";
     const signed = stored ? await deps.store.signDownload(row.storage_path as string, seconds) : null;

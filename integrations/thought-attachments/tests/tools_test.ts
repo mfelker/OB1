@@ -668,3 +668,14 @@ Deno.test("U332 one second before busy_until get_attachment reports the stored s
   assertEquals(out.data.state, "pending_upload");
   assertEquals(out.data.reason, null);
 });
+
+Deno.test("U333 a rebuild claim that expired unreleased reads processed, keeping its derived thoughts, with the cut-off noted", async () => {
+  const h = await harness();
+  const row = await claimedRow(h, "rebuild", 100);
+  h.clock.advanceSeconds(101);
+  const out = await call(h, "get_attachment", { attachment_id: row.id });
+  assertEquals(out.data.state, "processed");
+  assertEquals(out.data.derived_count, 5);
+  assertEquals(out.data.last_rebuild_error, "the run did not finish");
+  assertStringIncludes(out.text, "the run did not finish");
+});
