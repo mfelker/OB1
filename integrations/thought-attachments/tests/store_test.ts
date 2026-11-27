@@ -315,3 +315,13 @@ Deno.test("U90 listByParent returns that parent's attachments only", async () =>
   assertEquals(await store.listByParent(PARENT), { data: [a, b] });
   assertEquals(new URL(ff.requests[0].url).searchParams.get("order"), "created_at.asc");
 });
+
+Deno.test("U91 attachmentForDerived returns the attachment named by the thought's metadata.attachment_id", async () => {
+  const { store, ff } = setup();
+  const row = attachmentRow({ state: "processed" });
+  ff.on("GET", `${REST}/thoughts*`, { body: [{ id: "derived-1", metadata: { attachment_id: ATT_ID, type: "reference" } }] });
+  ff.on("GET", `${REST}/thought_attachments*`, { body: [row] });
+  assertEquals(await store.attachmentForDerived("derived-1"), { data: row });
+  assertEquals(ff.requests[0].url.includes("id=eq.derived-1"), true);
+  assertEquals(ff.requests[1].url.includes(`id=eq.${ATT_ID}`), true);
+});

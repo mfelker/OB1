@@ -97,7 +97,15 @@ export function createSupabaseStore(
       if (error) return { error: scrub(error.message) };
       return { data: (data ?? []) as AttachmentRow[] };
     },
-    attachmentForDerived: notYet,
+    async attachmentForDerived(thoughtId) {
+      const { data, error } = await db.from("thoughts").select("metadata").eq("id", thoughtId).limit(1);
+      if (error) return { error: scrub(error.message) };
+      const attachmentId = (data as { metadata: { attachment_id?: string } | null }[] | null)?.[0]?.metadata?.attachment_id;
+      if (!attachmentId) return { data: null };
+      const { data: rows, error: rowError } = await db.from("thought_attachments").select("*").eq("id", attachmentId).limit(1);
+      if (rowError) return { error: scrub(rowError.message) };
+      return { data: ((rows ?? []) as AttachmentRow[])[0] ?? null };
+    },
     orphans: notYet,
     async attachmentForPageToken(hash) {
       const r = await rpc<AttachmentRow[]>("attachment_by_page_token", { p_hash: hash });
