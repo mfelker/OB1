@@ -320,3 +320,33 @@ Task: "Compose test: default service set is exactly the always-on set (T020) in 
   - Note the scratch databases and `ob1_init_runner` role that `tests/verify.sql` leaves behind in its header comment.
 
   Done when the suite is green and the docs no longer name a bundled model server.
+
+---
+
+## Phase 10: TDD remediation (from `tdd/verification.md`, re-audit T044, verdict FAIL, audited at `c963653`)
+
+**The feature is not done until T073, T074 and T078 are cleared and a further re-audit (T044) reaches PASS or PASS_WITH_GAPS** (constitution Quality Gate 1). There are 0 HIGH smells. One surviving mutant, F13, is HIGH (Finding 4).
+
+### Blocking
+
+- [ ] T073 Finding 1: owner decision on U54 and U55, which are `TEST_AFTER` and outside the T066 exception (`plan.md:126`). Two options:
+  - Extend the Complexity Tracking row to name them, with their mutant evidence: M16, F2 and F3 for U54; F20 for U55.
+  - Or re-drive them red-first.
+  Done when `plan.md` Complexity Tracking names U54 and U55, or the cycle log records a red against missing behavior for each.
+- [ ] T074 Finding 3: SC-010's Linux half has no run. Run T038 before the next T044 re-audit (T038 is Phase 7, ahead of T044 in Phase 8). Done when `M/specs/006-self-hosted-supabase/evidence/linux/` holds the recorded V1–V9, V11 and V12 run, and T038 is ticked.
+- [ ] T078 Finding 4 (HIGH, surviving mutant in U36): U36 (`F/tests/compose.test.mjs:139-151`) asserts `init.image` equals the pinned `curlimages/curl:8.11.1`. Done when mutant F13 (`lean.override.yml:44` → `alpine:3.20.3`) fails U36 single, and the suite is green.
+
+### Non-blocking: MED and LOW findings
+
+- [ ] T075 [P] Finding 5: make the SQL runtime read the repository's bytes.
+  - Replace the bind-mount `psql` wrapper route with one that never serves stale content, for example `docker cp` of the folder before each run, or piping files over stdin. Update the recipe in `tdd/cycle-log.md` (T069 entry) to match.
+  - Done when this sequence leaves host and container sha256 of `F/db/ob1-schema.sql` equal, with no container restart: a size-changing edit, then `git checkout`, then `node .fork/ci/bin/tdd.mjs file tests/verify.sql`.
+- [ ] T076 [P] Finding 6: U54 (`F/tests/setup.test.mjs:313-322`) and U12 (`:152-161`) assert that the run stopped at key generation, for example that the output names the generator's failure. Done when mutant F21 (`exit 1` inserted before `setup.sh:54`) fails both single, and the suite is green.
+- [ ] T077 [P] Finding 7: run the setup tests under a POSIX shell that isn't bash. Either `runSetup` uses `/bin/dash` where present, or a test runs setup under dash. Done when mutant F9 (`setup.sh:53` `[ … ]` → `[[ … ]]`) fails a test on macOS, and the suite is green.
+- [ ] T079 [P] Finding 8: split U55 out of U51's test into its own `test("U55 …")` in `F/tests/create-bucket.test.mjs`, and update the trace in `tdd/test-list.md:72`. Done when `single tests/create-bucket.test.mjs "U55 …"` runs exactly one test, and mutant F20 fails it.
+- [ ] T080 [P] Findings 9–11 and 13:
+  - U54 asserts that the build folder is created under `TMPDIR`; mutant F1 plus M16 must fail it.
+  - U54 asserts `r.code` is a number before `notEqual(r.code, 0)`.
+  - H1 (`F/tests/harness.test.mjs:21-22`) asserts `st.status === 0`.
+  - Refresh `tdd/test-list.md` `updated_at`.
+  Done when the suite is green.

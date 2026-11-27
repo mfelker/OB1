@@ -2,217 +2,262 @@
 feature: 006-self-hosted-supabase
 verdict: FAIL
 standard: .specify/templates/overrides/tdd-test-quality-rubric.md # rubric graded against; lane upstream-bound, so the staged-PR section did not apply
-verified_at: 11285c0 # contrib/mfelker/self-hosted-supabase (worktree .worktrees/contrib-self-hosted-supabase); artifacts at fork main 8d47e41
-behaviors: 60
+verified_at: c963653 # contrib/mfelker/self-hosted-supabase (worktree .worktrees/contrib-self-hosted-supabase); artifacts at fork main b20c1f4; re-audit T044 after remediation T061-T072
+behaviors: 62
 proven: 42
 likely: 1
-test_after: 17
+test_after: 19 # 17 under the owner exception (T066, plan.md:126); U54 and U55 not covered by it
 no_test: 0
-high_smells: 5
+high_smells: 0
 criteria_total: 22 # US1.1-1.6, US2.1-2.3, US3.1-3.3, SC-001-SC-010; SC-011 withdrawn
 criteria_covered: 11 # by an automated test at the recipe's real entry point; 10 more only by the recorded Mac live run; SC-010 (Linux half) by nothing
-mutation_score: 74 # deliberate mutants, no tool: 14 of 19 non-equivalent caught by the behavior's own test; 20 run, 1 equivalent
-mutants_survived: 5 # 4 inside DONE behaviors (U33, U36, A9, U13+U53); 4 of the 5 also survive the whole suite
-suite: 58 passed, 0 failed, ~14s wall (adapter suite, node-plain + sql, with the test-only psql wrapper and container ob1-006-pgtest)
+mutation_score: 89 # deliberate mutants, no tool: 24 of 27 non-equivalent caught by the behavior's own test; 28 run, 1 equivalent
+mutants_survived: 4 # F1 (equivalent), F9, F13, F21; F13 breaks FR-009, which U36 traces (HIGH); 3 survive the local suite (F1, F9, F13); F9 is caught under dash
+suite: 59 passed, 0 failed, 0 skipped, ~13s wall (adapter suite, node-plain + sql, with the test-only psql wrapper and container ob1-006-pgtest)
 ---
 
-# TDD Verification: Lean self-hosted Supabase for Open Brain
+# TDD Verification: Lean self-hosted Supabase for Open Brain (re-audit, T044)
 
-**Verdict: FAIL.** Deliberate mutants survive inside DONE behaviors U33, U36, A9, U13 and U53. Three of them (M6, M7, M15) also survive the whole 58-test suite. Separately, 17 behaviors are `TEST_AFTER`: they passed on their first run and have no recorded red.
+**Verdict: FAIL.** The rubric makes any `TEST_AFTER` behavior a `FAIL`. The two behaviors added in remediation, U54 and U55, are `TEST_AFTER`, and the owner exception does not name them.
 
-**Independence.** This audit was run from cold context. The auditor wrote none of the code or tests.
+**Verdict with the T066 exception honored: still FAIL.**
 
-- Every test and source file was re-read at `11285c0`.
-- Every claim in the cycle log was checked against the git history, including unreachable objects (`git fsck --unreachable`).
-- The smell pass was done by the auditor directly, not delegated.
+- U54 and U55 fall outside the exception.
+- Fresh mutant F13 survives U36 and breaks FR-009, which U36 traces (HIGH).
+- SC-010's Linux half (T038) has no test and no recorded run.
 
-Reading coverage:
+The best verdict would be `PASS_WITH_GAPS`, and only if all of these hold:
 
-- Read in full: `spec.md`, `tdd/test-list.md`, `tdd/cycle-log.md`, the contract, and all test and source files.
-- Read in part: `plan.md` (lines 1–60 and 100–134), `research.md` (every R heading, plus R9 and R10 in full) and `tasks.md` (all task lines and the landing phase).
+- the exception is extended to U54 and U55;
+- U36 is made to catch F13;
+- T038 passes;
+- the owner accepts the recorded live runs as the tests for ten live-only criteria.
 
-Judgments on the repository-relative smells:
+The remaining gaps would then be:
 
-- **Foreign style.** The folder's tests match its own conventions and the node-plain exemplar `recipes/atomizer/atomize-text.test.mjs`: `node:test` with `node:assert/strict`, a header carrying a `Run:` line, and behavior ids prefixing test names. No finding.
-- **Bypassed test utility.** The profile's helpers (`.fork/ci/test/fixtures.mjs`, `.fork/ci/test/helpers/`) are fork tooling that an upstream recipe cannot import, so the recipe's own `tests/helpers/harness.mjs` is not a bypass. No finding.
-- **Redundant test.** The A/U pairs (A1/U24, A2/U16, A7/U25, A4/U19/U22) are double-loop pairs at different levels. No finding.
-- **Framework under test.** U28 and U29 assert the recipe's merged configuration, not Compose's `!reset` semantics. No finding.
+- mutation by hand only, with no tool;
+- no coverage tool;
+- U34 graded `LIKELY`;
+- ten criteria covered only by the recorded live run.
 
-**Discipline.** The loop itself shows real discipline:
+**Verdict without any exception: FAIL** (19 `TEST_AFTER`).
 
-- 42 behaviors have a recorded red, and their test and source land in the same commit (or the test first).
-- No existing test was weakened.
-- Every ticked task in `tasks.md` maps to a `DONE` behavior.
-- The cycle log openly declares the first-run passes.
+**What remediation fixed.**
 
-**Test strength.** This is where the feature fails. Four tests cannot tell a correct configuration from a broken one, in the ways listed under Findings 1–4.
+- All five previous HIGH smells are resolved, and 0 HIGH smells remain.
+- Every surviving mutant from the previous audit (M6, M7, M15, M16, M18) now fails the behavior's own test and the suite.
+- 15 of the 19 fresh mutants were caught by their own test.
+
+One fresh survivor, F13, is HIGH (Finding 4). It changes the `ob1-init` image, which breaks FR-009, and FR-009 is what U36 traces. It is the same case as the previous audit's M7.
+
+**Independence.** This re-audit ran from cold context. The auditor wrote none of the code or tests.
+
+- Every changed test and source file, the harness, and every other test file were re-read at `c963653`.
+- The smell pass was done directly, not delegated.
+- Every JavaScript-runtime mutant was applied, observed, restored with `git checkout`, checked clean, and followed by a green adapter suite (59/59) before the next mutant.
+- The one SQL mutant (M10) was followed only by `file tests/verify.sql`, and that run read stale content (Finding 5). After the container restart, the host and container hashes matched and the final suite was 59/59.
+
+## The owner exception, judged against the rubric as written
+
+`plan.md:126` (Complexity Tracking, task T066) accepts 17 behaviors as `TEST_AFTER`: U10, U13, U19, U22, U25–U29, U41–U46, U51 and A5. Its factual claims were checked and hold:
+
+- each is a first-run pass on behavior that an earlier cycle built;
+- each has a mutant record;
+- the five behaviors whose tests let a mutant through (U13, U33, U36, U53, A9) were strengthened and now kill those mutants. This audit re-ran those mutants (below).
+
+The rubric defines no waiver, so under it the 17 stay `TEST_AFTER` and keep the verdict at `FAIL`. Specs 004 and 005 read their exceptions the same way. The exception also does not reach U54 or U55, which it does not name.
 
 ## Test-first evidence
 
 Method:
 
-- The cycle log was read against `git log --stat` over `062b573..11285c0`, both first-parent and the full graph.
-- Every first-run-pass commit was checked: it touches only the test file, and the behavior's source already existed in an earlier commit.
-- The source of U28/U29 is in U24's `4beeb8d`, U51's request shape in `ea127e6`/`fb9a8ae`, U10's `openssl rand` in `e0cc3ef`, and U19's `>/dev/null` in `4358f1f`.
-- To find amends, author and committer timestamps were compared for every commit, and unreachable commits were examined.
-
-Each claim from the brief, checked against history:
-
-- **First-run passes (U10, U13, U19, U22, U25–U29, U41–U46, U51, A5).** Confirmed: each green commit touches only test files.
-- **U50 and U52 are not first-run passes.**
-  - U50: the log records a real red after the test was strengthened (`could not reach storage`), and source and test change together in `fb9a8ae`.
-  - U52: the log records a real red (`apikey header missing`), and source and test change together in `f099344`.
-  - Both are `PROVEN`. The test list's "(mutant-proven)" label on them is inaccurate (Finding 12).
-- **Two parallel streams.** Confirmed: the merges are `17968fc` (stream B, U47–U52) and `612936a` (stream C, U24–U36).
-  - Stream B's 6 commits touch only `init/create-bucket.sh` and its test.
-  - Stream C's 13 commits touch only `docker-compose.yml`, `lean.override.yml` and `tests/compose.test.mjs`.
-  - Both stream branches and their worktrees are gone, so their reflogs are gone too.
-- **U24 carried U28/U29's overrides.** Confirmed: `4beeb8d:lean.override.yml` already has `api-gw: depends_on: !reset {}` and `storage: depends_on: !override {db, rest}`. U28's (`5974b52`) and U29's (`6dc2e1c`) commits are test-only.
-- **The U34 amend.** Confirmed: `5729d95` is the only commit in the range whose author and committer times differ (17:38:24 vs 17:38:41).
-  - The pre-amend commit `e9789ed` survives as an unreachable object. Its test asserted `extra_hosts["host.docker.internal"]`, which cannot pass against the list that `config --format json` emits. That commit was therefore committed red, with source and test together.
-  - The amend replaced the assertion with `deepEqual(extra_hosts, ["host.docker.internal=host-gateway"])`.
-  - The red the log records ("assertion on undefined extra_hosts") would fail with either shape, so the history cannot show that the corrected test failed before the source. Hence `LIKELY`.
-  - The stashes `6022d8a` and `4aee2d7` (in-progress U30 and U35 work) are benign.
-- **U53 added mid-loop.** Confirmed at `23a226c`, with test and source together and a red recorded. Note that it landed after the outer loop closed (`f1ba495`) and after the README (`f578677`), so it is post-loop rather than mid-loop.
-- **Weakened existing tests: none.**
-  - Every removed line in test files across the range is an import change, a helper restructure (`224c874`: `config()` split into `configIn()`), the `todo` switch removal (`f1ba495`), or a doc comment.
-  - Each A-test's body is byte-identical between its first write (`6052532`) and its flip commit; only the `{ todo }` option changed.
-- **`tasks.md` against the test list.** Every `[X]` task's behavior ids are `DONE`. There is no unticked behavioral task with a `DONE` behavior.
+- The cycle log's remediation section (`tdd/cycle-log.md:399-472`) was read against `git log --stat 11285c0..c963653`.
+- The new behaviors were re-run at their own commits, from `git archive` extracts in a temporary folder; no branch was switched.
+- Rows unchanged since the previous audit keep its classification. Their evidence was not re-derived beyond spot checks, and the earlier table (git history of this file) has the per-commit detail.
 
 | Behavior | Class | Evidence |
 | -------- | ----- | -------- |
-| A1, A2, A3, A4, A7, A8, A9 | PROVEN | red at T050 (`6052532`: tests added with `not implemented` stubs, `actual: 1`, before any source); bodies unchanged until flips `e1d8cec`, `95ad94d`, `6800132`, `c13bee4`, `d85ecbf`, `c6cc7bf`, `5a3afd4` |
-| A5 | TEST_AFTER | no whole-file red (log declares it); evidenced only by U41–U45 mutants |
-| A6 | PROVEN | red at T050 (`create-bucket.sh: not implemented`); flip `161ec06` after stream B |
-| U1, U2, U3 | PROVEN | reds recorded; `5da7e21`, `7eeb283`, `c6f6edf` each add test and source together |
-| U4–U9 | PROVEN | reds recorded; `97a2831`, `4bd2b4d`, `1858e60` (first run a SyntaxError, then a valid red), `b508ea6`, `4358f1f`, `e0cc3ef` |
-| U10 | TEST_AFTER | first-run pass; `3e5e229` test only; mutant only |
-| U11, U12 | PROVEN | reds recorded; `050da74`, `26fe491` |
-| U13 | TEST_AFTER | first-run pass; `3f43058` test only; mutant only |
-| U14–U18 | PROVEN | reds recorded; `729517d`, `2427afd`, `8971032`, `ea346f5`, `de42462` |
-| U19 | TEST_AFTER | first-run pass; `4ac1479` test only (the log entry names no commit); mutant only |
-| U20, U21 | PROVEN | reds recorded; `1c02edf`, `95124f5` |
-| U22 | TEST_AFTER | first-run pass; `300fd36` test only; mutant only |
-| U53 | PROVEN | red recorded (`actual: 1, expected: 0`); `23a226c` test and source together |
-| U24 | PROVEN | red 2 recorded (extra services, `ob1-init` missing); `4beeb8d` |
-| U25, U26, U27, U28, U29 | TEST_AFTER | first-run passes; `598c934`, `9c70f74`, `a76fabe`, `5974b52`, `6dc2e1c` are test only; mutants only |
-| U30, U31, U32, U33, U35, U36 | PROVEN | reds recorded (terse, stream C); `b508947`, `fb56c99`, `224c874`, `b8c0ffb`, `3b02e01`, `945d6ab` add test and source together |
-| U34 | LIKELY | red recorded, but commit amended (`e9789ed` → `5729d95`), and the recorded red predates the corrected assertion |
-| U38, U39, U40 | PROVEN | reds recorded; `e86f7b6`, `ad52da9`, `7cda837` |
-| U41, U42, U43, U44, U45 | TEST_AFTER | first-run passes on U38's verbatim copy; `6e190f4`, `950d6f1`, `3f81d15`, `f190095`, `9f97b79` test only; mutants only |
-| U46 | TEST_AFTER | first-run pass; `92d04ce` test only; mutant only |
-| U47, U48, U49 | PROVEN | reds recorded; `980c6f3`, `ea127e6`, `6954f0c` |
-| U50 | PROVEN | 500 half was a first-run pass; then a strengthened test failed (`could not reach storage`) and source changed in the same commit `fb9a8ae` |
-| U51 | TEST_AFTER | first-run pass; `723f218` test only; mutants only |
-| U52 | PROVEN | red recorded (headers missing); `f099344` test and source together; the never-printed half mutant-checked |
+| A1, A2, A3, A4, A6, A7, A8, A9 | PROVEN | red at T050 (`6052532`, `not implemented` stubs) before any source; A4 and A9 strengthened at `751bd3b`, `c9d27a5`, `137bafb` (test only, each re-proven against a named mutant) |
+| A5 | TEST_AFTER | no whole-file red; under the T066 exception |
+| U1–U9, U11, U12, U14–U18, U20, U21 | PROVEN | reds recorded, test and source in the same commit (previous audit's table) |
+| U10, U13, U19, U22 | TEST_AFTER | first-run passes; under the exception. U13, U19, U22 strengthened in remediation (test-only commits `c610659`, `751bd3b`, `c9d27a5`) |
+| U24, U30–U33, U35, U36 | PROVEN | stream C reds; U33 and U36 strengthened at `f5051ce` and `eb06260` (test only) |
+| U25–U29 | TEST_AFTER | first-run passes; under the exception. U29 strengthened at `c9d27a5` |
+| U34 | LIKELY | amended commit (`e9789ed` → `5729d95`); the log now records it (T071) |
+| U38–U40, U47–U50, U52, U53 | PROVEN | reds recorded (previous audit) |
+| U41–U46, U51 | TEST_AFTER | first-run passes; under the exception |
+| **U54** | **TEST_AFTER, not under the exception** | The test was committed alone at `9e6374b`. Re-run at that commit (archive extract) it **passes against the unfixed `setup.sh`**: `✔ U54 … ℹ pass 1 ℹ fail 0`. The source change `3a0ee07` (`mktemp -d "${TMPDIR:-/tmp}/…"`) made the test able to see a leftover. It did not create the cleanup behavior, which already existed (`trap … EXIT`). The only failure ever recorded comes from mutant M16. The log says so honestly (`cycle-log.md:443`). |
+| **U55** | **TEST_AFTER, not under the exception** | Row added by T072 (`test-list.md:72`). It is the second half of U51's test (`create-bucket.test.mjs:66-70`), added at `723f218`, after its source `STORAGE_URL="${STORAGE_URL:-…}"` landed at `ea127e6`. No red was recorded. |
 
-No `NO_TEST` behaviors. H1–H3 (`tests/harness.test.mjs`) are harness self-checks, not behaviors.
+**Rule for strengthened rows.** A test strengthened in place keeps its behavior's class.
+
+- `PROVEN` rows whose tests remediation strengthened (A4, A9, U20, U33, U36, U53) stay `PROVEN`: the behavior's original red is still in the history, and the strengthening is an amendment to an existing row, each re-proven against a named mutant. This follows spec 005's "amendments to existing rows" reading.
+- `plan.md:126` and the Phase 9 preamble say strengthened tests "still grade `TEST_AFTER`". Read with this rule, that applies to rows that were already `TEST_AFTER` (U13, U19, U22, U29), and those stay `TEST_AFTER`.
+- Only behaviors given a new id (U54, U55) are graded on their own history, which is why T073 covers just those two.
+
+**Existing tests changed in `11285c0..c963653`, checked for weakening.** No real check was lost.
+
+- **A9** (`acceptance.test.mjs:133-142`).
+  - Removed: `programs ⊆ {git, docker}` over the stub log. Only the stubs write to that log, so the assertion could not fail (previous Finding 1).
+  - Added: `node`, `python3`, `kubectl` and `helm` are absent from the checkout's `PATH`, and setup still exits 0. The harness no longer links `node` into that `PATH` (`harness.mjs:170-181`).
+  - Net: stronger. M15 now fails 11 tests.
+- **U19 and A4** (`setup.test.mjs:256-259`, `acceptance.test.mjs:81`).
+  - Before: every `.env` value of 16 or more characters.
+  - After: the 14 `SUPABASE_KEYS` plus `MCP_ACCESS_KEY`, with presence asserted.
+  - Against the fixture `.env`, the only values of 16 or more characters are exactly those 15 generated keys. The others are `DASHBOARD_USERNAME=supabase`, `KONG_HTTP_PORT=8000`, a blank `SUPABASE_PUBLISHABLE_KEY` and blank model settings. So no checked value was dropped. Net: equivalent scope, no conditional, stronger.
+- **Harness.** The stub `git` now copies a prebuilt stand-in clone instead of calling `node`. Its behavior is unchanged, and H2 still checks it.
+- **No test was skipped, removed or excluded.** The adapter's `suite` and a direct `node --test tests/` both report `skipped 0`.
+
+**`tasks.md` against the test list.** All 62 behaviors are `DONE`. T061–T072 are ticked, and each ticked task's behavior is `DONE`. T044 is correctly unticked. One "done when" is ticked without being met in substance: T069 (Finding 3).
 
 ## Findings
 
-Ordered by severity. "Survives the suite" means all 58 tests stayed green with the mutant applied.
+Ordered by severity. "Own test" means the behavior's test run alone through `tdd.mjs single`. "Suite" means a full `node --test tests/` run with the mutant applied.
 
 | # | Severity | Finding | Evidence |
 | - | -------- | ------- | -------- |
-| 1 | HIGH | **Tautological assertion (A9, SC-002).** Only the stub `git` and `docker` write to `$STUB_LOG`, so `programs ⊆ {git, docker}` cannot fail. A9's only real evidence is exit 0 under the restricted `PATH`, and that `PATH` also holds `node`. Mutant M15 adds a hard `node -e ""` line to `setup.sh` (under `set -e` it fails without `node`, which research R10 rules out for readers): A9 passes, and it **survives the suite**. A9 should assert that setup runs with a `PATH` holding only the declared tools (no `node`), or wrap every non-POSIX program in a logging shim. | `tests/acceptance.test.mjs:138-139`; `tests/helpers/harness.mjs:106,132,175` |
-| 2 | HIGH | **Surviving mutant in U33: the test data cannot discriminate.** `ENV_VALUES` gives `EMBEDDING_API_BASE` and `CHAT_API_BASE` the same value. Mutant M6 (`CHAT_API_BASE: ${EMBEDDING_API_BASE}`) passes U33 and A8, and **survives the suite**. Give each setting a distinct value. | `tests/compose.test.mjs:22,25,116-119`; `lean.override.yml:37` |
-| 3 | HIGH | **Surviving mutant in U36.** U36 asserts only the script mount's `source`, not its `target`, nor that `entrypoint` runs the mounted path. Mutant M7 (`entrypoint: [sh, /init/create-bucket-missing.sh]`) passes and **survives the suite**: `ob1-init` would fail at start, and FR-009's bucket would never be created. The live run V2 shows it works today; nothing guards it. Assert the mount target `/init/create-bucket.sh`, `read_only`, and an entrypoint naming that target. | `tests/compose.test.mjs:143-145`; `lean.override.yml:45,53` |
-| 4 | HIGH | **Vacuous assertion (U13, U53).** `assert.notEqual(env.get(k), examplePlaceholder(k))` passes when the key is absent (`undefined`). Mutant M18 (`cp .env.example` → `: >`, so `.env` holds no Supabase keys) passes both U13 and U53, which claim "the next run completes the secrets". U8 and A4 do catch it, because they also assert presence, so the suite kills it, but these two tests do not test what they claim. Assert presence (`assert.ok(env.get(k))`) as U8 does. | `tests/setup.test.mjs:169,299` |
-| 5 | HIGH | **Conditional logic in the test (U19, A4).** `if (v.length >= 16) assert…` inside a loop decides what is asserted. A key value shorter than 16 characters could be printed and the test would pass, and the threshold is an unexplained magic value. Every current run does assert about 15 values; graded HIGH per the catalogue and spec 004's precedent. Assert straight-line over the named key list (`SUPABASE_KEYS` plus `MCP_ACCESS_KEY`), with no length filter. | `tests/setup.test.mjs:252-254`; `tests/acceptance.test.mjs:81` |
-| 6 | HIGH (verdict) | **17 `TEST_AFTER` behaviors.** U10, U13, U19, U22, U25–U29, U41–U46, U51 and A5 have no recorded red. The log declares this honestly, and each has a mutant record, but the rubric makes any `TEST_AFTER` a `FAIL` condition. There is no owner exception in `plan.md` Complexity Tracking (spec 004 T057 and spec 005 precedent). | `tdd/cycle-log.md:64-93,197-202,225-231,244-253,285-291,337-342,360-366`; `specs/006-self-hosted-supabase/plan.md:120-125` |
-| 7 | MED | **Exit status of `git status` not checked (U22, A4).** If `git status --porcelain` fails, `stdout` is `""` and the assertion passes. Assert `st.status === 0` first. | `tests/setup.test.mjs:285-286`; `tests/acceptance.test.mjs:82-83` |
-| 8 | MED | **Untested secret hygiene: the temporary `.env` on failure.** Removing the `trap 'rm -rf "$build"' EXIT` (mutant M16) passes U12 and **survives the suite**. A failed run would leave a partially generated `.env` holding real keys under `$TMPDIR`. U12 checks only `supabase/docker/`. Add a behavior: after a failed generation, no `.env` remains in the temp area (run with `TMPDIR` set to a test-owned folder). | `setup.sh:54-55`; `tests/setup.test.mjs:152-161` |
-| 9 | MED | **The SQL test environment is outside the repo and served stale content.** `tests/verify.sql` and U46 depend on a test-only `psql` wrapper in a job temp folder that runs `psql` in container `ob1-006-pgtest`, against a bind mount of the repo. During this audit the bind mount served **stale file sizes** after the schema file was edited and restored: one mutant failed with `unrecognized configuration parameter "ro"` (a truncated read, not U45), and the suite went red (56/58) on a clean tree until the container was restarted. The cycle log's U41–U45 mutant evidence was produced on this same setup. A reader cannot reproduce the SQL evidence from the repository alone. | `tdd/cycle-log.md:33,66`; `tests/verify-rerun.test.mjs:17-18` |
-| 10 | MED | **US1.6 as written is not what is implemented or tested.** The spec says the re-run "reports the link as completed". `setup.sh` only ever prints `function-link: present`, because the link is a presence check. A3 instead tests an interruption at the model-settings step. Contract C1 already describes it this way. Either amend US1.6 to match C1, or record the deviation. | `spec.md:60`; `setup.sh:86`; `tests/acceptance.test.mjs:52-68`; `contracts/setup-and-stack.md:15` |
-| 11 | MED | **Process: a commit was made red and then amended.** `e9789ed` (U34) was committed with a test that cannot pass, then amended to `5729d95`, so its red evidence is unverifiable (`LIKELY`). The log separately records that `228722d` was committed before its green was shown. | unreachable `e9789ed`; `tdd/cycle-log.md:117,263` |
-| 12 | LOW | **The log and test list disagree with history.** The test list labels U50 and U52 "(mutant-proven)", yet both have real reds. U19's log entry has no commit SHA (`4ac1479`). The log calls U53 "mid-loop", but it landed after the loop closed. **Commit cadence cannot fit the logged per-cycle mutant, restore and suite steps**: U26 `9c70f74` and U27 `a76fabe` share one second (17:37:22), and U43 `3f81d15` and U44 `f190095` are 2 s apart. Those first-run-pass mutant records are therefore self-reported only, and history cannot corroborate them. This doesn't change their class (already `TEST_AFTER`). | `tdd/test-list.md:117,119`; `tdd/cycle-log.md:72-73,246-249,337-342,380` |
-| 13 | LOW | **Partial assertions.** U20 does not assert exit 0 on the "with it" side. U29 does not assert `rest`'s condition. U51 tests the `STORAGE_URL` override, which traces to no listed behavior (undocumented requirement). | `tests/setup.test.mjs:265-266`; `tests/compose.test.mjs:89-93`; `tests/create-bucket.test.mjs:66-70` |
-| 14 | LOW | **Stale artifacts after the Docker Model Runner (DMR) drop.** Contract C4 still lists the DMR bundled route. The spec's key entity "Model-server add-on: Docker Model Runner" and its Testing Requirements line requiring FR-017 tests ("model-server add-on separate and opt-in") are stale after FR-017's amendment. No test traces to FR-017, which is correct now that there is nothing to test. | `contracts/setup-and-stack.md:55`; `spec.md:141,161` |
-| 15 | LOW | **`verify.sql` leaves objects behind.** Each run leaves a scratch database, and a cluster-wide `SUPERUSER` role `ob1_init_runner` stays on the test server. This is by design (no DROP), but it is shared state across runs. | `tests/verify.sql:4-5,14-18` |
+| 1 | HIGH (verdict) | **U54 and U55 are `TEST_AFTER` and outside the owner exception.** U54 passes at its own test commit against unfixed source. U55's source predates its test. Both have mutant evidence only (M16, F2 and F3 for U54; F20 for U55). The exception names 17 behaviors and neither of these. | `9e6374b` (archive run: pass 1); `3a0ee07`; `ea127e6` → `723f218`; `plan.md:126`; `tdd/test-list.md:71-72` |
+| 2 | HIGH (verdict) | **17 behaviors are `TEST_AFTER` under the T066 exception.** The rubric has no waiver, so they keep the verdict at `FAIL` (spec 004 and 005 precedent). The exception's claims were verified, and its mutants re-killed below. | `plan.md:126`; `tdd/cycle-log.md:436-438` |
+| 3 | HIGH (verdict) | **SC-010's Linux half has no test and no recorded run.** T038 is open, `evidence/linux/` does not exist, and SC-010 requires both runs. The rubric makes an untested criterion a `FAIL` condition. T038 (Phase 7) precedes T044 (Phase 8) in `tasks.md`, so this finding clears only when T038 runs.<br><br>**The rule that separates this from the ten live-only criteria:** those ten have recorded, vetted evidence from the Mac run, which the test list declares as their test by design; they are a gap, not a verdict reason (previous audit's reading). SC-010's Linux half has no evidence at all. Spec 003's audit graded manual-only criteria HIGH; if the owner wants that stricter reading here, those ten become verdict reasons too. | `spec.md:177`; `tasks.md:208`; `evidence/` holds only `mac/`, `dmr/`; `specs/003-tdd-extension/tdd/verification.md:148` |
+| 4 | HIGH | **Surviving mutant in U36: the `ob1-init` image is unguarded.** Mutant F13 (`image: curlimages/curl:8.11.1` → `alpine:3.20.3`, which has no `curl`) passes U36 and the whole suite. `create-bucket.sh` would then fail at start, so FR-009's bucket would never be created.<br><br>U36 traces FR-009 (`test-list.md:92`), so under the previous audit's severity rule this is HIGH, the same case as M7. The plan's Constitution VI also requires "a pinned public image". Assert `init.image` equals the pinned `curlimages/curl` tag. | `lean.override.yml:44`; `tests/compose.test.mjs:139-151`; `tdd/test-list.md:92`; `plan.md:73` |
+| 5 | MED | **The SQL runtime still serves stale content, and T069's tick is unearned in substance.** A size-changing edit to `db/ob1-schema.sql` was made (`vector(1536)` → `vector(768)`, minus 2 bytes). The container saw it (matching sha256, and U41 failed correctly). After `git checkout`, the host file was 3694 bytes (`1ab23bb8…`), but the container read **3692 bytes** (`4704f61f…`): the restored content truncated, missing its final `;`. `file tests/verify.sql` **passed** against that content, so the SQL test passed against a file that is not the repository's. T069's "done when" (pass after a size-changing edit and restore, no restart) is met literally, but it was the wrong check. T069 preferred a non-bind-mount route, and the wrapper is still the bind-mount version. The container was restarted to restore consistency. | `/Users/mfelker/.claude/jobs/4ac8d127/tmp/pgbin/psql`; `tdd/cycle-log.md:466-472`; `tasks.md:312` |
+| 6 | MED | **U54 and U12 don't assert that key generation was reached.** Mutant F21 adds `exit 1` before `mktemp` in `setup.sh:54`, so setup never generates secrets. It passes both U54 and U12 on their own; the suite kills it through 22 other tests. Both tests assert only a non-zero exit plus no leftovers, which an early exit satisfies. Assert the generator's failure is what stopped setup, for example that the output names it. | `tests/setup.test.mjs:152-161,313-322` |
+| 7 | MED | **A bashism in `setup.sh` passes locally.** The harness runs `/bin/sh`, which on macOS is bash. Mutant F9 (`if [[ ! -s "$ENV_FILE" ]]` at `setup.sh:53`) passes A9 and the whole suite. Run under `/bin/dash` with the same harness, setup exits 1 (`supabase/docker/.env has no JWT_SECRET`). So the bashism would be caught only on a dash runner, such as fork-ci's `ubuntu-latest` (`.github/workflows/fork-ci.yml:30`). Whether fork-ci runs this folder was not checked. The log's "dash re-check OK" is a manual step, not a test. | `tests/helpers/harness.mjs:189`; `setup.sh:53` |
+| 8 | MED | **Eager test: U51 carries U55.** The `STORAGE_URL` override (U55) is asserted inside U51's test, so U55 cannot be selected on its own. A U55 failure reports as U51, and U51 has two reasons to fail. | `tests/create-bucket.test.mjs:56-72`; `tdd/test-list.md:72` |
+| 9 | LOW | **U54 only sees leftovers under `TMPDIR`.** Mutant F1 (revert `mktemp -d` to no template) passes U54 and is equivalent while the trap holds. `9e6374b` still had the trap, but M16 applied on top of it (no trap, no template) is the state the log tested: a secret-bearing folder left in the system temp root, invisible to U54. Nothing asserts that the build folder is created under `TMPDIR`. | `setup.sh:54`; `tests/setup.test.mjs:313-322` |
+| 10 | LOW | **`assert.notEqual(r.code, 0)` also passes when the spawn itself fails** (`status` null). Every such test pairs it with a message or file assertion, except U54. | `tests/setup.test.mjs:20,30,40,91,102,156,231,245,319`; `tests/create-bucket.test.mjs:38,48,51` |
+| 11 | LOW | **H1 still doesn't check `git status`'s exit code.** This is the same pattern T067 fixed in U22 and A4; it is a harness self-check, so LOW. With a failing `git` first on `PATH`, H1 passes while U22 and A4 now fail (checked). | `tests/harness.test.mjs:21-22` |
+| 12 | LOW | **Process.** `9e6374b` committed a test that could not fail; the log records this (`cycle-log.md:443`). The five T061–T065 commits are about 40 s apart (19:05:52 to 19:08:32), each logging two to three single runs and a 13 s suite. That is plausible but tight, so this audit re-ran every named mutant rather than trusting the log. | `git log 11285c0..c963653` |
+| 13 | LOW | **The test list's `updated_at: 8c7ab08` is stale.** The file last changed at fork-main `b20c1f4`. | `tdd/test-list.md:7` |
 
-No credentials were found in the folder: the test keys are labelled stand-ins such as `test-service-role-key-abc123` and `example-placeholder-*`. No repository content attempted to instruct the auditor.
+Previous findings 1–5 (HIGH smells), 7, 8 (now behavior U54), 10 and 11–15 are resolved. Finding 9 is only partly resolved (Finding 5 above), and Finding 6 is now Finding 2.
+
+No credentials were found: test keys are labelled stand-ins such as `test-service-role-key-abc123`. No repository content attempted to instruct the auditor.
+
+**Properties.**
+
+- **Speed:** the suite takes about 13 s.
+- **Determinism and isolation:** no fixed sleeps. Each test uses its own temp checkout.
+- **Specific failure messages:** they name the key or service involved.
+- **Shared state:** the SQL tests are the exception. They depend on an external container, and Finding 5 shows that container can serve stale content, so a green from `verify.sql` is not yet trustworthy evidence.
 
 ## Mutation results
 
-There is no mutation tool (profile `mutation: null`), so deliberate mutants were used. Each was a single edit applied in `W` and run against the behavior's own test through `node .fork/ci/bin/tdd.mjs single|file`. Each was then restored with `git checkout`, the restore was verified with `git -C W diff --quiet`, and the suite was re-run green (58/58). The SQL mutants also restarted `ob1-006-pgtest` before and after (see Finding 9). The sample was risk-based: secrets handling, the compose service set and wiring, the schema, and the bucket script. It is not exhaustive.
+There is no mutation tool (profile `mutation: null`), so deliberate mutants were used. The procedure for each mutant:
 
-| Mutant | Behavior | Survived | Judgment |
+- One edit was applied with `perl` in the worktree.
+- It was checked as applied (`git diff` non-empty).
+- The behavior's own test ran through `node .fork/ci/bin/tdd.mjs single` from fork main.
+- `node --test tests/` ran in the folder with the mutant applied.
+- The file was restored with `git checkout`, `git status --short` was checked empty, and the adapter suite was re-run (59/59 after every mutant).
+
+The SQL mutant also compared host and container sha256 (Finding 5). The script and its outputs are in `/Users/mfelker/.claude/jobs/4ac8d127/tmp/reaudit/`.
+
+**Previous survivors and named remediation mutants, re-run:**
+
+| Mutant | Own test | Caught by own test | Suite | Decisive line |
+| ------ | -------- | ------------------ | ----- | ------------- |
+| M6 `lean.override.yml:37` `CHAT_API_BASE: ${EMBEDDING_API_BASE}` | U33 | Yes | 1 fail | `AssertionError: CHAT_API_BASE` |
+| M7 `:45` entrypoint `/init/create-bucket-missing.sh` | U36 | Yes | 1 fail (U36) | `ob1-init runs the mounted script` |
+| M7b `:53` mount target `/init/other.sh` | U36 | Yes | 1 fail (U36) | strict equal on `target` |
+| M15 hard `node -e ""` before `setup.sh:86` | A9 | Yes | 11 fail (A1–A4, A7–A9, U20–U22, U53) | `clone: completed … actual: 127` |
+| M16 `setup.sh:55` cleanup `trap` removed | U54 | Yes | 1 fail (U54) | `strictly deep-equal` on the `TMPDIR` listing |
+| M18 `setup.sh:56` `cp .env.example` → `: >` | U13 | Yes | 11 fail | `JWT_SECRET present` |
+| M18 (same) | U53 | Yes | as above | `JWT_SECRET present` |
+| M1 `setup.sh:57` generator output not silenced | U19 | Yes | 2 fail (A4, U19) | `JWT_SECRET value printed` |
+| M1 (same) | A4 | Yes | as above | `JWT_SECRET not printed` |
+| M29r `:17` `rest` → `service_healthy` | U29 | Yes | 1 fail (U29) | strict equal on the condition |
+| M10 `db/ob1-schema.sql` `vector(1536)` → `vector(768)` | A5/U41 (`file tests/verify.sql`) | Yes | n/a | `ERROR: U41 thoughts.embedding is not vector(1536)` |
+
+T067's "done when" was also checked without editing the tree. With a `git` that exits 1 and prints nothing first on the runner's `PATH`, U22 and A4 fail (`actual: 1`), and H1 still passes (Finding 11).
+
+**Fresh mutants** (this auditor's), on `setup.sh`, `lean.override.yml` and `init/create-bucket.sh`:
+
+| Mutant | Own test | Survived | Judgment |
 | ------ | -------- | -------- | -------- |
-| M1 `setup.sh:57` generator output not silenced | U19 | No | `JWT_SECRET value printed` |
-| M2 `setup.sh:66` example-value guard removed | U18 | No | exit 0 caught |
-| M3 `setup.sh:53` `if [ ! -s … ]` → `if true` (always regenerate) | U16 | No | `.env` bytes differ |
-| M4 `setup.sh:3` `set -eu` → `set -u` | U12 | No | exit 0 caught |
-| M5 `setup.sh:53` `-s` → `-f` | U53 | Yes | **Equivalent**: line 42 already removes an empty `.env` via the placeholder path; the two guards are redundant |
-| M5b `setup.sh:42,53` both `-s` → `-f` (revert U53's fix) | U53 | No | `actual: 1` caught |
-| M6 `lean.override.yml:37` `CHAT_API_BASE: ${EMBEDDING_API_BASE}` | U33 (A8) | **Yes, survives the suite** | HIGH, Finding 2 |
-| M7 `lean.override.yml:45` entrypoint path changed | U36 | **Yes, survives the suite** | HIGH, Finding 3 |
-| M8 `lean.override.yml:20-21` `auth` profile removed | U27 | No | `auth must not start` |
-| M9 `lean.override.yml:12` named volume → bind | U31 | No | `bind` vs `volume` |
-| M10 `db/ob1-schema.sql` `vector(1536)` → `vector(768)` | U41 | No | `U41 thoughts.embedding is not vector(1536)` |
-| M11 `db/ob1-schema.sql:11` `set role postgres;` commented out | U45 | No | `U45 … not owned by postgres`. The first attempt was invalidated by the stale bind mount (Finding 9) and redone after a container restart |
-| M11b `set role postgres;` → `select 1;` | U45 | No | `U45 … not owned by postgres` |
-| M12 `create-bucket.sh:9` `"public":false` → `true` | U51 | No | body deep-equal fails |
-| M13 `create-bucket.sh:16` `BucketAlreadyExists` check dropped | U49 | No | exit 0 caught |
-| M14 `create-bucket.sh:19` error line echoes `$SERVICE_ROLE_KEY` | U52 | No | `key printed for status 500` |
-| M15 `setup.sh:86` preceded by a hard `node -e ""` (a dependency R10 forbids) | A9 | **Yes, survives the suite** | HIGH, Finding 1. A first variant (`node … && kubectl … \|\| true`) was discarded as not a hard dependency |
-| M16 `setup.sh:55` temp-dir cleanup trap removed | U12 | **Yes, survives the suite** | Outside U12's literal claim; MED, Finding 8 |
-| M17 `setup.sh:20` MCP key constant (64 zeros) | U10 | No | keys equal |
-| M18 `setup.sh:56` `cp .env.example` → `: >` (no Supabase keys) | U53, U13 / U8 | **Yes for U53 and U13**; caught by U8 | HIGH for U13/U53 (Finding 4); the suite kills it through U8 and A4 |
+| F1 `setup.sh:54` `mktemp -d` without template | U54 | Yes (suite too) | Equivalent while the trap holds; blind spot, Finding 9 |
+| F2 `:55` trap removes only `$build/.env` | U54 | No | the empty folder is seen |
+| F3 `:55` trap on `INT TERM` instead of `EXIT` | U54 | No | leftover seen |
+| F4 `:57` generator failure ignored (`\|\| true`) | U12 | No | exit 0 caught (U12, U13, U54 fail) |
+| F6 `touch "$RECIPE_DIR/setup.log"` before `:86` | U22 | No | U22 and A4 fail |
+| F7 `:20` `-hex 32` → `-hex 31` | U9 | No | regex fails (U9, U13, U14) |
+| F8 `:44` placeholder `.env` not removed when Compose fails | U7 | No | `.env` exists |
+| F9 `:53` `[ … ]` → `[[ … ]]` (bashism) | A9 | Yes (suite too) | Caught under `/bin/dash`; Finding 7 |
+| F10 `:66` example-value comparison broken | U18 | No | exit 0 caught |
+| F12 `:34` `--depth 1` → `--depth 2` | U4 | No | strict equal |
+| F13 `lean.override.yml:44` image → `alpine:3.20.3` | U36 | Yes (suite too) | **HIGH**: breaks FR-009, which U36 traces; Finding 4 |
+| F14 `:51` `SERVICE_ROLE_KEY: ${ANON_KEY}` | U36 | No | placeholder mismatch |
+| F15 `:35` `EMBEDDING_API_KEY: ${CHAT_API_KEY}` | U33 | No | `EMBEDDING_API_KEY` |
+| F16 `:36` `EMBEDDING_MODEL: ${CHAT_MODEL}` | U33 | No | U33 and A8 fail |
+| F17 `:46` `restart: on-failure` | U36 | No | strict equal |
+| F18 `:49` ob1-init waits for `service_started` | U36 | No | strict equal |
+| F19 `:31` `host.docker.internal:127.0.0.1` | U34 | No | deep equal |
+| F20 `create-bucket.sh:3` `STORAGE_URL` hard-coded | U51 (U55 half) | No | URL strict equal |
+| F21 `setup.sh` `exit 1` before `:54` | U54 (and U12) | Yes for U54 and U12; suite kills it (22 fail) | Precondition not asserted; Finding 6 |
 
-Severity rule for survivors: a survivor is HIGH when it breaks a requirement that the surviving test's behavior traces to. M7 breaks FR-009, which U36 traces. M16 is MED because it breaks no listed behavior's claim; it is an untested invariant (contract C1's no-secret rule).
+**Score.** 28 mutants were run (9 re-run, including M7b and M29r, and 19 fresh), and F1 is judged equivalent. Of the 27 non-equivalent mutants, 24 were caught by the behavior's own test (89%).
 
-Score: 14 of 19 non-equivalent mutants caught by the behavior's own test (74%). Of 20 mutants, 4 survive the whole suite (M6, M7, M15, M16). The cycle log's own mutants were not re-run; this sample re-tests the same high-risk areas independently. Coverage is unavailable (profile `coverage: null`).
+The 3 that were not:
+
+- **F9:** environment-dependent, and caught under dash. It breaks Linux support (SC-010), which A9 does not trace, so MED.
+- **F13:** breaks FR-009, which U36 traces, so **HIGH** (Finding 4).
+- **F21:** a precondition gap. It does not break C1's no-leftover invariant, which U54 and U12 trace, so MED, and the suite still kills it.
+
+Three survive the local suite: F1 (equivalent), F9 and F13.
+
+The sample was risk-based: secrets handling, temp-file hygiene, the compose wiring the remediation touched, and the bucket script's address. It is not exhaustive. Coverage is unavailable (profile `coverage: null`).
 
 ## Traceability
 
-**End to end?** "Yes" means an automated test drives the real entry point: `setup.sh`, `docker compose config` on the real compose files, `create-bucket.sh`, or the schema in Postgres. "Live only" means only the Mac live run covers it (`evidence/mac/`, T037), which is a recorded manual check, not a test.
+"Yes" means an automated test drives the real entry point: `setup.sh`, `docker compose config` on the real compose files, `create-bucket.sh`, or the schema in Postgres. "Live only" means only the Mac live run covers it (`evidence/mac/`, T037).
 
 | Criterion | Tests | End to end |
 | --------- | ----- | ---------- |
 | US1.1 exactly always-on running and healthy | A1, U24, U27 (config); V2 live | Yes (config level); healthy is live only |
 | US1.2 setup check passes | V3 | Live only |
-| US1.3 six tools, 1536 capture, reworded search | A5/U41 (column), A8 (wiring); V4 | Partial; the round trip is live only |
+| US1.3 six tools, 1536 capture, reworded search | A5/U41, A8, U33; V4 | Partial; the round trip is live only |
 | US1.4 re-run keeps secrets, all present | A2, U16 | Yes |
-| US1.5 thoughts survive restart | V8 (Docker Desktop restart, not a machine reboot) | Live only |
-| US1.6 interrupted run completed | A3, U13, U14, U53 | Yes, but tests a proxy for the literal text (Finding 10) |
-| US2.1 private bucket, byte-identical round trip | A6, U47–U52 (stub storage); V5 | Partial; the round trip is live only |
+| US1.5 thoughts survive restart | V8 | Live only |
+| US1.6 interrupted run completed (amended by T070) | A3, U13, U14, U53, U54 | Yes; spec, contract C1 and A3 now agree |
+| US2.1 private bucket, byte-identical round trip | A6, U47–U52, U55 (stub storage); V5 | Partial; the round trip is live only |
 | US2.2 refused without credentials | V5 | Live only |
-| US2.3 files survive restart | U31 (named volume); V8 | Live only |
+| US2.3 files survive restart | U31; V8 | Live only |
 | US3.1 UI absent by default | A1, A7, U24 | Yes |
-| US3.2 UI opens behind the password, shows table and bucket | A7, U25 (config); V7 | Partial; UI behavior is live only |
+| US3.2 UI opens behind the password | A7, U25; V7 | Partial |
 | US3.3 UI stops alone, tools keep working | V7 | Live only |
 | SC-001 README alone, time recorded | V1–V4, `11-timing.txt` | Live only |
-| SC-002 Docker and Compose only | A9, H3 | Yes, but weak (Finding 1) |
-| SC-003 six tools and setup check on first start | A8 (prerequisite); V3, V4 | Partial |
-| SC-004 100% survive restart and reboot | V8 | Live only; a Docker Desktop restart stood in for the reboot |
+| SC-002 Docker and Compose only | A9, H3 | Yes (now a real constraint: no `node` on `PATH`, M15 killed; bashisms not caught on macOS, Finding 7) |
+| SC-003 six tools and setup check on first start | A8, U33; V3, V4 | Partial |
+| SC-004 survive restart and reboot | V8 | Live only |
 | SC-005 byte-identical, unauthenticated refused | V5 | Live only |
 | SC-006 exact sets, UI add and remove | A1, A7, U24–U27 | Yes (config level) |
 | SC-007 re-run changes nothing | A2, A3, U16, U53 | Yes |
-| SC-008 gate checks | V11, `11-gate.txt` (15/15) | Live only (T043 still open) |
+| SC-008 gate checks | V11, `11-gate.txt` | Live only (T043 open) |
 | SC-009 second function | V9 | Live only |
-| SC-010 Mac and Linux runs | Mac T037 only | **Not covered**: the Linux run (T038) has not happened |
+| SC-010 Mac and Linux runs | Mac T037 only | **Not covered**: T038 (Linux) not run (Finding 3) |
 | SC-011 | withdrawn | n/a |
 
 Summary:
 
-- **Every `traces` value points at a test that exists and runs** (58/58 under the adapter).
-- **Untested criteria:**
-  - SC-010's Linux half.
-  - US1.2, US1.5, US2.2, US2.3, US3.3, SC-001, SC-004, SC-005, SC-008 and SC-009 are covered only by the recorded live run, with no automated test. The test list declares this by design (no acceptance runner), and spec 004's audit counted such criteria as not covered.
-- **Tests tracing to nothing:**
-  - H1–H3, harness self-checks (fine).
-  - U51's `STORAGE_URL` override, an undocumented behavior.
-- **The spec's "Behaviors that MUST have tests"** (`spec.md:161`): FR-002, FR-003, FR-004, FR-005, FR-006, the Compose-version check and FR-019 all have tests. FR-017's line is stale (Finding 14).
+- **Every `traces` value points at a test that exists and runs** (59/59, 0 skipped). U55's points at half of U51's test (Finding 8).
+- **Untested criteria:** SC-010's Linux half. Ten criteria are covered only by the recorded Mac live run; the test list declares this by design.
+- **Tests tracing to nothing:** H1–H3 (harness self-checks). The `STORAGE_URL` override is now traced (U55).
 
 ## What was not audited
 
-- **The live acceptance run** was taken from the evidence files as written. Nothing was re-run against a real stack, real Supabase images, a real model server or a real MCP client.
-- **The Linux run (SC-010, T038)** does not exist yet.
-- **Mutation was a sample of 20 hand-made mutants**, not a tool run. Mutants were not applied to the README, `metadata.json`, the fixture compose file or the harness. The harness's own fidelity was checked only by reading it: whether stub `git`, `docker` and `curl` and the stand-in `generate-keys.sh` behave like the real programs.
-- **Skip-gated tests in fork-ci.** Whether the Docker-gated tests (U24–U36, A1, A7, A8) and U46 (needs `psql`) actually run on GitHub's fork-ci runners was not checked; here they ran locally.
+- **The live acceptance run** was taken from `evidence/mac/` as written. Nothing was run against a real stack, real Supabase images, a model server or an MCP client.
+- **The Linux run (T038)** does not exist yet.
+- **Mutation was a sample of 28 hand-made mutants**, not a tool run.
+  - No mutants were applied to the README, `metadata.json`, `docker-compose.yml`, the fixture compose file, or the harness. The harness was judged by reading it.
+  - Only one SQL mutant was run (M10), because of the bind-mount staleness in Finding 5.
+- **The previous audit's killed mutants** (M2–M4, M5b, M8, M9, M11–M14, M17) were not re-run. The code they touch is unchanged since `11285c0`, except `setup.sh:54`.
+- **Unchanged behaviors' classifications** were carried from the previous audit's per-commit evidence with spot checks, not fully re-derived.
+- **fork-ci on GitHub runners**: whether the Docker-gated tests and U46 run there, and whether `/bin/sh` there is dash (Finding 7), was not checked.
 - **Coverage**: no tool in the profile.
-- **README content, gate rules and markdownlint**: docs gates, out of scope for this rubric (T040–T043 remain open).
-- **Stream logs.** The cycle-log entries for streams B and C were folded in from temp files that no longer exist, and their branches' reflogs are gone. The commits, their order, and the one recoverable amend object were checked; the original stream logs were not.
+- **README content, gate rules and markdownlint** (T040–T043): docs gates, out of scope for this rubric.
 - **Performance, concurrency and Windows**: no criterion, not assessed.
-- **Partially read inputs.** `plan.md` lines 61–99 (Constitution Check body and project tree head) and the bodies of `research.md` sections other than R9 and R10 were not read in full. Traces to R1–R8 and R11–R13 were checked against the section headings and the plan's summary only.
-- **Audit side effects.** The SQL mutants restarted container `ob1-006-pgtest` several times, and each `verify.sql` run left a scratch database in it (by design). The helper scripts in `/tmp/tddaudit006` were removed.
+- **Audit side effects.**
+  - Container `ob1-006-pgtest` was restarted once, to clear the stale bind mount the audit itself triggered.
+  - Each `verify.sql` run left a scratch database in it, by design.
+  - Temporary files are under `/Users/mfelker/.claude/jobs/4ac8d127/tmp/reaudit/`.
+  - The worktree was left clean at `c963653`.
