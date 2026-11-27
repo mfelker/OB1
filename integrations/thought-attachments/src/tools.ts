@@ -41,7 +41,7 @@ export function buildServer(deps: Deps, _services: Services): McpServer {
       found = await deps.store.matchThoughts(embedded.data[0], limit);
     }
     if ("error" in found) return fail(found.error);
-    const matches = found.data.map((m) => ({ ...m, first_line: m.first_line.slice(0, FIRST_LINE_CHARS) }));
+    const matches = found.data.map((m) => ({ ...m, first_line: m.first_line.split(/\r?\n/)[0].slice(0, FIRST_LINE_CHARS) }));
     return reply(JSON.stringify(matches), { matches });
   });
 

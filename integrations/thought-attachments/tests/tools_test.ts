@@ -203,3 +203,10 @@ Deno.test("U224 find_thought returns a 120-character first line whole", async ()
   const out = await call(h, "find_thought", { query: "x", mode: "exact" });
   assertEquals((out.data.matches as { first_line: string }[])[0].first_line, "x".repeat(120));
 });
+
+Deno.test("U226 find_thought's first_line is the content up to its first line break", async () => {
+  const h = await harness();
+  storeReturns(h, "Garage shelf\nthree boxes of filters");
+  const out = await call(h, "find_thought", { query: "x", mode: "exact" });
+  assertEquals((out.data.matches as { first_line: string }[])[0].first_line, "Garage shelf");
+});
