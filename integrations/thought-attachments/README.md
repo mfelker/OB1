@@ -229,6 +229,23 @@ To see which attachments belong to a thought, or which one is behind a search re
 
 **Done when:** the downloaded file is byte-identical to your original.
 
+### Remove an attachment
+
+Removal is permanent, so it takes two steps.
+
+1. Ask the AI to run `remove_attachment` without confirming. This is a dry run: it deletes nothing and lists exactly what would go, namely the stored file and the number of derived thoughts.
+2. If the list is right, ask it to run `remove_attachment` again with `confirm: true`. The stored file is deleted first, then the record and its derived thoughts together. Each deletion is scoped to that one attachment.
+
+What goes: the stored file, the attachment record and that attachment's own passages or caption. What never goes: your parent thought and any other thought, and the passages of the same PDF attached to a different thought, which stay searchable. There is one exception: a note this integration created for an attachment that ended refused or expired without an upload is removed with it, unless another attachment still uses that note.
+
+If the second step fails, the attachment stays listed and a repeat removal succeeds, treating a missing file as already removed. A removal on an attachment that is being finished is refused as busy.
+
+**Done when:** a core search no longer returns the removed passages, and the parent thought is unchanged.
+
+### Orphan check
+
+Ask the AI to run `find_orphan_attachments`. It lists attachments whose parent thought was deleted elsewhere, uploads that were started but never finished after their link expired, and refused attachments. Each entry shows its id, file name, why it is listed and its derived thought count. Remove them with `remove_attachment` as above.
+
 ## Expected Outcome
 
 - The schema check shows the attachments table with row-level security on and the private bucket.
