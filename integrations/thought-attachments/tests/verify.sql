@@ -148,3 +148,14 @@ begin
   delete from thought_attachments where id = v_id;
   if after_ts <= before_ts then raise exception 'U40: updated_at did not advance (% then %)', before_ts, after_ts; end if;
 end $$;
+
+-- U41: indexes on parent_thought_id and on content_hash exist
+do $$
+begin
+  if not exists (select 1 from pg_indexes where tablename = 'thought_attachments' and indexdef ~ '\(parent_thought_id\)$') then
+    raise exception 'U41: no index on parent_thought_id';
+  end if;
+  if not exists (select 1 from pg_indexes where tablename = 'thought_attachments' and indexdef ~ '\(content_hash\)$') then
+    raise exception 'U41: no index on content_hash';
+  end if;
+end $$;

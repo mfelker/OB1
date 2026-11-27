@@ -86,3 +86,6 @@ begin
       for each row execute function thought_attachments_touch();
   end if;
 end $$;
+
+create index if not exists thought_attachments_parent_idx on thought_attachments (parent_thought_id);
+create index if not exists thought_attachments_content_hash_idx on thought_attachments (content_hash);
