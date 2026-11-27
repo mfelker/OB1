@@ -237,3 +237,22 @@ Deno.test("U398 a 4xx that rejects dimensions is retried once without the parame
     },
   );
 });
+
+Deno.test("U399 a retry that is refused again ends the call with its HTTP reason, and a 4xx that does not mention dimensions or a 5xx that does is not retried", async () => {
+  const cases = [
+    DIMENSIONS_REFUSED,
+    { status: 400, body: { error: { message: "input is too long" } } },
+    { status: 503, body: { error: { message: "dimensions service unavailable" } } },
+  ];
+  const seen: unknown[] = [];
+  for (const reply of cases) {
+    const ff = new FakeFetch().on("POST", URL_, reply);
+    const out = await createEmbeddingClient(settingsWith(), ff.fetch).embed(["alpha"]);
+    seen.push({ error: "error" in out ? out.error : out, requests: ff.requests.length });
+  }
+  assertEquals(seen, [
+    { error: "embedding endpoint answered HTTP 400: This model does not support specifying dimensions.", requests: 2 },
+    { error: "embedding endpoint answered HTTP 400: input is too long", requests: 1 },
+    { error: "embedding endpoint answered HTTP 503: dimensions service unavailable", requests: 1 },
+  ]);
+});
