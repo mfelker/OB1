@@ -198,3 +198,11 @@ Deno.test("U311 findPending returns a matching pending_upload whose deadline is 
   const found = data(await store.findPending(parent.id, "manual.pdf", "application/pdf", 4096, clock.now()));
   assertEquals(found?.id, row.id);
 });
+
+Deno.test("U312 findPending returns null for such a row whose deadline is one second before now", async () => {
+  const clock = new Clock();
+  const store = new FakeStore({ clock });
+  const parent = await store.seedThought({ content: "Dishwasher DW-500" });
+  pendingDueIn(store, clock, parent.id, -1);
+  assertEquals(data(await store.findPending(parent.id, "manual.pdf", "application/pdf", 4096, clock.now())), null);
+});
