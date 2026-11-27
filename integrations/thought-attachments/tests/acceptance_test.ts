@@ -1049,7 +1049,7 @@ Deno.test(
   },
 );
 
-todo(
+Deno.test(
   "A32 a 40 MB upload declared as a 4 MB JPEG is refused at finishing with the actual size, object deleted, no derived thought, and listed as an orphan",
   async () => {
     const w = world();
