@@ -679,6 +679,50 @@ Deno.test("U215 after a killed rebuild has expired, the attachment is processed 
   assertEquals(r.store.attachment(att.id)?.state, "processed");
 });
 
+Deno.test("U389 at exactly busy_until, a killed rebuild reads as cut off: processed, old derived set, the run did not finish", async () => {
+  const r = await rig();
+  const att = pending(r, jpegBytes(2000));
+  assertEquals((await r.finish(att.id, {})).state, "processed");
+  const oldIds = r.store.derivedOf(att.id).map((t) => t.id);
+  const killed = await r.store.claim(att.id, "rebuild", r.settings.busySeconds);
+  assert("data" in killed && "token" in killed.data);
+  r.clock.advanceSeconds(r.settings.busySeconds);
+  assertEquals(r.store.attachment(att.id)?.busy_until, r.clock.iso());
+  const out = await r.finish(att.id, {});
+  assertEquals(out, { state: "processed", derived_count: 1, last_rebuild_error: "the run did not finish" });
+  assertEquals(r.store.derivedOf(att.id).map((t) => t.id), oldIds);
+});
+
+Deno.test("U390 a refused write whose takeover claim ends at exactly now reports the stored state, not busy", async () => {
+  const r = await rig();
+  const att = pending(r, await textPdf(["alpha beta gamma delta epsilon zeta"]));
+  // The first run stalls in Storage after taking its claim; later calls pass straight through.
+  let stalled = false;
+  let go: () => void = () => {};
+  const gate = new Promise<void>((resolve) => go = resolve);
+  r.store.override.objectInfo = async (p: string) => {
+    if (!stalled) {
+      stalled = true;
+      await gate;
+    }
+    const o = r.store.objects.get(p);
+    return { data: o ? { size: o.bytes.length, createdAt: o.createdAt } : null };
+  };
+  const older = r.finish(att.id, {});
+  for (let i = 0; i < 200 && !stalled; i++) await new Promise((resolve) => setTimeout(resolve, 5));
+  assert(stalled);
+  r.clock.advanceSeconds(r.settings.busySeconds + 1);
+  // A newer run takes the claim over and is killed; its claim is never released.
+  const newer = await r.store.claim(att.id, "finish", r.settings.busySeconds);
+  assert("data" in newer && "token" in newer.data);
+  r.clock.advanceSeconds(r.settings.busySeconds);
+  assertEquals(r.store.attachment(att.id)?.busy_until, r.clock.iso());
+  go();
+  const late = await older;
+  assertEquals(late, { state: "pending_upload", derived_count: 0 });
+  assertEquals(r.store.derivedOf(att.id), []);
+});
+
 Deno.test("U216 a finish whose claim expired and was taken over has its write refused, and the newer run's result stands", async () => {
   const r = await rig();
   const att = pending(r, await textPdf(["alpha beta gamma delta epsilon zeta"]));

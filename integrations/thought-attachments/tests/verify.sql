@@ -806,6 +806,15 @@ begin
   if (r->'removed'->>'noteRemoved')::boolean is not true or (r->>'parent_still_there')::boolean then raise exception 'U99: %', r; end if;
 end $$;
 
+-- U392: remove deletes the parent note when the attachment is pending_upload at exactly its deadline
+-- (upload_deadline = now(); now() is fixed inside the transaction, and the deadline instant is past it)
+do $$
+declare r jsonb := pg_temp.note_case('pending_upload', true, interval '0');
+begin
+  if (r->'preview'->>'noteWouldGo')::boolean is not true or (r->'removed'->>'noteRemoved')::boolean is not true
+     or (r->>'parent_still_there')::boolean then raise exception 'U392: %', r; end if;
+end $$;
+
 -- U100: remove keeps the note when another attachment points to it
 do $$
 declare r jsonb := pg_temp.note_case('refused', true, interval '1 hour', true);
