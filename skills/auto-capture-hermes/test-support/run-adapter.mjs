@@ -124,11 +124,20 @@ export function queueEntries(sandbox, { dead = false } = {}) {
     .map((f) => ({ file: f, ...JSON.parse(fs.readFileSync(path.join(dir, f), "utf8")) }));
 }
 
-/** Pre-load a retry queue entry, as an earlier failed run would have left it. */
+/** Queue file names (not parsed, so unreadable entries show too), sorted. dead: list dead/ instead. */
+export function queueFiles(sandbox, { dead = false } = {}) {
+  const dir = queueDir(sandbox, dead);
+  return fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => f.endsWith(".json")).sort() : [];
+}
+
+/**
+ * Pre-load a retry queue entry, as an earlier failed run would have left it.
+ * entry: an object (written as JSON) or a string (written as is, e.g. a corrupt file).
+ */
 export function seedQueueEntry(sandbox, fileName, entry) {
   const dir = queueDir(sandbox);
   fs.mkdirSync(path.join(dir, "dead"), { recursive: true });
-  fs.writeFileSync(path.join(dir, fileName), JSON.stringify(entry, null, 2));
+  fs.writeFileSync(path.join(dir, fileName), typeof entry === "string" ? entry : JSON.stringify(entry, null, 2));
 }
 
 // ── Loopback ingest stand-in ────────────────────────────────────────────────

@@ -27,6 +27,7 @@ import {
   readState,
   stateFiles,
   queueEntries,
+  queueFiles,
   seedQueueEntry,
   writeEnvLocal,
   startIngestStub,
@@ -582,6 +583,18 @@ test("U34 one run resends the three oldest queued entries and keeps the newest",
   await capture(SESSION_ID, brainEnv());
   assert.deepEqual(stub.requests.slice(0, 3).map((r) => r.body.import_key), ["k-1-a", "k-2-b", "k-3-c"]);
   assert.deepEqual(queueEntries(sandbox).map((e) => e.file), ["4-d.json"]);
+});
+
+test("U42 an unreadable queue entry moves to dead/ and the valid entries behind it are still resent", { skip }, async () => {
+  seedSession();
+  // "1-a" sorts first. Left in the queue it would take a retry slot on every run.
+  seedQueueEntry(sandbox, "1-a.json", "{ this is not json");
+  for (const name of ["2-b", "3-c", "4-d"]) seedQueueEntry(sandbox, `${name}.json`, queuedEntry(`k-${name}`));
+  stub = await startIngestStub();
+  await capture(SESSION_ID, brainEnv());
+  assert.deepEqual(queueFiles(sandbox, { dead: true }), ["1-a.json"]);
+  assert.deepEqual(stub.requests.slice(0, 2).map((r) => r.body.import_key), ["k-2-b", "k-3-c"]);
+  assert.deepEqual(queueFiles(sandbox), ["4-d.json"]);
 });
 
 // ── Debounce (INV-3, research R8) ───────────────────────────────────────────
