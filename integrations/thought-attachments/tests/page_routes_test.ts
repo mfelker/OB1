@@ -1,5 +1,6 @@
 /** Phone page routes (T042, T043): contracts/upload-page.md, FR-001..FR-003, FR-024, T005 Q5. */
 import { assertEquals, assertStringIncludes } from "jsr:@std/assert@1.0.19";
+import { createFinisher } from "../src/finish.ts";
 import { pageRoutes } from "../src/page_routes.ts";
 import { loadSettings } from "../src/settings.ts";
 import type { AttachmentRow, Deps, FinishOutcome, Services } from "../src/types.ts";
@@ -407,4 +408,23 @@ Deno.test("U366 the declaration /page/start sends to the store carries declared_
   await r.post("/page/start", { token: TOKEN, ...PICK });
   const call = r.store.calls.find((c) => c.method === "setDeclaration");
   assertEquals((call?.args[1] as { declared_by_page?: boolean })?.declared_by_page, true);
+});
+
+Deno.test("U368 a /page/finish busy behind a live finish claim on a not_captioned or failed attachment leaves the token valid", async () => {
+  for (const state of ["not_captioned", "failed"] as const) {
+    const r = await rig();
+    const heldUntil = new Date(r.clock.now().getTime() + 60_000).toISOString();
+    const row = await r.seed({ state, state_reason: "an earlier attempt", busy_op: "finish", busy_until: heldUntil, busy_token: "claim-held" });
+    const routes = pageRoutes(r.deps, createFinisher(r.deps));
+    const busy = await routes.request("https://fn.example.test/page/finish", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ token: TOKEN }),
+    });
+    const body = await busy.json();
+    assertEquals([state, busy.status, body.state, body.busy], [state, 200, state, "finish"], `busy reply for ${state}`);
+    assertEquals([state, r.store.attachment(row.id)!.page_token_hash], [state, await sha256Hex(TOKEN)], `token kept for ${state}`);
+    const info = await r.post("/page/info", { token: TOKEN });
+    assertEquals([state, info.status], [state, 200], `token accepted afterwards for ${state}`);
+  }
 });
