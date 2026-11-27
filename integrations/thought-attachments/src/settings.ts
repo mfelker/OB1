@@ -14,6 +14,7 @@ export function loadSettings(getEnv: GetEnv): SettingsResult {
   const vision = visionApiBase !== undefined && visionModel !== undefined
     ? { visionApiBase, visionApiKey: getEnv("VISION_API_KEY"), visionModel }
     : { visionApiBase: undefined, visionApiKey: undefined, visionModel: undefined };
+  const publicBaseUrl = getEnv("PUBLIC_BASE_URL") ?? getEnv("SUPABASE_PUBLIC_URL") ?? getEnv("SUPABASE_URL") ?? "";
   if (mcpAccessKey === undefined) {
     return { ok: false, problems: [{ setting: "MCP_ACCESS_KEY", reason: "must be set" }] };
   }
@@ -35,8 +36,8 @@ export function loadSettings(getEnv: GetEnv): SettingsResult {
       uploadLinkMinutes: num("UPLOAD_LINK_MINUTES", 60),
       downloadLinkSeconds: num("DOWNLOAD_LINK_SECONDS", 600),
       busySeconds: num("BUSY_SECONDS", 410),
-      publicBaseUrl: getEnv("PUBLIC_BASE_URL") ?? getEnv("SUPABASE_PUBLIC_URL") ?? getEnv("SUPABASE_URL") ?? "",
-      uploadPageUrl: getEnv("UPLOAD_PAGE_URL") ?? "",
+      publicBaseUrl,
+      uploadPageUrl: getEnv("UPLOAD_PAGE_URL") ?? `${publicBaseUrl}/functions/v1/thought-attachments/upload`,
     },
   };
 }

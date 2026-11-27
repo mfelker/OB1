@@ -129,3 +129,8 @@ Deno.test("U15 a set UPLOAD_PAGE_URL is used as given", () => {
   const published = "https://pages.example.test/ob1/upload-page.html";
   assertEquals(settingsWith({ UPLOAD_PAGE_URL: published }).uploadPageUrl, published);
 });
+
+Deno.test("U16 with UPLOAD_PAGE_URL unset the page address is the public base plus the function's upload path", () => {
+  const s = settingsWith({ PUBLIC_BASE_URL: "https://brain.example", UPLOAD_PAGE_URL: undefined });
+  assertEquals(s.uploadPageUrl, "https://brain.example/functions/v1/thought-attachments/upload");
+});
