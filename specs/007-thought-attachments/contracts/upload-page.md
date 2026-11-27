@@ -13,7 +13,7 @@ One static file, `upload-page.html`, in the integration folder (research R5).
 ## What the owner sees
 
 1. The expected kind (if the AI named one), the accepted types and the size limit, and one file picker accepting `image/jpeg,image/png,image/webp,application/pdf` (R7). After a pick, a refusal (too large, wrong type) is shown before anything uploads.
-2. Upload progress.
+2. Upload progress. While finishing is refused as busy, or no file has arrived yet, the page shows "Waiting…" and retries every 10 seconds until the token's deadline (T005 Q5).
 3. Finishing runs automatically and its outcome is shown: "Captioned: …" (first 300 characters), "Saved N passages", "Scanned PDF: text search won't cover it yet", "Not captioned: <reason>", "Refused: <reason>" or "Failed: <reason>" (FR-024, SC-011).
 4. If the token has been used or has expired: "This link has expired or was already used. Ask your assistant for a new one" (spec edge case, SC-017).
 

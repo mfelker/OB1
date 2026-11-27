@@ -93,12 +93,13 @@ Streams code against these. The signatures are the only shared contract. Behavio
   - `DerivedRow { content; fingerprint; metadata }`. `StatePatch`: the subset of `AttachmentRow` that finishing sets
   - `Store`, every method async and returning `R<…>`:
     - thoughts: `thoughtExists(id)`, `insertNote(content, embedding, metadata) → { id; created }`, `matchThoughts(embedding, limit) → ThoughtMatch[]`, `findThoughtsExact(text, limit) → ThoughtMatch[]`, `embeddingDimension() → number`
-    - attachments: `createAttachment(fields) → AttachmentRow`, `getAttachment(idOrShortId) → AttachmentRow | "not_found" | "ambiguous"`, `findPending(parentId, name, type, size) → AttachmentRow | null`, `setDeclaration(id, decl)`, `listByParent(parentId)`, `attachmentForDerived(thoughtId)`, `orphans(now) → { row; why }[]`, `attachmentForPageToken(hash)`, `consumePageToken(id, hash) → boolean`
+    - attachments: `createAttachment(fields) → AttachmentRow`, `getAttachment(idOrShortId) → AttachmentRow | "not_found" | "ambiguous"`, `findPending(parentId, name, type, size, now) → AttachmentRow | null` (an expired `pending_upload` doesn't count), `findByHash(parentId, contentHash) → AttachmentRow | null` (a non-refused attachment with those bytes, T005 Q4), `setDeclaration(id, decl)`, `listByParent(parentId)`, `attachmentForDerived(thoughtId)`, `orphans(now) → { row; why }[]`, `attachmentForPageToken(hash)`, `consumePageToken(id, hash) → boolean`
     - claims and writes: `claim(id, op, seconds) → { token } | { busy: BusyOp }`, `release(id, token)`, `writeDerived(id, token, rows: DerivedRow[], patch: StatePatch)`, `setState(id, token, patch)`, `removalPreview(id) → { derived; noteWouldGo }`, `removeAttachment(id, token) → { derived; noteRemoved }`
     - Storage: `signUpload(path) → { url; token }`, `objectInfo(path) → { size; createdAt } | null`, `download(path) → Uint8Array`, `deleteObject(path)`, `signDownload(path, seconds) → string`
   - `EmbeddingClient { embed(texts: string[]): Promise<R<number[][]>> }`. `VisionClient { configured: boolean; caption(bytes, type): Promise<R<{ text; model }>> }`
   - `FinishOutcome { state; reason?; derived_count; caption?; page_count?; busy?: BusyOp; last_rebuild_error? }`. `Services { finish(id, opts: { rebuild?: boolean }): Promise<FinishOutcome> }`
   - `Deps { settings; store; embeddings; vision; now: () => Date; randomBytes: (n: number) => Uint8Array }`
+  - `AppInput = { ok: true; deps: Deps } | { ok: false; problems: { setting: string; reason: string }[] }`. `createApp(input)` answers every MCP call and page route with the named settings error when `ok` is false (T005 Q3), and `productionDeps()` returns an `AppInput`.
 - Stub exports (each throws `new Error("not implemented")` until its stream replaces it):
   - `settings.ts`: `loadSettings(getEnv)`. `links.ts`: `publicUrl(settings, url)`, `pageLink(settings, token)`, `curlLine(upload, filePath)`
   - `intake.ts`: `baseName(name)`, `checkDeclared(decl, settings)`, `sniffType(bytes)`, `checkActual(row, bytes, info, settings)`
@@ -109,7 +110,7 @@ Streams code against these. The signatures are the only shared contract. Behavio
   - `store.ts`: `createSupabaseStore(url, serviceRoleKey, settings, fetch)`
   - `finish.ts`: `createFinisher(deps)` → `Services`
   - `tools.ts`: `buildServer(deps, services)`. `page_routes.ts`: `pageRoutes(deps, services)` (a Hono sub-app)
-  - `app.ts`: `createApp(deps)`, `productionDeps()`
+  - `app.ts`: `createApp(input: AppInput)`, `productionDeps(): AppInput`
 - `tests/helpers/` (integrator):
   - `fake_fetch.ts`: a scripted `fetch`. Routes are keyed by method and URL. It records every request (URL, method, headers, parsed body). A route can reply with a status and body, throw a network error, hang until its `AbortSignal` fires, or hold its reply until released. It also has embedding and vision responders: a deterministic vector of a chosen length per input text, and a scripted caption.
   - `fake_store.ts`: an in-memory `Store`.
@@ -378,14 +379,14 @@ Streams code against these. The signatures are the only shared contract. Behavio
 
 ### Stream P: phone page (`ta-page`, wave 2)
 
-- [ ] T042 [P] [US2] [U262] [U263] [U264] [U265] [U266] [U267] [U268] [U269] [U270] [U271] [U272] [U273] [U274] [U275] [U276] Tests first in `F/tests/page_routes_test.ts`, then `POST /page/start` in `F/src/page_routes.ts` (contracts/upload-page.md):
+- [ ] T042 [P] [US2] [U262] [U263] [U264] [U265] [U266] [U267] [U268] [U269] [U270] [U271] [U272] [U273] [U274] [U275] [U276] Tests first in `F/tests/page_routes_test.ts`, then `POST /page/info` (token only: expected kind, accepted types, caps; changes nothing) and `POST /page/start` in `F/src/page_routes.ts` (contracts/upload-page.md):
   - a valid, unused token before `thought_attachments.upload_deadline` records the picked name, type and exact size as the declaration, or confirms they match the one the attach call gave
   - it refuses HEIC, other types, an `expected_kind` mismatch or an over-cap size, with `attach_file`'s messages, before any link is made
   - otherwise it returns a fresh signed upload link through `publicUrl`
   - a second `/page/start` replaces the declaration
   - an invalid, used or expired token gets `410` with "This link has expired or was already used. Ask your assistant for a new one"
   - a brain key is neither needed nor accepted, and CORS allows only the `UPLOAD_PAGE_URL` origin (or same-origin)
-- [ ] T043 [P] [US2] [U277] [U278] [U279] [U280] Tests first in `F/tests/page_routes_test.ts`, then `POST /page/finish` in `F/src/page_routes.ts`: it uses up the token and finishes **only** its own attachment through `services.finish`, returning the outcome as JSON; a second call gets `410`; a token for another attachment changes nothing (FR-024, SC-011); busy handling per T005.5.
+- [ ] T043 [P] [US2] [U277] [U278] [U279] [U280] Tests first in `F/tests/page_routes_test.ts`, then `POST /page/finish` in `F/src/page_routes.ts`: it finishes **only** its own attachment and uses up the token only when finishing reaches an outcome (busy and no-file leave it valid, T005 Q5) through `services.finish`, returning the outcome as JSON; a second call gets `410`; a token for another attachment changes nothing (FR-024, SC-011); busy handling per T005.5.
 - [ ] T044 [P] [US2] [U281] [U282] [U283] [U284] [U285] [U286] [U287] [U288] [U289] [U290] [U291] [U292] Tests first in `F/tests/page_script_test.ts` (with `F/tests/helpers/page_dom.ts`, a minimal DOM, `location` and `fetch` stand-in that runs the file's inline script), then `F/upload-page.html`:
   - it reads the token only from the fragment and calls only the API address fixed in the file, per T005.6 (R5)
   - the file input accepts `image/jpeg,image/png,image/webp,application/pdf` (R7)

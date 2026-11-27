@@ -44,12 +44,14 @@ any state ──remove (confirmed)──▶ deleted (row, file and derived thoug
 pending_upload past upload_deadline ──▶ listed by the orphan check (state unchanged)
 ```
 
-- `refused` is final; finishing it again is refused (FR-004).
-- A busy claim past `busy_until` counts as failed. Its partial derived thoughts never exist, because writes happen in one transaction (R9), so the next operation proceeds (FR-026).
+- `refused` is final; finishing it again is refused (FR-004). Same bytes as another non-refused attachment on the same parent also end `refused`, naming it (T005 Q4).
+- A successful rebuild clears `last_rebuild_error`.
+- A `pending_upload` past `upload_deadline` no longer blocks a new attachment for the same file.
+- A busy claim past `busy_until` counts as failed: every later read reports `failed` ("the run did not finish"). Its partial derived thoughts never exist, because writes happen in one transaction (R9), so the next operation proceeds (FR-026).
 
 ## Derived thought (rows in `thoughts`)
 
-`content` is the source line, a line break, then the passage or caption. Examples:
+`content` is the source line, a line break, then the passage or caption. A passage from one page names it as `page 12`, and one across pages as `pages 12–13`. Examples:
 
 ```text
 From dishwasher-manual.pdf, pages 12–13 (attachment a1b2c3d4)
@@ -91,7 +93,7 @@ Never stored: signed links, keys, tokens or absolute paths (FR-009, SC-007).
 |----------|------|--------------|
 | Claim and release an attachment | Claims only if no unexpired claim exists and returns a claim token; returns the running operation when refused | FR-026, R10 |
 | Write derived thoughts | Only with the caller's unexpired claim token: replaces the attachment's derived set and updates its state in one transaction; a fingerprint conflict raises an error, never merges | FR-011, FR-022, FR-027, R9, R10 |
-| Remove an attachment | Deletes its derived thoughts and its row (and the parent note under the FR-016 exception), all scoped by the attachment's id, in one transaction | FR-016, SC-020 |
-| Find a thought by exact text | Parameterised text match returning id, first line and date | FR-023, R11 |
+| Remove an attachment | After the stored file is deleted, it deletes the derived thoughts and the row (and the parent note under the FR-016 exception), all scoped by the attachment's id and the caller's claim token, in one transaction | FR-016, SC-020 |
+| Find a thought by exact text | Parameterised, case-insensitive "contains" match returning id, first line and date, at most 20 | FR-023, R11 |
 | The brain's embedding dimension | Reads the dimension of `thoughts.embedding` | FR-007, R3 |
 | Orphans | Attachments whose parent is gone, expired `pending_upload` rows, and `refused` rows | FR-021 |

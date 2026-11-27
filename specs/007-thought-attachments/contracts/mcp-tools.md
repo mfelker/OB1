@@ -6,7 +6,7 @@ An attachment id may be given in full or as the 8-character short id shown in so
 
 ## `find_thought` (read-only)
 
-- **Input**: `query` (text); `mode`: `meaning` (default) or `exact`; `limit` (default 5, at most 20).
+- **Input**: `query` (text); `mode`: `meaning` (default) or `exact`; `limit` (default 5; a larger value is reduced to 20). `exact` finds thoughts containing the text, ignoring letter case.
 - **Result**: the matches, each with `id`, `first_line` (up to 120 characters) and `captured` (a date). An empty result says "no matching thought".
 - **Annotations**: `readOnlyHint: true`.
 - **Covers**: FR-023, SC-009.
@@ -19,7 +19,8 @@ An attachment id may be given in full or as the 8-character short id shown in so
   - a size over the cap for its type, naming the cap and the declared size;
   - an unknown `thought_id`;
   - both or neither of `thought_id` and `note`;
-  - the same file name, type and size already pending on that parent. The result points to it.
+  - only some of `file_name`, `declared_type` and `declared_size` (give all three, or none for a phone upload);
+  - the same file name, type and size already pending on that parent, with its upload deadline not yet passed. The result points to it. An expired pending upload doesn't count.
   - The type and size checks apply to the details given here; when they are omitted, the page's declaration is checked the same way before any upload.
 - **Note text that already exists** as a thought makes that thought the parent; the result says "attached to your existing thought" (R17).
 - **Result**:
@@ -46,7 +47,8 @@ An attachment id may be given in full or as the 8-character short id shown in so
   - **Failure**: on an embedding failure or a dimension mismatch, no derived thoughts from the attempt remain, and the state becomes `failed` with the reason (FR-007, FR-011).
   - **Same bytes on the same thought**: if another non-refused attachment on the same parent already has these exact bytes, the state becomes `refused` with "already attached to this thought as <short id>", the stored copy is deleted, and no derived thoughts are written (FR-012, T005 Q4).
   - **Repeat**: a plain finish on `processed` returns the existing outcome unchanged (FR-012, SC-014), and one on `refused` is refused (FR-004).
-  - **Rebuild**: `rebuild: true` on `processed` replaces the derived set only if the new set is complete; otherwise it keeps the old set and reports `last_rebuild_error` (FR-027, SC-015, SC-018).
+  - **Rebuild**: `rebuild: true` on `processed` replaces the derived set only if the new set is complete, and then clears `last_rebuild_error`; otherwise it keeps the old set and reports `last_rebuild_error` (FR-027, SC-015, SC-018).
+  - **Cut-off run**: a finish whose busy mark expired before it reported back reads as `failed` ("the run did not finish") in every later result, and the next finish proceeds (FR-026).
 - **Result**: `state`, `reason`, `derived_count`, `caption` (photos, the first 300 characters), `page_count`.
 - **Annotations**: `readOnlyHint: false`, `destructiveHint: true` (rebuild replaces), `openWorldHint: true`.
 - **Covers**: FR-004–FR-013, FR-022, FR-025–FR-028.
@@ -69,7 +71,7 @@ An attachment id may be given in full or as the 8-character short id shown in so
 
 - **Input**: `attachment_id`; `confirm` (boolean, default false).
 - **Without confirm**: deletes nothing and lists exactly what would go: the file, N derived thoughts and, under the FR-016 exception, the parent note (User Story 5 #2).
-- **With confirm**: the file, the record and its derived thoughts are deleted, plus the parent note when the FR-016 exception applies. Other thoughts are untouched (FR-016, FR-022, SC-020). If busy, it is refused as in `finish_attachment`.
+- **With confirm**: the stored file is deleted first, then the record and its derived thoughts in one transaction; if that second step fails, the attachment stays listed and a repeat remove succeeds, treating an already-missing file as removed. The parent note goes too when the FR-016 exception applies. Other thoughts are untouched (FR-016, FR-022, SC-020). If busy, it is refused as in `finish_attachment`.
 - **Annotations**: `readOnlyHint: false`, `destructiveHint: true`, `openWorldHint: false`.
 - **Covers**: FR-016, User Story 5.
 
