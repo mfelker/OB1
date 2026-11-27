@@ -134,3 +134,9 @@ Deno.test("U16 with UPLOAD_PAGE_URL unset the page address is the public base pl
   const s = settingsWith({ PUBLIC_BASE_URL: "https://brain.example", UPLOAD_PAGE_URL: undefined });
   assertEquals(s.uploadPageUrl, "https://brain.example/functions/v1/thought-attachments/upload");
 });
+
+const WHOLE = "must be a positive whole number";
+
+Deno.test("U17 a non-numeric value for a numeric setting is a problem naming it and what it must be", () => {
+  assertEquals(problemsWith({ MAX_PDF_PAGES: "abc" }), [{ setting: "MAX_PDF_PAGES", reason: WHOLE }]);
+});
