@@ -58,6 +58,12 @@ export function createFinisher(deps: Deps): Services {
     // The page count must be known before `checkActual`, which skips the page cap when it is null.
     const opened = sniffed === "application/pdf" ? await openPdf(bytes) : null;
     const pageCount = opened && "data" in opened ? opened.data.pageCount : null;
+    if (new Date(info.data.createdAt).getTime() > new Date(row.upload_deadline).getTime()) {
+      return await refuse(row, token, "The file was uploaded after the upload window closed.", {
+        actual_type: sniffed,
+        actual_size: info.data.size,
+      });
+    }
     const refusal = checkActual({ ...row, page_count: pageCount }, bytes, info.data, settings);
     if (refusal) {
       return await refuse(row, token, refusal.message, {

@@ -382,3 +382,17 @@ Deno.test("U198 when checkActual refuses, the object is deleted, the row is refu
     assertEquals(r.store.derivedOf(att.id).length, 0, c.name);
   }
 });
+
+Deno.test("U199 an object created after upload_deadline is refused and deleted", async () => {
+  const r = await rig();
+  const bytes = await textPdf(["alpha beta gamma"]);
+  const deadline = new Date(r.clock.now().getTime() + 10 * 60_000);
+  const att = pending(r, bytes, { upload_deadline: deadline.toISOString() }, new Date(deadline.getTime() + 1000).toISOString());
+  r.clock.advanceMinutes(5);
+  const out = await r.finish(att.id, {});
+  assertEquals(out.state, "refused");
+  assertStringIncludes(out.reason ?? "", "after");
+  assertEquals(r.store.attachment(att.id)?.state, "refused");
+  assertEquals(r.store.objects.has(att.storage_path as string), false);
+  assertEquals(r.store.derivedOf(att.id).length, 0);
+});
