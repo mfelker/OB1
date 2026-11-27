@@ -325,3 +325,12 @@ Deno.test("U91 attachmentForDerived returns the attachment named by the thought'
   assertEquals(ff.requests[0].url.includes("id=eq.derived-1"), true);
   assertEquals(ff.requests[1].url.includes(`id=eq.${ATT_ID}`), true);
 });
+
+Deno.test("U92 attachmentForDerived on a thought without attachment_id returns null", async () => {
+  const { store, ff } = setup();
+  ff.on("GET", `${REST}/thoughts*`, { body: [{ id: "owner-1", metadata: { type: "idea" } }] }, { body: [{ id: "owner-2", metadata: null }] }, { body: [] });
+  assertEquals(await store.attachmentForDerived("owner-1"), { data: null });
+  assertEquals(await store.attachmentForDerived("owner-2"), { data: null });
+  assertEquals(await store.attachmentForDerived("gone"), { data: null });
+  assertEquals(ff.requests.length, 3); // no attachment lookup was made
+});
