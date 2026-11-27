@@ -89,7 +89,7 @@ Test file: `tests/compose.test.mjs`. Uses `docker compose config` against the T0
 | U33 | `functions` receives `MCP_ACCESS_KEY`, `EMBEDDING_API_BASE`, `EMBEDDING_API_KEY`, `EMBEDDING_MODEL`, `CHAT_API_BASE`, `CHAT_API_KEY`, `CHAT_MODEL`, `FETCH_TIMEOUT_MS` with the values in `.env` | FR-008, R8 | example | DONE | `tests/compose.test.mjs::U33` |
 | U34 | `functions` maps `host.docker.internal` to `host-gateway` | R12, C4 | example | DONE | `tests/compose.test.mjs::U34` |
 | U35 | `db` mounts `db/ob1-schema.sql` read-only at `/docker-entrypoint-initdb.d/migrations/99-ob1-schema.sql`, and the fixture's own `db` mounts are still present | FR-006, R7 | example | DONE | `tests/compose.test.mjs::U35` |
-| U36 | `ob1-init` depends on `storage` with condition `service_healthy`, has `restart: "no"`, mounts `init/create-bucket.sh`, and receives `SERVICE_ROLE_KEY` | FR-009, R9 | example | DONE | `tests/compose.test.mjs::U36` |
+| U36 | `ob1-init` uses the pinned `curlimages/curl:8.11.1` image, depends on `storage` with condition `service_healthy`, has `restart: "no"`, mounts `init/create-bucket.sh`, and receives `SERVICE_ROLE_KEY` | FR-009, R9 | example | DONE | `tests/compose.test.mjs::U36` |
 
 ### `recipes/self-hosted-supabase-mcp/db/ob1-schema.sql` (R7; data-model.md Schema objects)
 

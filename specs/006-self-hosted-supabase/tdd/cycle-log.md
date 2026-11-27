@@ -470,3 +470,16 @@ The fork-ci SQL runtime needs `psql` and a Postgres reachable through the `PG*` 
 2. A `psql` wrapper first on `PATH`, outside the repo: `exec docker exec -i -w "$PWD" -e PGUSER="${PGUSER:-postgres}" -e PGDATABASE="${PGDATABASE:-postgres}" ob1-006-pgtest psql "$@"`.
 3. Then `PATH=<wrapper dir>:$PATH node .fork/ci/bin/tdd.mjs suite` (or `file tests/verify.sql`).
 - Caveats seen in this feature: (a) the container has no restart policy, so a Docker Desktop restart stops it (`docker start ob1-006-pgtest`); (b) during the audit, the bind mount once served stale file contents until the container was restarted. If results look inconsistent with the files, restart the container before trusting a red.
+
+## Remediation: T073 (re-audit Finding 1), owner decision
+
+- U54 and U55 are `TEST_AFTER` and outside the T066 exception. The owner decided on 2026-11-26 to extend the exception to name them, rather than re-drive them red-first. Recorded as a new row in `plan.md` Complexity Tracking.
+- Evidence (mutant-only, from the cold re-audit at `c963653`): U54 fails under M16, F2 and F3; U55's half of U51 fails under F20.
+
+## Remediation: T078 U36 asserts the ob1-init image (re-audit Finding 4, HIGH)
+
+- test: `recipes/self-hosted-supabase-mcp/tests/compose.test.mjs::U36` (strengthened). It now asserts `init.image === "curlimages/curl:8.11.1"`.
+- before: mutant F13 (`lean.override.yml` `ob1-init` image changed to `alpine:3.20.3`) passed U36 and the whole suite.
+- mutant: F13 applied → `node .fork/ci/bin/tdd.mjs single tests/compose.test.mjs "U36 …"` → `actual: 'alpine:3.20.3', expected: 'curlimages/curl:8.11.1'` (tests=1 pass=0 fail=1). Restored byte for byte from a copy; `git status` showed only the test file.
+- green: U36 single passes (tests=1 pass=1). Suite → tests=59 pass=59 fail=0.
+- commit: `bfacd22`

@@ -329,12 +329,12 @@ Task: "Compose test: default service set is exactly the always-on set (T020) in 
 
 ### Blocking
 
-- [ ] T073 Finding 1: owner decision on U54 and U55, which are `TEST_AFTER` and outside the T066 exception (`plan.md:126`). Two options:
+- [x] T073 Finding 1: owner decision on U54 and U55, which are `TEST_AFTER` and outside the T066 exception (`plan.md:126`). Two options:
   - Extend the Complexity Tracking row to name them, with their mutant evidence: M16, F2 and F3 for U54; F20 for U55.
   - Or re-drive them red-first.
   Done when `plan.md` Complexity Tracking names U54 and U55, or the cycle log records a red against missing behavior for each.
 - [ ] T074 Finding 3: SC-010's Linux half has no run. Run T038 before the next T044 re-audit (T038 is Phase 7, ahead of T044 in Phase 8). Done when `M/specs/006-self-hosted-supabase/evidence/linux/` holds the recorded V1–V9, V11 and V12 run, and T038 is ticked.
-- [ ] T078 Finding 4 (HIGH, surviving mutant in U36): U36 (`F/tests/compose.test.mjs:139-151`) asserts `init.image` equals the pinned `curlimages/curl:8.11.1`. Done when mutant F13 (`lean.override.yml:44` → `alpine:3.20.3`) fails U36 single, and the suite is green.
+- [x] T078 Finding 4 (HIGH, surviving mutant in U36): U36 (`F/tests/compose.test.mjs:139-151`) asserts `init.image` equals the pinned `curlimages/curl:8.11.1`. Done when mutant F13 (`lean.override.yml:44` → `alpine:3.20.3`) fails U36 single, and the suite is green.
 
 ### Non-blocking: MED and LOW findings
 
