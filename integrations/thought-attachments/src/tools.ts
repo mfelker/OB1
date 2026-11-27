@@ -9,7 +9,14 @@ const READ_ONLY: Hints = { readOnlyHint: true };
 
 const NOT_YET = () => ({ content: [{ type: "text" as const, text: "" }] });
 
-export function buildServer(_deps: Deps, _services: Services): McpServer {
+/** A tool result: the text for the AI, plus the structured fields. */
+function reply(text: string, data: Record<string, unknown> = {}, isError = false) {
+  return { content: [{ type: "text" as const, text }], structuredContent: data, ...(isError ? { isError: true } : {}) };
+}
+
+const fail = (message: string) => reply(message, { error: message }, true);
+
+export function buildServer(deps: Deps, _services: Services): McpServer {
   const server = new McpServer({ name: "thought-attachments", version: "0.1.0" });
 
   server.registerTool("find_thought", {
@@ -20,7 +27,13 @@ export function buildServer(_deps: Deps, _services: Services): McpServer {
       limit: z.number().int().positive().default(5),
     },
     annotations: READ_ONLY,
-  }, NOT_YET);
+  }, async ({ query, limit }) => {
+    const embedded = await deps.embeddings.embed([query]);
+    if ("error" in embedded) return fail(embedded.error);
+    const found = await deps.store.matchThoughts(embedded.data[0], limit);
+    if ("error" in found) return fail(found.error);
+    return reply(JSON.stringify(found.data), { matches: found.data });
+  });
 
   server.registerTool("attach_file", {
     description: "Start attaching a file to a thought, or to a new note.",

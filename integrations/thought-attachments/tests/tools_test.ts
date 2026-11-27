@@ -138,3 +138,19 @@ Deno.test("U219 each tool's input schema and defaults match the contract", async
   assertEquals(remove.properties?.confirm?.default, false);
   assertEquals(Object.keys(schema("find_orphan_attachments").properties ?? {}), []);
 });
+
+// ---------- find_thought (T028) ----------
+
+async function seed(h: H, content: string, embedding: number[] | null = null, created_at?: string) {
+  return await h.store.seedThought({ content, embedding, created_at });
+}
+
+Deno.test("U220 find_thought in meaning mode embeds the query and returns matchThoughts' matches", async () => {
+  const h = await harness();
+  const near = await seed(h, "furnace filters", [1, 0, 0, 0]);
+  await seed(h, "tax records", [0, 1, 0, 0]);
+  h.embeddings.vector = [1, 0, 0, 0];
+  const out = await call(h, "find_thought", { query: "where are the filters", limit: 1 });
+  assertEquals(h.embeddings.calls, [["where are the filters"]]);
+  assertEquals(out.data.matches, [{ id: near.id, first_line: "furnace filters", captured: near.created_at }]);
+});
