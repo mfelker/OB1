@@ -1474,7 +1474,7 @@ Deno.test("A51 attach_file with note and a HEIC declared type saves no thought a
   });
 });
 
-todo(
+Deno.test(
   "A52 after a full run no thought or attachment row holds a signed URL, a key, a page token or an absolute path",
   async () => {
     const w = world({ vision: [() => chatReply(CAPTION, VISION_MODEL)] });
