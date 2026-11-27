@@ -314,18 +314,32 @@ Deno.test("U235 a successful start writes a row with the parent, base name, decl
   const h = await harness();
   const parent = await seed(h, "dishwasher");
   const out = await call(h, "attach_file", { thought_id: parent.id, ...PDF, file_name: "docs/manual.pdf" });
-  assertEquals(out.isError, false);
-  assertEquals(h.store.attachments.length, 1);
+  assertEquals({ isError: out.isError, rows: h.store.attachments.length }, { isError: false, rows: 1 });
   const row = h.store.attachments[0];
-  assertEquals(out.data.attachment_id, row.id);
-  assertEquals(row.parent_thought_id, parent.id);
-  assertEquals(row.parent_created_here, false);
-  assertEquals(row.file_name, "manual.pdf");
-  assertEquals(row.declared_type, "application/pdf");
-  assertEquals(row.declared_size, 1000);
-  assertEquals(row.sensitivity_tier, "personal");
-  assertEquals(row.storage_path, `attachments/${row.id}/manual.pdf`);
-  assertEquals(row.state, "pending_upload");
+  assertEquals(
+    {
+      attachment_id: out.data.attachment_id,
+      parent_thought_id: row.parent_thought_id,
+      parent_created_here: row.parent_created_here,
+      file_name: row.file_name,
+      declared_type: row.declared_type,
+      declared_size: row.declared_size,
+      sensitivity_tier: row.sensitivity_tier,
+      storage_path: row.storage_path,
+      state: row.state,
+    },
+    {
+      attachment_id: row.id,
+      parent_thought_id: parent.id,
+      parent_created_here: false,
+      file_name: "manual.pdf",
+      declared_type: "application/pdf",
+      declared_size: 1000,
+      sensitivity_tier: "personal",
+      storage_path: `attachments/${row.id}/manual.pdf`,
+      state: "pending_upload",
+    },
+  );
 });
 
 Deno.test("U234 the same name and type with a different size on the parent creates a new attachment", async () => {
@@ -375,22 +389,36 @@ Deno.test("U238 the attach_file result has the ids, deadline, upload, curl line,
   const out = await call(h, "attach_file", { thought_id: parent.id, ...PDF });
   const row = h.store.attachments[0];
   const d = out.data;
-  assertEquals(d.attachment_id, row.id);
-  assertEquals(d.short_id, "01010101");
-  assertEquals(d.parent_thought_id, parent.id);
-  assertEquals(d.parent_created_here, false);
-  assertEquals(d.upload_deadline, row.upload_deadline);
   const upload = d.upload as { url: string; method: string; headers: Record<string, string> };
-  assertEquals(upload.method, "PUT");
-  assertEquals(upload.headers, { "content-type": "application/pdf", "x-upsert": "false" });
   // Seeded bytes: the id is call 1's bytes (0x01, with the UUID version and variant bits), the page token call 2's (0x02).
   const id = "01010101-0101-4101-8101-010101010101";
   const signedUrl = `https://brain.example.test/storage/v1/object/upload/sign/ob1-files/attachments/${id}/manual.pdf?token=${h.store.signedUploads[0].token}`;
-  assertEquals(row.id, id);
-  assertEquals(upload.url, signedUrl);
-  assertEquals(d.curl, `curl -X PUT -H 'content-type: application/pdf' -H 'x-upsert: false' -T 'manual.pdf' '${signedUrl}'`);
-  assertEquals(d.page_link, "https://brain.example.test/functions/v1/thought-attachments/upload#t=" + "02".repeat(32));
-  assertEquals(d.limits, { max_bytes: 25 * 1024 * 1024, max_pages: 50 });
+  assertEquals(
+    {
+      row_id: row.id,
+      attachment_id: d.attachment_id,
+      short_id: d.short_id,
+      parent_thought_id: d.parent_thought_id,
+      parent_created_here: d.parent_created_here,
+      upload_deadline: d.upload_deadline,
+      upload,
+      curl: d.curl,
+      page_link: d.page_link,
+      limits: d.limits,
+    },
+    {
+      row_id: id,
+      attachment_id: id,
+      short_id: "01010101",
+      parent_thought_id: parent.id,
+      parent_created_here: false,
+      upload_deadline: row.upload_deadline,
+      upload: { url: signedUrl, method: "PUT", headers: { "content-type": "application/pdf", "x-upsert": "false" } },
+      curl: `curl -X PUT -H 'content-type: application/pdf' -H 'x-upsert: false' -T 'manual.pdf' '${signedUrl}'`,
+      page_link: "https://brain.example.test/functions/v1/thought-attachments/upload#t=" + "02".repeat(32),
+      limits: { max_bytes: 25 * 1024 * 1024, max_pages: 50 },
+    },
+  );
   assertStringIncludes(out.text, String(d.short_id));
   assertStringIncludes(out.text, upload.url);
 });
@@ -597,17 +625,20 @@ Deno.test("U250 get_attachment returns file name, type, size, page count, state,
   const row = await storedRow(h, { state_reason: "all passages saved" });
   const out = await call(h, "get_attachment", { attachment_id: row.id });
   assertEquals(out.isError, false);
-  assertEquals(out.data.attachment_id, row.id);
-  assertEquals(out.data.short_id, shortId(row.id));
-  assertEquals(out.data.file_name, "manual.pdf");
-  assertEquals(out.data.type, "application/pdf");
-  assertEquals(out.data.size, 1000);
-  assertEquals(out.data.page_count, 12);
-  assertEquals(out.data.state, "processed");
-  assertEquals(out.data.reason, "all passages saved");
-  assertEquals(out.data.derived_count, 5);
-  assertEquals(out.data.caption_model, "test/vision-model");
-  assertEquals(out.data.parent_thought_id, row.parent_thought_id);
+  const fields = ["attachment_id", "short_id", "file_name", "type", "size", "page_count", "state", "reason", "derived_count", "caption_model", "parent_thought_id"];
+  assertEquals(Object.fromEntries(fields.map((f) => [f, out.data[f]])), {
+    attachment_id: row.id,
+    short_id: shortId(row.id),
+    file_name: "manual.pdf",
+    type: "application/pdf",
+    size: 1000,
+    page_count: 12,
+    state: "processed",
+    reason: "all passages saved",
+    derived_count: 5,
+    caption_model: "test/vision-model",
+    parent_thought_id: row.parent_thought_id,
+  });
   for (const shown of ["manual.pdf", "application/pdf", "1000", "12", "processed", "all passages saved", "5", "test/vision-model", row.parent_thought_id]) {
     assertStringIncludes(out.text, shown);
   }

@@ -82,10 +82,7 @@ Deno.test("U262 /page/start with a valid token and no declaration records the ba
   const res = await r.post("/page/start", { token: TOKEN, ...PICK, name: "C:\\photos\\receipt.jpg" });
   const body = await res.json();
   const stored = r.store.attachment(row.id)!;
-  assertEquals(
-    [res.status, stored.file_name, stored.declared_type, stored.declared_size, body.upload.method],
-    [200, "receipt.jpg", "image/jpeg", 2048, "PUT"],
-  );
+  assertEquals({ status: res.status, fileName: stored.file_name, declaredType: stored.declared_type, declaredSize: stored.declared_size, uploadMethod: body.upload.method }, { status: 200, fileName: "receipt.jpg", declaredType: "image/jpeg", declaredSize: 2048, uploadMethod: "PUT" });
   assertEquals(body.upload.url, r.store.signedUploads[0].url.replace(SUPABASE_URL, PUBLIC_BASE_URL));
   assertEquals(r.store.signedUploads[0].path, stored.storage_path);
   assertStringIncludes(stored.storage_path!, `attachments/${row.id}/receipt.jpg`);
@@ -102,7 +99,7 @@ Deno.test("U263 /page/start whose pick matches the attach call's declaration con
   const r = await rig();
   const row = await r.seed(DECLARED);
   const res = await r.post("/page/start", { token: TOKEN, ...PICK });
-  assertEquals([res.status, r.store.attachment(row.id)!.storage_path, r.store.signedUploads.length], [200, DECLARED.storage_path, 1]);
+  assertEquals({ status: res.status, storagePath: r.store.attachment(row.id)!.storage_path, signedUploads: r.store.signedUploads.length }, { status: 200, storagePath: DECLARED.storage_path, signedUploads: 1 });
   assertEquals(r.store.signedUploads[0].path, DECLARED.storage_path);
 });
 
@@ -111,11 +108,8 @@ Deno.test("U264 /page/start whose pick doesn't match the attach call's declarati
   const row = await r.seed(DECLARED);
   const wrongSize = await r.post("/page/start", { token: TOKEN, ...PICK, size: 4096 });
   const wrongType = await r.post("/page/start", { token: TOKEN, ...PICK, type: "image/png" });
-  assertEquals(
-    [wrongSize.status, (await wrongSize.json()).code, wrongType.status, (await wrongType.json()).code],
-    [400, "wrong_size", 400, "wrong_type"],
-  );
-  assertEquals([r.store.signedUploads.length, r.store.attachment(row.id)!.declared_size], [0, 2048]);
+  assertEquals({ wrongSizeStatus: wrongSize.status, wrongSizeCode: (await wrongSize.json()).code, wrongTypeStatus: wrongType.status, wrongTypeCode: (await wrongType.json()).code }, { wrongSizeStatus: 400, wrongSizeCode: "wrong_size", wrongTypeStatus: 400, wrongTypeCode: "wrong_type" });
+  assertEquals({ signedUploads: r.store.signedUploads.length, declaredSize: r.store.attachment(row.id)!.declared_size }, { signedUploads: 0, declaredSize: 2048 });
 });
 
 Deno.test("U265 a picked HEIC file is refused with the share-as-JPEG message, with no link", async () => {
@@ -123,9 +117,9 @@ Deno.test("U265 a picked HEIC file is refused with the share-as-JPEG message, wi
   const row = await r.seed();
   const res = await r.post("/page/start", { token: TOKEN, name: "IMG_1.HEIC", type: "image/heic", size: 100 });
   const body = await res.json();
-  assertEquals([res.status, body.code], [400, "heic"]);
+  assertEquals({ status: res.status, code: body.code }, { status: 400, code: "heic" });
   assertStringIncludes(body.message, "JPEG");
-  assertEquals([r.store.signedUploads.length, r.store.attachment(row.id)!.declared_type], [0, null]);
+  assertEquals({ signedUploads: r.store.signedUploads.length, declaredType: r.store.attachment(row.id)!.declared_type }, { signedUploads: 0, declaredType: null });
 });
 
 Deno.test("U266 a picked type outside the four is refused with attach_file's message, with no link", async () => {
@@ -133,9 +127,9 @@ Deno.test("U266 a picked type outside the four is refused with attach_file's mes
   const row = await r.seed();
   const res = await r.post("/page/start", { token: TOKEN, name: "notes.txt", type: "text/plain", size: 100 });
   const body = await res.json();
-  assertEquals([res.status, body.code], [400, "unsupported_type"]);
+  assertEquals({ status: res.status, code: body.code }, { status: 400, code: "unsupported_type" });
   assertStringIncludes(body.message, "Accepted types are PDF, JPEG, PNG and WebP");
-  assertEquals([r.store.signedUploads.length, r.store.attachment(row.id)!.declared_type], [0, null]);
+  assertEquals({ signedUploads: r.store.signedUploads.length, declaredType: r.store.attachment(row.id)!.declared_type }, { signedUploads: 0, declaredType: null });
 });
 
 Deno.test("U268 a picked size over its cap is refused, naming the cap and the size", async () => {
@@ -143,10 +137,10 @@ Deno.test("U268 a picked size over its cap is refused, naming the cap and the si
   const row = await r.seed();
   const res = await r.post("/page/start", { token: TOKEN, ...PICK, size: 2_000_000 });
   const body = await res.json();
-  assertEquals([res.status, body.code], [400, "too_large"]);
+  assertEquals({ status: res.status, code: body.code }, { status: 400, code: "too_large" });
   assertStringIncludes(body.message, "2000000");
   assertStringIncludes(body.message, "1048576");
-  assertEquals([r.store.signedUploads.length, r.store.attachment(row.id)!.declared_size], [0, null]);
+  assertEquals({ signedUploads: r.store.signedUploads.length, declaredSize: r.store.attachment(row.id)!.declared_size }, { signedUploads: 0, declaredSize: null });
 });
 
 Deno.test("U267 a pick whose kind differs from expected_kind is refused, a PDF for a photo and the reverse", async () => {
@@ -156,11 +150,8 @@ Deno.test("U267 a pick whose kind differs from expected_kind is refused, a PDF f
   const pdfForPhoto = await r.post("/page/start", { token: TOKEN, name: "a.pdf", type: "application/pdf", size: 10 });
   const photoForPdf = await r.post("/page/start", { token: "token-for-pdf", ...PICK });
   const okPhoto = await r.post("/page/start", { token: TOKEN, ...PICK });
-  assertEquals(
-    [pdfForPhoto.status, (await pdfForPhoto.json()).code, photoForPdf.status, (await photoForPdf.json()).code, okPhoto.status],
-    [400, "wrong_type", 400, "wrong_type", 200],
-  );
-  assertEquals([r.store.attachment(pdf.id)!.declared_type, r.store.signedUploads.length], [null, 1]);
+  assertEquals({ pdfForPhotoStatus: pdfForPhoto.status, pdfForPhotoCode: (await pdfForPhoto.json()).code, photoForPdfStatus: photoForPdf.status, photoForPdfCode: (await photoForPdf.json()).code, okPhotoStatus: okPhoto.status }, { pdfForPhotoStatus: 400, pdfForPhotoCode: "wrong_type", photoForPdfStatus: 400, photoForPdfCode: "wrong_type", okPhotoStatus: 200 });
+  assertEquals({ pdfDeclaredType: r.store.attachment(pdf.id)!.declared_type, signedUploads: r.store.signedUploads.length }, { pdfDeclaredType: null, signedUploads: 1 });
 });
 
 Deno.test("U269 a second /page/start replaces the declaration and returns a new link", async () => {
@@ -169,8 +160,8 @@ Deno.test("U269 a second /page/start replaces the declaration and returns a new 
   const first = await r.post("/page/start", { token: TOKEN, name: "a.jpg", type: "image/jpeg", size: 100 });
   const second = await r.post("/page/start", { token: TOKEN, name: "b.png", type: "image/png", size: 200 });
   const stored = r.store.attachment(row.id)!;
-  assertEquals([first.status, second.status], [200, 200]);
-  assertEquals([stored.file_name, stored.declared_type, stored.declared_size], ["b.png", "image/png", 200]);
+  assertEquals({ firstStatus: first.status, secondStatus: second.status }, { firstStatus: 200, secondStatus: 200 });
+  assertEquals({ fileName: stored.file_name, declaredType: stored.declared_type, declaredSize: stored.declared_size }, { fileName: "b.png", declaredType: "image/png", declaredSize: 200 });
   assertEquals(r.store.signedUploads.map((s) => s.path), [`attachments/${row.id}/a.jpg`, `attachments/${row.id}/b.png`]);
   assertEquals(stored.storage_path, `attachments/${row.id}/b.png`);
 });
@@ -182,8 +173,8 @@ Deno.test("U270 an unknown token gets 410 with the expired message", async () =>
   const row = await r.seed();
   const unknown = await r.post("/page/start", { token: "no-such-token", ...PICK });
   const missing = await r.post("/page/start", { ...PICK });
-  assertEquals([unknown.status, (await unknown.json()).error, missing.status, (await missing.json()).error], [410, EXPIRED, 410, EXPIRED]);
-  assertEquals([r.store.signedUploads.length, r.store.attachment(row.id)!.declared_type], [0, null]);
+  assertEquals({ unknownStatus: unknown.status, unknownError: (await unknown.json()).error, missingStatus: missing.status, missingError: (await missing.json()).error }, { unknownStatus: 410, unknownError: EXPIRED, missingStatus: 410, missingError: EXPIRED });
+  assertEquals({ signedUploads: r.store.signedUploads.length, declaredType: r.store.attachment(row.id)!.declared_type }, { signedUploads: 0, declaredType: null });
 });
 
 Deno.test("U271 a used token gets 410 with the same message", async () => {
@@ -191,7 +182,7 @@ Deno.test("U271 a used token gets 410 with the same message", async () => {
   const row = await r.seed();
   await r.store.consumePageToken(row.id, await sha256Hex(TOKEN));
   const res = await r.post("/page/start", { token: TOKEN, ...PICK });
-  assertEquals([res.status, (await res.json()).error], [410, EXPIRED]);
+  assertEquals({ status: res.status, error: (await res.json()).error }, { status: 410, error: EXPIRED });
   assertEquals(r.store.signedUploads.length, 0);
 });
 
@@ -200,7 +191,7 @@ Deno.test("U272 a token one second after upload_deadline gets 410", async () => 
   const row = await r.seed();
   r.clock.set(new Date(new Date(row.upload_deadline).getTime() + 1000));
   const res = await r.post("/page/start", { token: TOKEN, ...PICK });
-  assertEquals([res.status, (await res.json()).error], [410, EXPIRED]);
+  assertEquals({ status: res.status, error: (await res.json()).error }, { status: 410, error: EXPIRED });
   assertEquals(r.store.signedUploads.length, 0);
 });
 
@@ -209,7 +200,7 @@ Deno.test("U273 a token one second before upload_deadline is accepted", async ()
   const row = await r.seed();
   r.clock.set(new Date(new Date(row.upload_deadline).getTime() - 1000));
   const res = await r.post("/page/start", { token: TOKEN, ...PICK });
-  assertEquals([res.status, r.store.signedUploads.length], [200, 1]);
+  assertEquals({ status: res.status, signedUploads: r.store.signedUploads.length }, { status: 200, signedUploads: 1 });
 });
 
 // The deadline is the first instant the window is closed: a token presented at exactly upload_deadline is refused,
@@ -220,7 +211,7 @@ Deno.test("U369 a token at exactly upload_deadline gets 410", async () => {
   const row = await r.seed();
   r.clock.set(new Date(row.upload_deadline));
   const res = await r.post("/page/start", { token: TOKEN, ...PICK });
-  assertEquals([res.status, (await res.json()).error], [410, EXPIRED]);
+  assertEquals({ status: res.status, error: (await res.json()).error }, { status: 410, error: EXPIRED });
   assertEquals(r.store.signedUploads.length, 0);
 });
 
@@ -231,7 +222,7 @@ Deno.test("U274 the page routes need no brain key, and a brain key without a val
   const keyOnly = await r.post("/page/start", { ...PICK }, keyHeaders);
   const keyAsToken = await r.post("/page/start", { token: BRAIN_KEY, ...PICK }, keyHeaders);
   const noKey = await r.post("/page/start", { token: TOKEN, ...PICK });
-  assertEquals([keyOnly.status, keyAsToken.status, noKey.status], [410, 410, 200]);
+  assertEquals({ keyOnlyStatus: keyOnly.status, keyAsTokenStatus: keyAsToken.status, noKeyStatus: noKey.status }, { keyOnlyStatus: 410, keyAsTokenStatus: 410, noKeyStatus: 200 });
   assertEquals(r.store.attachment(row.id)!.declared_size, 2048);
 });
 
@@ -249,15 +240,10 @@ Deno.test("U275 CORS allows the origin of UPLOAD_PAGE_URL and gives no allow-ori
     method: "OPTIONS",
     headers: { origin: "https://evil.example.test", "access-control-request-method": "POST" },
   });
+  const allowed = (r: Response) => r.headers.get("access-control-allow-origin");
   assertEquals(
-    [
-      ok.headers.get("access-control-allow-origin"),
-      other.headers.get("access-control-allow-origin"),
-      none.headers.get("access-control-allow-origin"),
-      preflight.headers.get("access-control-allow-origin"),
-      badPreflight.headers.get("access-control-allow-origin"),
-    ],
-    ["https://pages.example.test", null, null, "https://pages.example.test", null],
+    { ok: allowed(ok), other: allowed(other), none: allowed(none), preflight: allowed(preflight), badPreflight: allowed(badPreflight) },
+    { ok: "https://pages.example.test", other: null, none: null, preflight: "https://pages.example.test", badPreflight: null },
   );
   assertStringIncludes(preflight.headers.get("access-control-allow-headers") ?? "", "content-type");
 });
@@ -347,7 +333,7 @@ Deno.test("U278 a second /page/finish with the same token, after processed, gets
   await r.seed();
   const first = await r.post("/page/finish", { token: TOKEN });
   const second = await r.post("/page/finish", { token: TOKEN });
-  assertEquals([first.status, second.status, (await second.json()).error], [200, 410, EXPIRED]);
+  assertEquals({ firstStatus: first.status, secondStatus: second.status, secondError: (await second.json()).error }, { firstStatus: 200, secondStatus: 410, secondError: EXPIRED });
   assertEquals(r.finishCalls.length, 1);
 });
 
@@ -360,7 +346,7 @@ Deno.test("U279 a token for attachment X never finishes attachment Y", async () 
   assertEquals(r.finishCalls, [x.id]);
   assertEquals(r.store.attachment(y.id), y);
   const wrong = await r.post("/page/finish", { token: "token-z", id: y.id });
-  assertEquals([wrong.status, r.finishCalls.length, r.store.attachment(y.id)], [410, 1, y]);
+  assertEquals({ wrongStatus: wrong.status, finishCalls: r.finishCalls.length, yRow: r.store.attachment(y.id) }, { wrongStatus: 410, finishCalls: 1, yRow: y });
 });
 
 Deno.test("U280 a /page/finish refused as busy returns the busy outcome and leaves the token valid", async () => {
@@ -368,11 +354,11 @@ Deno.test("U280 a /page/finish refused as busy returns the busy outcome and leav
   const row = await r.seed();
   r.outcomes.push({ state: "pending_upload", derived_count: 0, busy: "finish", reason: "busy: finish is running" });
   const busy = await r.post("/page/finish", { token: TOKEN });
-  assertEquals([busy.status, (await busy.json()).busy], [200, "finish"]);
+  assertEquals({ busyStatus: busy.status, busyBusy: (await busy.json()).busy }, { busyStatus: 200, busyBusy: "finish" });
   assertEquals(r.store.attachment(row.id)!.page_token_hash, await sha256Hex(TOKEN));
   const later = await r.post("/page/finish", { token: TOKEN });
-  assertEquals([later.status, (await later.json()).state], [200, "processed"]);
-  assertEquals([r.finishCalls, r.store.attachment(row.id)!.page_token_hash], [[row.id, row.id], null]);
+  assertEquals({ laterStatus: later.status, laterState: (await later.json()).state }, { laterStatus: 200, laterState: "processed" });
+  assertEquals({ finishCalls: r.finishCalls, pageTokenHash: r.store.attachment(row.id)!.page_token_hash }, { finishCalls: [row.id, row.id], pageTokenHash: null });
 });
 
 Deno.test("U340 a /page/finish with no file uploaded yet returns it and leaves the token valid", async () => {
@@ -380,11 +366,11 @@ Deno.test("U340 a /page/finish with no file uploaded yet returns it and leaves t
   const row = await r.seed();
   r.outcomes.push({ state: "pending_upload", derived_count: 0, reason: "no file uploaded yet" });
   const none = await r.post("/page/finish", { token: TOKEN });
-  assertEquals([none.status, await none.json()], [200, { state: "pending_upload", derived_count: 0, reason: "no file uploaded yet" }]);
+  assertEquals({ noneStatus: none.status, noneBody: await none.json() }, { noneStatus: 200, noneBody: { state: "pending_upload", derived_count: 0, reason: "no file uploaded yet" } });
   assertEquals(r.store.attachment(row.id)!.page_token_hash, await sha256Hex(TOKEN));
   const start = await r.post("/page/start", { token: TOKEN, ...PICK });
   const again = await r.post("/page/finish", { token: TOKEN });
-  assertEquals([start.status, again.status, (await again.json()).state], [200, 200, "processed"]);
+  assertEquals({ startStatus: start.status, againStatus: again.status, againState: (await again.json()).state }, { startStatus: 200, againStatus: 200, againState: "processed" });
 });
 
 Deno.test("U341 a /page/finish whose outcome is refused uses the token up", async () => {
@@ -393,8 +379,8 @@ Deno.test("U341 a /page/finish whose outcome is refused uses the token up", asyn
   r.outcomes.push({ state: "refused", derived_count: 0, reason: "The file is image/png, not the declared image/jpeg." });
   const first = await r.post("/page/finish", { token: TOKEN });
   const second = await r.post("/page/finish", { token: TOKEN });
-  assertEquals([first.status, (await first.json()).state, second.status], [200, "refused", 410]);
-  assertEquals([r.finishCalls.length, r.store.attachment(row.id)!.page_token_hash], [1, null]);
+  assertEquals({ firstStatus: first.status, firstState: (await first.json()).state, secondStatus: second.status }, { firstStatus: 200, firstState: "refused", secondStatus: 410 });
+  assertEquals({ finishCalls: r.finishCalls.length, pageTokenHash: r.store.attachment(row.id)!.page_token_hash }, { finishCalls: 1, pageTokenHash: null });
 });
 
 Deno.test("U365 a second pick on a fresh instance (a new isolate) replaces a page-made declaration instead of refusing it", async () => {
@@ -408,10 +394,7 @@ Deno.test("U365 a second pick on a fresh instance (a new isolate) replaces a pag
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ token: TOKEN, ...PICK, type: "image/png", size: 4096 }),
   });
-  assertEquals(
-    [first.status, second.status, r.store.attachment(row.id)!.declared_type, r.store.attachment(row.id)!.declared_size],
-    [200, 200, "image/png", 4096],
-  );
+  assertEquals({ firstStatus: first.status, secondStatus: second.status, declaredType: r.store.attachment(row.id)!.declared_type, declaredSize: r.store.attachment(row.id)!.declared_size }, { firstStatus: 200, secondStatus: 200, declaredType: "image/png", declaredSize: 4096 });
 });
 
 Deno.test("U366 the declaration /page/start sends to the store carries declared_by_page: true, so the real store persists the flag", async () => {
