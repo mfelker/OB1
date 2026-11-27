@@ -40,9 +40,6 @@ export function pageRoutes(deps: Deps, services: Services): Hono {
     if (c.req.method === "OPTIONS") return c.body(null, 204);
     await next();
   });
-  // Attachments whose declaration came from this page: a new pick replaces those. A declaration
-  // from the attach call is confirmed, never replaced. (No column tells them apart.)
-  const declaredByPage = new Set<string>();
 
   /** The attachment a request's token is for, or null when the token is unknown, used or past its deadline. */
   async function attachmentFor(body: { token?: unknown }): Promise<AttachmentRow | null> {
@@ -69,10 +66,10 @@ export function pageRoutes(deps: Deps, services: Services): Hono {
     const body = await c.req.json().catch(() => ({}));
     const row = await attachmentFor(body);
     if (!row) return c.json({ error: EXPIRED }, 410);
-    if (!declaredByPage.has(row.id) && row.declared_type !== null && row.declared_type !== body.type) {
+    if (!row.declared_by_page && row.declared_type !== null && row.declared_type !== body.type) {
       return c.json({ code: "wrong_type", message: "The picked file is " + body.type + ", not the declared " + row.declared_type + "." }, 400);
     }
-    if (!declaredByPage.has(row.id) && row.declared_size !== null && row.declared_size !== body.size) {
+    if (!row.declared_by_page && row.declared_size !== null && row.declared_size !== body.size) {
       return c.json({ code: "wrong_size", message: "The picked file is " + body.size + " bytes, not the declared " + row.declared_size + "." }, 400);
     }
     const name = baseName(body.name);
@@ -83,7 +80,6 @@ export function pageRoutes(deps: Deps, services: Services): Hono {
       return c.json({ code: "wrong_type", message: "The assistant expected " + wanted + ", but the picked file is " + body.type + "." }, 400);
     }
     const path = `attachments/${row.id}/${name}`;
-    declaredByPage.add(row.id);
     await deps.store.setDeclaration(row.id, {
       file_name: name,
       declared_type: body.type as AcceptedType,

@@ -78,6 +78,8 @@ export interface AttachmentRow {
   file_name: string | null;
   declared_type: AcceptedType | null;
   declared_size: number | null;
+  /** True once the upload page declared the file; a later pick then replaces it (FR-002, contracts/upload-page.md). */
+  declared_by_page?: boolean;
   expected_kind: ExpectedKind | null;
   actual_type: string | null;
   actual_size: number | null;

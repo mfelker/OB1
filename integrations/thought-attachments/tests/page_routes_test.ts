@@ -383,3 +383,20 @@ Deno.test("U341 a /page/finish whose outcome is refused uses the token up", asyn
   assertEquals([first.status, (await first.json()).state, second.status], [200, "refused", 410]);
   assertEquals([r.finishCalls.length, r.store.attachment(row.id)!.page_token_hash], [1, null]);
 });
+
+Deno.test("U365 a second pick on a fresh instance (a new isolate) replaces a page-made declaration instead of refusing it", async () => {
+  const r = await rig();
+  const row = await r.seed();
+  const first = await r.post("/page/start", { token: TOKEN, ...PICK });
+  const freshServices: Services = { finish: () => Promise.resolve({ state: "processed", derived_count: 1 }) };
+  const fresh = pageRoutes(r.deps, freshServices);
+  const second = await fresh.request("https://fn.example.test/page/start", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ token: TOKEN, ...PICK, type: "image/png", size: 4096 }),
+  });
+  assertEquals(
+    [first.status, second.status, r.store.attachment(row.id)!.declared_type, r.store.attachment(row.id)!.declared_size],
+    [200, 200, "image/png", 4096],
+  );
+});

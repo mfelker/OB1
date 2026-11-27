@@ -229,6 +229,7 @@ export class FakeStore implements Store {
       file_name: null,
       declared_type: null,
       declared_size: null,
+      declared_by_page: false,
       expected_kind: null,
       actual_type: null,
       actual_size: null,
@@ -407,6 +408,7 @@ export class FakeStore implements Store {
         file_name: fields.file_name ?? null,
         declared_type: fields.declared_type ?? null,
         declared_size: fields.declared_size ?? null,
+        declared_by_page: false,
         expected_kind: fields.expected_kind ?? null,
         storage_path: fields.storage_path ?? null,
         sensitivity_tier: fields.sensitivity_tier ?? "personal",
@@ -460,6 +462,7 @@ export class FakeStore implements Store {
     return this.run("setDeclaration", [id, decl], () => {
       const row = this.mustGet(id);
       Object.assign(row, decl);
+      row.declared_by_page = true;
       row.updated_at = this.clock.iso();
       return structuredClone(row);
     });
