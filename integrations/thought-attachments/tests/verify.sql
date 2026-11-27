@@ -582,3 +582,15 @@ begin
   delete from thoughts where id = wild;
   if n <> 1 or hit <> lit then raise exception 'U68: % matches, first %', n, hit; end if;
 end $$;
+
+-- U314: the exact-text find ignores letter case, and a thought without the text in any case is not returned
+do $$
+declare tag text := replace(gen_random_uuid()::text, '-', ''); yes uuid; no uuid; n int; hit uuid;
+begin
+  insert into thoughts (content) values ('Box of furnace filters ' || tag) returning id into yes;
+  insert into thoughts (content) values ('Box of water filters ' || tag) returning id into no;
+  select count(*), min(id::text)::uuid into n, hit from attachment_find_thoughts_exact('FURNACE Filters ' || upper(tag), 20);
+  delete from thoughts where id = yes;
+  delete from thoughts where id = no;
+  if n <> 1 or hit <> yes then raise exception 'U314: % matches, first %', n, hit; end if;
+end $$;

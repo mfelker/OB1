@@ -238,7 +238,7 @@ as $$
 $$;
 grant execute on function attachment_embedding_dimension() to service_role;
 
--- Exact-text find (FR-023, R11): the text is a parameter, matched literally (no LIKE wildcards).
+-- Exact-text find (FR-023, R11): the text is a parameter, matched literally (no LIKE wildcards), ignoring case.
 create or replace function attachment_find_thoughts_exact(p_text text, p_limit int default 20)
 returns table (id uuid, first_line text, captured timestamptz)
 language sql
@@ -246,7 +246,7 @@ stable
 as $$
   select t.id, left(split_part(t.content, E'\n', 1), 120), t.created_at
     from thoughts t
-    where position(p_text in t.content) > 0
+    where position(lower(p_text) in lower(t.content)) > 0
     order by t.created_at desc
     limit least(p_limit, 20)
 $$;
