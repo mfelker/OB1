@@ -40,7 +40,13 @@ export function createSupabaseStore(
       if (error) return { error: scrub(error.message) };
       return { data: (data ?? []).length > 0 };
     },
-    insertNote: notYet,
+    insertNote(content, embedding, metadata) {
+      return rpc<{ id: string; created: boolean }>("attachment_insert_note", {
+        p_content: content,
+        p_embedding: `[${embedding.join(",")}]`,
+        p_metadata: metadata,
+      });
+    },
     async matchThoughts(embedding, limit) {
       const r = await rpc<{ id: string; content: string; created_at: string }[]>("match_thoughts", {
         query_embedding: embedding,
@@ -88,8 +94,13 @@ export function createSupabaseStore(
     listByParent: notYet,
     attachmentForDerived: notYet,
     orphans: notYet,
-    attachmentForPageToken: notYet,
-    consumePageToken: notYet,
+    async attachmentForPageToken(hash) {
+      const r = await rpc<AttachmentRow[]>("attachment_by_page_token", { p_hash: hash });
+      return "error" in r ? r : { data: r.data[0] ?? null };
+    },
+    consumePageToken(id, hash) {
+      return rpc<boolean>("attachment_consume_page_token", { p_id: id, p_hash: hash });
+    },
     claim(id, op, seconds) {
       return rpc<{ token: string } | { busy: BusyOp }>("attachment_claim", { p_id: id, p_op: op, p_seconds: seconds });
     },

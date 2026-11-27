@@ -237,3 +237,22 @@ Deno.test("U319 findPending returns null for that row once now is past its deadl
   assertEquals(await store.findPending(PARENT, "manual.pdf", "application/pdf", 1234, new Date("2026-01-01T01:00:00.000Z")), { data: null });
   assertEquals(await store.findPending(PARENT, "manual.pdf", "application/pdf", 1234, new Date("2026-01-01T01:00:01.000Z")), { data: null });
 });
+
+Deno.test("U88 insertNote, attachmentForPageToken and consumePageToken map the RPC replies to { id, created }, the row and a boolean", async () => {
+  const { store, ff } = setup();
+  const row = attachmentRow({ page_token_hash: "sha256:tokenhash" });
+  ff.on("POST", `${REST}/rpc/attachment_insert_note`, { body: { id: "note-1", created: true } });
+  ff.on("POST", `${REST}/rpc/attachment_by_page_token`, { body: [row] }, { body: [] });
+  ff.on("POST", `${REST}/rpc/attachment_consume_page_token`, { body: true }, { body: false });
+
+  assertEquals(await store.insertNote("a note", [0.5, 0.25], { type: "observation" }), { data: { id: "note-1", created: true } });
+  assertEquals(ff.requests[0].body, { p_content: "a note", p_embedding: "[0.5,0.25]", p_metadata: { type: "observation" } });
+
+  assertEquals(await store.attachmentForPageToken("sha256:tokenhash"), { data: row });
+  assertEquals(ff.requests[1].body, { p_hash: "sha256:tokenhash" });
+  assertEquals(await store.attachmentForPageToken("sha256:other"), { data: null });
+
+  assertEquals(await store.consumePageToken(ATT_ID, "sha256:tokenhash"), { data: true });
+  assertEquals(ff.requests[3].body, { p_id: ATT_ID, p_hash: "sha256:tokenhash" });
+  assertEquals(await store.consumePageToken(ATT_ID, "sha256:tokenhash"), { data: false });
+});
