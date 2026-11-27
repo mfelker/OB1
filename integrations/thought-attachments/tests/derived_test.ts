@@ -6,6 +6,8 @@ import type { AttachmentRow } from "../src/types.ts";
 const ID = "a1b2c3d4-0000-4000-8000-000000000000";
 const PARENT = "11111111-1111-4111-8111-111111111111";
 const NOW = new Date("2026-11-27T12:34:56.789Z");
+/** The integration's own version, from its metadata.json (FR-008: derived thoughts name the importer version). */
+const PACKAGE_VERSION: string = JSON.parse(await Deno.readTextFile(new URL("../metadata.json", import.meta.url))).version;
 
 /** A processed-in-progress attachment of `fileName`. */
 function rowFor(fileName = "dishwasher-manual.pdf", overrides: Partial<AttachmentRow> = {}): AttachmentRow {
@@ -87,8 +89,7 @@ Deno.test("U135 a passage row's metadata carries the ingestion contract fields",
   assertEquals(m.source_type, "local_document");
   assertEquals(m.source_label, "dishwasher-manual.pdf");
   assertEquals(m.importer_name, "thought-attachments");
-  assertEquals(typeof m.importer_version, "string");
-  assert((m.importer_version as string).length > 0);
+  assertEquals(m.importer_version, PACKAGE_VERSION);
   assertEquals(m.imported_at, "2026-11-27T12:34:56.789Z");
   assertEquals(m.input_hash, "sha256:" + "ab".repeat(32));
   assertEquals(m.content_fingerprint, "sha256:" + row.fingerprint);
