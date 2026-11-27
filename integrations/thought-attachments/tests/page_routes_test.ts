@@ -285,3 +285,12 @@ Deno.test("U337 /page/info returns the expected kind, the four accepted types an
   assertEquals(r.store.callNames().filter((m) => MUTATORS.includes(m)), []);
   assertEquals(r.store.attachment(row.id)!.page_token_hash !== null, true);
 });
+
+Deno.test("U338 /page/info for an attachment started with no expected kind returns no expected kind", async () => {
+  const r = await rig();
+  await r.seed();
+  const body = await (await r.post("/page/info", { token: TOKEN })).json();
+  assertEquals(body.expected_kind, null);
+  assertEquals([...body.accepted_types].sort(), [...ACCEPTED_TYPES].sort());
+  assertEquals(typeof body.caps.image_bytes, "number");
+});
