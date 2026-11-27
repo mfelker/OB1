@@ -11,6 +11,10 @@ export function checkDeclared(decl: DeclaredFile, settings: Settings): Refusal |
   if (!ACCEPTED.includes(decl.type as AcceptedType)) {
     return { code: "unsupported_type", message: "Accepted types are PDF, JPEG, PNG and WebP. Got " + decl.type + "." };
   }
+  const cap = Math.floor((decl.type === "application/pdf" ? settings.maxPdfMb : settings.maxImageMb) * 1024 * 1024);
+  if (decl.size > cap) {
+    return { code: "too_large", message: "The file is " + decl.size + " bytes, over the cap of " + cap + " bytes." };
+  }
   return null;
 }
 

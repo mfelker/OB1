@@ -39,3 +39,11 @@ Deno.test("U117 checkDeclared refuses any other type, naming the accepted types"
   assertEquals(refusal.code, "unsupported_type");
   for (const name of ["PDF", "JPEG", "PNG", "WebP"]) assertStringIncludes(refusal.message, name);
 });
+
+Deno.test("U119 an image declared one byte over the image cap is refused, naming the cap and the declared size", () => {
+  const refusal = checkDeclared({ name: "a.jpg", type: "image/jpeg", size: IMAGE_CAP + 1 }, settingsWith());
+  assert(refusal !== null);
+  assertEquals(refusal.code, "too_large");
+  assertStringIncludes(refusal.message, "10485760");
+  assertStringIncludes(refusal.message, "10485761");
+});
