@@ -29,8 +29,24 @@
 - Q: When does extraction run? → A: Inline, during the call that finishes an attachment, within Supabase Cloud's function limits; files too big to process inline are rejected. A resumable step or background worker is deferred (fork issue 26).
 - Q: Which extraction approach? → A: PDF text from the file's text layer; captions from a vision model the owner configures through an OpenAI-compatible endpoint (local or cloud). Scanned PDFs without a text layer are flagged, not OCR'd; OCR is deferred (fork issue 30).
 - Q: Who performs the upload to the signed link? → A: The owner must be able to upload photos from their phone in 007. Clients that can run commands (Claude Code) upload directly; every client also gets a one-time browser upload link (file picker, no shell, no access key in the page) that works from a phone. Planning must prove the page works on Supabase Cloud, where functions on the default domain serve HTML as plain text, and choose a fallback if needed (FR-002, User Story 2).
-- Q: Attachment lifecycle? → A: Every attachment has a parent thought; there are no parentless files. Removing an attachment is a hard remove, needing an explicit confirmation: the stored file, the attachment record and its derived thoughts are deleted by the attachment's identity, and the parent thought is untouched. Attachments whose parent thought was deleted elsewhere are reported by an orphan check and can then be removed (FR-016, FR-021, User Story 5). A soft remove was rejected because the unchanged core search would keep showing the derived thoughts.
+- Q: Attachment lifecycle? → A: Every attachment has a parent thought; there are no parentless files. Removing an attachment is a hard remove, needing an explicit confirmation: the stored file, the attachment record and its derived thoughts are deleted by the attachment's identity, and the parent thought is untouched. Attachments whose parent thought was deleted elsewhere are reported by an orphan check and can then be removed (FR-016, FR-021, User Story 5). A soft remove was rejected because the unchanged core search would keep showing the derived thoughts. → Superseded in part by "Is the note saved if the attachment is refused" (grill): one exception, a note this integration created when starting an attachment is removed with that attachment if it ended refused or expired without an upload and no other attachment points to it.
 - Q: Which types and limits? → A: PDF, JPEG, PNG and WebP; HEIC is rejected with a "share as JPEG" message. Size and page limits are configurable settings whose defaults (images 10 MB; PDFs 25 MB and 50 pages) are validated by measurement on Supabase Cloud during planning. Thumbnails are deferred (fork issue 31).
+
+### Session 2026-11-26 (grill-with-docs)
+
+- Q: How does the AI identify the parent thought, given that the core connector returns no thought id on capture or in its main search? → A: The attachments connector has its own read-only lookup tool that finds thoughts by meaning or exact text and returns their ids with the first line and date; attaching takes that id.
+- Q: Can starting an attachment also create the parent thought? → A: Yes. Starting an attachment takes either an existing thought id or new note text; with text, the note is first saved as a normal thought (embedded with the brain's model, labelled with this integration as its source, type `observation`, without the core's chat-model labelling) and the file is attached to it.
+- Q: What finishes an attachment after a phone upload? → A: The upload page itself: after the upload it asks the integration to finish that attachment and shows the result on the phone; the AI can still finish an attachment (command uploads, retries). The page's one-time link may start finishing only for its own attachment.
+- Q: How does a search result show which file it came from? → A: Each derived thought's text starts with a short source line naming the file's base name, the page range (or "photo") and a short attachment id, followed by the passage or caption.
+- Q: What happens to a file that finishing refuses? → A: Finishing deletes the stored file at once and keeps the attachment record marked `refused`, with the reason and the actual type, size or page count; the owner starts a new attachment to try again, and refused records appear in the orphan check until removed.
+- Q: What happens when two operations on one attachment overlap? → A: One at a time: while an attachment is being finished or removed, any other finish or remove on it is refused at once with an "attachment busy, try again shortly" message and changes nothing.
+- Q: Which attachment states can be finished again? → A: Every state except `refused`: `failed` and `not captioned` are retried, `scanned` is re-checked, and a `processed` attachment can be rebuilt, replacing its derived thoughts (for example after changing the vision model).
+- Q: How do derived thoughts appear in the core listing and stats? → A: They are labelled with the core type `reference` and the topics `attachment` and the file's base name, so the owner can filter them; the unfiltered recent listing may still fill up after a large upload. A later spec that adds more kinds of thought is tracked as fork issue #32.
+- Q: How long does an upload link stay valid? → A: A setting, default 60 minutes, for both the direct upload link and the phone upload page.
+- Q: What counts as "findable" when verifying? → A: Pass/fail on fixed samples with no percentages: each listed sample question must return its expected passage or caption within the core search's default 10 results, and the phone upload must work with no app and no shell, with no time limit.
+- Q: What does a failed rebuild leave behind? → A: The old derived thoughts stay until the new set is completely written and are then swapped; on failure the attachment stays `processed` with its old derived thoughts and a "last rebuild failed" note with the reason.
+- Q: What if finishing is cut off by the platform and never reports back? → A: A busy mark expires after a configured time, defaulting to slightly more than the platform's longest allowed request (to be measured); after that, a cut-off finish counts as `failed` with its partial derived thoughts cleared, and a cut-off rebuild keeps its old derived thoughts.
+- Q: Is a note saved by starting an attachment kept if that attachment is refused or expires? → A: Checks before upload run before the note is saved, so a request refused at that stage saves nothing. A note this integration created when starting an attachment is removed together with that attachment when the attachment, having ended `refused` or expired without an upload, is removed, but only if no other attachment points to the note; every other parent thought is never touched (confirmed after a conflict with the lifecycle rule).
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -45,7 +61,7 @@ The owner tells their AI "here's the manual for the dishwasher, save it with my 
 **Acceptance Scenarios**:
 
 1. **Given** an existing thought and a PDF with a text layer within the limits, **When** the AI attaches the PDF to the thought and the attachment is finished, **Then** the file is stored, the attachment is recorded as processed, and its text is saved as one or more passage thoughts linked to the attachment and its parent thought.
-2. **Given** a processed PDF attachment, **When** the owner searches with the brain's existing search tool for something stated only in the PDF, **Then** a passage thought from that PDF is among the results and identifies the attachment it came from.
+2. **Given** a processed PDF attachment, **When** the owner searches with the brain's existing search tool for something stated only in the PDF, **Then** a passage thought from that PDF is among the results, and its text shows the file name, page range and attachment id.
 3. **Given** the same PDF is attached again to the same thought, **When** it is attached, **Then** no second attachment or duplicate passage thoughts are created and the owner is pointed to the existing attachment.
 4. **Given** a PDF passage whose text matches a thought the owner wrote earlier, **When** the PDF is finished, **Then** the owner's thought is not changed in any way, and the passage is saved as its own thought owned by the attachment.
 
@@ -65,7 +81,9 @@ The owner snaps a photo of the garage shelf on their phone and tells the AI "the
 2. **Given** an upload link from the AI, **When** the owner opens it in a phone browser and picks a photo, **Then** the photo is uploaded without a shell, an app install or the brain's access key, and the link cannot be used a second time.
 3. **Given** a HEIC photo, **When** the AI tries to attach it or the owner picks it on the upload page, **Then** it is refused before upload with a message telling the owner to share it as JPEG.
 4. **Given** a photo taken with the phone's default camera settings (on many phones the default format is HEIC), **When** the owner picks it on the upload page, **Then** it is either uploaded in an accepted format or refused with the "share as JPEG" message together with how to do that on that phone; the owner is never left with a silent failure.
-5. **Given** no vision model is configured or it fails, **When** a photo is finished, **Then** the file is still stored and fetchable, the attachment is marked as not captioned with the reason, and no caption thought is invented.
+5. **Given** no thought about the shelf exists yet, **When** the AI starts an attachment with the note text "the spare furnace filters are on this shelf", **Then** that note is saved as a thought, becomes the photo's parent, and is returned by the existing search for "furnace filters".
+6. **Given** the owner uploaded a photo through the upload page, **When** the upload completes, **Then** the page finishes the attachment without the AI and shows the caption on the phone, and the photo's caption is searchable before the owner returns to the chat.
+7. **Given** no vision model is configured or it fails, **When** a photo is finished, **Then** the file is still stored and fetchable, the attachment is marked as not captioned with the reason, and no caption thought is invented.
 
 ---
 
@@ -95,7 +113,7 @@ When a file is too large, of the wrong type, scanned without text, or the model 
 
 **Acceptance Scenarios**:
 
-1. **Given** a PDF over the page or size limit, **When** it is attached, **Then** it is refused with the limit, the file's actual size or page count, and a note that larger files need the planned background processing.
+1. **Given** a PDF declared over the size limit, **When** an attachment is started for it, **Then** it is refused before upload with the limit and the declared size; **Given** an uploaded PDF over the page or size limit, **When** it is finished, **Then** it is refused, its stored file is deleted, its record shows `refused` with the actual size or page count, and the message notes that larger files need the planned background processing (derived from FR-003, FR-004 and Round 1, Q5).
 2. **Given** a PDF with no text layer, **When** it is finished, **Then** the file is stored and fetchable, the attachment is flagged as scanned, no passage thoughts are created, and the owner is told text search will not cover it yet.
 3. **Given** the embedding model fails partway through a PDF, **When** finishing fails, **Then** no passage thoughts from that attempt remain, the attachment is marked failed with the reason, and finishing again later can succeed.
 
@@ -111,9 +129,10 @@ The owner says "that's the wrong manual, remove it". The attachment, its stored 
 
 **Acceptance Scenarios**:
 
-1. **Given** a processed attachment, **When** the owner asks to remove it and confirms, **Then** its stored file, its attachment record and all its derived thoughts are permanently deleted, the existing search no longer returns them, fetching it fails as not found, and the parent thought and its other attachments are unchanged.
+1. **Given** a processed attachment, **When** the owner asks to remove it and confirms, **Then** its stored file, its attachment record and all its derived thoughts are permanently deleted, the existing search no longer returns them, fetching it fails as not found, and the parent thought and its other attachments are unchanged (except as in scenario 4).
 2. **Given** a remove request without confirmation, **When** it is sent, **Then** nothing is deleted and the response lists exactly what would be deleted (the file, and the count of derived thoughts).
 3. **Given** an attachment whose parent thought was deleted outside this integration, **When** the AI runs the orphan check, **Then** that attachment is listed as orphaned with its file name and derived-thought count, and it can be removed in the same way.
+4. **Given** an attachment started with note text whose upload link expired unused, **When** the orphan check lists it and it is removed, **Then** the note created for it is removed too; had a second, processed attachment pointed to that note, the note would stay.
 
 ---
 
@@ -123,6 +142,7 @@ The owner says "that's the wrong manual, remove it". The attachment, its stored 
 - The upload link expires before the client uploads; finishing reports "no file uploaded" and a new link can be requested.
 - The client declares one type or size but uploads another; finishing checks the actual stored file (type by content, size, hash) and refuses a mismatch.
 - The parent thought does not exist; attaching is refused.
+- The page and the AI finish the same attachment at nearly the same time, or a remove arrives while finishing runs; the later operation is refused as busy and the owner or AI retries (FR-026).
 - The same file attached to two different thoughts; each is its own attachment with its own derived thoughts, so removing one never removes the other's searchable text.
 - A PDF that is encrypted or corrupt; it is stored, marked failed with a readable reason, and no passage thoughts are created.
 - A file name containing personal or path information; only the file's base name is kept, never a local path.
@@ -135,10 +155,10 @@ The owner says "that's the wrong manual, remove it". The attachment, its stored 
 
 **Attach and upload**
 
-- **FR-001**: The integration MUST let the AI start an attachment for an existing thought by giving the file's name, declared type and size, and MUST return a short-lived upload link that accepts exactly one file; file bytes MUST NOT pass through the MCP call.
+- **FR-001**: The integration MUST let the AI start an attachment by giving the file's name, declared type and size and either an existing thought's id or new note text; with note text, the note MUST first be saved as a normal thought (embedded with the brain's model, type `observation`, metadata naming this integration as its source) and becomes the parent (Round 1, Q2). It MUST return an upload link that accepts exactly one file and expires after a configured time (default 60 minutes, shared by the direct link and the upload page; Round 1, Q9); file bytes MUST NOT pass through the MCP call.
 - **FR-002**: Every started attachment MUST be uploadable two ways: (a) directly to the upload link by a client that can run commands, with a ready-to-run command returned; and (b) through a one-time browser upload page that works on a phone, needs no shell, app or access key, shows the expected file type and size limit, accepts only one file, and stops working after one upload or when the link expires. The page MUST work on Supabase Cloud and on the self-hosted stack.
-- **FR-003**: Starting an attachment MUST refuse, before any upload, a declared type outside PDF, JPEG, PNG and WebP (HEIC gets the "share as JPEG" message) and a declared size over the configured limit.
-- **FR-004**: Finishing an attachment MUST check the stored file itself (type by content, actual size, page count for PDFs, content hash) and refuse it when it breaks a limit or does not match what was declared.
+- **FR-003**: Starting an attachment MUST refuse, before any upload and before any note text is saved as a thought, a declared type outside PDF, JPEG, PNG and WebP (HEIC gets the "share as JPEG" message) and a declared size over the configured limit.
+- **FR-004**: Finishing an attachment MUST check the stored file itself (type by content, actual size, page count for PDFs, content hash) and refuse it when it breaks a limit or does not match what was declared. On refusal it MUST delete the stored file at once, create no derived thoughts, and keep the attachment record in state `refused` with the reason and the actual type, size or page count; a refused attachment cannot be finished again (Round 1, Q5).
 
 **Extraction and derived thoughts**
 
@@ -160,21 +180,27 @@ The owner says "that's the wrong manual, remove it". The attachment, its stored 
 
 **Lifecycle**
 
-- **FR-016**: Every attachment MUST belong to exactly one existing parent thought. Removing an attachment MUST require explicit confirmation; without it, the response MUST describe what would be deleted and delete nothing. With it, the stored file, the attachment record and the attachment's derived thoughts MUST be permanently deleted, each deletion scoped to that attachment's identity (never an unscoped delete), and the parent thought MUST NOT change.
-- **FR-021**: The AI MUST be able to list orphaned attachments (parent thought no longer exists), including uploads that were started but never finished after their link expired, and remove them under FR-016's rules.
+- **FR-016**: Every attachment MUST belong to exactly one existing parent thought. Removing an attachment MUST require explicit confirmation; without it, the response MUST describe what would be deleted and delete nothing. With it, the stored file, the attachment record and the attachment's derived thoughts MUST be permanently deleted, each deletion scoped to that attachment's identity (never an unscoped delete), and the parent thought MUST NOT change, with one exception: when the attachment being removed ended `refused` or expired without an upload, and its parent is a note this integration created when starting that attachment, and no other attachment points to that note, the note MUST be removed with it (Round 3, Q1).
+- **FR-021**: The AI MUST be able to list orphaned attachments (parent thought no longer exists), including uploads that were started but never finished after their link expired and attachments in state `refused`, and remove them under FR-016's rules.
 
 **Configuration and security**
 
-- **FR-017**: Limits (image size, PDF size, PDF pages), the download link lifetime, the vision model and its endpoint MUST be settings with documented defaults; the defaults MUST be validated by measurement on Supabase Cloud before landing.
+- **FR-017**: Limits (image size, PDF size, PDF pages), the upload link lifetime, the download link lifetime, the busy-mark expiry, the vision model and its endpoint MUST be settings with documented defaults; the defaults MUST be validated by measurement on Supabase Cloud before landing.
 - **FR-018**: The integration MUST use the brain's existing access key for its connector, and the stored files MUST NOT be publicly readable.
 - **FR-019**: The integration MUST work unchanged on Supabase Cloud and on spec 006's self-hosted stack, differing only in settings.
 - **FR-020**: The setup MUST create everything the integration needs (its table, any storage bucket it uses) idempotently, without needing spec 006, and with the required grants for every new table.
+- **FR-023**: The integration MUST offer a read-only lookup that finds existing thoughts by meaning or by exact text and returns, for each match, its id, the first line of its content and its capture date, so the AI can name a parent thought without any other connector; starting an attachment MUST take that id (Round 1, Q1; VP-001, VP-002).
+- **FR-024**: After a successful upload through the browser upload page, the page MUST start finishing that attachment and show the owner the outcome (processed with a short caption or passage count, scanned, not captioned, refused or failed, with the reason). The page's one-time link MUST authorise finishing only its own attachment and nothing else; the AI MUST still be able to finish any attachment (Round 1, Q3).
+- **FR-025**: Every derived thought's text MUST begin with one source line naming the file's base name, its page range (PDF passages) or "photo" (captions), and a short attachment id that the attachment tools accept, followed by the passage or caption; the source line counts toward the passage size limit of FR-005. Two derived thoughts from different attachments are therefore never identical text, so FR-022 holds under the brain's table-wide duplicate merge (Round 1, Q4; VP-004).
+- **FR-026**: Finish and remove MUST run one at a time per attachment: while one is in progress on an attachment, any other finish or remove on that same attachment MUST be refused at once with a message saying the attachment is busy and which operation is running, and MUST change nothing. Operations on different attachments are not blocked (Round 1, Q6). A busy mark MUST expire after a configured time (default: slightly more than the platform's longest allowed request, set from the planning measurement); once it has expired, the next finish or remove proceeds, a cut-off finish counts as `failed` with any derived thoughts it wrote removed (FR-011), and a cut-off rebuild keeps the old derived thoughts (FR-027) (Round 2, Q2).
+- **FR-027**: Finishing again MUST be allowed for every attachment state except `refused`: for `failed` and `not captioned` it retries and writes the missing derived thoughts; for `scanned` it re-checks the text layer; for `processed` a plain repeat returns the existing outcome (FR-012), and an explicitly requested rebuild replaces all of the attachment's derived thoughts with newly extracted ones, recording the model used (Round 1, Q7). A rebuild MUST keep the old derived thoughts until the new set is completely written and then swap them; if it fails, the attachment MUST stay `processed` with its old derived thoughts and record a "last rebuild failed" note with the reason (Round 2, Q1).
+- **FR-028**: Every derived thought MUST carry the core type `reference` and the topics `attachment` and the file's base name, so the core listing can be filtered by type and the core stats count derived thoughts under `reference`; the core tools themselves are unchanged (Round 1, Q8; VP-003).
 
 ### Key Entities
 
-- **Attachment**: One stored file linked to one parent thought. Attributes: base file name, type, size, content hash, page count (PDFs), storage location, processing state (pending upload, processed, scanned, uncaptioned, failed) with a reason, the model used for captions, created and processed times.
+- **Attachment**: One stored file linked to one parent thought. Attributes: base file name, type, size, content hash, page count (PDFs), storage location, processing state (pending upload, processed, scanned, uncaptioned, failed, refused) with a reason, the model used for captions, created and processed times.
 - **Derived thought**: An ordinary thought created from an attachment: a PDF passage or a photo caption. It carries the ingestion-contract metadata and points to its attachment and parent thought.
-- **Parent thought**: The owner's existing thought the file belongs to; it is never modified by this feature.
+- **Parent thought**: The thought the file belongs to: either an existing thought, or a note this integration saved when the attachment was started with note text. Once it exists, this feature never modifies it.
 
 ### Data & Schema Changes
 
@@ -190,10 +216,11 @@ Names are provisional; planning settles them.
 | Tool | Purpose | readOnlyHint | destructiveHint | openWorldHint |
 |------|---------|--------------|-----------------|---------------|
 | `attach_file` | Start an attachment for a thought; return a one-file upload link, a ready-to-run upload command and a one-time phone upload page link | false | false | false |
-| `finish_attachment` | Verify the uploaded file, extract text or caption, write derived thoughts | false | false | true (calls the vision and embedding models) |
+| `finish_attachment` | Verify the uploaded file, extract text or caption, write derived thoughts (also started by the upload page for its own attachment); retry, re-check or, on explicit request, rebuild (FR-027) | false | true (a rebuild replaces derived thoughts) | true (calls the vision and embedding models) |
 | `get_attachment` | Return an attachment's details and a short-lived download link | true | n/a | false |
 | `list_attachments` | List a thought's attachments, or the attachment behind a derived thought | true | n/a | false |
 | `remove_attachment` | Permanently remove an attachment, its file and derived thoughts (dry run without confirm) | false | true | false |
+| `find_thought` | Find existing thoughts by meaning or exact text; return id, first line and capture date | true | n/a | false |
 | `find_orphan_attachments` | List attachments whose parent thought is gone, or unfinished uploads past expiry | true | n/a | false |
 
 ### README Contract
@@ -212,14 +239,26 @@ Names are provisional; planning settles them.
 
 ### Measurable Outcomes
 
-- **SC-001**: For a set of 10 questions answerable only from a sample service manual within the limits, the brain's existing search returns a passage from that manual in the top 5 results for at least 8 of them.
-- **SC-002**: For 5 sample storage photos, a search naming the stored object finds the photo's caption thought in the top 5 results for at least 4 of them.
+- **SC-001**: For a fixed sample service manual within the limits and a listed set of questions answerable only from it, every question returns its expected passage within the core search's default 10 results (pass/fail per question; verifies Round 1, Q10).
+- **SC-002**: For a fixed set of sample storage photos, a search naming each photo's stored object returns that photo's caption thought within the core search's default 10 results (pass/fail per photo; verifies Round 1, Q10).
 - **SC-003**: A file fetched through its link is byte-identical to the original in 100% of tested cases, and every expired link is refused.
 - **SC-004**: On Supabase Cloud, a PDF at the default page and size limits and an image at the default size limit each finish within one call without hitting platform limits; if not, the defaults are lowered until they do, and the measured values are recorded.
 - **SC-005**: Every refusal and failure case in User Story 4 leaves zero derived thoughts from the failed attempt and gives a message naming the cause.
 - **SC-006**: A live run on both Supabase Cloud and spec 006's self-hosted stack completes the attach, search and fetch flow for one PDF and one photo with identical behaviour, differing only in settings.
 - **SC-007**: No derived thought or attachment record contains a signed link, access key or absolute local path (checked over every record from the live runs).
-- **SC-008**: On both Supabase Cloud and the self-hosted stack (phone on the same network), the owner uploads a photo taken with the phone's default camera settings through the upload page in under 1 minute from receiving the link, with no app install, and the photo ends up captioned and searchable.
+- **SC-008**: On both Supabase Cloud and the self-hosted stack (phone on the same network), the owner uploads a photo taken with the phone's default camera settings through the upload page with no app install and no shell, and the photo ends up captioned and searchable; no time limit applies (verifies Round 1, Q10).
+- **SC-009**: After the owner captures a thought through the core connector, the AI finds it with the lookup using words from it, gets its id among the returned matches, and attaches a file to it without using any other connector (verifies Round 1, Q1).
+- **SC-010**: Starting an attachment with note text and no thought id creates exactly one new thought with that text, the attachment's parent is that thought, and the core connector's search finds it (verifies Round 1, Q2).
+- **SC-011**: A photo uploaded through the upload page is finished by the page itself: with no further AI call, its caption thought exists and the page shows the caption; the page's link cannot finish or upload to any other attachment (verifies Round 1, Q3).
+- **SC-012**: For a passage returned by the core connector's search, the AI fetches the original file using only the attachment id shown in the result's text; and the same PDF attached to two different thoughts yields two separate sets of passages, so removing one attachment leaves the other's passages searchable (verifies Round 1, Q4).
+- **SC-013**: An upload whose real type or size breaks the limits (example: a 40 MB file declared as a 4 MB JPEG) is refused at finishing; afterwards its stored file no longer exists, the attachment shows state `refused` with the actual size, it has no derived thoughts, and the orphan check lists it (verifies Round 1, Q5).
+- **SC-014**: While an attachment is being finished, a second finish and a remove on the same attachment are each refused as busy and change nothing; once finishing completes, a repeat finish returns the existing outcome with no new derived thoughts, and the remove then succeeds (verifies Round 1, Q6).
+- **SC-015**: A photo finished while the vision model was off is `not captioned`; after the model is back, finishing it again writes its caption thought. A `processed` photo rebuilt with a different configured vision model ends with exactly one caption thought, written by the new model (verifies Round 1, Q7).
+- **SC-016**: After a PDF is processed, the core listing filtered to type `observation` shows none of its passages, the core stats count every passage under `reference`, and each passage carries the topics `attachment` and the file's base name (verifies Round 1, Q8).
+- **SC-017**: With the default settings, an upload page opened 20 minutes after the AI created it accepts the photo; one opened 65 minutes after refuses it with a "link expired, ask your assistant for a new one" message, and that pending attachment appears in the orphan check (example times; verifies Round 1, Q9).
+- **SC-018**: A `processed` photo whose rebuild fails because the vision model is unavailable still has exactly its old caption thought, still shows state `processed`, and reports the failed rebuild with its reason (verifies Round 2, Q1).
+- **SC-019**: When a finishing run is killed before it completes (simulated), a finish before the busy mark expires is refused as busy; one after it expires proceeds, finds no derived thoughts left from the killed run, and completes the attachment (verifies Round 2, Q2).
+- **SC-020**: Starting an attachment with note text and a declared HEIC photo saves no thought; starting one with note text whose link then expires, and removing it, leaves no trace of the note; the same with a second processed attachment on that note leaves the note in place (verifies Round 3, Q1).
 
 ## Assumptions
 
@@ -229,6 +268,13 @@ Names are provisional; planning settles them.
 - On spec 006's self-hosted stack the phone must be on the same network as the stack until secure remote access (fork issue #29) lands; on Supabase Cloud the phone works from anywhere.
 - One file belongs to one parent thought; attaching the same file to another thought creates a second attachment record.
 - The download link lifetime default (10 minutes) is short enough to limit leaks and long enough for a person to open it.
-- Out of scope, tracked as fork issues: resumable or background processing for larger files (#26), OCR for scanned PDFs (#30), photo thumbnails (#31). Also out of scope: Word, spreadsheet and slide formats; HEIC conversion; editing attachments; a dashboard view.
+- Out of scope, tracked as fork issues: resumable or background processing for larger files (#26), OCR for scanned PDFs (#30), photo thumbnails (#31), and more kinds of thought so derived thoughts no longer crowd the owner's unfiltered recent listing (#32; the unfiltered listing showing derived thoughts is a known limitation of 007). Also out of scope: Word, spreadsheet and slide formats; HEIC conversion; editing attachments; a dashboard view.
 - Upstream PR 533 and spec 004 are not needed; if upstream PR 533 merges first, nothing here changes.
 - Supabase Cloud's per-request function limits are tight for large PDFs; the default limits are a starting point, to be confirmed by the planning measurement (SC-004).
+
+## Verified Premises
+
+- **VP-001**: The core connector's capture tool returns only a confirmation text (type, topics, people, actions), not the new thought's id (upstream `server/index.ts`, `capture_thought`, lines ~485–495 at `238df6c`).
+- **VP-002**: The core connector's `search_thoughts` shows each match's similarity, capture date, type, topics, people, actions and content, but not its id or any other metadata; only the ChatGPT-style `search` tool returns ids (upstream `server/index.ts`, lines ~140 and ~255–278 at `238df6c`).
+- **VP-003**: The core connector's `list_thoughts` lists the most recent thoughts with optional filters on `metadata.type`, topic, person and days, and `thought_stats` counts thoughts by type and topic (upstream `server/index.ts`, lines ~289–330 and ~366 at `238df6c`).
+- **VP-004**: The base `upsert_thought` computes `content_fingerprint` from the trimmed, lower-cased, whitespace-collapsed content, and on a conflict anywhere in the `thoughts` table it merges the new metadata into the existing row instead of inserting (upstream `docs/01-getting-started.md`, `upsert_thought`, at `238df6c`).
