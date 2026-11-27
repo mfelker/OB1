@@ -186,9 +186,9 @@ export function makeCheckout({ withIntegration = true, hide = [] } = {}) {
 }
 
 /**
- * Shell the setup tests run setup.sh under: dash where present, else /bin/sh. On macOS /bin/sh is
- * bash, which accepts bashisms that Debian and Ubuntu's sh (dash) rejects; dash keeps the tests
- * strict about POSIX sh on every host.
+ * Shell the tests run the recipe's scripts under (setup.sh and init/create-bucket.sh): dash where
+ * present, else /bin/sh. On macOS /bin/sh is bash, which accepts bashisms that Debian and Ubuntu's
+ * sh (dash) rejects; dash keeps the tests strict about POSIX sh on every host (H4, H5).
  */
 export const SETUP_SHELL = existsSync("/bin/dash") ? "/bin/dash" : "/bin/sh";
 
@@ -278,7 +278,7 @@ export function makeBucketEnv({ script = join(RECIPE_DIR, "init", "create-bucket
   return {
     root,
     run(env = {}) {
-      const r = spawnSync("/bin/sh", [script], {
+      const r = spawnSync(SETUP_SHELL, [script], {
         encoding: "utf8",
         env: { PATH: bin, STUB_CURL_LOG: log, STUB_CURL_STATE: state, ...env },
       });
