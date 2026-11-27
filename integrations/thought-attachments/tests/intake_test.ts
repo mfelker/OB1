@@ -47,3 +47,7 @@ Deno.test("U119 an image declared one byte over the image cap is refused, naming
   assertStringIncludes(refusal.message, "10485760");
   assertStringIncludes(refusal.message, "10485761");
 });
+
+Deno.test("U118 an image declared at exactly the image cap is accepted", () => {
+  assertEquals(checkDeclared({ name: "a.jpg", type: "image/jpeg", size: IMAGE_CAP }, settingsWith()), null);
+});
