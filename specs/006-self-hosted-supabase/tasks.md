@@ -213,13 +213,13 @@ Stack configuration, in `F/tests/compose.test.mjs`. Each test runs `docker compo
 
 **Purpose**: pass every constitution Quality Gate, then land in the lane.
 
-- [ ] T039 Refactor with all tests green (red-green-REFACTOR).
-- [ ] T040 [P] `F/metadata.json` validates against `W/.github/metadata.schema.json`.
-- [ ] T041 [P] `markdownlint-cli2 --config .github/.markdownlint.jsonc "recipes/self-hosted-supabase-mcp/**/*.md"` in `W`.
-- [ ] T042 [P] README check: Prerequisites, numbered steps, Expected Outcome, every relative link resolves (in `W`, where 004's folder exists), and the `docs/05-tool-audit.md` link.
-- [ ] T043 [P] Secret, binary, profanity and SQL-safety scan of `F`, plus the OB1 gate's review checks run locally with the upstream title (all rules; SC-008).
+- [x] T039 Refactor with all tests green (red-green-REFACTOR).
+- [x] T040 [P] `F/metadata.json` validates against `W/.github/metadata.schema.json`.
+- [x] T041 [P] `markdownlint-cli2 --config .github/.markdownlint.jsonc "recipes/self-hosted-supabase-mcp/**/*.md"` in `W`.
+- [x] T042 [P] README check: Prerequisites, numbered steps, Expected Outcome, every relative link resolves (in `W`, where 004's folder exists), and the `docs/05-tool-audit.md` link.
+- [x] T043 [P] Secret, binary, profanity and SQL-safety scan of `F`, plus the OB1 gate's review checks run locally with the upstream title (all rules; SC-008).
 - [x] T044 TDD audit: `/speckit-tdd-verify` writes `M/specs/006-self-hosted-supabase/tdd/verification.md` with verdict PASS or PASS_WITH_GAPS (Quality Gate 1). Ticked 2026-11-27 on the second re-audit at `9744cd2` (report `e1125f0`): PASS_WITH_GAPS under the owner exceptions T066 and T073 (FAIL under the rubric as written). The owner ruled that the 11 criteria covered only by the recorded Mac and Linux live runs count as a gap, not HIGH. T081 and T082 are non-blocking.
-- [ ] T045 Scope check: `git -C W diff --stat main...HEAD`, run against fork `main`, which has 004, lists only `recipes/self-hosted-supabase-mcp/`.
+- [x] T045 Scope check: `git -C W diff --stat main...HEAD`, run against fork `main`, which has 004, lists only `recipes/self-hosted-supabase-mcp/`. T039–T043 and T045 were run locally on 2026-11-27 at `9744cd2`; evidence is in `evidence/gates/`.
 - [ ] T046 **Fork landing, asking the owner before each push or PR.**
   1. `git -C W push -u origin contrib/mfelker/self-hosted-supabase`.
   2. `gh pr create -R mfelker/OB1 --base main --head contrib/mfelker/self-hosted-supabase --title "[recipes] Lean self-hosted Supabase for Open Brain (fork landing)"`. The `[category]` title is required by the gate's PR-format rule; the body ends with the "Generated with Claude Code" line only.

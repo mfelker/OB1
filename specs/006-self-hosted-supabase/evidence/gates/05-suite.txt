@@ -1,0 +1,3 @@
+[tdd] suite node-plain recipes/self-hosted-supabase-mcp: pass (tests passed)
+[tdd] suite sql recipes/self-hosted-supabase-mcp: pass (tests passed)
+[tdd] suite feature=specs/006-self-hosted-supabase folder=recipes/self-hosted-supabase-mcp: tests=60 pass=60 fail=0 → pass

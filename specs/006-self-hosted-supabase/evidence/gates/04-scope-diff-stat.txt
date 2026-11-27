@@ -1,0 +1,19 @@
+ recipes/self-hosted-supabase-mcp/.gitignore        |   1 +
+ recipes/self-hosted-supabase-mcp/README.md         | 226 ++++++++++++++
+ recipes/self-hosted-supabase-mcp/db/ob1-schema.sql | 127 ++++++++
+ .../self-hosted-supabase-mcp/docker-compose.yml    |   5 +
+ .../self-hosted-supabase-mcp/init/create-bucket.sh |  23 ++
+ recipes/self-hosted-supabase-mcp/lean.override.yml |  56 ++++
+ recipes/self-hosted-supabase-mcp/metadata.json     |  21 ++
+ recipes/self-hosted-supabase-mcp/setup.sh          |  86 ++++++
+ .../tests/acceptance.test.mjs                      | 142 +++++++++
+ .../tests/compose.test.mjs                         | 152 ++++++++++
+ .../tests/create-bucket.test.mjs                   |  97 ++++++
+ .../tests/fixtures/compose/docker-compose.yml      |  71 +++++
+ .../tests/harness.test.mjs                         |  54 ++++
+ .../tests/helpers/harness.mjs                      | 305 +++++++++++++++++++
+ .../tests/schema-drift.test.mjs                    |  40 +++
+ .../self-hosted-supabase-mcp/tests/setup.test.mjs  | 326 +++++++++++++++++++++
+ .../tests/verify-rerun.test.mjs                    |  26 ++
+ recipes/self-hosted-supabase-mcp/tests/verify.sql  |  61 ++++
+ 18 files changed, 1819 insertions(+)
