@@ -47,5 +47,5 @@ export function checkActual(
   info: { size: number; createdAt: string },
   settings: Settings,
 ): Refusal | null {
-  throw new Error("not implemented");
+  return null;
 }

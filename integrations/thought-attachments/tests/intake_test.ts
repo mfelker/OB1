@@ -1,8 +1,8 @@
 /** Intake checks (T020, T035, T053): declared and actual file details. */
 import { assert, assertEquals, assertStringIncludes } from "jsr:@std/assert@1.0.19";
-import { baseName, checkDeclared, sniffType } from "../src/intake.ts";
+import { baseName, checkActual, checkDeclared, sniffType } from "../src/intake.ts";
 import { loadSettings } from "../src/settings.ts";
-import type { Settings } from "../src/types.ts";
+import type { AcceptedType, AttachmentRow, Settings } from "../src/types.ts";
 import { envGetter } from "./helpers/env.ts";
 import { heicBytes, jpegBytes, pngBytes, textPdf, webpBytes } from "./helpers/fixtures.ts";
 
@@ -104,4 +104,43 @@ Deno.test("U144 sniffType returns null for any other bytes and for empty input",
   assertEquals(sniffType(new Uint8Array()), null);
   assertEquals(sniffType(new TextEncoder().encode("PK\u0003\u0004 zip archive")), null);
   assertEquals(sniffType(new TextEncoder().encode("plain text, not a file")), null);
+});
+
+/** A pending attachment declared as `type` and `size`. `page_count` is what the finisher read from the stored PDF. */
+function rowFor(type: AcceptedType, size: number, pageCount: number | null = null): AttachmentRow {
+  return {
+    id: "a1b2c3d4-0000-4000-8000-000000000000",
+    parent_thought_id: "11111111-1111-4111-8111-111111111111",
+    parent_created_here: false,
+    file_name: "file",
+    declared_type: type,
+    declared_size: size,
+    expected_kind: null,
+    actual_type: null,
+    actual_size: null,
+    page_count: pageCount,
+    content_hash: null,
+    storage_path: "attachments/a1b2c3d4-0000-4000-8000-000000000000/file",
+    sensitivity_tier: "personal",
+    state: "pending_upload",
+    state_reason: null,
+    last_rebuild_error: null,
+    caption_model: null,
+    derived_count: 0,
+    upload_deadline: "2026-11-27T13:00:00.000Z",
+    page_token_hash: null,
+    busy_op: null,
+    busy_until: null,
+    busy_token: null,
+    created_at: "2026-11-27T12:00:00.000Z",
+    updated_at: "2026-11-27T12:00:00.000Z",
+    processed_at: null,
+  };
+}
+
+const info = (size: number) => ({ size, createdAt: "2026-11-27T12:10:00.000Z" });
+
+Deno.test("U148 checkActual accepts a file whose sniffed type and exact size equal the declaration, within the caps", () => {
+  const bytes = jpegBytes(5000);
+  assertEquals(checkActual(rowFor("image/jpeg", 5000), bytes, info(5000), settingsWith()), null);
 });
