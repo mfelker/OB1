@@ -17,14 +17,29 @@ export async function fingerprint(content: string): Promise<string> {
   return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-export async function passageRow(
+export function passageRow(
   row: AttachmentRow,
   passage: Passage,
   embedding: number[],
   now: Date,
 ): Promise<DerivedRow> {
+  return derivedRow(row, locatorFor(passage.pages), passage.text, {
+    method: "deterministic_conversion",
+    source_locator: locatorFor(passage.pages),
+  }, embedding, now);
+}
+
+/** The row shared by passages and captions: source line, fingerprint and the data-model metadata. */
+async function derivedRow(
+  row: AttachmentRow,
+  locator: string,
+  body: string,
+  provenance: Record<string, unknown>,
+  embedding: number[],
+  now: Date,
+): Promise<DerivedRow> {
   const fileName = baseName(row.file_name ?? "");
-  const content = sourceLine(fileName, locatorFor(passage.pages), row.id.slice(0, 8)) + "\n" + passage.text;
+  const content = sourceLine(fileName, locator, row.id.slice(0, 8)) + "\n" + body;
   const hash = await fingerprint(content);
   const metadata = {
     source: "local_document",
@@ -38,12 +53,7 @@ export async function passageRow(
     sensitivity_tier: row.sensitivity_tier,
     type: "reference",
     topics: ["attachment", fileName],
-    provenance: {
-      method: "deterministic_conversion",
-      source_locator: locatorFor(passage.pages),
-      artifact: fileName,
-      review_status: "unreviewed",
-    },
+    provenance: { ...provenance, artifact: fileName, review_status: "unreviewed" },
     attachment_id: row.id,
     parent_thought_id: row.parent_thought_id,
   };
@@ -61,7 +71,11 @@ export function captionRow(
   embedding: number[],
   now: Date,
 ): Promise<DerivedRow> {
-  throw new Error("not implemented");
+  return derivedRow(row, "photo", caption.text, {
+    method: "llm_extraction",
+    source_locator: "photo",
+    extractor_model: caption.model,
+  }, embedding, now);
 }
 
 /** Metadata of a parent note created by attaching (data-model.md). */

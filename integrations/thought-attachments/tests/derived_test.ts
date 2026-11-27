@@ -143,3 +143,13 @@ Deno.test("U140 the metadata contains no URL, token or absolute path, even from 
   assertEquals(row.metadata.topics, ["attachment", "dishwasher-manual.pdf"]);
   assertStringIncludes(row.content, "From dishwasher-manual.pdf,");
 });
+
+const SHELF = rowFor("shelf.jpg", { id: "9f8e7d6c-1111-4222-8333-444444444444", declared_type: "image/jpeg", actual_type: "image/jpeg" });
+const CAPTION = { text: "A grey metal garage shelf with three boxed furnace filters.", model: "test/vision-model" };
+
+Deno.test("U145 a caption row's content is the source line with photo, a line break, then the caption", async () => {
+  const row = await captionRow(SHELF, CAPTION, EMBEDDING, NOW);
+  assertEquals(row.content, "From shelf.jpg, photo (attachment 9f8e7d6c)\nA grey metal garage shelf with three boxed furnace filters.");
+  assertEquals(row.embedding, EMBEDDING);
+  assertEquals(row.fingerprint, await fingerprint(row.content));
+});
