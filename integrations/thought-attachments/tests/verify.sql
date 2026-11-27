@@ -791,3 +791,10 @@ declare r jsonb := pg_temp.note_case('refused', false, interval '1 hour');
 begin
   if (r->'removed'->>'noteRemoved')::boolean is not false or not (r->>'parent_still_there')::boolean then raise exception 'U101: %', r; end if;
 end $$;
+
+-- U102: remove keeps the note when the attachment is processed
+do $$
+declare r jsonb := pg_temp.note_case('processed', true, interval '1 hour');
+begin
+  if (r->'removed'->>'noteRemoved')::boolean is not false or not (r->>'parent_still_there')::boolean then raise exception 'U102: %', r; end if;
+end $$;
