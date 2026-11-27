@@ -2,7 +2,7 @@
 import { checkActual, sniffType } from "./intake.ts";
 import { captionRow, passageRow, sourceLine } from "./derived.ts";
 import { toPassages } from "./passages.ts";
-import { openPdf } from "./pdf.ts";
+import { isScanned, openPdf } from "./pdf.ts";
 import type { AcceptedType, AttachmentRow, Deps, FinishOutcome, PdfDoc, R, Services, StatePatch } from "./types.ts";
 
 /** `sha256:<hex>` of the bytes, as `content_hash` stores it. */
@@ -105,13 +105,23 @@ export function createFinisher(deps: Deps): Services {
     };
     const stored = { ...row, content_hash: hash };
     return opened
-      ? await pdfPath(stored, token, opened, actual)
+      ? await pdfPath(stored, token, opened, actual, rebuild)
       : await photoPath(stored, token, bytes, actual, rebuild);
   }
 
-  async function pdfPath(row: AttachmentRow, token: string, pdf: R<PdfDoc>, actual: StatePatch): Promise<FinishOutcome> {
+  async function pdfPath(row: AttachmentRow, token: string, pdf: R<PdfDoc>, actual: StatePatch, rebuild: boolean): Promise<FinishOutcome> {
     if ("error" in pdf) throw new Error(pdf.error);
     const pageTexts = await pdf.data.pageTexts();
+    if (isScanned(pageTexts, settings)) {
+      return await ends(
+        row,
+        token,
+        { ...actual, page_count: pdf.data.pageCount },
+        rebuild,
+        "scanned",
+        "No text layer was found in this PDF (it looks scanned), so text search won't cover it yet.",
+      );
+    }
     const shortId = row.id.slice(0, 8);
     const name = row.file_name as string;
     const passages = toPassages(
@@ -150,10 +160,24 @@ export function createFinisher(deps: Deps): Services {
     rebuild: boolean,
     reason: string,
   ): Promise<FinishOutcome> {
+    return await ends(row, token, actual, rebuild, "not_captioned", reason);
+  }
+
+  /** An attempt that wrote nothing ends in `state` with its reason; a rebuild keeps `processed` instead (FR-027). */
+  async function ends(
+    row: AttachmentRow,
+    token: string,
+    actual: StatePatch,
+    rebuild: boolean,
+    state: "scanned" | "not_captioned" | "failed",
+    reason: string,
+  ): Promise<FinishOutcome> {
     if (rebuild) return await rebuildFailed(row, token, reason);
-    const set = await store.setState(row.id, token, { ...actual, state: "not_captioned", state_reason: reason });
+    const set = await store.setState(row.id, token, { ...actual, state, state_reason: reason });
     if ("error" in set) throw new Error(set.error);
-    return { state: "not_captioned", reason, derived_count: 0 };
+    const out: FinishOutcome = { state, reason, derived_count: 0 };
+    if (set.data.page_count !== null) out.page_count = set.data.page_count;
+    return out;
   }
 
   async function photoPath(row: AttachmentRow, token: string, bytes: Uint8Array, actual: StatePatch, rebuild: boolean): Promise<FinishOutcome> {

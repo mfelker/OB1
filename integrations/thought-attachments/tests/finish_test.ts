@@ -9,7 +9,7 @@ import { Clock } from "./helpers/clock.ts";
 import { envGetter, EMBEDDING_API_BASE, VISION_API_BASE } from "./helpers/env.ts";
 import { embeddingResponder, FakeFetch, visionResponder } from "./helpers/fake_fetch.ts";
 import { FakeStore, shortId } from "./helpers/fake_store.ts";
-import { contentHash, jpegBytes, textPdf } from "./helpers/fixtures.ts";
+import { contentHash, jpegBytes, scannedPdf, textPdf } from "./helpers/fixtures.ts";
 
 function settingsWith(overrides: Record<string, string | undefined> = {}): Settings {
   const result = loadSettings(envGetter(overrides));
@@ -85,7 +85,7 @@ function pending(
 
 Deno.test("U182 a pending PDF with a matching upload ends processed, with derived_count equal to the passage count and page_count set", async () => {
   const r = await rig();
-  const att = pending(r, await textPdf(["alpha beta gamma", "delta epsilon"]));
+  const att = pending(r, await textPdf(["alpha beta gamma delta epsilon zeta", "eta theta iota kappa lambda mu"]));
   const out = await r.finish(att.id, {});
   assertEquals(out.state, "processed");
   assertEquals(out.page_count, 2);
@@ -98,7 +98,7 @@ Deno.test("U182 a pending PDF with a matching upload ends processed, with derive
 
 Deno.test("U183 finishing sets actual_type, actual_size, page_count, content_hash and processed_at", async () => {
   const r = await rig();
-  const bytes = await textPdf(["alpha beta gamma", "delta epsilon"]);
+  const bytes = await textPdf(["alpha beta gamma delta epsilon zeta", "eta theta iota kappa lambda mu"]);
   const att = pending(r, bytes);
   r.clock.advanceMinutes(5);
   await r.finish(att.id, {});
@@ -112,7 +112,7 @@ Deno.test("U183 finishing sets actual_type, actual_size, page_count, content_has
 
 Deno.test("U184 every derived row's input_hash equals the attachment's content_hash", async () => {
   const r = await rig();
-  const bytes = await textPdf(["alpha beta gamma", "delta epsilon"]);
+  const bytes = await textPdf(["alpha beta gamma delta epsilon zeta", "eta theta iota kappa lambda mu"]);
   const att = pending(r, bytes);
   await r.finish(att.id, {});
   const derived = r.store.derivedOf(att.id);
@@ -124,7 +124,7 @@ Deno.test("U184 every derived row's input_hash equals the attachment's content_h
 
 Deno.test("U185 after a processed finish, a new claim on the attachment succeeds at once", async () => {
   const r = await rig();
-  const att = pending(r, await textPdf(["alpha beta gamma"]));
+  const att = pending(r, await textPdf(["alpha beta gamma delta epsilon zeta"]));
   const out = await r.finish(att.id, {});
   assertEquals(out.state, "processed");
   const claim = await r.store.claim(att.id, "remove", 60);
@@ -133,19 +133,19 @@ Deno.test("U185 after a processed finish, a new claim on the attachment succeeds
 
 Deno.test("U186 an owner thought equal to a passage's body is unchanged after the finish", async () => {
   const r = await rig();
-  const owner = await r.store.seedThought({ content: "alpha beta gamma", metadata: { mine: true } });
+  const owner = await r.store.seedThought({ content: "alpha beta gamma delta epsilon zeta", metadata: { mine: true } });
   const before = structuredClone(r.store.thought(owner.id));
-  const att = pending(r, await textPdf(["alpha beta gamma"]));
+  const att = pending(r, await textPdf(["alpha beta gamma delta epsilon zeta"]));
   const out = await r.finish(att.id, {});
   assertEquals(out.state, "processed");
   assertEquals(r.store.thought(owner.id), before);
   assertEquals(r.store.derivedOf(att.id).length, 1);
-  assertStringIncludes(r.store.derivedOf(att.id)[0].content, "alpha beta gamma");
+  assertStringIncludes(r.store.derivedOf(att.id)[0].content, "alpha beta gamma delta epsilon zeta");
 });
 
 Deno.test("U187 a plain finish on processed returns the existing outcome with no embedding or vision request and no write", async () => {
   const r = await rig();
-  const att = pending(r, await textPdf(["alpha beta gamma", "delta epsilon"]));
+  const att = pending(r, await textPdf(["alpha beta gamma delta epsilon zeta", "eta theta iota kappa lambda mu"]));
   const first = await r.finish(att.id, {});
   assertEquals(first.state, "processed");
   const requests = r.ff.requests.length;
@@ -159,7 +159,7 @@ Deno.test("U187 a plain finish on processed returns the existing outcome with no
 
 Deno.test("U188 bytes already on another attachment of the parent end refused, naming its short id, with the copy deleted", async () => {
   const r = await rig();
-  const bytes = await textPdf(["alpha beta gamma", "delta epsilon"]);
+  const bytes = await textPdf(["alpha beta gamma delta epsilon zeta", "eta theta iota kappa lambda mu"]);
   const first = pending(r, bytes);
   assertEquals((await r.finish(first.id, {})).state, "processed");
   const second = pending(r, bytes, { file_name: "copy.pdf" });
@@ -176,7 +176,7 @@ Deno.test("U188 bytes already on another attachment of the parent end refused, n
 
 Deno.test("U322 when the only attachment with those bytes is refused, the finish is not refused for them", async () => {
   const r = await rig();
-  const bytes = await textPdf(["alpha beta gamma"]);
+  const bytes = await textPdf(["alpha beta gamma delta epsilon zeta"]);
   pending(r, bytes, { file_name: "old.pdf", state: "refused", content_hash: await contentHash(bytes) });
   const second = pending(r, bytes, { file_name: "again.pdf" });
   const out = await r.finish(second.id, {});
@@ -185,7 +185,7 @@ Deno.test("U322 when the only attachment with those bytes is refused, the finish
 
 Deno.test("U323 the same bytes on an attachment of another parent don't refuse the finish", async () => {
   const r = await rig();
-  const bytes = await textPdf(["alpha beta gamma"]);
+  const bytes = await textPdf(["alpha beta gamma delta epsilon zeta"]);
   const otherParent = (await r.store.seedThought({ content: "another thought" })).id;
   pending(r, bytes, { parent_thought_id: otherParent, file_name: "theirs.pdf", state: "processed", content_hash: await contentHash(bytes) });
   const mine = pending(r, bytes, { file_name: "mine.pdf" });
@@ -196,7 +196,7 @@ Deno.test("U323 the same bytes on an attachment of another parent don't refuse t
 
 Deno.test("U324 a first attachment with those bytes in state failed still counts: the second ends refused, naming it", async () => {
   const r = await rig();
-  const bytes = await textPdf(["alpha beta gamma"]);
+  const bytes = await textPdf(["alpha beta gamma delta epsilon zeta"]);
   const first = pending(r, bytes, { file_name: "first.pdf", state: "failed", content_hash: await contentHash(bytes) });
   const second = pending(r, bytes, { file_name: "second.pdf" });
   const out = await r.finish(second.id, {});
@@ -349,7 +349,7 @@ Deno.test("U326 a successful rebuild after a failed one clears last_rebuild_erro
 
 Deno.test("U325 finishing a failed attachment again, or rebuilding a processed one, is not refused as a duplicate of itself", async () => {
   const r = await rig();
-  const bytes = await textPdf(["alpha beta gamma"]);
+  const bytes = await textPdf(["alpha beta gamma delta epsilon zeta"]);
   const att = pending(r, bytes, { state: "failed", state_reason: "boom", content_hash: await contentHash(bytes) });
   const again = await r.finish(att.id, {});
   assertEquals(again.state, "processed");
@@ -360,7 +360,7 @@ Deno.test("U325 finishing a failed attachment again, or rebuilding a processed o
 });
 
 Deno.test("U198 when checkActual refuses, the object is deleted, the row is refused with the actual values, and no derived thought is written", async () => {
-  const pdf = await textPdf(["alpha beta gamma", "delta epsilon"]);
+  const pdf = await textPdf(["alpha beta gamma delta epsilon zeta", "eta theta iota kappa lambda mu"]);
   const cases: { name: string; overrides: Record<string, string>; row: Partial<AttachmentRow>; bytes: Uint8Array; code: string }[] = [
     { name: "wrong type", overrides: {}, row: { declared_type: "image/jpeg" }, bytes: pdf, code: "image/jpeg" },
     { name: "wrong size", overrides: {}, row: { declared_size: 5 }, bytes: pdf, code: "not the declared 5" },
@@ -385,7 +385,7 @@ Deno.test("U198 when checkActual refuses, the object is deleted, the row is refu
 
 Deno.test("U199 an object created after upload_deadline is refused and deleted", async () => {
   const r = await rig();
-  const bytes = await textPdf(["alpha beta gamma"]);
+  const bytes = await textPdf(["alpha beta gamma delta epsilon zeta"]);
   const deadline = new Date(r.clock.now().getTime() + 10 * 60_000);
   const att = pending(r, bytes, { upload_deadline: deadline.toISOString() }, new Date(deadline.getTime() + 1000).toISOString());
   r.clock.advanceMinutes(5);
@@ -399,7 +399,7 @@ Deno.test("U199 an object created after upload_deadline is refused and deleted",
 
 Deno.test("U200 an object created exactly at upload_deadline is not refused for its timing", async () => {
   const r = await rig();
-  const bytes = await textPdf(["alpha beta gamma"]);
+  const bytes = await textPdf(["alpha beta gamma delta epsilon zeta"]);
   const deadline = new Date(r.clock.now().getTime() + 10 * 60_000);
   const att = pending(r, bytes, { upload_deadline: deadline.toISOString() }, deadline.toISOString());
   r.clock.advanceMinutes(5);
@@ -409,7 +409,7 @@ Deno.test("U200 an object created exactly at upload_deadline is not refused for 
 
 Deno.test("U201 finishing a refused attachment is refused, and nothing changes", async () => {
   const r = await rig();
-  const att = pending(r, await textPdf(["alpha beta gamma"]), { state: "refused", state_reason: "too big" });
+  const att = pending(r, await textPdf(["alpha beta gamma delta epsilon zeta"]), { state: "refused", state_reason: "too big" });
   const before = structuredClone(r.store.attachment(att.id));
   const callsBefore = r.store.calls.length;
   const out = await r.finish(att.id, {});
@@ -460,7 +460,7 @@ Deno.test("U203 with no object after the deadline, the outcome is 'upload window
 
 Deno.test("U204 after a refused or no-file outcome, a new claim succeeds at once", async () => {
   const r = await rig();
-  const refused = pending(r, await textPdf(["alpha beta gamma"]), { declared_size: 5 });
+  const refused = pending(r, await textPdf(["alpha beta gamma delta epsilon zeta"]), { declared_size: 5 });
   assertEquals((await r.finish(refused.id, {})).state, "refused");
   const claimRefused = await r.store.claim(refused.id, "remove", 60);
   assert("data" in claimRefused && "token" in claimRefused.data);
@@ -474,4 +474,21 @@ Deno.test("U204 after a refused or no-file outcome, a new claim succeeds at once
   assertEquals((await r.finish(none.id, {})).state, "pending_upload");
   const claimNone = await r.store.claim(none.id, "finish", 60);
   assert("data" in claimNone && "token" in claimNone.data);
+});
+
+Deno.test("U205 a text-less PDF ends scanned with the reason and 'text search won't cover it yet', no passages, and the object kept", async () => {
+  const r = await rig();
+  const att = pending(r, await scannedPdf(2));
+  const out = await r.finish(att.id, {});
+  assertEquals(out.state, "scanned");
+  assertStringIncludes(out.reason ?? "", "text search won't cover it yet");
+  assertEquals(out.derived_count, 0);
+  assertEquals(out.page_count, 2);
+  const row = r.store.attachment(att.id) as AttachmentRow;
+  assertEquals(row.state, "scanned");
+  assertEquals(row.state_reason, out.reason);
+  assertEquals(row.page_count, 2);
+  assertEquals(r.store.derivedOf(att.id).length, 0);
+  assertEquals(r.store.objects.has(att.storage_path as string), true);
+  assertEquals(r.ff.requests.length, 0);
 });
