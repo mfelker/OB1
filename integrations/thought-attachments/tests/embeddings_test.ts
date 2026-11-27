@@ -220,3 +220,20 @@ Deno.test("U397 every request carries dimensions equal to EMBEDDING_DIMENSIONS (
   }
   assertEquals(sent, [[1536], [1024, 1024]]);
 });
+
+const DIMENSIONS_REFUSED = { status: 400, body: { error: { message: "This model does not support specifying dimensions." } } };
+
+Deno.test("U398 a 4xx that rejects dimensions is retried once without the parameter, and the retry's vectors are returned", async () => {
+  const ff = new FakeFetch().on("POST", URL_, DIMENSIONS_REFUSED, embeddingResponder(1536));
+  const out = await createEmbeddingClient(settingsWith(), ff.fetch).embed(["alpha"]);
+  assertEquals(
+    { data: "data" in out ? out.data : out, bodies: ff.requests.map((r) => r.body) },
+    {
+      data: [vectorFor("alpha", 1536)],
+      bodies: [
+        { model: EMBEDDING_MODEL, input: ["alpha"], dimensions: 1536 },
+        { model: EMBEDDING_MODEL, input: ["alpha"] },
+      ],
+    },
+  );
+});

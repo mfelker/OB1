@@ -11,19 +11,20 @@ export function createEmbeddingClient(
     return key ? text.split(key).join("[redacted]") : text;
   }
 
-  async function embedBatch(batch: string[]): Promise<R<number[][]>> {
-    let response: Response;
+  async function post(body: Record<string, unknown>): Promise<R<Response>> {
     try {
-      response = await fetch(`${settings.embeddingApiBase}/embeddings`, {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-          ...(settings.embeddingApiKey
-            ? { authorization: `Bearer ${settings.embeddingApiKey}` }
-            : {}),
-        },
-        body: JSON.stringify({ model: settings.embeddingModel, input: batch, dimensions: settings.embeddingDimensions }),
-      });
+      return {
+        data: await fetch(`${settings.embeddingApiBase}/embeddings`, {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            ...(settings.embeddingApiKey
+              ? { authorization: `Bearer ${settings.embeddingApiKey}` }
+              : {}),
+          },
+          body: JSON.stringify(body),
+        }),
+      };
     } catch (e) {
       return {
         error: redact(
@@ -33,10 +34,28 @@ export function createEmbeddingClient(
         ),
       };
     }
+  }
+
+  async function embedBatch(batch: string[]): Promise<R<number[][]>> {
+    const request = { model: settings.embeddingModel, input: batch };
+    let sent = await post({ ...request, dimensions: settings.embeddingDimensions });
+    if ("error" in sent) return sent;
+    let response = sent.data;
+    let errorText: string | undefined;
     if (!response.ok) {
+      errorText = await response.text();
+      // An endpoint that refuses the dimensions parameter gets one retry without it (spec 004 model_client.ts).
+      if (response.status >= 400 && response.status < 500 && /dimension|matryoshka/i.test(errorText)) {
+        sent = await post(request);
+        if ("error" in sent) return sent;
+        response = sent.data;
+        errorText = response.ok ? undefined : await response.text();
+      }
+    }
+    if (errorText !== undefined) {
       return {
         error: `embedding endpoint answered HTTP ${response.status}: ${
-          redact(bodyReason(await response.text())).slice(0, 300)
+          redact(bodyReason(errorText)).slice(0, 300)
         }`,
       };
     }
