@@ -163,7 +163,7 @@ Streams code against these. The signatures are the only shared contract. Behavio
   6. Before T013 (it affects T044 and stream D's T047): how the copy of `upload-page.html` that the function serves on self-hosted gets its API address, given that the address is "written in the file" (R5).
 - [ ] T006 Write the seams in `F/src/types.ts` and the throwing stubs in `F/src/{settings,links,intake,pdf,passages,derived,embeddings,vision,store,finish,tools,page_routes,app}.ts`, exactly as listed under **Seams**. Write `F/index.ts` as the one-line entry, `Deno.serve(createApp(productionDeps()).fetch)`. Use full specifiers only. Run `deno check` on every file, then commit.
 - [ ] T007 Write `F/tests/helpers/{fake_fetch,fake_store,clock,fixtures,env,mcp,todo}.ts` per **Seams**. Commit.
-- [ ] T008 Tests first in `F/tests/settings_test.ts`, then `loadSettings(getEnv)` in `F/src/settings.ts`, covering every row of contracts/settings.md:
+- [ ] T008 [U1] [U2] [U3] [U4] [U5] [U6] [U7] [U8] [U9] [U10] [U11] [U12] [U13] [U14] [U15] [U16] [U17] [U18] [U19] Tests first in `F/tests/settings_test.ts`, then `loadSettings(getEnv)` in `F/src/settings.ts`, covering every row of contracts/settings.md:
   - each default
   - `EMBEDDING_API_KEY` falls back to `OPENROUTER_API_KEY` (R3)
   - `PUBLIC_BASE_URL` falls back to `SUPABASE_PUBLIC_URL`, then `SUPABASE_URL` (R6)
@@ -173,7 +173,7 @@ Streams code against these. The signatures are the only shared contract. Behavio
   - no setting value appears in any problem's reason (FR-009)
 
   FR-017, R10, R13.
-- [ ] T009 Tests first in `F/tests/links_test.ts`, then `F/src/links.ts`:
+- [ ] T009 [U20] [U21] [U22] [U23] [U24] Tests first in `F/tests/links_test.ts`, then `F/src/links.ts`:
   - `publicUrl` rewrites the internal Supabase origin of a signed link to `PUBLIC_BASE_URL` and keeps its path and query (R6)
   - `pageLink` is `UPLOAD_PAGE_URL#t=<token>`, with the token only in the fragment (contracts/upload-page.md "The link")
   - `curlLine` is a ready-to-run `PUT` with the returned headers (FR-002a) and contains no brain key
@@ -187,7 +187,7 @@ Streams code against these. The signatures are the only shared contract. Behavio
   - `--filter "/^<name> /"` on this file runs exactly one test
 
   Commit.
-- [ ] T011 Fake-store self-tests in `F/tests/helpers/fake_store_test.ts`. The fake re-implements database semantics that acceptance tests rely on, so each rule gets its own test:
+- [ ] T011 [U25] [U26] [U27] [U28] [U29] [U30] [U31] [U32] [U33] Fake-store self-tests in `F/tests/helpers/fake_store_test.ts`. The fake re-implements database semantics that acceptance tests rely on, so each rule gets its own test:
   - a claim is refused while unexpired, naming the running operation
   - a claim succeeds after its expiry by the clock
   - a write with a stale or foreign claim token is refused
@@ -198,7 +198,7 @@ Streams code against these. The signatures are the only shared contract. Behavio
   - `insertNote` with an existing fingerprint returns `created: false` (R17)
 
   The same rules are asserted against real SQL by stream Q (T015, T016, T038, T055, T061), so a fake that drifts shows up as a disagreement. Commit.
-- [ ] T012 Outer loop first: write `F/tests/acceptance_test.ts` with every `[A#]` behavior from `tdd/test-list.md` as a `todo(...)` test. Each drives `createApp(deps).fetch(new Request(…))` with `FakeStore`, the real embedding and vision clients over `fake_fetch`, `loadSettings` over `env.ts` and the fake clock. Each asserts the full observable result: JSON-RPC result text and structured fields, page-route status and JSON, fake-store rows and objects, and the fake-fetch request log. The acceptance set, by story:
+- [ ] T012 [A1] [A2] [A3] [A4] [A5] [A6] [A7] [A8] [A9] [A10] [A11] [A12] [A13] [A14] [A15] [A16] [A17] [A18] [A19] [A20] [A21] [A22] [A23] [A24] [A25] [A26] [A27] [A28] [A29] [A30] [A31] [A32] [A33] [A34] [A35] [A36] [A37] [A38] [A39] [A40] [A41] [A42] [A43] [A44] [A45] [A46] [A47] [A48] [A49] [A50] [A51] [A52] [A53] Outer loop first: write `F/tests/acceptance_test.ts` with every `[A#]` behavior from `tdd/test-list.md` as a `todo(...)` test. Each drives `createApp(deps).fetch(new Request(…))` with `FakeStore`, the real embedding and vision clients over `fake_fetch`, `loadSettings` over `env.ts` and the fake clock. Each asserts the full observable result: JSON-RPC result text and structured fields, page-route status and JSON, fake-store rows and objects, and the fake-fetch request log. The acceptance set, by story:
   - **US1**: scenarios 1–4, SC-001 (each listed sample fact is in a passage whose source line names the file, page range and short id; the findability half is live), SC-009, SC-012, SC-016.
   - **US2**: scenarios 1–3 and 5–7, SC-002 (caption half), SC-010, SC-011, SC-015, SC-018; US2 #4's HEIC bytes refused with the "share as JPEG" message.
   - **US3**: scenarios 1–2, SC-003 (link lifetime and no link for `pending_upload`/`refused`; byte identity and real expiry are live).
@@ -221,7 +221,7 @@ Streams code against these. The signatures are the only shared contract. Behavio
 
 ### Stream Q: data (`ta-data`, wave 1)
 
-- [ ] T014 [P] [US1] Tests first in `F/tests/verify.sql`, then `F/schema.sql` (fork-ci SQL runtime, after `bootstrap.sql`). Assert:
+- [ ] T014 [P] [US1] [U34] [U35] [U36] [U37] [U38] [U39] [U40] [U41] [U42] [U43] [U44] [U45] [U46] [U47] [U48] [U49] [U50] [U51] [U52] Tests first in `F/tests/verify.sql`, then `F/schema.sql` (fork-ci SQL runtime, after `bootstrap.sql`). Assert:
   - the table `thought_attachments` with every column, type, default and not-null rule of `data-model.md` `thought_attachments` (`thought_attachments.id`, `thought_attachments.parent_thought_id` with **no** foreign key, `thought_attachments.parent_created_here`, `thought_attachments.file_name`, `thought_attachments.declared_type`, `thought_attachments.declared_size`, `thought_attachments.expected_kind`, `thought_attachments.actual_type`, `thought_attachments.actual_size`, `thought_attachments.page_count`, `thought_attachments.content_hash`, `thought_attachments.storage_path`, `thought_attachments.sensitivity_tier`, `thought_attachments.state`, `thought_attachments.state_reason`, `thought_attachments.last_rebuild_error`, `thought_attachments.caption_model`, `thought_attachments.derived_count`, `thought_attachments.upload_deadline`, `thought_attachments.page_token_hash`, `thought_attachments.busy_op`, `thought_attachments.busy_until`, `thought_attachments.busy_token`, `thought_attachments.created_at`, `thought_attachments.updated_at` with its trigger, `thought_attachments.processed_at`)
   - the value rules that data-model.md states for `thought_attachments.declared_type`, `thought_attachments.expected_kind`, `thought_attachments.sensitivity_tier`, `thought_attachments.state` and `thought_attachments.busy_op`
   - the indexes on `parent_thought_id` and `content_hash`, and the partial unique `(parent_thought_id, content_hash)` index that excludes `refused` (FR-012)
@@ -230,34 +230,34 @@ Streams code against these. The signatures are the only shared contract. Behavio
   - when a `storage` schema exists, the bucket `ATTACHMENTS_BUCKET` (`ob1-files`) is private, limited to the four accepted MIME types and has no size limit of its own (R12); skipped when the schema is absent
   - the whole file runs twice on the same database
   - no `DROP`, `TRUNCATE` or unqualified `DELETE` in either file (CLAUDE.md guard rails)
-- [ ] T015 [P] [US1] Tests first in `F/tests/verify.sql`, then the write-derived function in `F/schema.sql` (`data-model.md` "Database functions"; R9, R10):
+- [ ] T015 [P] [US1] [U53] [U54] [U55] [U56] [U57] [U58] [U59] [U60] Tests first in `F/tests/verify.sql`, then the write-derived function in `F/schema.sql` (`data-model.md` "Database functions"; R9, R10):
   - it succeeds only with the caller's unexpired claim token
   - it inserts rows with `upsert_thought`'s fingerprint normalisation (fork-ci's bootstrap has no `upsert_thought`, so the test compares against the expression in `docs/01-getting-started.md` step 2.6)
   - a fingerprint conflict raises, and the existing thought (an owner thought with identical text) is unchanged (US1 #4, FR-022)
   - it replaces the attachment's previous derived set and sets the state fields and `thought_attachments.derived_count` in one transaction
   - a failure partway leaves the old set (FR-011, FR-027)
   - the duplicate-content outcome per T005.4
-- [ ] T016 [P] [US1] Tests first in `F/tests/verify.sql`, then the claim and release, dimension and exact-text functions in `F/schema.sql`:
+- [ ] T016 [P] [US1] [U61] [U62] [U63] [U64] [U65] [U66] [U67] [U68] Tests first in `F/tests/verify.sql`, then the claim and release, dimension and exact-text functions in `F/schema.sql`:
   - a claim is refused while unexpired, returning the running `thought_attachments.busy_op`
   - a claim succeeds after `thought_attachments.busy_until`, with a new `thought_attachments.busy_token` (FR-026, R10)
   - the dimension function returns `vector(1536)`'s 1536 on fork-ci's bootstrap (FR-007, R3)
   - the exact-text find takes the text as a parameter: a query containing `%`, `,`, `)` and `'` matches literally, and the function returns id, first line and date (FR-023, R11)
-- [ ] T017 [P] [US1] Tests first in `F/tests/store_test.ts`, then the database half of `createSupabaseStore` in `F/src/store.ts`: supabase-js with the fake fetch injected; each thought, attachment and claim method from **Seams** sends its RPC or PostgREST request; errors map to `{ error }` with no key in the text (FR-009). `matchThoughts` calls the base `match_thoughts` (R11). `getAttachment` accepts the 8-character short id and reports `not_found` and `ambiguous` (contracts/mcp-tools.md; `data-model.md` `thought_attachments.id`).
-- [ ] T018 [P] [US1] Tests first in `F/tests/store_test.ts`, then the Storage half of `F/src/store.ts`: `signUpload`, `objectInfo` (size and creation time), `download` and `deleteObject` on the bucket `ATTACHMENTS_BUCKET` at `attachments/<id>/<file_name>` (`data-model.md` `thought_attachments.storage_path`; R12). `signUpload`'s URL comes back unchanged; rewriting is `links.ts`'s job.
-- [ ] T019 [P] [US1] Tests first in `F/tests/schema_drift_test.ts`: every RPC name and named parameter that `F/src/store.ts` sends exists in `F/schema.sql` (read with `--allow-read`).
+- [ ] T017 [P] [US1] [U69] [U70] [U71] [U72] [U73] [U74] [U75] [U76] [U77] [U78] Tests first in `F/tests/store_test.ts`, then the database half of `createSupabaseStore` in `F/src/store.ts`: supabase-js with the fake fetch injected; each thought, attachment and claim method from **Seams** sends its RPC or PostgREST request; errors map to `{ error }` with no key in the text (FR-009). `matchThoughts` calls the base `match_thoughts` (R11). `getAttachment` accepts the 8-character short id and reports `not_found` and `ambiguous` (contracts/mcp-tools.md; `data-model.md` `thought_attachments.id`).
+- [ ] T018 [P] [US1] [U79] [U80] [U81] [U82] Tests first in `F/tests/store_test.ts`, then the Storage half of `F/src/store.ts`: `signUpload`, `objectInfo` (size and creation time), `download` and `deleteObject` on the bucket `ATTACHMENTS_BUCKET` at `attachments/<id>/<file_name>` (`data-model.md` `thought_attachments.storage_path`; R12). `signUpload`'s URL comes back unchanged; rewriting is `links.ts`'s job.
+- [ ] T019 [P] [US1] [U83] Tests first in `F/tests/schema_drift_test.ts`: every RPC name and named parameter that `F/src/store.ts` sends exists in `F/schema.sql` (read with `--allow-read`).
 
 ### Stream X: files (`ta-files`, wave 1)
 
-- [ ] T020 [P] [US1] Tests first in `F/tests/intake_test.ts`, then `baseName` and `checkDeclared` in `F/src/intake.ts`:
+- [ ] T020 [P] [US1] [U113] [U114] [U115] [U116] [U117] [U118] [U119] [U120] [U121] Tests first in `F/tests/intake_test.ts`, then `baseName` and `checkDeclared` in `F/src/intake.ts`:
   - `baseName` keeps only the base name, without path parts or control characters (`data-model.md` `thought_attachments.file_name`; spec edge case; FR-009)
   - `checkDeclared` refuses a type outside the four accepted types (`data-model.md` `thought_attachments.declared_type`) and a size over the cap for its type, naming the cap and the declared size (`data-model.md` `thought_attachments.declared_size`; `MAX_IMAGE_MB`, `MAX_PDF_MB`; FR-003)
-- [ ] T021 [P] [US1] Tests first in `F/tests/pdf_test.ts`, then `openPdf` in `F/src/pdf.ts` with `unpdf` (R2): the page count is available before any text is extracted (R1), and per-page text comes back in page order for `pdf-lib` fixtures.
-- [ ] T022 [P] [US1] Tests first in `F/tests/passages_test.ts`, then `toPassages` in `F/src/passages.ts`:
+- [ ] T021 [P] [US1] [U122] [U123] Tests first in `F/tests/pdf_test.ts`, then `openPdf` in `F/src/pdf.ts` with `unpdf` (R2): the page count is available before any text is extracted (R1), and per-page text comes back in page order for `pdf-lib` fixtures.
+- [ ] T022 [P] [US1] [U124] [U125] [U126] [U127] [U128] [U129] [U130] Tests first in `F/tests/passages_test.ts`, then `toPassages` in `F/src/passages.ts`:
   - every passage, its source line included, is at most `PASSAGE_MAX_CHARS` (FR-005, FR-025)
   - passages keep reading order and cover all the text
   - each records the page range it spans, including a passage that crosses a page boundary
   - a single over-long run of text is still split
-- [ ] T023 [P] [US1] Tests first in `F/tests/derived_test.ts`, then `sourceLine`, `fingerprint` and `passageRow` in `F/src/derived.ts`:
+- [ ] T023 [P] [US1] [U131] [U132] [U133] [U134] [U135] [U136] [U137] [U138] [U139] [U140] Tests first in `F/tests/derived_test.ts`, then `sourceLine`, `fingerprint` and `passageRow` in `F/src/derived.ts`:
   - the source line has the format of the data-model examples, with the page range and the short id (`data-model.md` `Derived thought.content`; FR-025)
   - `fingerprint` equals `upsert_thought`'s normalisation (VP-004; `data-model.md` `Derived thought.content_fingerprint`)
   - the metadata has every key of `data-model.md` `Derived thought.metadata`: `Derived thought.metadata.source`, `Derived thought.metadata.source_type`, `Derived thought.metadata.source_label`, `Derived thought.metadata.importer_name`, `Derived thought.metadata.importer_version`, `Derived thought.metadata.imported_at`, `Derived thought.metadata.input_hash`, `Derived thought.metadata.content_fingerprint`, `Derived thought.metadata.sensitivity_tier`, `Derived thought.metadata.type` (`reference`), `Derived thought.metadata.topics`, `Derived thought.metadata.provenance` (`deterministic_conversion`, `source_locator`, `artifact`, `review_status`), `Derived thought.metadata.attachment_id` and `Derived thought.metadata.parent_thought_id` (FR-008, FR-028)
@@ -265,7 +265,7 @@ Streams code against these. The signatures are the only shared contract. Behavio
 
 ### Stream E: model clients (`ta-models`, wave 1)
 
-- [ ] T024 [P] [US1] Tests first in `F/tests/embeddings_test.ts`, then `createEmbeddingClient` in `F/src/embeddings.ts` (R3; contracts/settings.md):
+- [ ] T024 [P] [US1] [U161] [U162] [U163] [U164] [U165] [U166] [U167] [U168] [U169] [U170] [U171] Tests first in `F/tests/embeddings_test.ts`, then `createEmbeddingClient` in `F/src/embeddings.ts` (R3; contracts/settings.md):
   - `POST <EMBEDDING_API_BASE>/embeddings` with `EMBEDDING_MODEL` and an array input of at most `EMBEDDING_BATCH_SIZE` texts; with `1`, one text per request
   - `Authorization: Bearer` with `EMBEDDING_API_KEY` (or its fallback)
   - vectors come back in input order across batches
@@ -274,35 +274,35 @@ Streams code against these. The signatures are the only shared contract. Behavio
 
 ### Stream N: finishing (`ta-finish`, wave 2)
 
-- [ ] T025 [P] [US1] Tests first in `F/tests/finish_test.ts`, then the PDF path of `createFinisher` in `F/src/finish.ts`, using the merged X and E modules with `FakeStore` and `fake_fetch` (contracts/mcp-tools.md `finish_attachment`):
+- [ ] T025 [P] [US1] [U182] [U183] [U184] [U185] [U186] Tests first in `F/tests/finish_test.ts`, then the PDF path of `createFinisher` in `F/src/finish.ts`, using the merged X and E modules with `FakeStore` and `fake_fetch` (contracts/mcp-tools.md `finish_attachment`):
   - claim → verify the stored file → extract → embed → write → `processed`, with `derived_count` and `page_count`
   - `thought_attachments.actual_type`, `thought_attachments.actual_size`, `thought_attachments.page_count`, `thought_attachments.content_hash` (`sha256:<hex>`, the `input_hash`) and `thought_attachments.processed_at` set
   - the claim is released on every exit
   - an existing owner thought with the same text as a passage is untouched (US1 #4, FR-022)
-- [ ] T026 [P] [US1] Tests first in `F/tests/finish_test.ts`, then repeat finishes in `F/src/finish.ts`: a plain finish on `processed` returns the existing outcome with no embedding call and no write (FR-012); the duplicate-content outcome per T005.4 (US1 #3).
+- [ ] T026 [P] [US1] [U187] [U188] Tests first in `F/tests/finish_test.ts`, then repeat finishes in `F/src/finish.ts`: a plain finish on `processed` returns the existing outcome with no embedding call and no write (FR-012); the duplicate-content outcome per T005.4 (US1 #3).
 
 ### Stream T: tools (`ta-tools`, wave 2)
 
-- [ ] T027 [P] [US1] Tests first in `F/tests/tools_test.ts`, then tool registration in `F/src/tools.ts`: `tools/list` returns exactly `find_thought`, `attach_file`, `finish_attachment`, `get_attachment`, `list_attachments`, `remove_attachment` and `find_orphan_attachments`, each with the input schema, defaults and annotations of contracts/mcp-tools.md.
-- [ ] T028 [P] [US1] Tests first in `F/tests/tools_test.ts`, then `find_thought` in `F/src/tools.ts`: `meaning` (default) embeds the query and calls `matchThoughts`, `exact` calls `findThoughtsExact`; `limit` defaults to 5 and is at most 20; each match has `id`, `first_line` (at most 120 characters) and `captured`; an empty result says "no matching thought" (FR-023, SC-009, R11).
-- [ ] T029 [P] [US1] Tests first in `F/tests/tools_test.ts`, then, in `F/src/tools.ts`, `attach_file` with `thought_id` and the command-upload details. Refusals, each before any row, note or link (FR-003, contracts/mcp-tools.md): an unknown `thought_id`; both or neither of `thought_id` and `note`; `checkDeclared`'s refusals; the same name, type and size already pending on the parent (pointing to it). On success:
+- [ ] T027 [P] [US1] [U217] [U218] [U219] Tests first in `F/tests/tools_test.ts`, then tool registration in `F/src/tools.ts`: `tools/list` returns exactly `find_thought`, `attach_file`, `finish_attachment`, `get_attachment`, `list_attachments`, `remove_attachment` and `find_orphan_attachments`, each with the input schema, defaults and annotations of contracts/mcp-tools.md.
+- [ ] T028 [P] [US1] [U220] [U221] [U222] [U223] [U224] [U225] [U226] [U227] [U228] Tests first in `F/tests/tools_test.ts`, then `find_thought` in `F/src/tools.ts`: `meaning` (default) embeds the query and calls `matchThoughts`, `exact` calls `findThoughtsExact`; `limit` defaults to 5 and is at most 20; each match has `id`, `first_line` (at most 120 characters) and `captured`; an empty result says "no matching thought" (FR-023, SC-009, R11).
+- [ ] T029 [P] [US1] [U229] [U230] [U231] [U232] [U233] [U234] [U235] [U236] [U237] [U238] [U239] [U240] Tests first in `F/tests/tools_test.ts`, then, in `F/src/tools.ts`, `attach_file` with `thought_id` and the command-upload details. Refusals, each before any row, note or link (FR-003, contracts/mcp-tools.md): an unknown `thought_id`; both or neither of `thought_id` and `note`; `checkDeclared`'s refusals; the same name, type and size already pending on the parent (pointing to it). On success:
   - a row with `thought_attachments.parent_thought_id`, `thought_attachments.file_name`, `thought_attachments.declared_type`, `thought_attachments.declared_size`, `thought_attachments.sensitivity_tier` (default `personal`), `thought_attachments.storage_path`, `thought_attachments.upload_deadline` (now + `UPLOAD_LINK_MINUTES`; R8), `thought_attachments.page_token_hash` (a hash only, never the token) and `thought_attachments.state` `pending_upload`
   - a result with `attachment_id` and its short id, `parent_thought_id`, `upload_deadline`, `upload { url, method: "PUT", headers }` through `publicUrl`, the `curl` line, `page_link` and `limits` (FR-001, FR-002, R6)
-- [ ] T030 [P] [US1] Tests first in `F/tests/tools_test.ts`, then, in `F/src/tools.ts`, `finish_attachment` over `services.finish` (scripted in this stream's tests): `attachment_id` and optional `rebuild`; the result text and the structured `state`, `reason`, `derived_count`, `caption`, `page_count`; the busy message "busy (finishing / rebuilding / removing), try again shortly" (FR-026).
+- [ ] T030 [P] [US1] [U241] [U242] [U243] Tests first in `F/tests/tools_test.ts`, then, in `F/src/tools.ts`, `finish_attachment` over `services.finish` (scripted in this stream's tests): `attachment_id` and optional `rebuild`; the result text and the structured `state`, `reason`, `derived_count`, `caption`, `page_count`; the busy message "busy (finishing / rebuilding / removing), try again shortly" (FR-026).
 
 ### Stream A: app and entry (`ta-app`, wave 3)
 
-- [ ] T031 [US1] Tests first in `F/tests/app_test.ts`, then `createApp(deps)` in `F/src/app.ts`:
+- [ ] T031 [US1] [U293] [U294] [U295] [U296] [U297] [U298] [U299] Tests first in `F/tests/app_test.ts`, then `createApp(deps)` in `F/src/app.ts`:
   - the MCP route accepts `MCP_ACCESS_KEY` from `x-brain-key` or `?key=`, compared in constant time
   - a missing or wrong key gets an authorization error and changes nothing, and an unset key refuses everything (FR-018, R13)
   - CORS and the Accept-header handling as the core does (`W/server/index.ts`)
   - it composes `createFinisher`, `buildServer` and `pageRoutes`
-- [ ] T032 [US1] Tests first in `F/tests/imports_test.ts`, then `productionDeps()` in `F/src/app.ts`:
+- [ ] T032 [US1] [U300] [U301] [U302] [U303] [U304] Tests first in `F/tests/imports_test.ts`, then `productionDeps()` in `F/src/app.ts`:
   - `loadSettings(Deno.env.get)`, with startup refused, naming the problems, when settings are not `ok`
   - `createSupabaseStore(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, …)` and the real clients over `globalThis.fetch`
   - `index.ts` stays the one-line entry
   - the test reads every `.ts` file outside `tests/` and fails on a bare import specifier (004 R10) or any `pdf-lib` import (R15)
-- [ ] T033 [US1] Flip the US1 acceptance tests in `F/tests/acceptance_test.ts` from `todo` to `Deno.test`, one per green commit, including the 7-tool `tools/list` and wrong-key cases.
+- [ ] T033 [US1] [A1] [A2] [A3] [A4] [A5] [A6] [A7] [A8] [A9] [A10] [A11] [A12] [A53] Flip the US1 acceptance tests in `F/tests/acceptance_test.ts` from `todo` to `Deno.test`, one per green commit, including the 7-tool `tools/list` and wrong-key cases.
 
 ### Stream D: docs (`ta-docs`, wave 1)
 
@@ -333,16 +333,16 @@ Streams code against these. The signatures are the only shared contract. Behavio
 
 ### Stream X: files (`ta-files`, wave 1)
 
-- [ ] T035 [P] [US2] Tests first in `F/tests/intake_test.ts`, then HEIC handling and `sniffType` in `F/src/intake.ts`:
+- [ ] T035 [P] [US2] [U141] [U142] [U143] [U144] Tests first in `F/tests/intake_test.ts`, then HEIC handling and `sniffType` in `F/src/intake.ts`:
   - a HEIC name or declared type gets "share it as JPEG", with the steps on iPhone and Android (FR-003, US2 #3 and #4)
   - `sniffType` identifies PDF, JPEG, PNG, WebP and HEIC from the first bytes, never from a name or declared type (R7), and returns `null` for anything else
-- [ ] T036 [P] [US2] Tests first in `F/tests/derived_test.ts`, then `captionRow` and `noteMetadata` in `F/src/derived.ts`:
+- [ ] T036 [P] [US2] [U145] [U146] [U147] Tests first in `F/tests/derived_test.ts`, then `captionRow` and `noteMetadata` in `F/src/derived.ts`:
   - the caption's source line uses "photo" (FR-025), and `data-model.md` `Derived thought.metadata.provenance` has `method: "llm_extraction"`, `source_locator: "photo"` and `extractor_model` (FR-006, FR-008)
   - `noteMetadata` gives `data-model.md` `Parent note.metadata` (`type: "observation"`, `source: "thought-attachments"`, `source_type: "thought_attachments_note"`, `imported_at`; FR-001)
 
 ### Stream E: model clients (`ta-models`, wave 1)
 
-- [ ] T037 [P] [US2] Tests first in `F/tests/vision_test.ts`, then `createVisionClient` in `F/src/vision.ts` (R4):
+- [ ] T037 [P] [US2] [U172] [U173] [U174] [U175] [U176] [U177] [U178] [U179] [U180] [U181] Tests first in `F/tests/vision_test.ts`, then `createVisionClient` in `F/src/vision.ts` (R4):
   - `configured` is false when `VISION_API_BASE` or `VISION_MODEL` is unset
   - `POST <VISION_API_BASE>/chat/completions` with `VISION_MODEL`, the image as a base64 `data:` URL of its real type, and a prompt asking for visible objects, places, labels and text
   - `VISION_API_KEY` as a bearer token only when set
@@ -352,7 +352,7 @@ Streams code against these. The signatures are the only shared contract. Behavio
 
 ### Stream Q: data (`ta-data`, wave 1)
 
-- [ ] T038 [P] [US2] Tests first in `F/tests/verify.sql` and `F/tests/store_test.ts`, then note insertion and page tokens in `F/schema.sql` and `F/src/store.ts`:
+- [ ] T038 [P] [US2] [U84] [U85] [U86] [U87] [U88] Tests first in `F/tests/verify.sql` and `F/tests/store_test.ts`, then note insertion and page tokens in `F/schema.sql` and `F/src/store.ts`:
   - `insertNote` inserts a new thought with `data-model.md` `Parent note.content` and `Parent note.metadata` and returns `created: true`
   - a note whose fingerprint exists returns that thought with `created: false`, unchanged (R17; `data-model.md` `thought_attachments.parent_created_here`)
   - `attachmentForPageToken` finds a row by `thought_attachments.page_token_hash` only
@@ -360,33 +360,33 @@ Streams code against these. The signatures are the only shared contract. Behavio
 
 ### Stream N: finishing (`ta-finish`, wave 2)
 
-- [ ] T039 [P] [US2] Tests first in `F/tests/finish_test.ts`, then the photo path in `F/src/finish.ts`:
+- [ ] T039 [P] [US2] [U189] [U190] [U191] [U192] [U193] [U194] Tests first in `F/tests/finish_test.ts`, then the photo path in `F/src/finish.ts`:
   - a caption becomes one derived thought, the state becomes `processed`, and `thought_attachments.caption_model` is set (FR-006, US2 #1)
   - with vision not configured or failing: `not_captioned` with the reason in `thought_attachments.state_reason`, the file kept, no caption (US2 #7)
   - `not_captioned` finished again writes the caption (SC-015)
-- [ ] T040 [P] [US2] Tests first in `F/tests/finish_test.ts`, then rebuilds in `F/src/finish.ts` (FR-027):
+- [ ] T040 [P] [US2] [U187] [U195] [U196] [U197] Tests first in `F/tests/finish_test.ts`, then rebuilds in `F/src/finish.ts` (FR-027):
   - `rebuild: true` on a `processed` photo replaces the caption with exactly one caption by the newly configured model (SC-015)
   - a failed rebuild keeps the old set and `processed`, and sets `thought_attachments.last_rebuild_error` with the reason (SC-018)
   - a plain finish never rebuilds
 
 ### Stream T: tools (`ta-tools`, wave 2)
 
-- [ ] T041 [P] [US2] Tests first in `F/tests/tools_test.ts`, then `attach_file`'s `note` and phone-upload paths in `F/src/tools.ts`:
+- [ ] T041 [P] [US2] [U244] [U245] [U246] [U247] [U248] [U249] Tests first in `F/tests/tools_test.ts`, then `attach_file`'s `note` and phone-upload paths in `F/src/tools.ts`:
   - `note` embeds the text and saves it through `insertNote` as the parent; `parent_created_here` follows `created`, and an existing note gets "attached to your existing thought" (FR-001, R17, SC-010)
   - a HEIC or over-cap declaration with `note` saves no thought (FR-003, SC-020)
   - with the file details omitted, the row has no declaration and carries `thought_attachments.expected_kind` when given (planning clarification)
 
 ### Stream P: phone page (`ta-page`, wave 2)
 
-- [ ] T042 [P] [US2] Tests first in `F/tests/page_routes_test.ts`, then `POST /page/start` in `F/src/page_routes.ts` (contracts/upload-page.md):
+- [ ] T042 [P] [US2] [U262] [U263] [U264] [U265] [U266] [U267] [U268] [U269] [U270] [U271] [U272] [U273] [U274] [U275] [U276] Tests first in `F/tests/page_routes_test.ts`, then `POST /page/start` in `F/src/page_routes.ts` (contracts/upload-page.md):
   - a valid, unused token before `thought_attachments.upload_deadline` records the picked name, type and exact size as the declaration, or confirms they match the one the attach call gave
   - it refuses HEIC, other types, an `expected_kind` mismatch or an over-cap size, with `attach_file`'s messages, before any link is made
   - otherwise it returns a fresh signed upload link through `publicUrl`
   - a second `/page/start` replaces the declaration
   - an invalid, used or expired token gets `410` with "This link has expired or was already used. Ask your assistant for a new one"
   - a brain key is neither needed nor accepted, and CORS allows only the `UPLOAD_PAGE_URL` origin (or same-origin)
-- [ ] T043 [P] [US2] Tests first in `F/tests/page_routes_test.ts`, then `POST /page/finish` in `F/src/page_routes.ts`: it uses up the token and finishes **only** its own attachment through `services.finish`, returning the outcome as JSON; a second call gets `410`; a token for another attachment changes nothing (FR-024, SC-011); busy handling per T005.5.
-- [ ] T044 [P] [US2] Tests first in `F/tests/page_script_test.ts` (with `F/tests/helpers/page_dom.ts`, a minimal DOM, `location` and `fetch` stand-in that runs the file's inline script), then `F/upload-page.html`:
+- [ ] T043 [P] [US2] [U277] [U278] [U279] [U280] Tests first in `F/tests/page_routes_test.ts`, then `POST /page/finish` in `F/src/page_routes.ts`: it uses up the token and finishes **only** its own attachment through `services.finish`, returning the outcome as JSON; a second call gets `410`; a token for another attachment changes nothing (FR-024, SC-011); busy handling per T005.5.
+- [ ] T044 [P] [US2] [U281] [U282] [U283] [U284] [U285] [U286] [U287] [U288] [U289] [U290] [U291] [U292] Tests first in `F/tests/page_script_test.ts` (with `F/tests/helpers/page_dom.ts`, a minimal DOM, `location` and `fetch` stand-in that runs the file's inline script), then `F/upload-page.html`:
   - it reads the token only from the fragment and calls only the API address fixed in the file, per T005.6 (R5)
   - the file input accepts `image/jpeg,image/png,image/webp,application/pdf` (R7)
   - it shows the expected kind, accepted types and size limit
@@ -398,8 +398,8 @@ Streams code against these. The signatures are the only shared contract. Behavio
 
 ### Stream A: app (`ta-app`, wave 3)
 
-- [ ] T045 [US2] Tests first in `F/tests/app_test.ts`, then `GET /upload` in `F/src/app.ts`: it serves `upload-page.html` unchanged as `text/html` for the self-hosted path (R5), and mounts the page routes outside the brain-key check.
-- [ ] T046 [US2] Flip the US2 acceptance tests in `F/tests/acceptance_test.ts`, one per green commit.
+- [ ] T045 [US2] [U305] [U306] [U307] Tests first in `F/tests/app_test.ts`, then `GET /upload` in `F/src/app.ts`: it serves `upload-page.html` unchanged as `text/html` for the self-hosted path (R5), and mounts the page routes outside the brain-key check.
+- [ ] T046 [US2] [A13] [A14] [A15] [A16] [A17] [A18] [A19] [A20] [A21] [A22] [A23] [A24] [A25] [A26] Flip the US2 acceptance tests in `F/tests/acceptance_test.ts`, one per green commit.
 
 ### Stream D: docs (`ta-docs`, wave 1)
 
@@ -422,19 +422,19 @@ Streams code against these. The signatures are the only shared contract. Behavio
 
 ### Stream Q: data (`ta-data`, wave 1)
 
-- [ ] T048 [P] [US3] Tests first in `F/tests/store_test.ts` (and `F/tests/verify.sql` for any SQL used), then `signDownload(path, seconds)`, `listByParent` and `attachmentForDerived` in `F/src/store.ts`. `attachmentForDerived` resolves through `data-model.md` `Derived thought.metadata.attachment_id` (FR-015).
+- [ ] T048 [P] [US3] [U89] [U90] [U91] [U92] Tests first in `F/tests/store_test.ts` (and `F/tests/verify.sql` for any SQL used), then `signDownload(path, seconds)`, `listByParent` and `attachmentForDerived` in `F/src/store.ts`. `attachmentForDerived` resolves through `data-model.md` `Derived thought.metadata.attachment_id` (FR-015).
 
 ### Stream T: tools (`ta-tools`, wave 2)
 
-- [ ] T049 [P] [US3] Tests first in `F/tests/tools_test.ts`, then `get_attachment` in `F/src/tools.ts`:
+- [ ] T049 [P] [US3] [U243] [U250] [U251] [U252] [U253] Tests first in `F/tests/tools_test.ts`, then `get_attachment` in `F/src/tools.ts`:
   - it accepts a full or short id, with "not found" and "ambiguous" errors
   - it returns file name, type, size, page count, state, reason, `derived_count`, `caption_model` and parent id
   - it gives a `download_link` valid for `DOWNLOAD_LINK_SECONDS`, through `publicUrl` and with the lifetime stated, only when the file is stored; never for `pending_upload` or `refused` (FR-014, SC-003, SC-012)
-- [ ] T050 [P] [US3] Tests first in `F/tests/tools_test.ts`, then `list_attachments` in `F/src/tools.ts`: exactly one of `thought_id` or `derived_thought_id`; each attachment's id, short id, file name, type, size, state and `derived_count` (FR-015, US3 #2).
+- [ ] T050 [P] [US3] [U254] [U255] [U256] [U257] Tests first in `F/tests/tools_test.ts`, then `list_attachments` in `F/src/tools.ts`: exactly one of `thought_id` or `derived_thought_id`; each attachment's id, short id, file name, type, size, state and `derived_count` (FR-015, US3 #2).
 
 ### Stream A: app (`ta-app`, wave 3)
 
-- [ ] T051 [US3] Flip the US3 acceptance tests in `F/tests/acceptance_test.ts`, one per green commit.
+- [ ] T051 [US3] [A27] [A28] [A29] Flip the US3 acceptance tests in `F/tests/acceptance_test.ts`, one per green commit.
 
 ### Stream D: docs (`ta-docs`, wave 1)
 
@@ -450,41 +450,41 @@ Streams code against these. The signatures are the only shared contract. Behavio
 
 ### Stream X: files (`ta-files`, wave 1)
 
-- [ ] T053 [P] [US4] Tests first in `F/tests/intake_test.ts`, then `checkActual` in `F/src/intake.ts` (FR-004, FR-013):
+- [ ] T053 [P] [US4] [U148] [U149] [U150] [U151] [U152] [U153] [U154] [U155] Tests first in `F/tests/intake_test.ts`, then `checkActual` in `F/src/intake.ts` (FR-004, FR-013):
   - it refuses when the sniffed type or the exact size differs from the declaration, or when the size or page count is over its cap
   - the reason names the actual type, size or page count (`data-model.md` `thought_attachments.actual_type`, `thought_attachments.actual_size`, `thought_attachments.page_count`)
   - a page-cap refusal names `MAX_PDF_PAGES` and the planned background processing (fork issue #26)
   - HEIC bytes get the "share as JPEG" message (US2 #4)
-- [ ] T054 [P] [US4] Tests first in `F/tests/pdf_test.ts`, then in `F/src/pdf.ts`:
+- [ ] T054 [P] [US4] [U156] [U157] [U158] [U159] [U160] Tests first in `F/tests/pdf_test.ts`, then in `F/src/pdf.ts`:
   - `isScanned` is true below `SCANNED_MIN_CHARS_PER_PAGE` non-space characters per page on average (R2, FR-010)
   - corrupt bytes fail `openPdf` with a readable reason (spec edge case)
   - an encrypted fixture, if one can be generated without a committed binary (`pdf-lib` cannot encrypt); otherwise the encrypted case is a live check in T077
 
 ### Stream Q: data (`ta-data`, wave 1)
 
-- [ ] T055 [P] [US4] Tests first in `F/tests/verify.sql`, then in `F/schema.sql`:
+- [ ] T055 [P] [US4] [U43] [U93] [U94] Tests first in `F/tests/verify.sql`, then in `F/schema.sql`:
   - a write or state change with a stale token, after a newer claim took over, is refused and changes nothing (R10, SC-019)
   - a `refused` row does not block a new attachment of the same content on the same parent (`data-model.md` `thought_attachments.content_hash` index; SC-013)
   - a set-state under a valid claim records `thought_attachments.state` and `thought_attachments.state_reason` without touching derived thoughts
 
 ### Stream N: finishing (`ta-finish`, wave 2)
 
-- [ ] T056 [P] [US4] Tests first in `F/tests/finish_test.ts`, then refusals in `F/src/finish.ts` (FR-004, SC-013):
+- [ ] T056 [P] [US4] [U198] [U199] [U200] [U201] [U202] [U203] [U204] Tests first in `F/tests/finish_test.ts`, then refusals in `F/src/finish.ts` (FR-004, SC-013):
   - on `checkActual`'s refusal, or an object created after `thought_attachments.upload_deadline` (R8), the file is deleted at once, the state becomes `refused` with the actual values, and no derived thoughts are written
   - finishing `refused` again is refused
   - no object gives "no file uploaded yet", or "upload window expired" after the deadline, with the state unchanged
-- [ ] T057 [P] [US4] Tests first in `F/tests/finish_test.ts`, then failures in `F/src/finish.ts`:
+- [ ] T057 [P] [US4] [U205] [U206] [U207] [U208] [U209] [U210] [U211] Tests first in `F/tests/finish_test.ts`, then failures in `F/src/finish.ts`:
   - a text-less PDF ends `scanned` with "text search won't cover it yet" and no passages, and `scanned` finished again re-checks (FR-010, US4 #2)
   - a corrupt PDF ends `failed` with the reason
   - an embedding failure partway, or a vector length different from `embeddingDimension()`, ends `failed` with no derived thoughts from that attempt, and a later finish succeeds (`data-model.md` `Derived thought.embedding`; FR-007, FR-011, US4 #3, SC-005)
-- [ ] T058 [P] [US4] Tests first in `F/tests/finish_test.ts`, then the claim in `F/src/finish.ts` (FR-026, R10):
+- [ ] T058 [P] [US4] [U212] [U213] [U214] [U215] [U216] Tests first in `F/tests/finish_test.ts`, then the claim in `F/src/finish.ts` (FR-026, R10):
   - a finish while another finish, rebuild or remove holds an unexpired claim returns `busy` with the running operation and changes nothing (SC-014)
   - once `BUSY_SECONDS` has passed by the clock, the next finish proceeds and completes (SC-019)
   - a cut-off rebuild keeps the old set
 
 ### Stream A: app (`ta-app`, wave 3)
 
-- [ ] T059 [US4] Flip the US4 acceptance tests in `F/tests/acceptance_test.ts`, one per green commit, including SC-014's held-vision concurrency case and SC-017's +20 and +65 minute cases.
+- [ ] T059 [US4] [A30] [A31] [A32] [A33] [A34] [A35] [A36] [A37] [A38] [A39] [A40] [A41] [A42] [A43] [A44] [A45] Flip the US4 acceptance tests in `F/tests/acceptance_test.ts`, one per green commit, including SC-014's held-vision concurrency case and SC-017's +20 and +65 minute cases.
 
 ### Stream D: docs (`ta-docs`, wave 1)
 
@@ -500,24 +500,24 @@ Streams code against these. The signatures are the only shared contract. Behavio
 
 ### Stream Q: data (`ta-data`, wave 1)
 
-- [ ] T061 [P] [US5] Tests first in `F/tests/verify.sql`, then the remove, preview and orphan functions in `F/schema.sql`:
+- [ ] T061 [P] [US5] [U95] [U96] [U97] [U98] [U99] [U100] [U101] [U102] [U103] [U104] [U105] [U106] [U107] [U108] [U109] Tests first in `F/tests/verify.sql`, then the remove, preview and orphan functions in `F/schema.sql`:
   - remove deletes only that attachment's derived thoughts and its row, scoped by its id, in one transaction, under a valid claim; the parent and another attachment of the same PDF on another thought keep everything (FR-016, FR-022, SC-012)
   - the parent note goes too only when `thought_attachments.parent_created_here` is true, the attachment ended `refused` or expired without an upload, and no other attachment points to it (FR-016, SC-020)
   - the preview reports the same counts and deletes nothing
   - orphans lists a parent gone, `pending_upload` past `thought_attachments.upload_deadline` and `refused`, each with why and `derived_count` (FR-021)
-- [ ] T062 [P] [US5] Tests first in `F/tests/store_test.ts`, then `removalPreview`, `removeAttachment` and `orphans` in `F/src/store.ts`.
+- [ ] T062 [P] [US5] [U110] [U111] [U112] Tests first in `F/tests/store_test.ts`, then `removalPreview`, `removeAttachment` and `orphans` in `F/src/store.ts`.
 
 ### Stream T: tools (`ta-tools`, wave 2)
 
-- [ ] T063 [P] [US5] Tests first in `F/tests/tools_test.ts`, then `remove_attachment` in `F/src/tools.ts`:
+- [ ] T063 [P] [US5] [U243] [U258] [U259] [U260] Tests first in `F/tests/tools_test.ts`, then `remove_attachment` in `F/src/tools.ts`:
   - without `confirm`, nothing is deleted, and the result lists the file, N derived thoughts and the parent note when it would go (US5 #2)
   - with `confirm`, it claims, deletes the stored file, removes through the store and releases (US5 #1, #4)
   - while busy, it is refused as in `finish_attachment` (SC-014)
-- [ ] T064 [P] [US5] Tests first in `F/tests/tools_test.ts`, then `find_orphan_attachments` in `F/src/tools.ts`: each orphan's id, file name, why it is listed and `derived_count` (FR-021, US5 #3, SC-013, SC-017).
+- [ ] T064 [P] [US5] [U261] Tests first in `F/tests/tools_test.ts`, then `find_orphan_attachments` in `F/src/tools.ts`: each orphan's id, file name, why it is listed and `derived_count` (FR-021, US5 #3, SC-013, SC-017).
 
 ### Stream A: app (`ta-app`, wave 3)
 
-- [ ] T065 [US5] Flip the US5 acceptance tests and the cross-cutting SC-007 test in `F/tests/acceptance_test.ts`, one per green commit. Afterwards `RUN_TODO=1` runs no ignored test.
+- [ ] T065 [US5] [A46] [A47] [A48] [A49] [A50] [A51] [A52] Flip the US5 acceptance tests and the cross-cutting SC-007 test in `F/tests/acceptance_test.ts`, one per green commit. Afterwards `RUN_TODO=1` runs no ignored test.
 
 ### Stream D: docs (`ta-docs`, wave 1)
 
