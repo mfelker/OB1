@@ -143,5 +143,8 @@ test("U36 ob1-init waits for a healthy storage, runs once, mounts create-bucket.
   const script = init.volumes.find((v) => v.source === join(root, "recipes", "self-hosted-supabase-mcp", "init", "create-bucket.sh"));
   assert.ok(script, JSON.stringify(init.volumes));
   assert.equal(script.type, "bind");
+  assert.equal(script.target, "/init/create-bucket.sh");
+  assert.equal(script.read_only, true);
+  assert.deepEqual(init.entrypoint, ["sh", script.target], "ob1-init runs the mounted script");
   assert.equal(init.environment.SERVICE_ROLE_KEY, examplePlaceholder("SERVICE_ROLE_KEY"));
 });
