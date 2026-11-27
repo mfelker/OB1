@@ -19,7 +19,10 @@ function data<T>(result: R<T>): T {
 async function setup() {
   const clock = new Clock();
   const store = new FakeStore({ clock });
-  const parent = await store.seedThought({ content: "Dishwasher DW-500, bought in 2024", embedding: vectorFor("parent") });
+  const parent = await store.seedThought({
+    content: "Dishwasher DW-500, bought in 2024",
+    embedding: vectorFor("parent"),
+  });
   const att = store.seedAttachment({
     parent_thought_id: parent.id,
     file_name: "manual.pdf",
@@ -32,7 +35,12 @@ async function setup() {
 
 /** A derived row for `content`, with its fingerprint and a vector of the fake's dimension. */
 async function derivedRow(content: string): Promise<DerivedRow> {
-  return { content, fingerprint: await fingerprintOf(content), metadata: { type: "reference" }, embedding: vectorFor(content) };
+  return {
+    content,
+    fingerprint: await fingerprintOf(content),
+    metadata: { type: "reference" },
+    embedding: vectorFor(content),
+  };
 }
 
 const BUSY_SECONDS = 410;
@@ -76,7 +84,11 @@ Deno.test("U28 writeDerived failing partway leaves the previous derived set and 
   const { store, att } = await setup();
   const line = (n: number) => `From manual.pdf, page ${n} (attachment ${att.id.slice(0, 8)})\nStep ${n}.`;
   const { token } = data(await store.claim(att.id, "finish", BUSY_SECONDS)) as { token: string };
-  data(await store.writeDerived(att.id, token, [await derivedRow(line(1)), await derivedRow(line(2))], { state: "processed" }));
+  data(
+    await store.writeDerived(att.id, token, [await derivedRow(line(1)), await derivedRow(line(2))], {
+      state: "processed",
+    }),
+  );
   const before = structuredClone({ thoughts: store.thoughts, attachments: store.attachments });
   store.failDerivedAfter = 1;
   const rebuilt = [await derivedRow(line(3)), await derivedRow(line(4)), await derivedRow(line(5))];
@@ -91,7 +103,10 @@ Deno.test("U29 a writeDerived row whose fingerprint equals an existing thought's
   const { store, att } = await setup();
   const body = `From manual.pdf, page 1 (attachment ${att.id.slice(0, 8)})\nTo clean the filter, twist it.`;
   // The owner's thought differs only in case and spacing, so upsert_thought's normalisation makes it the same fingerprint.
-  const owner = await store.seedThought({ content: `  ${body.toUpperCase().replace(" ", "   ")}  `, metadata: { by: "owner" } });
+  const owner = await store.seedThought({
+    content: `  ${body.toUpperCase().replace(" ", "   ")}  `,
+    metadata: { by: "owner" },
+  });
   const ownerBefore = structuredClone(owner);
   const { token } = data(await store.claim(att.id, "finish", BUSY_SECONDS)) as { token: string };
   const result = await store.writeDerived(att.id, token, [await derivedRow(body)], { state: "processed" });
@@ -104,18 +119,27 @@ Deno.test("U29 a writeDerived row whose fingerprint equals an existing thought's
 /** Finishes `row` with one derived thought per text, under a fresh claim that is then released. */
 async function finishWith(store: FakeStore, row: AttachmentRow, texts: string[]): Promise<void> {
   const { token } = data(await store.claim(row.id, "finish", BUSY_SECONDS)) as { token: string };
-  const rows = await Promise.all(texts.map((t) => derivedRow(`From ${row.file_name}, photo (attachment ${row.id.slice(0, 8)})\n${t}`)));
+  const rows = await Promise.all(
+    texts.map((t) => derivedRow(`From ${row.file_name}, photo (attachment ${row.id.slice(0, 8)})\n${t}`)),
+  );
   data(await store.writeDerived(row.id, token, rows, { state: "processed" }));
   data(await store.release(row.id, token));
 }
 
 Deno.test("U30 removeAttachment removes only that attachment's derived thoughts and its row", async () => {
   const { store, parent, att } = await setup();
-  const other = store.seedAttachment({ parent_thought_id: parent.id, file_name: "shelf.jpg", declared_type: "image/jpeg" });
+  const other = store.seedAttachment({
+    parent_thought_id: parent.id,
+    file_name: "shelf.jpg",
+    declared_type: "image/jpeg",
+  });
   await finishWith(store, att, ["Page one.", "Page two."]);
   await finishWith(store, other, ["A grey shelf."]);
   await store.seedThought({ content: "Buy furnace filters" }); // an owner thought, kept with the rest
-  const keep = structuredClone({ other: store.attachment(other.id), thoughts: store.thoughts.filter((t) => t.attachment_id !== att.id) });
+  const keep = structuredClone({
+    other: store.attachment(other.id),
+    thoughts: store.thoughts.filter((t) => t.attachment_id !== att.id),
+  });
   const { token } = data(await store.claim(att.id, "remove", BUSY_SECONDS)) as { token: string };
   const removed = data(await store.removeAttachment(att.id, token));
   assertEquals(
@@ -129,7 +153,11 @@ Deno.test("U31 removeAttachment removes the parent note only under FR-016's exce
   async function removeOn(opts: { createdHere: boolean; state: AttachmentRow["state"]; sibling: boolean }) {
     const store = new FakeStore({ clock: new Clock() });
     const note = await store.seedThought({ content: "Photo of the garage shelf" });
-    const row = store.seedAttachment({ parent_thought_id: note.id, parent_created_here: opts.createdHere, state: opts.state });
+    const row = store.seedAttachment({
+      parent_thought_id: note.id,
+      parent_created_here: opts.createdHere,
+      state: opts.state,
+    });
     if (opts.sibling) store.seedAttachment({ parent_thought_id: note.id, state: "processed" });
     const { token } = data(await store.claim(row.id, "remove", BUSY_SECONDS)) as { token: string };
     const { noteRemoved } = data(await store.removeAttachment(row.id, token));
@@ -171,7 +199,9 @@ Deno.test("U33 insertNote with a fingerprint that already exists returns that th
   const { store, parent } = await setup();
   const before = structuredClone(parent);
   const count = store.thoughts.length;
-  const result = data(await store.insertNote("dishwasher dw-500,   bought in 2024 ", vectorFor("note"), { type: "observation" }));
+  const result = data(
+    await store.insertNote("dishwasher dw-500,   bought in 2024 ", vectorFor("note"), { type: "observation" }),
+  );
   assertEquals({ result, parent: store.thought(parent.id), count: store.thoughts.length }, {
     result: { id: parent.id, created: false },
     parent: before,
