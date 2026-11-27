@@ -1267,7 +1267,7 @@ Deno.test(
   },
 );
 
-todo(
+Deno.test(
   "A45 after a killed finish, a finish before BUSY_SECONDS is busy, and one after it proceeds with no leftover derived thought and ends processed",
   async () => {
     const w = world();
