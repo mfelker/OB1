@@ -8,7 +8,7 @@ import type { AttachmentRow, Deps, Settings } from "../src/types.ts";
 import { Clock } from "./helpers/clock.ts";
 import { envGetter, EMBEDDING_API_BASE, VISION_API_BASE } from "./helpers/env.ts";
 import { embeddingResponder, FakeFetch, visionResponder } from "./helpers/fake_fetch.ts";
-import { FakeStore } from "./helpers/fake_store.ts";
+import { FakeStore, shortId } from "./helpers/fake_store.ts";
 import { contentHash, textPdf } from "./helpers/fixtures.ts";
 
 function settingsWith(overrides: Record<string, string | undefined> = {}): Settings {
@@ -144,4 +144,21 @@ Deno.test("U187 a plain finish on processed returns the existing outcome with no
   assertEquals(again, first);
   assertEquals(r.ff.requests.length, requests);
   assertEquals(writes(), writesBefore);
+});
+
+Deno.test("U188 bytes already on another attachment of the parent end refused, naming its short id, with the copy deleted", async () => {
+  const r = await rig();
+  const bytes = await textPdf(["alpha beta gamma", "delta epsilon"]);
+  const first = pending(r, bytes);
+  assertEquals((await r.finish(first.id, {})).state, "processed");
+  const second = pending(r, bytes, { file_name: "copy.pdf" });
+  const out = await r.finish(second.id, {});
+  assertEquals(out.state, "refused");
+  assertStringIncludes(out.reason ?? "", "already attached to this thought as " + shortId(first.id));
+  const row = r.store.attachment(second.id) as AttachmentRow;
+  assertEquals(row.state, "refused");
+  assertEquals(row.state_reason, out.reason);
+  assertEquals(r.store.objects.has(second.storage_path as string), false);
+  assertEquals(r.store.derivedOf(second.id).length, 0);
+  assertEquals(out.derived_count, 0);
 });

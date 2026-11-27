@@ -3,7 +3,7 @@ import { checkActual, sniffType } from "./intake.ts";
 import { passageRow, sourceLine } from "./derived.ts";
 import { toPassages } from "./passages.ts";
 import { openPdf } from "./pdf.ts";
-import type { AttachmentRow, Deps, FinishOutcome, Services } from "./types.ts";
+import type { AttachmentRow, Deps, FinishOutcome, Services, StatePatch } from "./types.ts";
 
 /** `sha256:<hex>` of the bytes, as `content_hash` stores it. */
 async function sha256(bytes: Uint8Array): Promise<string> {
@@ -37,6 +37,14 @@ export function createFinisher(deps: Deps): Services {
     return out;
   }
 
+  /** The file is deleted at once and the attachment ends `refused` (FR-004). */
+  async function refuse(row: AttachmentRow, token: string, reason: string, actual: StatePatch): Promise<FinishOutcome> {
+    await store.deleteObject(row.storage_path as string);
+    const set = await store.setState(row.id, token, { ...actual, state: "refused", state_reason: reason });
+    if ("error" in set) throw new Error(set.error);
+    return { state: "refused", reason, derived_count: 0 };
+  }
+
   async function run(row: AttachmentRow, token: string): Promise<FinishOutcome> {
     if (row.state === "processed") return outcomeOf(row);
     const path = row.storage_path as string;
@@ -46,6 +54,16 @@ export function createFinisher(deps: Deps): Services {
     if ("error" in file) throw new Error(file.error);
     const bytes = file.data;
     const hash = await sha256(bytes);
+    const twin = await store.findByHash(row.parent_thought_id, hash);
+    if ("error" in twin) throw new Error(twin.error);
+    if (twin.data && twin.data.id !== row.id) {
+      return await refuse(
+        row,
+        token,
+        "already attached to this thought as " + twin.data.id.replace(/-/g, "").slice(0, 8),
+        { actual_type: sniffType(bytes), actual_size: info.data.size },
+      );
+    }
     const pdf = await openPdf(bytes);
     if ("error" in pdf) throw new Error(pdf.error);
     const pageTexts = await pdf.data.pageTexts();
