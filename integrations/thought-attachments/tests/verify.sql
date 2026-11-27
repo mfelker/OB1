@@ -188,3 +188,13 @@ begin
   delete from thought_attachments where id = a;
   delete from thought_attachments where id = b;
 end $$;
+
+-- U44: two rows on the same parent with no content_hash yet are both allowed
+do $$
+declare p uuid := gen_random_uuid(); a uuid; b uuid;
+begin
+  insert into thought_attachments (parent_thought_id, state, upload_deadline) values (p, 'pending_upload', now()) returning id into a;
+  insert into thought_attachments (parent_thought_id, state, upload_deadline) values (p, 'pending_upload', now()) returning id into b;
+  delete from thought_attachments where id = a;
+  delete from thought_attachments where id = b;
+end $$;
