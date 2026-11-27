@@ -51,7 +51,14 @@ export function createSupabaseStore(
     },
     createAttachment: notYet,
     async getAttachment(idOrShortId) {
-      const { data, error } = await db.from("thought_attachments").select("*").eq("id", idOrShortId).limit(2);
+      let query = db.from("thought_attachments").select("*");
+      if (/^[0-9a-f]{8}$/i.test(idOrShortId)) {
+        const prefix = idOrShortId.toLowerCase();
+        query = query.gte("id", `${prefix}-0000-0000-0000-000000000000`).lte("id", `${prefix}-ffff-ffff-ffff-ffffffffffff`);
+      } else {
+        query = query.eq("id", idOrShortId);
+      }
+      const { data, error } = await query.limit(2);
       if (error) return { error: error.message };
       const rows = (data ?? []) as AttachmentRow[];
       return { data: rows[0] };

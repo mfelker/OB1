@@ -124,3 +124,13 @@ Deno.test("U74 getAttachment with a full id returns the row", async () => {
   assertEquals(await store.getAttachment(ATT_ID), { data: row });
   assertEquals(ff.requests[0].url.includes(`id=eq.${ATT_ID}`), true);
 });
+
+Deno.test("U75 getAttachment with an 8-character short id returns the row when exactly one matches", async () => {
+  const { store, ff } = setup();
+  const row = attachmentRow();
+  ff.on("GET", `${REST}/thought_attachments*`, { body: [row] });
+  assertEquals(await store.getAttachment("11111111"), { data: row });
+  const url = decodeURIComponent(ff.requests[0].url);
+  assertEquals(url.includes("id=gte.11111111-0000-0000-0000-000000000000"), true);
+  assertEquals(url.includes("id=lte.11111111-ffff-ffff-ffff-ffffffffffff"), true);
+});
