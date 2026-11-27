@@ -3,7 +3,12 @@ import { extractText, getDocumentProxy } from "npm:unpdf@2.2.2";
 import type { PdfDoc, R, Settings } from "./types.ts";
 
 export async function openPdf(bytes: Uint8Array): Promise<R<PdfDoc>> {
-  const pdf = await getDocumentProxy(new Uint8Array(bytes));
+  let pdf;
+  try {
+    pdf = await getDocumentProxy(new Uint8Array(bytes));
+  } catch {
+    return { error: "The PDF could not be read: it is damaged or not a PDF." };
+  }
   return {
     data: {
       pageCount: pdf.numPages,

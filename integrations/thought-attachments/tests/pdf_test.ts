@@ -1,10 +1,10 @@
 /** PDF reading (T021, T054): page count, per-page text, scanned detection, unreadable files. */
-import { assert, assertEquals } from "jsr:@std/assert@1.0.19";
+import { assert, assertEquals, assertStringIncludes } from "jsr:@std/assert@1.0.19";
 import { isScanned, openPdf } from "../src/pdf.ts";
 import { loadSettings } from "../src/settings.ts";
 import type { Settings } from "../src/types.ts";
 import { envGetter } from "./helpers/env.ts";
-import { textPdf } from "./helpers/fixtures.ts";
+import { corruptPdf, textPdf } from "./helpers/fixtures.ts";
 
 function settingsWith(overrides: Record<string, string | undefined> = {}): Settings {
   const result = loadSettings(envGetter(overrides));
@@ -41,4 +41,12 @@ Deno.test("U157 isScanned is false at exactly SCANNED_MIN_CHARS_PER_PAGE", () =>
 Deno.test("U158 whitespace-only page text counts as zero characters", () => {
   assertEquals(isScanned([" \n\t ".repeat(50), "  ".repeat(40)], settingsWith()), true);
   assertEquals(isScanned([" \n ".repeat(50) + "x".repeat(20)], settingsWith()), false);
+});
+
+Deno.test("U159 openPdf of corrupt bytes returns an error with a readable reason, without throwing", async () => {
+  for (const bytes of [corruptPdf(), new Uint8Array(), new TextEncoder().encode("not a pdf at all")]) {
+    const result = await openPdf(bytes);
+    assert("error" in result);
+    assertStringIncludes(result.error, "could not be read");
+  }
 });
