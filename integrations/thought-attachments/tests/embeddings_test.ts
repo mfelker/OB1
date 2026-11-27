@@ -48,6 +48,7 @@ Deno.test("U161 embed sends POST <EMBEDDING_API_BASE>/embeddings with the model 
   assertEquals(ff.requests[0].body, {
     model: EMBEDDING_MODEL,
     input: ["alpha", "beta"],
+    dimensions: 1536,
   });
 });
 
@@ -207,4 +208,15 @@ Deno.test("U385 a JSON error body whose error.message is not a string gives { er
   const out = await createEmbeddingClient(settingsWith(), ff.fetch).embed(["alpha"]);
   assert("error" in out);
   assertEquals(out.error, 'embedding endpoint answered HTTP 400: {"error":{"message":42}}');
+});
+
+Deno.test("U397 every request carries dimensions equal to EMBEDDING_DIMENSIONS (1536 by default)", async () => {
+  const sent: unknown[] = [];
+  for (const [overrides, length] of [[{}, 1536], [{ EMBEDDING_DIMENSIONS: "1024", EMBEDDING_BATCH_SIZE: "1" }, 1024]] as const) {
+    const ff = new FakeFetch().on("POST", URL_, embeddingResponder(length));
+    const out = await createEmbeddingClient(settingsWith(overrides), ff.fetch).embed(["alpha", "beta"]);
+    assert("data" in out);
+    sent.push(ff.requests.map((r) => (r.body as { dimensions?: unknown }).dimensions));
+  }
+  assertEquals(sent, [[1536], [1024, 1024]]);
 });

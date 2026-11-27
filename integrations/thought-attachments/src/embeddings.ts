@@ -22,7 +22,7 @@ export function createEmbeddingClient(
             ? { authorization: `Bearer ${settings.embeddingApiKey}` }
             : {}),
         },
-        body: JSON.stringify({ model: settings.embeddingModel, input: batch }),
+        body: JSON.stringify({ model: settings.embeddingModel, input: batch, dimensions: settings.embeddingDimensions }),
       });
     } catch (e) {
       return {
