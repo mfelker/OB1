@@ -83,3 +83,12 @@ Deno.test("U179 a non-2xx status fails with the status in the reason", async () 
   assert("error" in out);
   assertStringIncludes(out.error, "502");
 });
+
+Deno.test("U180 an empty or whitespace-only caption fails with a reason", async () => {
+  for (const reply of [chatReply(""), chatReply(" \n\t "), { status: 200, body: { choices: [] } }]) {
+    const ff = new FakeFetch().on("POST", URL_, reply);
+    const out = await createVisionClient(settingsWith(), ff.fetch).caption(BYTES, "image/jpeg");
+    assert("error" in out, `expected an error for ${JSON.stringify(reply.body)}`);
+    assertStringIncludes(out.error, "empty caption");
+  }
+});

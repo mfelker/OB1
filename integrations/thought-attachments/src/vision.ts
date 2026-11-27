@@ -54,13 +54,16 @@ export function createVisionClient(
           error: `vision endpoint answered HTTP ${response.status}: ${(await response.text()).slice(0, 300)}`,
         };
       }
-      const body = await response.json();
-      return {
-        data: {
-          text: String(body.choices[0].message.content).trim(),
-          model: settings.visionModel!,
-        },
-      };
+      let text = "";
+      try {
+        const body = await response.json();
+        const content = body?.choices?.[0]?.message?.content;
+        if (typeof content === "string") text = content.trim();
+      } catch {
+        // an unreadable body is treated as an empty caption below
+      }
+      if (!text) return { error: "vision endpoint returned an empty caption" };
+      return { data: { text, model: settings.visionModel! } };
     },
   };
 }
