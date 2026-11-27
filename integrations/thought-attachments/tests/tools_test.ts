@@ -532,6 +532,9 @@ Deno.test("U244 attach_file with note embeds the text and saves it through inser
   assertEquals(row.parent_created_here, true);
   assertEquals(out.data.parent_thought_id, note.id);
   assertEquals(out.data.parent_created_here, true);
+  const firstLine = out.text.split("\n")[0];
+  assertEquals(firstLine, `Attachment ${row.id} (short id ${out.data.short_id}) started on thought ${note.id}.`);
+  assert(!out.text.includes("attached to your existing thought"), out.text);
 });
 
 Deno.test("U245 note text matching an existing thought makes it the parent, not created here, and says attached to your existing thought", async () => {
