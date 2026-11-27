@@ -119,3 +119,28 @@ begin
     $q$;
   end if;
 end $$;
+
+-- Write the derived thoughts of one attachment (R9, R10): under the caller's claim, in one transaction.
+-- p_rows is an array of { content, metadata, embedding } (a "[..]" vector text). p_patch holds the state
+-- fields to set. A fingerprint conflict raises; nothing merges.
+create or replace function attachment_write_derived(p_id uuid, p_token text, p_rows jsonb, p_patch jsonb)
+returns thought_attachments
+language plpgsql
+as $$
+declare
+  r jsonb;
+  a thought_attachments;
+begin
+  for r in select * from jsonb_array_elements(p_rows) loop
+    insert into thoughts (content, content_fingerprint, embedding, metadata)
+    values (
+      r->>'content',
+      encode(sha256(convert_to(lower(trim(regexp_replace(r->>'content', '\s+', ' ', 'g'))), 'UTF8')), 'hex'),
+      (r->>'embedding')::vector,
+      coalesce(r->'metadata', '{}'::jsonb) || jsonb_build_object('attachment_id', p_id));
+  end loop;
+  update thought_attachments set derived_count = jsonb_array_length(p_rows) where id = p_id returning * into a;
+  return a;
+end;
+$$;
+grant execute on function attachment_write_derived(uuid, text, jsonb, jsonb) to service_role;

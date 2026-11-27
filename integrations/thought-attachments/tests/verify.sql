@@ -316,3 +316,34 @@ begin
   select count(*) into n from pg_proc where proname = 'thought_attachments_touch';
   if n <> 1 then raise exception 'U51: % touch functions', n; end if;
 end $$;
+
+-- Test helpers (temp, this session only)
+create or replace function pg_temp.mk_parent(p_content text default null) returns uuid
+language sql as $$
+  insert into thoughts (content, embedding) values (coalesce(p_content, 'parent ' || gen_random_uuid()::text), array_fill(0, array[1536])::vector) returning id
+$$;
+-- an attachment on a parent, with a held claim (token 'tok', unexpired by default)
+create or replace function pg_temp.mk_att(p_parent uuid, p_state text default 'pending_upload', p_until interval default interval '10 minutes') returns uuid
+language sql as $$
+  insert into thought_attachments (parent_thought_id, state, upload_deadline, busy_op, busy_token, busy_until)
+  values (p_parent, p_state, now() + interval '1 hour', 'finish', 'tok', now() + p_until) returning id
+$$;
+create or replace function pg_temp.rows_json(variadic p_contents text[]) returns jsonb
+language sql as $$
+  select coalesce(jsonb_agg(jsonb_build_object(
+    'content', c, 'fingerprint', 'ignored', 'metadata', jsonb_build_object('type', 'reference'),
+    'embedding', array_fill(0, array[1536])::vector::text)), '[]'::jsonb) from unnest(p_contents) c
+$$;
+
+-- U53: the write-derived function, with the caller's unexpired claim token, inserts the given rows
+do $$
+declare p uuid := pg_temp.mk_parent(); a uuid := pg_temp.mk_att(p); n bigint; dc int;
+begin
+  perform attachment_write_derived(a, 'tok', pg_temp.rows_json('u53 one ' || a, 'u53 two ' || a), '{"state":"processed"}'::jsonb);
+  select count(*) into n from thoughts where metadata->>'attachment_id' = a::text;
+  select derived_count into dc from thought_attachments where id = a;
+  delete from thoughts where metadata->>'attachment_id' = a::text;
+  delete from thought_attachments where id = a;
+  delete from thoughts where id = p;
+  if n <> 2 then raise exception 'U53: % rows inserted, want 2', n; end if;
+end $$;
