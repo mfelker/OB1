@@ -1345,7 +1345,7 @@ Deno.test(
   },
 );
 
-todo(
+Deno.test(
   "A63 a JPEG declared at exactly 10,485,760 bytes gets an upload link, and one at 10,485,761 bytes is refused naming the limit and the declared size",
   async () => {
     const w = world();
