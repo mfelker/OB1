@@ -208,20 +208,18 @@ Deno.test("U301 productionDeps' store sends its requests to SUPABASE_URL with th
   );
 });
 
-Deno.test("U351 with MCP_ACCESS_KEY set a missing or wrong key is unauthorized; unset, every call gets the named settings error instead", async () => {
-  const set = await withEnv(baseEnv(), () => productionDeps());
+// With MCP_ACCESS_KEY set, a missing or wrong key is unauthorized: U295 and U296.
+Deno.test("U351 with MCP_ACCESS_KEY unset, productionDeps is not ok and every call, even with no key, gets the named settings error", async () => {
   const unset = await withEnv({ ...baseEnv(), MCP_ACCESS_KEY: undefined }, () => productionDeps());
   const errorOf = async (input: ReturnType<typeof productionDeps>, key?: string) =>
     (await mcpCall(createApp(input).fetch, "tools/list", {}, key)).message?.error as { code: number; message: string };
   const missingKeyMessage = "setting MCP_ACCESS_KEY is invalid: must be set";
   assertEquals(
     {
-      set: [(await errorOf(set)).code, (await errorOf(set, "wrong")).code],
       unsetOk: unset.ok,
       unset: [(await errorOf(unset))?.message, (await errorOf(unset, "wrong"))?.message, (await errorOf(unset, BRAIN_KEY))?.message],
     },
     {
-      set: [-32001, -32001],
       unsetOk: false,
       unset: [missingKeyMessage, missingKeyMessage, missingKeyMessage],
     },

@@ -691,13 +691,12 @@ Deno.test("U333 a rebuild claim that expired unreleased reads processed, keeping
   assertStringIncludes(out.text, "the run did not finish");
 });
 
-Deno.test("U353 a cut-off finish reads failed, the run did not finish, and its stored file still gets a download link", async () => {
+// U331 asserts the same cut-off reads failed, "the run did not finish"; U353 adds only the download link.
+Deno.test("U353 a cut-off finish (read as failed, U331) still gets a download link for its stored file", async () => {
   const h = await harness();
   const row = await claimedRow(h, "finish", 100, { state: "pending_upload" });
   h.clock.advanceSeconds(101);
   const out = await call(h, "get_attachment", { attachment_id: row.id });
-  assertEquals(out.data.state, "failed");
-  assertEquals(out.data.reason, "the run did not finish");
   const link = out.data.download_link as string;
   const token = new URL(h.store.signedDownloads[0].url).searchParams.get("token");
   assertEquals(link, `https://brain.example.test/storage/v1/object/sign/ob1-files/${row.storage_path}?token=${token}`);

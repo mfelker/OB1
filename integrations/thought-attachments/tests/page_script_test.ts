@@ -171,8 +171,7 @@ Deno.test("U291 the file contains no key, no token and no project address other 
   assertEquals(source.match(/https?:\/\//g), null);
   assertEquals(source.match(/supabase|x-brain|service_role|apikey|bearer|authorization|eyJ[A-Za-z0-9]/gi), null);
   assertEquals(source.match(/#t=[A-Za-z0-9_-]{8,}/g), null);
-  const blank = source.split("\n").filter((l) => /API_ADDRESS\s*=/.test(l));
-  assertEquals(blank, ['var API_ADDRESS = "";']);
+  // That the API-address setting itself is blank is U346's check.
 });
 
 Deno.test("U292 the file loads no external script or style", () => {
@@ -249,8 +248,7 @@ Deno.test("U345 when a retried /page/finish gets 410, the page shows the expired
 
 Deno.test("U346 the repository's upload-page.html has its API-address line blank", () => {
   const lines = readPageSource().split("\n").filter((l) => /\bAPI_ADDRESS\b\s*=/.test(l));
-  assertEquals(lines.length, 1);
-  assertEquals(/=\s*(""|'')\s*;/.test(lines[0]), true);
+  assertEquals(lines, ['var API_ADDRESS = "";']);
 });
 
 Deno.test("U363 a failed upload or an unreachable server shows Failed, and /page/finish is not called", async () => {
