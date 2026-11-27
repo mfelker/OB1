@@ -1,0 +1,15 @@
+m10.pdf run1: {"bytes":58339,"totalPages":10,"chunks":70,"chars":99390,"parsedFloats":107520,"ms":{"download":278,"open":71,"extract":148,"chunkHash":5,"embedSim":49,"total":551}} HTTP200 wall=0.728092s
+m10.pdf run2: {"bytes":58339,"totalPages":10,"chunks":70,"chars":99390,"parsedFloats":107520,"ms":{"download":20,"open":4,"extract":105,"chunkHash":3,"embedSim":47,"total":179}} HTTP200 wall=0.253569s
+m10.pdf run3: {"bytes":58339,"totalPages":10,"chunks":70,"chars":99390,"parsedFloats":107520,"ms":{"download":43,"open":3,"extract":99,"chunkHash":3,"embedSim":47,"total":195}} HTTP200 wall=0.324162s
+m50.pdf run1: {"bytes":288459,"totalPages":50,"chunks":350,"chars":498305,"parsedFloats":537600,"ms":{"download":251,"open":9,"extract":455,"chunkHash":34,"embedSim":244,"total":994}} HTTP200 wall=1.441253s
+m50.pdf run2: {"bytes":288459,"totalPages":50,"chunks":350,"chars":498305,"parsedFloats":537600,"ms":{"download":41,"open":89,"extract":549,"chunkHash":18,"embedSim":257,"total":953}} HTTP200 wall=1.233447s
+m50.pdf run3: {"bytes":288459,"totalPages":50,"chunks":350,"chars":498305,"parsedFloats":537600,"ms":{"download":21,"open":10,"extract":485,"chunkHash":36,"embedSim":260,"total":812}} HTTP200 wall=0.942064s
+m50-25mb.pdf run1: {"bytes":25462358,"totalPages":50,"chunks":350,"chars":497996,"parsedFloats":537600,"ms":{"download":1114,"open":97,"extract":523,"chunkHash":18,"embedSim":235,"total":1987}} HTTP200 wall=2.161780s
+m50-25mb.pdf run2: {"bytes":25462358,"totalPages":50,"chunks":350,"chars":497996,"parsedFloats":537600,"ms":{"download":166,"open":24,"extract":466,"chunkHash":32,"embedSim":235,"total":922}} HTTP200 wall=1.065201s
+m50-25mb.pdf run3: {"bytes":25462358,"totalPages":50,"chunks":350,"chars":497996,"parsedFloats":537600,"ms":{"download":171,"open":96,"extract":510,"chunkHash":17,"embedSim":229,"total":1024}} HTTP200 wall=1.247775s
+m100.pdf run1: {"code":"WORKER_RESOURCE_LIMIT","message":"Function failed due to not having enough compute resources (please check logs)"} HTTP546 wall=1.771725s
+m100.pdf run2: {"bytes":576148,"totalPages":100,"chunks":700,"chars":996119,"parsedFloats":1075200,"ms":{"download":63,"open":87,"extract":970,"chunkHash":35,"embedSim":472,"total":1626}} HTTP200 wall=1.793616s
+m100.pdf run3: {"bytes":576148,"totalPages":100,"chunks":700,"chars":996119,"parsedFloats":1075200,"ms":{"download":46,"open":90,"extract":969,"chunkHash":35,"embedSim":476,"total":1616}} HTTP200 wall=1.786403s
+img10mb run1: {"bytes":10485760,"payloadMB":13.3,"ms":{"download":709,"encode":70}} HTTP200 wall=0.954424s
+img10mb run2: {"bytes":10485760,"payloadMB":13.3,"ms":{"download":84,"encode":64}} HTTP200 wall=0.329283s
+img10mb run3: {"bytes":10485760,"payloadMB":13.3,"ms":{"download":164,"encode":70}} HTTP200 wall=0.311129s

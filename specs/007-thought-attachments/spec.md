@@ -48,6 +48,10 @@
 - Q: What if finishing is cut off by the platform and never reports back? → A: A busy mark expires after a configured time, defaulting to slightly more than the platform's longest allowed request (to be measured); after that, a cut-off finish counts as `failed` with its partial derived thoughts cleared, and a cut-off rebuild keeps its old derived thoughts.
 - Q: Is a note saved by starting an attachment kept if that attachment is refused or expires? → A: Checks before upload run before the note is saved, so a request refused at that stage saves nothing. A note this integration created when starting an attachment is removed together with that attachment when the attachment, having ended `refused` or expired without an upload, is removed, but only if no other attachment points to the note; every other parent thought is never touched (confirmed after a conflict with the lifecycle rule).
 
+### Session 2026-11-26 (planning)
+
+- Q: Where does the phone upload page live, given that Supabase Cloud's default domain rewrites HTML from Edge Functions and Storage to plain text and allows XHTML only with the paid custom-domain add-on (probed and read at planning; plan R5)? → A: One static HTML file in the integration folder: on the self-hosted stack the function serves it itself (probed: the self-hosted runtime serves HTML unchanged); on Supabase Cloud the owner publishes the same file once to any free static host, and the upload link points there with its one-time token in the URL fragment, the page calling only the integration's JSON interface.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Attach a service manual and find it later (Priority: P1)
@@ -156,7 +160,7 @@ The owner says "that's the wrong manual, remove it". The attachment, its stored 
 **Attach and upload**
 
 - **FR-001**: The integration MUST let the AI start an attachment by giving the file's name, declared type and size and either an existing thought's id or new note text; with note text, the note MUST first be saved as a normal thought (embedded with the brain's model, type `observation`, metadata naming this integration as its source) and becomes the parent (Round 1, Q2). It MUST return an upload link that accepts exactly one file and expires after a configured time (default 60 minutes, shared by the direct link and the upload page; Round 1, Q9); file bytes MUST NOT pass through the MCP call.
-- **FR-002**: Every started attachment MUST be uploadable two ways: (a) directly to the upload link by a client that can run commands, with a ready-to-run command returned; and (b) through a one-time browser upload page that works on a phone, needs no shell, app or access key, shows the expected file type and size limit, accepts only one file, and stops working after one upload or when the link expires. The page MUST work on Supabase Cloud and on the self-hosted stack.
+- **FR-002**: Every started attachment MUST be uploadable two ways: (a) directly to the upload link by a client that can run commands, with a ready-to-run command returned; and (b) through a one-time browser upload page that works on a phone, needs no shell, app or access key, shows the expected file type and size limit, accepts only one file, and stops working after one upload or when the link expires. The page MUST work on Supabase Cloud and on the self-hosted stack: on the self-hosted stack the integration serves it; on Supabase Cloud it is the same file published once by the owner to a static host of their choice, carrying no secrets, with the one-time token in the link's fragment (planning clarification).
 - **FR-003**: Starting an attachment MUST refuse, before any upload and before any note text is saved as a thought, a declared type outside PDF, JPEG, PNG and WebP (HEIC gets the "share as JPEG" message) and a declared size over the configured limit.
 - **FR-004**: Finishing an attachment MUST check the stored file itself (type by content, actual size, page count for PDFs, content hash) and refuse it when it breaks a limit or does not match what was declared. On refusal it MUST delete the stored file at once, create no derived thoughts, and keep the attachment record in state `refused` with the reason and the actual type, size or page count; a refused attachment cannot be finished again (Round 1, Q5).
 
@@ -226,7 +230,7 @@ Names are provisional; planning settles them.
 ### README Contract
 
 - **Prerequisites**: a working Open Brain (Cloud or spec 006 self-hosted); the Supabase CLI; the brain's access key; the brain's embedding model settings; a vision-capable model endpoint.
-- **Steps**: run the setup SQL (and create the bucket if needed); set the settings; deploy the Edge Function; add the connector in the AI client; attach a sample PDF and photo; search for them.
+- **Steps**: run the setup SQL (and create the bucket if needed); set the settings; deploy the Edge Function; on Supabase Cloud only, publish the upload page file to a static host and set its address; add the connector in the AI client; attach a sample PDF and photo; search for them.
 - **Expected outcome**: a photo uploaded from a phone through the upload page, and the sample PDF's passage and the photo's caption appear in the brain's normal search, and the original files can be fetched through a link.
 - **Links**: `docs/05-tool-audit.md`; `docs/ingestion-metadata-contract.md`; the getting-started guide; spec 006's recipe for self-hosted users.
 
