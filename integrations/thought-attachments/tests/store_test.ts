@@ -86,3 +86,17 @@ Deno.test("U70 matchThoughts sends the embedding and limit to the base match_tho
   assertEquals(body.match_count, 5);
   assertEquals(body.match_threshold, 0);
 });
+
+Deno.test("U71 findThoughtsExact sends the text as an RPC parameter, never inside a filter string", async () => {
+  const { store, ff } = setup();
+  ff.on("POST", `${REST}/rpc/attachment_find_thoughts_exact`, {
+    body: [{ id: "t1", first_line: "Furnace filters, 50%", captured: "2026-02-03T04:05:06+00:00" }],
+  });
+  const text = "50%, (a) it's),or.eq.x";
+  const result = await store.findThoughtsExact(text, 7);
+  assertEquals(result, { data: [{ id: "t1", first_line: "Furnace filters, 50%", captured: "2026-02-03T04:05:06+00:00" }] });
+  assertEquals(ff.requests.length, 1);
+  assertEquals(ff.requests[0].method, "POST");
+  assertEquals(ff.requests[0].body, { p_text: text, p_limit: 7 });
+  assertEquals(ff.requests[0].url.includes("50%"), false);
+});

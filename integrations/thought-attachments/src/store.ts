@@ -43,7 +43,9 @@ export function createSupabaseStore(
       if ("error" in r) return r;
       return { data: r.data.map((t): ThoughtMatch => ({ id: t.id, first_line: t.content.split("\n")[0].slice(0, 120), captured: t.created_at })) };
     },
-    findThoughtsExact: notYet,
+    findThoughtsExact(text, limit) {
+      return rpc<ThoughtMatch[]>("attachment_find_thoughts_exact", { p_text: text, p_limit: limit });
+    },
     embeddingDimension: notYet,
     createAttachment: notYet,
     getAttachment: notYet,
