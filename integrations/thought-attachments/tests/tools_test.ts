@@ -303,3 +303,21 @@ Deno.test("U233 the same name, type and size pending on the parent returns that 
   assertEquals(h.store.attachments.length, 1);
   assertEquals(h.store.callNames().filter((m) => m === "createAttachment" || m === "signUpload"), []);
 });
+
+Deno.test("U235 a successful start writes a row with the parent, base name, declared type and size, tier personal, storage_path and state pending_upload", async () => {
+  const h = await harness();
+  const parent = await seed(h, "dishwasher");
+  const out = await call(h, "attach_file", { thought_id: parent.id, ...PDF, file_name: "docs/manual.pdf" });
+  assertEquals(out.isError, false);
+  assertEquals(h.store.attachments.length, 1);
+  const row = h.store.attachments[0];
+  assertEquals(out.data.attachment_id, row.id);
+  assertEquals(row.parent_thought_id, parent.id);
+  assertEquals(row.parent_created_here, false);
+  assertEquals(row.file_name, "manual.pdf");
+  assertEquals(row.declared_type, "application/pdf");
+  assertEquals(row.declared_size, 1000);
+  assertEquals(row.sensitivity_tier, "personal");
+  assertEquals(row.storage_path, `attachments/${row.id}/manual.pdf`);
+  assertEquals(row.state, "pending_upload");
+});
