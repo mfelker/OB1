@@ -55,3 +55,13 @@ Deno.test("U283 with its API-address line blank, every request goes to the addre
   assertEquals(f.requests.map((r) => r.url), [`${BASE}/page/info`, `${BASE}/page/start`]);
   assertEquals(f.requests[1].body, { token: "tok", ...PICK });
 });
+
+Deno.test("U284 the file input accepts exactly the four types and one file", async () => {
+  const page = await loadPage({ href: `${PAGE_AT}#t=tok`, fetch: net().fetch });
+  const input = page.el("file");
+  assertEquals([input.getAttribute("type"), input.getAttribute("accept"), input.hasAttribute("multiple")], [
+    "file",
+    "image/jpeg,image/png,image/webp,application/pdf",
+    false,
+  ]);
+});
