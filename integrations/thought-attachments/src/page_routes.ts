@@ -9,6 +9,8 @@ async function sha256Hex(text: string): Promise<string> {
   return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
+const EXPIRED = "This link has expired or was already used. Ask your assistant for a new one";
+
 /** The page's routes (contracts/upload-page.md), as a Hono sub-app. */
 export function pageRoutes(deps: Deps, _services: Services): Hono {
   const app = new Hono();
@@ -17,9 +19,11 @@ export function pageRoutes(deps: Deps, _services: Services): Hono {
   const declaredByPage = new Set<string>();
 
   app.post("/page/start", async (c) => {
-    const body = await c.req.json();
-    const found = await deps.store.attachmentForPageToken(await sha256Hex(body.token));
-    if (!("data" in found) || found.data === null) return c.json({ error: "gone" }, 410);
+    const body = await c.req.json().catch(() => ({}));
+    const found = typeof body.token === "string" && body.token !== ""
+      ? await deps.store.attachmentForPageToken(await sha256Hex(body.token))
+      : null;
+    if (!found || !("data" in found) || found.data === null) return c.json({ error: EXPIRED }, 410);
     const row = found.data;
     if (!declaredByPage.has(row.id) && row.declared_type !== null && row.declared_type !== body.type) {
       return c.json({ code: "wrong_type", message: "The picked file is " + body.type + ", not the declared " + row.declared_type + "." }, 400);

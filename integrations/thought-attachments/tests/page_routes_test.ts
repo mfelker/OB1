@@ -173,3 +173,14 @@ Deno.test("U269 a second /page/start replaces the declaration and returns a new 
   assertEquals(r.store.signedUploads.map((s) => s.path), [`attachments/${row.id}/a.jpg`, `attachments/${row.id}/b.png`]);
   assertEquals(stored.storage_path, `attachments/${row.id}/b.png`);
 });
+
+const EXPIRED = "This link has expired or was already used. Ask your assistant for a new one";
+
+Deno.test("U270 an unknown token gets 410 with the expired message", async () => {
+  const r = await rig();
+  const row = await r.seed();
+  const unknown = await r.post("/page/start", { token: "no-such-token", ...PICK });
+  const missing = await r.post("/page/start", { ...PICK });
+  assertEquals([unknown.status, (await unknown.json()).error, missing.status, (await missing.json()).error], [410, EXPIRED, 410, EXPIRED]);
+  assertEquals([r.store.signedUploads.length, r.store.attachment(row.id)!.declared_type], [0, null]);
+});
