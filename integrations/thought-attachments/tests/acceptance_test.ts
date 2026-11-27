@@ -1289,7 +1289,7 @@ Deno.test(
   },
 );
 
-todo(
+Deno.test(
   "A54 with MAX_PDF_PAGES=abc, attach_file and /page/start each answer the named settings error, create nothing and never echo abc",
   async () => {
     const loaded = loadSettings(envGetter({ MAX_PDF_PAGES: "abc" }));
