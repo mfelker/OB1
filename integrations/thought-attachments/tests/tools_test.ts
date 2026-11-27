@@ -639,3 +639,23 @@ Deno.test("U253 get_attachment on refused returns no download_link", async () =>
   assertEquals(out.data.download_link, undefined);
   assertEquals(h.store.signedDownloads, []);
 });
+
+/** A row whose claim of this kind ends `secondsFromNow` from now (claimed, never released). */
+async function claimedRow(h: H, op: "finish" | "rebuild" | "remove", secondsFromNow: number, fields: Record<string, unknown> = {}) {
+  return await storedRow(h, {
+    busy_op: op,
+    busy_token: "claim-lost",
+    busy_until: new Date(h.clock.now().getTime() + secondsFromNow * 1000).toISOString(),
+    ...fields,
+  });
+}
+
+Deno.test("U331 get_attachment on a finish claim one second past busy_until, never released, reports failed: the run did not finish", async () => {
+  const h = await harness();
+  const row = await claimedRow(h, "finish", 100, { state: "pending_upload" });
+  h.clock.advanceSeconds(101);
+  const out = await call(h, "get_attachment", { attachment_id: row.id });
+  assertEquals(out.data.state, "failed");
+  assertEquals(out.data.reason, "the run did not finish");
+  assertStringIncludes(out.text, "the run did not finish");
+});

@@ -166,6 +166,19 @@ async function attachFile(deps: Deps, args: AttachArgs) {
   );
 }
 
+const DID_NOT_FINISH = "the run did not finish";
+
+/**
+ * How a row reads once a claim has expired unreleased (data-model.md states, FR-026). The store returns rows as stored;
+ * this is the reading layer. A cut-off finish reads as `failed`; a cut-off rebuild keeps its old derived set.
+ */
+function asReported(row: AttachmentRow, now: Date): AttachmentRow {
+  const expired = row.busy_op !== null && row.busy_until !== null && new Date(row.busy_until).getTime() <= now.getTime();
+  if (!expired) return row;
+  if (row.busy_op === "finish") return { ...row, state: "failed", state_reason: DID_NOT_FINISH };
+  return row;
+}
+
 /** An attachment by full or short id, or the "not found" / "ambiguous" failure to return. */
 async function resolveAttachment(
   deps: Deps,
@@ -252,7 +265,7 @@ export function buildServer(deps: Deps, services: Services): McpServer {
   }, async ({ attachment_id }) => {
     const found = await resolveAttachment(deps, attachment_id);
     if ("failure" in found) return found.failure;
-    const row = found.row;
+    const row = asReported(found.row, deps.now());
     const data = {
       attachment_id: row.id,
       short_id: shortId(row.id),
