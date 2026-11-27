@@ -9,7 +9,7 @@ import { Clock } from "./helpers/clock.ts";
 import { envGetter, EMBEDDING_API_BASE, VISION_API_BASE } from "./helpers/env.ts";
 import { embeddingResponder, FakeFetch, visionResponder } from "./helpers/fake_fetch.ts";
 import { FakeStore, shortId } from "./helpers/fake_store.ts";
-import { contentHash, jpegBytes, scannedPdf, textPdf } from "./helpers/fixtures.ts";
+import { contentHash, corruptPdf, jpegBytes, scannedPdf, textPdf } from "./helpers/fixtures.ts";
 
 function settingsWith(overrides: Record<string, string | undefined> = {}): Settings {
   const result = loadSettings(envGetter(overrides));
@@ -517,4 +517,18 @@ Deno.test("U207 a scanned PDF finished again with unchanged settings stays scann
   assertEquals(out.derived_count, 0);
   assertEquals(r.store.derivedOf(att.id).length, 0);
   assertEquals(r.store.attachment(att.id)?.state, "scanned");
+});
+
+Deno.test("U208 a corrupt PDF ends failed with the reason, the object kept, and no passages", async () => {
+  const r = await rig();
+  const att = pending(r, corruptPdf());
+  const out = await r.finish(att.id, {});
+  assertEquals(out.state, "failed");
+  assertStringIncludes(out.reason ?? "", "PDF could not be read");
+  assertEquals(out.derived_count, 0);
+  const row = r.store.attachment(att.id) as AttachmentRow;
+  assertEquals(row.state, "failed");
+  assertEquals(row.state_reason, out.reason);
+  assertEquals(r.store.objects.has(att.storage_path as string), true);
+  assertEquals(r.store.derivedOf(att.id).length, 0);
 });

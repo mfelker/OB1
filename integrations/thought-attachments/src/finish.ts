@@ -110,7 +110,7 @@ export function createFinisher(deps: Deps): Services {
   }
 
   async function pdfPath(row: AttachmentRow, token: string, pdf: R<PdfDoc>, actual: StatePatch, rebuild: boolean): Promise<FinishOutcome> {
-    if ("error" in pdf) throw new Error(pdf.error);
+    if ("error" in pdf) return await ends(row, token, actual, rebuild, "failed", pdf.error);
     const pageTexts = await pdf.data.pageTexts();
     if (isScanned(pageTexts, settings)) {
       return await ends(
