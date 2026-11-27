@@ -1,5 +1,6 @@
 /** vision (T037): research R4, contracts/settings.md, FR-006, FR-009. */
 import { assert, assertEquals, assertStringIncludes } from "jsr:@std/assert@1.0.19";
+import { encodeBase64 } from "jsr:@std/encoding@1.0.11/base64";
 import { createVisionClient } from "../src/vision.ts";
 import { loadSettings } from "../src/settings.ts";
 import type { Settings } from "../src/types.ts";
@@ -20,4 +21,23 @@ Deno.test("U172 configured is false when VISION_API_BASE or VISION_MODEL is unse
   assertEquals(createVisionClient(settingsWith(), fetch).configured, true);
   assertEquals(createVisionClient(settingsWith({ VISION_API_BASE: undefined }), fetch).configured, false);
   assertEquals(createVisionClient(settingsWith({ VISION_MODEL: undefined }), fetch).configured, false);
+});
+
+interface ChatBody {
+  model: string;
+  messages: { role: string; content: { type: string; text?: string; image_url?: { url: string } }[] }[];
+}
+
+Deno.test("U173 caption posts to <VISION_API_BASE>/chat/completions with the model and the image as a data URL of its real type", async () => {
+  const ff = new FakeFetch().on("POST", URL_, visionResponder("a red door"));
+  const client = createVisionClient(settingsWith(), ff.fetch);
+  const out = await client.caption(BYTES, "image/png");
+  assert("data" in out);
+  assertEquals(ff.requests.length, 1);
+  assertEquals(ff.requests[0].method, "POST");
+  assertEquals(ff.requests[0].url, URL_);
+  const body = ff.requests[0].body as ChatBody;
+  assertEquals(body.model, VISION_MODEL);
+  const image = body.messages.flatMap((m) => m.content).find((p) => p.type === "image_url");
+  assertEquals(image?.image_url?.url, `data:image/png;base64,${encodeBase64(BYTES)}`);
 });
