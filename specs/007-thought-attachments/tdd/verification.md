@@ -114,7 +114,7 @@ No credential was found. `tests/helpers/env.ts` holds only `*-placeholder` value
 | 1 | HIGH: P6, P6b, P6c (same-length key) | **Cleared** | U386 (header) and U387 (`?key=`) send `BRAIN_KEY` with the first, a middle and the last byte changed. They assert the same length, then `{ error: UNAUTHORIZED, id: 42, calls: [] }` for each. P6, P6b and P6c each fail exactly U386 and U387. |
 | 2 | HIGH: Q10, Q15 (NULL-unsafe asserts) | **Cleared** | U57 and U94 use `is distinct from`. Q10 fails U94 (`verify.sql:699`), and Q15 fails U57 (`:442`), on fresh databases. The sweep left no `<>` on a nullable value. |
 | 3 | HIGH: Q8 (case) | **Cleared** | U314 stores mixed case and queries a different mix. Q8 fails it with `U314: 0 matches` (`:618`). |
-| 4 | HIGH: F3–F3e (sniff near misses) | **Cleared** | U144 adds a RIFF/WAVE file, an ISO-BMFF file with brand `isom`, `\x00PNG`, `FF D8 00` and `%PDF ` (a space, not a dash), each expecting `null`, in one object comparison. Each of the five mutants fails U144 only. |
+| 4 | HIGH: F3–F3e (sniff near misses) | **Cleared** | U144 adds a RIFF/WAVE file, an ISO-BMFF file with brand `isom`, `\x00PNG`, `FF D8 00` and `%PDF` plus a space (a space, not a dash), each expecting `null`, in one object comparison. Each of the five mutants fails U144 only. |
 | 5 | MED: K18 | **Cleared** | U388 fails the delete once, then asserts the error text, no "Removed", no `removeAttachment` call, the row still listed, 2 derived thoughts, the file still stored and the claim released. A repeat remove then succeeds. K18 fails U388. |
 | 6 | MED: G2, G3, K15, Q14 | **Cleared** | U389 (G2), U390 (G3), U391 (K15) and U392 (Q14) each sit at the exact instant, and each mutant fails its own test only. Two remaining SQL comparisons of the same class survive (new finding 2). |
 | 7 | MED: G1 | **Cleared** | U393: `rebuild: true` on a `not_captioned` photo claims `["finish", "finish"]`, and records `state_reason` with a null `last_rebuild_error`. G1 fails it. |
@@ -242,3 +242,9 @@ The criteria are the 21 user-story scenarios and SC-001 to SC-020. The end-to-en
 - **Coverage.** Not measured; there is no tool.
 - **Performance and load.** Not assessed beyond suite wall time (2.6 s Deno; `verify.sql` well under 1 s).
 - **README, metadata.json and documentation.** Out of scope for this rubric.
+
+## Integrator addendum (after this audit, at `4044fdeb`)
+
+- **T117 is done.** U394 kills N21. The red was recorded under the mutant and the green on the restored code; suite 403 passed (cycle log, "Cycle U394").
+- **Targeted recheck:** N21 is killed. N10, N12, N15, N24, S1, S2, S5 and S8 still survive, as graded here (MED/LOW only).
+- **Outcome under the owner's rule:** no HIGH finding remains, so T081 closes as **PASS_WITH_GAPS**. The MED/LOW survivors are recorded follow-ups (T118–T120; `plan.md` Complexity Tracking). The GAPs are the live-only criteria pending the self-hosted run (T077).

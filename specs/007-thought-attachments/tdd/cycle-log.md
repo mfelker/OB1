@@ -2707,3 +2707,19 @@ No production change in R3. Final suite at `a6168ba`: 402 passed, 0 failed. Fres
 - Test-only: `git diff --name-only 293dee5..HEAD` lists only test files. Suite 402 passed.
 - The skip-last-byte mutant of the constant-time key compare (`i < b.length - 1` at `src/app.ts:31`), re-applied on a copy, fails 2 tests.
 - Correction to the audit's framing: T112's K18 is not a code bug. `src/tools.ts:364` already returns `fail(deleted.error)`; the gap was the missing test, now U388.
+
+## Cycle U394: a phone-page PDF with no expected kind (T117; kills N21)
+
+- Final scoped audit finding (HIGH): mutant N21 (`src/page_routes.ts:78`, `row.expected_kind !== null &&` removed) refused every PDF picked on the page when the AI named no kind, and the suite still passed 402 of 402 (before).
+- test: `tests/page_routes_test.ts::U394 /page/start with no expected kind accepts a picked PDF: it is recorded as the declaration and a link is returned` (new)
+- red: with N21 applied, `--filter "/^U394 /"` gives `FAILED \| 0 passed \| 1 failed` (status 400 `wrong_type`, where 200 is expected)
+- green: the code is restored byte for byte (`git diff --quiet -- src`); U394 passes; suite 403 passed
+- commit: `4044fdeb`
+
+## Integrator targeted recheck after U394 (owner-chosen scope)
+
+The final audit's survivors were re-applied from its own `fresh.json`, each on a fresh copy:
+
+- **N21:** now killed (`FAILED \| 402 passed \| 1 failed`).
+- **Still surviving, as the audit graded them:** N10 (no observable effect), N12, N15 and N24 (LOW; each gives `ok \| 403 passed`), and the SQL mutants S1 and S2 (MED, claim at exactly `busy_until`), S8 (MED, 120-character cut) and S5 (LOW).
+- No HIGH remains. Under the owner's rule (2026-11-27), these MED/LOW items are recorded follow-ups (T118–T120), not another audit loop.

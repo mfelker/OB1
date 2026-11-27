@@ -669,6 +669,7 @@ Test files: `tests/app_test.ts` (U293–U301, U305–U307, U347–U349) and `tes
 | U391 | get_attachment on a finish claim at exactly busy_until, never released, reports failed: the run did not finish | FR-026 | example | DONE | `tests/tools_test.ts::U391 get_attachment on a finish claim at exactly busy_until, never released, reports failed: the run did not finish` |
 | U392 | remove deletes the parent note when the attachment is pending_upload at exactly its deadline (SQL block) | FR-021, FR-016 | example | DONE | `tests/verify.sql::U392 remove deletes the parent note when the attachment is pending_upload at exactly its deadline (SQL block)` |
 | U393 | rebuild: true on a not_captioned photo is a plain finish: it claims as finish, and a failure records state_reason, not last_rebuild_error | FR-027 | example | DONE | `tests/finish_test.ts::U393 rebuild: true on a not_captioned photo is a plain finish: it claims as finish, and a failure records state_reason, not last_rebuild_error` |
+| U394 | `/page/start` with no expected kind accepts a picked PDF: it is recorded as the declaration and a link is returned | FR-001, FR-002 | example | DONE | `tests/page_routes_test.ts::U394 /page/start with no expected kind accepts a picked PDF: it is recorded as the declaration and a link is returned` |
 
 ## Invariants and edge cases still to place
 
