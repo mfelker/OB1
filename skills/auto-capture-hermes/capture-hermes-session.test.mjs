@@ -39,6 +39,7 @@ const support = sqliteSupport();
 const skip = support.ok ? false : support.reason;
 
 const SESSION_ID = "session-1";
+const JOB_ID = "job-hermes-1"; // the id the accepting stand-in returns
 const PROJECT = "demo-project";
 
 let sandbox;
@@ -76,6 +77,11 @@ function capture(sessionId = SESSION_ID, env = {}) {
   return runAdapter(sandbox, { args: ["--session", sessionId], env });
 }
 
+/** A stand-in that accepts every capture and answers with JOB_ID. */
+function acceptingStub() {
+  return startIngestStub([{ status: 200, body: { job_id: JOB_ID } }]);
+}
+
 /** Address and key pointing at the stand-in. */
 function brainEnv(url = stub.url) {
   return { SUPABASE_URL: url, MCP_ACCESS_KEY: DUMMY_KEY };
@@ -101,7 +107,18 @@ function count(haystack, needle) {
   return haystack.split(needle).length - 1;
 }
 
-const TRUNCATION_MARKER = "[... transcript truncated to fit capture size limit ...]";
+// The script's marker wording is not part of any contract (data-model: "a marker"),
+// so match it loosely. No fixture text contains "truncated".
+const TRUNCATION_MARKER = /truncated/i;
+
+// The long fixture: LONG_PAIRS user/assistant pairs of LONG_TURN_CHARS each.
+const LONG_PAIRS = 4;
+const LONG_TURN_CHARS = 1000;
+const LONG_TURN_TEXT_CHARS = LONG_PAIRS * 2 * LONG_TURN_CHARS; // turn text only; header and labels add a few hundred
+// Half the turn text: certainly over the limit. Two and a half times: certainly under.
+// The exact boundary is pinned separately by U41.
+const LIMIT_OVER_LONG = String(LONG_TURN_TEXT_CHARS / 2);
+const LIMIT_UNDER_LONG = String(LONG_TURN_TEXT_CHARS * 2.5);
 
 /** n user/assistant pairs of `size` characters each; first and last turns tagged. */
 function longConversation(pairs, size) {
@@ -176,9 +193,9 @@ describe("acceptance", () => {
   });
 
   test("A6 an over-limit transcript fits the limit and keeps the first and last turns", { skip }, async () => {
-    seedSession({}, longConversation(4, 1000));
-    const payload = parsePayload(await dryRun(SESSION_ID, { OB_CAPTURE_MAX_CHARS: "3000" }));
-    assert.ok(payload.text.length <= 3000, `text is ${payload.text.length} chars`);
+    seedSession({}, longConversation(LONG_PAIRS, LONG_TURN_CHARS));
+    const payload = parsePayload(await dryRun(SESSION_ID, { OB_CAPTURE_MAX_CHARS: LIMIT_OVER_LONG }));
+    assert.ok(payload.text.length <= Number(LIMIT_OVER_LONG), `text is ${payload.text.length} chars`);
     assert.ok(payload.text.includes("FIRST-TURN"));
     assert.ok(payload.text.includes("LAST-TURN"));
   });
@@ -328,17 +345,18 @@ test("U15 a literal thought_content tag inside a turn is escaped", { skip }, asy
 });
 
 test("U16 a transcript within the limit is sent whole without a marker", { skip }, async () => {
-  seedSession({}, longConversation(4, 1000));
-  const { text } = parsePayload(await dryRun(SESSION_ID, { OB_CAPTURE_MAX_CHARS: "20000" }));
-  assert.equal(text.includes(TRUNCATION_MARKER), false);
-  assert.equal(turnsOf({ text }).length, 8);
+  const messages = longConversation(LONG_PAIRS, LONG_TURN_CHARS);
+  seedSession({}, messages);
+  const { text } = parsePayload(await dryRun(SESSION_ID, { OB_CAPTURE_MAX_CHARS: LIMIT_UNDER_LONG }));
+  assert.deepEqual(turnsOf({ text }).map((t) => t.content), messages.map((m) => m.content));
+  assert.equal(TRUNCATION_MARKER.test(text), false);
 });
 
 test("U17 an over-limit transcript has the marker between the kept start and end", { skip }, async () => {
-  seedSession({}, longConversation(4, 1000));
-  const { text } = parsePayload(await dryRun(SESSION_ID, { OB_CAPTURE_MAX_CHARS: "3000" }));
+  seedSession({}, longConversation(LONG_PAIRS, LONG_TURN_CHARS));
+  const { text } = parsePayload(await dryRun(SESSION_ID, { OB_CAPTURE_MAX_CHARS: LIMIT_OVER_LONG }));
   const first = text.indexOf("FIRST-TURN");
-  const marker = text.indexOf(TRUNCATION_MARKER);
+  const marker = text.search(TRUNCATION_MARKER);
   const last = text.indexOf("LAST-TURN");
   assert.ok(first >= 0, "the first turn is kept");
   assert.ok(last >= 0, "the last turn is kept");
@@ -347,18 +365,18 @@ test("U17 an over-limit transcript has the marker between the kept start and end
 });
 
 test("U41 a transcript one character under the limit is sent whole and one character over is trimmed to fit", { skip }, async () => {
-  seedSession({}, longConversation(4, 1000));
+  seedSession({}, longConversation(LONG_PAIRS, LONG_TURN_CHARS));
   // Measure the full capture once, with a limit far above it, then put the limit
   // one character either side of that size.
   const fullLength = parsePayload(await dryRun(SESSION_ID, { OB_CAPTURE_MAX_CHARS: "100000" })).text.length;
 
   const under = parsePayload(await dryRun(SESSION_ID, { OB_CAPTURE_MAX_CHARS: String(fullLength + 1) })).text;
   assert.equal(under.length, fullLength, "one character under the limit: sent whole");
-  assert.equal(under.includes(TRUNCATION_MARKER), false, "one character under the limit: no marker");
+  assert.equal(TRUNCATION_MARKER.test(under), false, "one character under the limit: no marker");
 
   const over = parsePayload(await dryRun(SESSION_ID, { OB_CAPTURE_MAX_CHARS: String(fullLength - 1) })).text;
   assert.ok(over.length <= fullLength - 1, `one character over the limit: ${over.length} chars exceeds ${fullLength - 1}`);
-  assert.equal(over.includes(TRUNCATION_MARKER), true, "one character over the limit: marker present");
+  assert.equal(TRUNCATION_MARKER.test(over), true, "one character over the limit: marker present");
 });
 
 test("U18 import_key has the form hermes:<session id>:<8 hex>", { skip }, async () => {
@@ -440,7 +458,7 @@ test("U37 unparseable hook stdin exits 0 with the no-op reply", { skip }, async 
 
 test("U38 on_session_finalize captures once and records it in session state", { skip }, async () => {
   seedSession();
-  stub = await startIngestStub();
+  stub = await acceptingStub();
   const before = Date.now();
   const result = await runAdapter(sandbox, { stdin: hookPayload("on_session_finalize"), env: { ...brainEnv(), OB_CAPTURE_SYNC: "1" } });
   const after = Date.now();
@@ -451,7 +469,7 @@ test("U38 on_session_finalize captures once and records it in session state", { 
   assert.match(state.captured_at, /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/);
   const capturedAt = Date.parse(state.captured_at);
   assert.ok(capturedAt >= before && capturedAt <= after, `captured_at ${state.captured_at} is outside this run`);
-  assert.equal(state.ingest_ref, "job-1");
+  assert.equal(state.ingest_ref, JOB_ID);
 });
 
 test("U39 a hook fire after a capture is skipped and sends nothing more", { skip }, async () => {
@@ -479,7 +497,7 @@ describe("acceptance", () => {
   test("A9 a successful capture sends one request with the key and the dry-run payload", { skip }, async () => {
     seedSession();
     const expected = parsePayload(await dryRun());
-    stub = await startIngestStub();
+    stub = await acceptingStub();
     await capture(SESSION_ID, brainEnv());
     assert.equal(stub.requests.length, 1);
     const [request] = stub.requests;
@@ -487,7 +505,8 @@ describe("acceptance", () => {
     assert.equal(request.path, INGEST_PATH);
     assert.equal(request.key, DUMMY_KEY);
     assert.deepEqual(request.body, expected);
-    assert.ok(dispositions(sandbox).includes("captured:job-1"));
+    // The dry run above logged its own line first; the capture's line is the last one.
+    assert.equal(dispositions(sandbox).at(-1), `captured:${JOB_ID}`);
   });
 
   test("A10 a temporary failure is queued and resent before the next capture", { skip }, async () => {
@@ -611,13 +630,13 @@ test("U42 an unreadable queue entry moves to dead/ and the valid entries behind 
 
 test("U40 two quick on_session_end fires are captured once", { skip }, async () => {
   seedSession();
-  stub = await startIngestStub();
+  stub = await acceptingStub();
   const env = { ...brainEnv(), OB_CAPTURE_DEBOUNCE_MS: "1000" };
   await runAdapter(sandbox, { stdin: hookPayload("on_session_end"), env });
   await runAdapter(sandbox, { stdin: hookPayload("on_session_end"), env });
   await waitFor(() => {
     const d = dispositions(sandbox);
-    return d.includes("skipped:superseded") && d.includes("captured:job-1");
+    return d.includes("skipped:superseded") && d.includes(`captured:${JOB_ID}`);
   }, { what: "one superseded worker and one capture" });
   assert.equal(stub.requests.length, 1);
 });
