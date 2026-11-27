@@ -174,3 +174,11 @@ Deno.test("U291 the file contains no key, no token and no project address other 
   const blank = source.split("\n").filter((l) => /API_ADDRESS\s*=/.test(l));
   assertEquals(blank, ['var API_ADDRESS = "";']);
 });
+
+Deno.test("U292 the file loads no external script or style", () => {
+  const source = readPageSource();
+  assertEquals(source.match(/<script[^>]*\ssrc\s*=/gi), null);
+  assertEquals(source.match(/<link\b/gi), null);
+  assertEquals(source.match(/@import|url\(/gi), null);
+  assertEquals(source.match(/<(img|iframe|object|embed|audio|video|source)\b/gi), null);
+});
