@@ -109,6 +109,16 @@ export function createFinisher(deps: Deps): Services {
       : await photoPath(stored, token, bytes, actual, rebuild);
   }
 
+  /** FR-007: every vector has the brain's length, or the attempt fails naming both lengths. */
+  async function wrongLength(vectors: number[][]): Promise<string | null> {
+    const dimension = await store.embeddingDimension();
+    if ("error" in dimension) throw new Error(dimension.error);
+    const bad = vectors.find((v) => v.length !== dimension.data);
+    return bad
+      ? "The embedding model returned vectors of length " + bad.length + ", but this brain's vectors have length " + dimension.data + "."
+      : null;
+  }
+
   async function pdfPath(row: AttachmentRow, token: string, pdf: R<PdfDoc>, actual: StatePatch, rebuild: boolean): Promise<FinishOutcome> {
     if ("error" in pdf) return await ends(row, token, actual, rebuild, "failed", pdf.error);
     const pageTexts = await pdf.data.pageTexts();
@@ -131,6 +141,8 @@ export function createFinisher(deps: Deps): Services {
     );
     const embedded = await deps.embeddings.embed(passages.map((p) => p.text));
     if ("error" in embedded) return await ends(row, token, actual, rebuild, "failed", embedded.error);
+    const mismatch = await wrongLength(embedded.data);
+    if (mismatch) return await ends(row, token, actual, rebuild, "failed", mismatch);
     const now = deps.now();
     const rows = await Promise.all(passages.map((p, i) => passageRow(row, p, embedded.data[i], now)));
     const patch: StatePatch = {
@@ -189,6 +201,8 @@ export function createFinisher(deps: Deps): Services {
     if ("error" in caption) return await notCaptioned(row, token, actual, rebuild, caption.error);
     const embedded = await deps.embeddings.embed([caption.data.text]);
     if ("error" in embedded) return await ends(row, token, actual, rebuild, "failed", embedded.error);
+    const mismatch = await wrongLength(embedded.data);
+    if (mismatch) return await ends(row, token, actual, rebuild, "failed", mismatch);
     const now = deps.now();
     const derived = await captionRow(row, caption.data, embedded.data[0], now);
     const patch: StatePatch = {

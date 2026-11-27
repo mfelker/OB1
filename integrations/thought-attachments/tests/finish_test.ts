@@ -559,3 +559,18 @@ Deno.test("U209 an embedding failure partway ends failed with the reason, and no
     assertEquals(r.store.objects.has(att.storage_path as string), true);
   }
 });
+
+Deno.test("U210 a vector length different from embeddingDimension() ends failed naming both lengths, with no derived thought", async () => {
+  for (const photo of [false, true]) {
+    const r = await rig();
+    r.ff.on("POST", EMBED_URL, embeddingResponder(8));
+    const att = photo ? pending(r, jpegBytes(2000)) : pending(r, await textPdf(["alpha beta gamma delta epsilon zeta"]));
+    const out = await r.finish(att.id, {});
+    assertEquals(out.state, "failed");
+    assertStringIncludes(out.reason ?? "", "8");
+    assertStringIncludes(out.reason ?? "", "1536");
+    assertEquals(out.derived_count, 0);
+    assertEquals(r.store.attachment(att.id)?.state, "failed");
+    assertEquals(r.store.derivedOf(att.id).length, 0);
+  }
+});
