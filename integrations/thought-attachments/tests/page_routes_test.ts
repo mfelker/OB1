@@ -212,6 +212,18 @@ Deno.test("U273 a token one second before upload_deadline is accepted", async ()
   assertEquals([res.status, r.store.signedUploads.length], [200, 1]);
 });
 
+// The deadline is the first instant the window is closed: a token presented at exactly upload_deadline is refused,
+// as the orphan check (U370) and the "upload window expired" wording (U371) treat that instant. An object Storage
+// recorded at exactly the deadline is still on time (U200): it was in flight, and R8 refuses only one created after it.
+Deno.test("U369 a token at exactly upload_deadline gets 410", async () => {
+  const r = await rig();
+  const row = await r.seed();
+  r.clock.set(new Date(row.upload_deadline));
+  const res = await r.post("/page/start", { token: TOKEN, ...PICK });
+  assertEquals([res.status, (await res.json()).error], [410, EXPIRED]);
+  assertEquals(r.store.signedUploads.length, 0);
+});
+
 Deno.test("U274 the page routes need no brain key, and a brain key without a valid token gets 410", async () => {
   const r = await rig();
   const row = await r.seed();

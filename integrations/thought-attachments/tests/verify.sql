@@ -853,6 +853,13 @@ begin
   if r is null or r->>'why' <> 'upload_expired' then raise exception 'U106: %', r; end if;
 end $$;
 
+-- U370: orphans lists a pending_upload row at exactly its upload_deadline (the deadline instant is past it)
+do $$
+declare r jsonb := pg_temp.orphan_case('pending_upload', interval '0', true);
+begin
+  if r is null or r->>'why' <> 'upload_expired' then raise exception 'U370: %', r; end if;
+end $$;
+
 -- U107: orphans omits a pending_upload row before its upload_deadline
 do $$
 declare r jsonb := pg_temp.orphan_case('pending_upload', interval '1 second', true);
