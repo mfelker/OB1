@@ -5,3 +5,7 @@ import { baseName } from "../src/intake.ts";
 Deno.test("U113 baseName drops POSIX directory parts", () => {
   assertEquals(baseName("/Users/a/b/manual.pdf"), "manual.pdf");
 });
+
+Deno.test("U114 baseName drops Windows directory parts and the drive", () => {
+  assertEquals(baseName("C:\\Users\\a\\manual.pdf"), "manual.pdf");
+});
