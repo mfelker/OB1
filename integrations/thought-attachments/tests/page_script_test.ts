@@ -246,3 +246,9 @@ Deno.test("U345 when a retried /page/finish gets 410, the page shows the expired
   await page.advance(120_000);
   assertEquals(finishCalls(f), 2);
 });
+
+Deno.test("U346 the repository's upload-page.html has its API-address line blank", () => {
+  const lines = readPageSource().split("\n").filter((l) => /\bAPI_ADDRESS\b\s*=/.test(l));
+  assertEquals(lines.length, 1);
+  assertEquals(/=\s*(""|'')\s*;/.test(lines[0]), true);
+});
