@@ -863,3 +863,19 @@ Deno.test("U335 when the store's removal fails after the file was deleted, remov
   assertEquals(h.store.derivedOf(row.id).length, 2);
   assertEquals(h.store.attachment(row.id)?.busy_op, null);
 });
+
+Deno.test("U336 a confirmed removal whose stored file is already missing succeeds, and a repeat after a failed removal succeeds", async () => {
+  const h = await harness();
+  const row = await storedRow(h, { derived_count: 2 });
+  addDerived(h, row.id, 2);
+  h.store.failNext("removeAttachment", "database went away");
+  const first = await call(h, "remove_attachment", { attachment_id: row.id, confirm: true });
+  assertEquals(first.isError, true);
+  assertEquals(h.store.objects.has(row.storage_path as string), false);
+  const again = await call(h, "remove_attachment", { attachment_id: row.id, confirm: true });
+  assertEquals(again.isError, false);
+  assertEquals(again.data.removed, true);
+  assertEquals(again.data.derived_thoughts, 2);
+  assertEquals(h.store.attachments, []);
+  assertEquals(h.store.derivedOf(row.id), []);
+});
