@@ -760,3 +760,12 @@ Deno.test("U257 list_attachments with the id of a thought no attachment owns say
     assertEquals(out.data.attachments, []);
   }
 });
+
+Deno.test("U334 list_attachments reports an attachment whose finish claim expired unreleased as failed", async () => {
+  const h = await harness();
+  const row = await claimedRow(h, "finish", 100, { state: "pending_upload" });
+  h.clock.advanceSeconds(101);
+  const out = await call(h, "list_attachments", { thought_id: row.parent_thought_id });
+  assertEquals((out.data.attachments as { state: string }[]).map((a) => a.state), ["failed"]);
+  assertStringIncludes(out.text, "failed");
+});
