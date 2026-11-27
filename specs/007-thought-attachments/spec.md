@@ -46,7 +46,8 @@ The owner tells their AI "here's the manual for the dishwasher, save it with my 
 
 1. **Given** an existing thought and a PDF with a text layer within the limits, **When** the AI attaches the PDF to the thought and the attachment is finished, **Then** the file is stored, the attachment is recorded as processed, and its text is saved as one or more passage thoughts linked to the attachment and its parent thought.
 2. **Given** a processed PDF attachment, **When** the owner searches with the brain's existing search tool for something stated only in the PDF, **Then** a passage thought from that PDF is among the results and identifies the attachment it came from.
-3. **Given** the same PDF is attached again to the same thought, **When** it is finished, **Then** no duplicate passage thoughts are created and the owner is told it already exists.
+3. **Given** the same PDF is attached again to the same thought, **When** it is attached, **Then** no second attachment or duplicate passage thoughts are created and the owner is pointed to the existing attachment.
+4. **Given** a PDF passage whose text matches a thought the owner wrote earlier, **When** the PDF is finished, **Then** the owner's thought is not changed in any way, and the passage is saved as its own thought owned by the attachment.
 
 ---
 
@@ -63,7 +64,8 @@ The owner snaps a photo of the garage shelf on their phone and tells the AI "the
 1. **Given** a thought and a JPEG, PNG or WebP photo within the limits, **When** the photo is attached and finished, **Then** a caption thought describing the photo is saved, linked to the attachment and its parent thought, and records which model wrote it.
 2. **Given** an upload link from the AI, **When** the owner opens it in a phone browser and picks a photo, **Then** the photo is uploaded without a shell, an app install or the brain's access key, and the link cannot be used a second time.
 3. **Given** a HEIC photo, **When** the AI tries to attach it or the owner picks it on the upload page, **Then** it is refused before upload with a message telling the owner to share it as JPEG.
-4. **Given** no vision model is configured or it fails, **When** a photo is finished, **Then** the file is still stored and fetchable, the attachment is marked as not captioned with the reason, and no caption thought is invented.
+4. **Given** a photo taken with the phone's default camera settings (on many phones the default format is HEIC), **When** the owner picks it on the upload page, **Then** it is either uploaded in an accepted format or refused with the "share as JPEG" message together with how to do that on that phone; the owner is never left with a silent failure.
+5. **Given** no vision model is configured or it fails, **When** a photo is finished, **Then** the file is still stored and fetchable, the attachment is marked as not captioned with the reason, and no caption thought is invented.
 
 ---
 
@@ -99,7 +101,7 @@ When a file is too large, of the wrong type, scanned without text, or the model 
 
 ---
 
-### User Story 5 - Detach or remove an attachment (Priority: P3)
+### User Story 5 - Remove an attachment (Priority: P3)
 
 The owner says "that's the wrong manual, remove it". The attachment, its stored file and the thoughts derived from it stop appearing in search and fetch, without touching the owner's own thought.
 
@@ -121,7 +123,7 @@ The owner says "that's the wrong manual, remove it". The attachment, its stored 
 - The upload link expires before the client uploads; finishing reports "no file uploaded" and a new link can be requested.
 - The client declares one type or size but uploads another; finishing checks the actual stored file (type by content, size, hash) and refuses a mismatch.
 - The parent thought does not exist; attaching is refused.
-- Two attachments of the same file to different thoughts; each attachment is recorded, and duplicate passage thoughts are not created twice for the same file content (shared content fingerprint).
+- The same file attached to two different thoughts; each is its own attachment with its own derived thoughts, so removing one never removes the other's searchable text.
 - A PDF that is encrypted or corrupt; it is stored, marked failed with a readable reason, and no passage thoughts are created.
 - A file name containing personal or path information; only the file's base name is kept, never a local path.
 - The brain's embedding model returns vectors of a different length than the brain's thoughts; finishing fails loudly instead of writing unsearchable thoughts.
@@ -147,7 +149,8 @@ The owner says "that's the wrong manual, remove it". The attachment, its stored 
 - **FR-009**: Derived-thought metadata and attachment records MUST NOT contain signed links, access keys, or absolute local paths.
 - **FR-010**: A PDF with no usable text layer MUST be stored and flagged as scanned, with no passage thoughts, and the finish response MUST say text search will not cover it.
 - **FR-011**: Finishing MUST be all-or-nothing for derived thoughts: on any failure no derived thoughts from that attempt remain, the attachment records a failed state with the reason, and finishing can be retried.
-- **FR-012**: Re-finishing or re-attaching the same file content MUST NOT create duplicate derived thoughts.
+- **FR-012**: Re-finishing an attachment, or attaching the same file content to the same parent thought again, MUST NOT create duplicate attachments or derived thoughts.
+- **FR-022**: Each derived thought MUST be created by, and owned by, exactly one attachment. Writing derived thoughts MUST NEVER merge into, update or take ownership of a thought that already exists (the owner's own thoughts or another attachment's), even when their text is the same; and removal MUST delete only thoughts that this integration created for that attachment.
 - **FR-013**: Extraction MUST run within one finish call; files the configured limits mark as too large for inline processing MUST be refused with a message that names the limit and the planned background processing.
 
 **Fetch and list**
@@ -203,7 +206,7 @@ Names are provisional; planning settles them.
 ### Testing Requirements
 
 - **Runner**: Deno tests inside `integrations/thought-attachments/`, plus SQL verification; storage, embedding and vision services mocked; no live credentials.
-- **Behaviors that MUST have tests**: each acceptance scenario above; type and limit refusals (FR-003, FR-004); passage size and page locators (FR-005); ingestion-contract fields and the no-secrets rule (FR-008, FR-009); vector-size mismatch (FR-007); all-or-nothing failure and retry (FR-011); duplicate prevention (FR-012); link expiry (FR-014); confirmed and unconfirmed removal, scoped deletes and orphan listing (FR-016, FR-021); grants and private bucket (FR-018, FR-020).
+- **Behaviors that MUST have tests**: each acceptance scenario above; type and limit refusals (FR-003, FR-004); passage size and page locators (FR-005); ingestion-contract fields and the no-secrets rule (FR-008, FR-009); vector-size mismatch (FR-007); all-or-nothing failure and retry (FR-011); duplicate prevention and exclusive ownership, including a passage that matches an existing thought (FR-012, FR-022); link expiry (FR-014); confirmed and unconfirmed removal, scoped deletes and orphan listing (FR-016, FR-021); grants and private bucket (FR-018, FR-020).
 
 ## Success Criteria *(mandatory)*
 
@@ -216,7 +219,7 @@ Names are provisional; planning settles them.
 - **SC-005**: Every refusal and failure case in User Story 4 leaves zero derived thoughts from the failed attempt and gives a message naming the cause.
 - **SC-006**: A live run on both Supabase Cloud and spec 006's self-hosted stack completes the attach, search and fetch flow for one PDF and one photo with identical behaviour, differing only in settings.
 - **SC-007**: No derived thought or attachment record contains a signed link, access key or absolute local path (checked over every record from the live runs).
-- **SC-008**: On both Supabase Cloud and the self-hosted stack (phone on the same network), the owner uploads a photo from a phone through the upload page in under 1 minute from receiving the link, with no app install.
+- **SC-008**: On both Supabase Cloud and the self-hosted stack (phone on the same network), the owner uploads a photo taken with the phone's default camera settings through the upload page in under 1 minute from receiving the link, with no app install, and the photo ends up captioned and searchable.
 
 ## Assumptions
 
