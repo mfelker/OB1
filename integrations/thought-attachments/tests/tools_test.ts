@@ -921,14 +921,25 @@ Deno.test("U261 find_orphan_attachments lists each orphan's id, file name, why i
 
 Deno.test("U243 every tool taking attachment_id accepts the short id and reports not found and ambiguous", async () => {
   const h = await harness();
-  const row = await storedRow(h);
+  const row = await storedRow(h, { file_name: "short-target.pdf", storage_path: "attachments/x/short-target.pdf" });
   const short = row.id.replace(/-/g, "").slice(0, 8);
   const one = await pendingRow(h, { id: "a1b2c3d4-0000-4000-8000-000000000001" });
   await pendingRow(h, { id: "a1b2c3d4-0000-4000-8000-000000000002" });
+  /** Which row each tool acted on, read from what it returned or what it asked of its dependencies. */
+  const resolved: Record<string, (data: Record<string, unknown>) => unknown> = {
+    finish_attachment: () => ({ finished: h.finish.calls.at(-1)?.id }),
+    get_attachment: (data) => ({ attachment_id: data.attachment_id, file_name: data.file_name }),
+    remove_attachment: (data) => ({ file: data.file, previewed: h.store.calls.filter((c) => c.method === "removalPreview").at(-1)?.args }),
+  };
+  const expected: Record<string, unknown> = {
+    finish_attachment: { finished: row.id },
+    get_attachment: { attachment_id: row.id, file_name: "short-target.pdf" },
+    remove_attachment: { file: "short-target.pdf", previewed: [row.id] },
+  };
   for (const tool of ["finish_attachment", "get_attachment", "remove_attachment"]) {
     const ok = await call(h, tool, { attachment_id: short });
     assertEquals(ok.isError, false, tool);
-    assertEquals(ok.data.attachment_id ?? row.id, row.id, tool);
+    assertEquals(resolved[tool](ok.data), expected[tool], tool);
     const missing = await call(h, tool, { attachment_id: "ffffffff" });
     assertEquals(missing.isError, true, tool);
     assertStringIncludes(missing.text, "not found");
