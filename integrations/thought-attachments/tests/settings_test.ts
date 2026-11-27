@@ -115,3 +115,7 @@ Deno.test("U10 with VISION_API_BASE and VISION_MODEL set and VISION_API_KEY unse
     model: VISION_MODEL,
   });
 });
+
+Deno.test("U12 a set BUSY_SECONDS is used as given", () => {
+  assertEquals(settingsWith({ BUSY_SECONDS: "160" }).busySeconds, 160);
+});
