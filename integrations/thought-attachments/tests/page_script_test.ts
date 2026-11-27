@@ -43,3 +43,15 @@ Deno.test("U282 with its API-address line filled in, every request goes to that 
   assertEquals(f.requests.map((r) => r.url), [`${api}/page/info`]);
   assertEquals(f.unmatched, []);
 });
+
+const PICK = { name: "receipt.jpg", type: "image/jpeg", size: 2048 };
+const REFUSAL = { code: "too_large", message: "The file is 20000000 bytes, over the cap of 10485760 bytes." };
+
+Deno.test("U283 with its API-address line blank, every request goes to the address the page was served from", async () => {
+  const f = net().on("POST", `${BASE}/page/start`, { status: 400, body: REFUSAL });
+  const page = await loadPage({ href: `${PAGE_AT}#t=tok`, fetch: f.fetch });
+  await page.pick(PICK);
+  await settle();
+  assertEquals(f.requests.map((r) => r.url), [`${BASE}/page/info`, `${BASE}/page/start`]);
+  assertEquals(f.requests[1].body, { token: "tok", ...PICK });
+});

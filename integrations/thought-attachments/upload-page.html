@@ -39,11 +39,21 @@ function post(path, body) {
   });
 }
 
+var fileEl = document.getElementById("file");
+
+function start(file) {
+  return post("/page/start", { token: token, name: file.name, type: file.type, size: file.size });
+}
+
 var token = readToken();
 if (!token) {
   statusEl.textContent = EXPIRED;
 } else {
   post("/page/info", { token: token });
+  fileEl.addEventListener("change", function () {
+    var file = fileEl.files && fileEl.files[0];
+    if (file) start(file);
+  });
 }
 </script>
 </body>
