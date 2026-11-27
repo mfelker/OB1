@@ -228,3 +228,11 @@ Deno.test("U395 EMBEDDING_DIMENSIONS defaults to 1536, and a set value is used a
     [1536, 1024],
   );
 });
+
+Deno.test("U396 a non-numeric, zero, negative or decimal EMBEDDING_DIMENSIONS is a problem naming it", () => {
+  const values = ["abc", "0", "-1", "1536.5"];
+  assertEquals(
+    values.map((value) => problemsWith({ EMBEDDING_DIMENSIONS: value })),
+    values.map(() => [{ setting: "EMBEDDING_DIMENSIONS", reason: WHOLE }]),
+  );
+});
