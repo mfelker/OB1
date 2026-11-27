@@ -2,7 +2,7 @@
 import type { AcceptedType, AttachmentRow, DeclaredFile, Refusal, Settings } from "./types.ts";
 
 export function baseName(name: string): string {
-  return name.split(/[\\/]/).pop() ?? "";
+  return (name.split(/[\\/]/).pop() ?? "").replace(/[\u0000-\u001f\u007f]/g, "");
 }
 
 export function checkDeclared(decl: DeclaredFile, settings: Settings): Refusal | null {

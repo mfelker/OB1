@@ -9,3 +9,7 @@ Deno.test("U113 baseName drops POSIX directory parts", () => {
 Deno.test("U114 baseName drops Windows directory parts and the drive", () => {
   assertEquals(baseName("C:\\Users\\a\\manual.pdf"), "manual.pdf");
 });
+
+Deno.test("U115 baseName removes control characters", () => {
+  assertEquals(baseName("man\u0000ual\n\t.pdf\u007f"), "manual.pdf");
+});
