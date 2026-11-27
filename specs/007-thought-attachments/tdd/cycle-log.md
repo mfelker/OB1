@@ -645,7 +645,7 @@ Cycle baseline: suite 48 passed at `34dd206`.
 ## Cycle U119: an image one byte over the cap is refused, naming cap and declared size
 
 - red: `error: AssertionError` (`assert(refusal !== null)`, 1 failed)
-- green: cap = floor(MB * 1024 * 1024); `too_large` message names both. Suite 53 passed
+- green: `cap = floor(MB * 1024 * 1024)`; `too_large` message names both. Suite 53 passed
 - commit: `393c5f1`
 
 ## Cycle U118: an image declared at exactly the image cap is accepted
