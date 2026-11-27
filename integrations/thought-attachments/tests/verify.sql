@@ -843,3 +843,10 @@ declare r jsonb := pg_temp.orphan_case('processed', interval '1 hour', false);
 begin
   if r is null or r->>'why' <> 'parent_gone' or (r->'attachment'->>'derived_count')::int <> 3 then raise exception 'U105: %', r; end if;
 end $$;
+
+-- U106: orphans lists a pending_upload row past its upload_deadline
+do $$
+declare r jsonb := pg_temp.orphan_case('pending_upload', interval '-1 second', true);
+begin
+  if r is null or r->>'why' <> 'upload_expired' then raise exception 'U106: %', r; end if;
+end $$;

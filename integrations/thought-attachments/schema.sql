@@ -377,5 +377,10 @@ as $$
   select to_jsonb(a), 'parent_gone'
     from thought_attachments a
     where not exists (select 1 from thoughts t where t.id = a.parent_thought_id)
+  union all
+  select to_jsonb(a), 'upload_expired'
+    from thought_attachments a
+    where exists (select 1 from thoughts t where t.id = a.parent_thought_id)
+      and a.state = 'pending_upload' and a.upload_deadline <= p_now
 $$;
 grant execute on function attachment_orphans(timestamptz) to service_role;
