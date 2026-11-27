@@ -294,3 +294,11 @@ Deno.test("U82 deleteObject deletes that path and no other", async () => {
   assertEquals(ff.requests.length, 1);
   assertEquals(ff.requests[0].body, { prefixes: [BUCKET_PATH] });
 });
+
+Deno.test("U89 signDownload passes the path and the seconds to Storage and returns the signed URL", async () => {
+  const { store, ff } = setup();
+  const signed = `/object/sign/ob1-files/${BUCKET_PATH}?token=dl-token`;
+  ff.on("POST", `${STORAGE}/object/sign/ob1-files/${BUCKET_PATH}`, { body: { signedURL: signed } });
+  assertEquals(await store.signDownload(BUCKET_PATH, 300), { data: `${STORAGE}${signed}` });
+  assertEquals(ff.requests[0].body, { expiresIn: 300 });
+});

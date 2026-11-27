@@ -133,7 +133,11 @@ export function createSupabaseStore(
       if (error) return { error: scrub(error.message) };
       return { data: null };
     },
-    signDownload: notYet,
+    async signDownload(path, seconds) {
+      const { data, error } = await db.storage.from(settings.attachmentsBucket).createSignedUrl(path, seconds);
+      if (error) return { error: scrub(error.message) };
+      return { data: data.signedUrl };
+    },
   };
 
   // A thrown error (a network failure, say) also becomes { error }, with the key removed.
