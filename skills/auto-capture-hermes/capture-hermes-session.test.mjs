@@ -430,3 +430,144 @@ test("U39 a hook fire after a capture is skipped and sends nothing more", { skip
   assert.ok(dispositions(sandbox).includes("skipped:already_captured"));
   assert.equal(stub.requests.length, 1);
 });
+
+// ── US3 acceptance: delivery (spec US3.1–US3.3) ─────────────────────────────
+
+function seedSecondSession(id = "session-2") {
+  store.addSession({ id, cwd: `/work/${PROJECT}` });
+  store.addMessages(id, conversation("v1", "b1", "v2", "b2", "v3", "b3"));
+}
+
+function queuedEntry(key, attempts = 1) {
+  return { payload: { text: `queued ${key}`, import_key: key }, failed_at: "2026-11-27T00:00:00.000Z", error: "HTTP 503", attempt_count: attempts };
+}
+
+describe("acceptance", () => {
+  test("A9 a successful capture sends one request with the key and the dry-run payload", { skip }, async () => {
+    seedSession();
+    const expected = parsePayload(await dryRun());
+    stub = await startIngestStub();
+    await capture(SESSION_ID, brainEnv());
+    assert.equal(stub.requests.length, 1);
+    const [request] = stub.requests;
+    assert.equal(request.method, "POST");
+    assert.equal(request.path, INGEST_PATH);
+    assert.equal(request.key, DUMMY_KEY);
+    assert.deepEqual(request.body, expected);
+    assert.ok(dispositions(sandbox).includes("captured:job-1"));
+  });
+
+  test("A10 a temporary failure is queued and resent before the next capture", { skip }, async () => {
+    seedSession();
+    seedSecondSession();
+    stub = await startIngestStub([{ status: 503, body: { error: "unavailable" } }]);
+    await capture(SESSION_ID, brainEnv());
+    const [queued] = queueEntries(sandbox);
+    assert.ok(queued, "nothing was queued");
+    await stub.close();
+    stub = await startIngestStub();
+    await capture("session-2", brainEnv());
+    assert.equal(stub.requests.length, 2);
+    assert.equal(stub.requests[0].body.import_key, queued.payload.import_key);
+    assert.match(stub.requests[1].body.import_key, /^hermes:session-2:/);
+    assert.deepEqual(queueEntries(sandbox), []);
+  });
+
+  test("A11 a permanent failure is not queued and is logged as permanent", { skip }, async () => {
+    seedSession();
+    stub = await startIngestStub([{ status: 401, body: { error: "bad key" } }]);
+    await capture(SESSION_ID, brainEnv());
+    assert.deepEqual(queueEntries(sandbox), []);
+    assert.ok(dispositions(sandbox).some((d) => d.endsWith(":permanent")));
+  });
+});
+
+// ── Delivery and retry queue (US3.1, FR-015, INV-2) ─────────────────────────
+
+test("U25 an address with a trailing slash still posts to the ingest path", { skip }, async () => {
+  seedSession();
+  stub = await startIngestStub();
+  await capture(SESSION_ID, brainEnv(`${stub.url}/`));
+  assert.equal(stub.requests[0]?.path, INGEST_PATH);
+});
+
+test("U26 a 2xx answer with a non-JSON body is logged captured:unknown", { skip }, async () => {
+  seedSession();
+  stub = await startIngestStub([{ status: 200, body: "ok" }]);
+  await capture(SESSION_ID, brainEnv());
+  assert.ok(dispositions(sandbox).includes("captured:unknown"));
+});
+
+for (const [id, status] of [["U27", 429], ["U28", 500]]) {
+  test(`${id} a ${status} answer queues the payload`, { skip }, async () => {
+    seedSession();
+    stub = await startIngestStub([{ status, body: {} }]);
+    await capture(SESSION_ID, brainEnv());
+    assert.equal(queueEntries(sandbox).length, 1);
+  });
+}
+
+test("U29 a 400 answer is not queued and is logged as permanent", { skip }, async () => {
+  seedSession();
+  stub = await startIngestStub([{ status: 400, body: { error: "bad payload" } }]);
+  await capture(SESSION_ID, brainEnv());
+  assert.deepEqual(queueEntries(sandbox), []);
+  assert.ok(dispositions(sandbox).some((d) => d.endsWith(":permanent")));
+});
+
+test("U30 a refused connection exits 0 and queues the payload", { skip }, async () => {
+  seedSession();
+  const result = await capture(SESSION_ID, brainEnv(await closedPortUrl()));
+  assert.equal(result.code, 0);
+  assert.equal(queueEntries(sandbox).length, 1);
+});
+
+test("U31 a queued entry failing a fourth time stays queued with attempt_count 4", { skip }, async () => {
+  seedSession();
+  seedQueueEntry(sandbox, "1-old.json", queuedEntry("k-old", 3));
+  stub = await startIngestStub([{ status: 503, body: {} }]);
+  await capture(SESSION_ID, brainEnv());
+  const old = queueEntries(sandbox).find((e) => e.file === "1-old.json");
+  assert.equal(old?.attempt_count, 4);
+});
+
+test("U32 a queued entry failing a fifth time moves to dead/", { skip }, async () => {
+  seedSession();
+  seedQueueEntry(sandbox, "1-old.json", queuedEntry("k-old", 4));
+  stub = await startIngestStub([{ status: 503, body: {} }]);
+  await capture(SESSION_ID, brainEnv());
+  assert.equal(queueEntries(sandbox).some((e) => e.file === "1-old.json"), false);
+  assert.deepEqual(queueEntries(sandbox, { dead: true }).map((e) => e.file), ["1-old.json"]);
+});
+
+test("U33 a queued entry answered with 401 moves to dead/", { skip }, async () => {
+  seedSession();
+  seedQueueEntry(sandbox, "1-old.json", queuedEntry("k-old", 1));
+  stub = await startIngestStub([{ status: 401, body: {} }]);
+  await capture(SESSION_ID, brainEnv());
+  assert.deepEqual(queueEntries(sandbox, { dead: true }).map((e) => e.file), ["1-old.json"]);
+});
+
+test("U34 one run resends the three oldest queued entries and keeps the newest", { skip }, async () => {
+  seedSession();
+  for (const name of ["1-a", "2-b", "3-c", "4-d"]) seedQueueEntry(sandbox, `${name}.json`, queuedEntry(`k-${name}`));
+  stub = await startIngestStub();
+  await capture(SESSION_ID, brainEnv());
+  assert.deepEqual(stub.requests.slice(0, 3).map((r) => r.body.import_key), ["k-1-a", "k-2-b", "k-3-c"]);
+  assert.deepEqual(queueEntries(sandbox).map((e) => e.file), ["4-d.json"]);
+});
+
+// ── Debounce (INV-3, research R8) ───────────────────────────────────────────
+
+test("U40 two quick on_session_end fires are captured once", { skip }, async () => {
+  seedSession();
+  stub = await startIngestStub();
+  const env = { ...brainEnv(), OB_CAPTURE_DEBOUNCE_MS: "1000" };
+  await runAdapter(sandbox, { stdin: hookPayload("on_session_end"), env });
+  await runAdapter(sandbox, { stdin: hookPayload("on_session_end"), env });
+  await waitFor(() => {
+    const d = dispositions(sandbox);
+    return d.includes("skipped:superseded") && d.includes("captured:job-1");
+  }, { what: "one superseded worker and one capture" });
+  assert.equal(stub.requests.length, 1);
+});
