@@ -69,11 +69,15 @@ export class Page {
 
   constructor(opts: PageOptions) {
     this.source = opts.html ?? readPageSource();
-    const tag = /<(\w+)\b([^>]*)>/g;
+    const tag = /<(\w+)\b([^>]*)>([^<]*)/g;
     for (const m of this.source.matchAll(tag)) {
       const attrs: Record<string, string> = {};
       for (const a of m[2].matchAll(/([\w-]+)(?:="([^"]*)")?/g)) attrs[a[1]] = a[2] ?? "";
-      if (attrs.id) this.elements.set(attrs.id, new FakeElement(attrs.id, m[1].toLowerCase(), attrs));
+      if (attrs.id) {
+        const el = new FakeElement(attrs.id, m[1].toLowerCase(), attrs);
+        el.textContent = m[3].trim();
+        this.elements.set(attrs.id, el);
+      }
     }
     const script = this.source.match(/<script>([\s\S]*?)<\/script>/)?.[1] ?? "";
     const url = new URL(opts.href);

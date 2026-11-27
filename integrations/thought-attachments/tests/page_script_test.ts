@@ -65,3 +65,9 @@ Deno.test("U284 the file input accepts exactly the four types and one file", asy
     false,
   ]);
 });
+
+Deno.test("U285 the page shows the accepted types", async () => {
+  const page = await loadPage({ href: `${PAGE_AT}#t=tok`, fetch: net().fetch });
+  const types = page.text("types");
+  for (const word of ["JPEG", "PNG", "WebP", "PDF"]) assertStringIncludes(types, word);
+});
