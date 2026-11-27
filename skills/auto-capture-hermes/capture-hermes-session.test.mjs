@@ -337,8 +337,13 @@ test("U16 a transcript within the limit is sent whole without a marker", { skip 
 test("U17 an over-limit transcript has the marker between the kept start and end", { skip }, async () => {
   seedSession({}, longConversation(4, 1000));
   const { text } = parsePayload(await dryRun(SESSION_ID, { OB_CAPTURE_MAX_CHARS: "3000" }));
+  const first = text.indexOf("FIRST-TURN");
   const marker = text.indexOf(TRUNCATION_MARKER);
-  assert.ok(marker > text.indexOf("FIRST-TURN") && marker < text.indexOf("LAST-TURN"));
+  const last = text.indexOf("LAST-TURN");
+  assert.ok(first >= 0, "the first turn is kept");
+  assert.ok(last >= 0, "the last turn is kept");
+  assert.ok(marker > first, "the marker comes after the first turn");
+  assert.ok(marker < last, "the marker comes before the last turn");
 });
 
 test("U41 a transcript one character under the limit is sent whole and one character over is trimmed to fit", { skip }, async () => {
@@ -506,7 +511,10 @@ describe("acceptance", () => {
     stub = await startIngestStub([{ status: 401, body: { error: "bad key" } }]);
     await capture(SESSION_ID, brainEnv());
     assert.deepEqual(queueEntries(sandbox), []);
-    assert.ok(dispositions(sandbox).some((d) => d.endsWith(":permanent")));
+    // Contract form: error:HTTP <status>…:permanent (the body in between is not pinned).
+    const logged = dispositions(sandbox);
+    assert.equal(logged.length, 1, `expected one log line, got ${JSON.stringify(logged)}`);
+    assert.match(logged[0], /^error:HTTP 401:.*:permanent$/);
   });
 });
 
@@ -540,7 +548,9 @@ test("U29 a 400 answer is not queued and is logged as permanent", { skip }, asyn
   stub = await startIngestStub([{ status: 400, body: { error: "bad payload" } }]);
   await capture(SESSION_ID, brainEnv());
   assert.deepEqual(queueEntries(sandbox), []);
-  assert.ok(dispositions(sandbox).some((d) => d.endsWith(":permanent")));
+  const logged = dispositions(sandbox);
+  assert.equal(logged.length, 1, `expected one log line, got ${JSON.stringify(logged)}`);
+  assert.match(logged[0], /^error:HTTP 400:.*:permanent$/);
 });
 
 test("U30 a refused connection exits 0 and queues the payload", { skip }, async () => {
