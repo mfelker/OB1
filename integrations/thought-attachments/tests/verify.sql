@@ -545,3 +545,11 @@ begin
   delete from thoughts where id = p;
   if r2 is distinct from '{"busy": "finish"}'::jsonb then raise exception 'U65: the claim was released by another token: %', r2; end if;
 end $$;
+
+-- U66: the dimension function returns 1536 on fork-ci's bootstrap (vector(1536))
+do $$
+begin
+  if attachment_embedding_dimension() is distinct from 1536 then
+    raise exception 'U66: dimension is %', attachment_embedding_dimension();
+  end if;
+end $$;

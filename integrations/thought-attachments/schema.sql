@@ -226,3 +226,14 @@ as $$
     where id = p_id and busy_token = p_token
 $$;
 grant execute on function attachment_release(uuid, text) to service_role;
+
+-- The brain's embedding dimension: the type modifier of thoughts.embedding (R3).
+create or replace function attachment_embedding_dimension()
+returns int
+language sql
+stable
+as $$
+  select atttypmod from pg_attribute
+    where attrelid = 'public.thoughts'::regclass and attname = 'embedding' and not attisdropped
+$$;
+grant execute on function attachment_embedding_dimension() to service_role;
