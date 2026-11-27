@@ -60,6 +60,7 @@
 - Q: What does a bad setting value do, and may the size caps be decimals? → A: An unparseable, zero or negative number makes every tool call and page route answer with a named error (which setting, and what it must be) and do nothing else; size caps in megabytes accept decimals, while page, character, second and minute settings must be whole numbers.
 - Q: What happens when a second attachment on the same thought is finished with exactly the same bytes as one already stored? → A: The second ends `refused` with a message naming the first attachment's short id; its stored copy is deleted and no derived thoughts are written; the owner keeps using the first (and may retry it if it had failed).
 - Q: When is the phone page's one-time link used up? → A: Only when finishing reaches an outcome (processed, scanned, not captioned, failed or refused); a "busy" refusal or "no file uploaded yet" leaves it usable until it expires, so the page can retry by itself.
+- Q: How does the self-served copy of the upload page learn its API address? → A: The page file holds one API-address line, blank in the repository; the Supabase Cloud owner fills it in before publishing; when it is blank (the copy the function serves itself), the page uses the address it was served from. The address is never taken from the link.
 
 ## User Scenarios & Testing *(mandatory)*
 

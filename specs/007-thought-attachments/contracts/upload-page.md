@@ -3,7 +3,8 @@
 One static file, `upload-page.html`, in the integration folder (research R5).
 
 - **Self-hosted**: the integration serves it at `GET <function URL>/upload` as `text/html`.
-- **Cloud**: the owner publishes the file once to a static host after setting its API address. That address is written **in the file** and never read from the link. The integration hands out the published address from the `UPLOAD_PAGE_URL` setting.
+- **Cloud**: the owner publishes the file once to a static host after setting its API address. That address is written **in the file** and never read from the link.
+- **The API address rule** (T005 Q6): the file holds one API-address line, blank in the repository. If it is filled in, the page uses it. If it is blank (the copy the function serves), the page uses the address it was served from, `…/functions/v1/thought-attachments`. A blank copy published on a static host therefore fails visibly against that host, and never against a third party. The integration hands out the published address from the `UPLOAD_PAGE_URL` setting.
 
 ## The link
 

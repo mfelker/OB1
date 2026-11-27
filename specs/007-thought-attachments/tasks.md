@@ -154,7 +154,7 @@ Streams code against these. The signatures are the only shared contract. Behavio
 
 **Purpose**: seams, settings, links, fakes and the outer loop. **No stream starts before T013.**
 
-- [ ] T005 Owner decisions, **asked one question at a time** (say how many remain). Record each answer in `M/specs/007-thought-attachments/spec.md` Clarifications and the contract it affects, then commit on fork `main`. Each one must be answered before the task named, and all six before T013:
+- [X] T005 Owner decisions, **asked one question at a time** (say how many remain). Record each answer in `M/specs/007-thought-attachments/spec.md` Clarifications and the contract it affects, then commit on fork `main`. Each one must be answered before the task named, and all six before T013:
   1. Before T008: how `BUSY_SECONDS` picks "160 on Supabase Cloud, 410 elsewhere" (contracts/settings.md), with no platform signal named.
   2. Before T008: how `UPLOAD_PAGE_URL`'s default `<function URL>/upload` is built (from `PUBLIC_BASE_URL` plus `/functions/v1/<name>`?), and the function's name.
   3. Before T008: whether a bad setting value (`MAX_PDF_PAGES=abc`, `0`) is a named error or falls back to the default, and whether the MB caps accept decimals.
