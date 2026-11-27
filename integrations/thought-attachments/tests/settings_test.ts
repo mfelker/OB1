@@ -147,3 +147,7 @@ Deno.test("U18 a zero or negative value for a whole-number setting is a problem 
     [[{ setting: "MAX_PDF_PAGES", reason: WHOLE }], [{ setting: "MAX_PDF_PAGES", reason: WHOLE }]],
   );
 });
+
+Deno.test("U19 a decimal MB cap is accepted as given", () => {
+  assertEquals(settingsWith({ MAX_IMAGE_MB: "2.5" }).maxImageMb, 2.5);
+});
