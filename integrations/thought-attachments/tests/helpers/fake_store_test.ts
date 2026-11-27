@@ -71,3 +71,18 @@ Deno.test("U27 writeDerived or setState with a stale or foreign claim token retu
     { errors: [true, true, true, true], ...before },
   );
 });
+
+Deno.test("U28 writeDerived failing partway leaves the previous derived set and state unchanged", async () => {
+  const { store, att } = await setup();
+  const line = (n: number) => `From manual.pdf, page ${n} (attachment ${att.id.slice(0, 8)})\nStep ${n}.`;
+  const { token } = data(await store.claim(att.id, "finish", BUSY_SECONDS)) as { token: string };
+  data(await store.writeDerived(att.id, token, [await derivedRow(line(1)), await derivedRow(line(2))], { state: "processed" }));
+  const before = structuredClone({ thoughts: store.thoughts, attachments: store.attachments });
+  store.failDerivedAfter = 1;
+  const rebuilt = [await derivedRow(line(3)), await derivedRow(line(4)), await derivedRow(line(5))];
+  const result = await store.writeDerived(att.id, token, rebuilt, { state: "processed", caption_model: "new" });
+  assertEquals({ failed: "error" in result, thoughts: store.thoughts, attachments: store.attachments }, {
+    failed: true,
+    ...before,
+  });
+});
