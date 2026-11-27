@@ -56,8 +56,23 @@ function upload(file, target) {
   });
 }
 
+function outcomeText(o) {
+  if (o.state === "processed") {
+    if (o.caption) return "Captioned: " + o.caption.slice(0, 300);
+    return "Saved " + o.derived_count + (o.derived_count === 1 ? " passage" : " passages");
+  }
+  if (o.state === "scanned") return "Scanned PDF: text search won't cover it yet";
+  if (o.state === "not_captioned") return "Not captioned: " + o.reason;
+  if (o.state === "refused") return "Refused: " + o.reason;
+  return "Failed: " + o.reason;
+}
+
 function finish() {
-  return post("/page/finish", { token: token });
+  return post("/page/finish", { token: token }).then(function (res) {
+    return res.json().then(function (body) {
+      show(outcomeText(body));
+    });
+  });
 }
 
 function start(file) {

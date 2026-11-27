@@ -115,3 +115,31 @@ Deno.test("U288 the page PUTs the one file to the returned link, then calls /pag
   assertEquals([put.headers["content-type"], put.headers["x-upsert"], (put.body as string).length], ["image/jpeg", "true", PICK.size]);
   assertEquals(f.requests[3].body, { token: "tok" });
 });
+
+/** Load the page, pick a file, and let it upload and finish with `outcome`. */
+async function finishWith(outcome: unknown) {
+  const f = net()
+    .on("POST", `${BASE}/page/start`, { body: UPLOAD })
+    .on("PUT", SIGNED, { status: 200, body: {} })
+    .on("POST", `${BASE}/page/finish`, { body: outcome });
+  const page = await loadPage({ href: `${PAGE_AT}#t=tok`, fetch: f.fetch });
+  await page.pick(PICK);
+  await settle();
+  return { page, f };
+}
+
+Deno.test("U289 each outcome shows its text from the contract", async () => {
+  const long = "x".repeat(400);
+  const cases: [unknown, string][] = [
+    [{ state: "processed", derived_count: 1, caption: long }, "Captioned: " + "x".repeat(300)],
+    [{ state: "processed", derived_count: 12, page_count: 9 }, "Saved 12 passages"],
+    [{ state: "scanned", derived_count: 0, page_count: 3 }, "Scanned PDF: text search won't cover it yet"],
+    [{ state: "not_captioned", derived_count: 0, reason: "the vision model is not configured" }, "Not captioned: the vision model is not configured"],
+    [{ state: "refused", derived_count: 0, reason: "The file is image/png, not the declared image/jpeg." }, "Refused: The file is image/png, not the declared image/jpeg."],
+    [{ state: "failed", derived_count: 0, reason: "embedding service unavailable" }, "Failed: embedding service unavailable"],
+  ];
+  for (const [outcome, expected] of cases) {
+    const { page } = await finishWith(outcome);
+    assertEquals(page.text("status"), expected);
+  }
+});
