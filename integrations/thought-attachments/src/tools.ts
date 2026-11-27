@@ -144,7 +144,9 @@ async function attachFile(deps: Deps, args: AttachArgs) {
   };
   return reply(
     [
-      `Attachment ${row.id} (short id ${data.short_id}) started on thought ${row.parent_thought_id}.`,
+      `Attachment ${row.id} (short id ${data.short_id}) started on thought ${row.parent_thought_id}${
+        note !== undefined && !parentCreated ? ", attached to your existing thought" : ""
+      }.`,
       `Upload before ${row.upload_deadline}, with a command:`,
       data.curl,
       `or on a phone: ${data.page_link}`,
