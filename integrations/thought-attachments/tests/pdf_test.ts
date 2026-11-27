@@ -50,3 +50,22 @@ Deno.test("U159 openPdf of corrupt bytes returns an error with a readable reason
     assertStringIncludes(result.error, "could not be read");
   }
 });
+
+/** A hand-written PDF with a standard-handler /Encrypt entry that needs a password: no binary file, no pdf-lib. */
+function encryptedPdf(): Uint8Array {
+  const hex = (digit: string) => "<" + digit.repeat(32) + ">";
+  return new TextEncoder().encode(`%PDF-1.4
+1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj
+2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj
+3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 200 200] >> endobj
+4 0 obj << /Filter /Standard /V 1 /R 2 /O ${hex("ab")} /U ${hex("cd")} /P -4 >> endobj
+trailer << /Root 1 0 R /Size 5 /Encrypt 4 0 R /ID [<00112233445566778899aabbccddeeff> <00112233445566778899aabbccddeeff>] >>
+%%EOF
+`);
+}
+
+Deno.test("U160 openPdf of an encrypted PDF returns an error with a readable reason", async () => {
+  const result = await openPdf(encryptedPdf());
+  assert("error" in result);
+  assertStringIncludes(result.error, "password");
+});

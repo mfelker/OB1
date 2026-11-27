@@ -6,7 +6,10 @@ export async function openPdf(bytes: Uint8Array): Promise<R<PdfDoc>> {
   let pdf;
   try {
     pdf = await getDocumentProxy(new Uint8Array(bytes));
-  } catch {
+  } catch (error) {
+    if (error instanceof Error && error.name === "PasswordException") {
+      return { error: "The PDF is password-protected (encrypted), so its text cannot be read." };
+    }
     return { error: "The PDF could not be read: it is damaged or not a PDF." };
   }
   return {
