@@ -396,7 +396,7 @@ Deno.test(
   },
 );
 
-todo(
+Deno.test(
   "A6 find_thought (meaning) finds a thought stored as the core stores it, with first line and date, and attach_file accepts its id",
   async () => {
     const w = world();
