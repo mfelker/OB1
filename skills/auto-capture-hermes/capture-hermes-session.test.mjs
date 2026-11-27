@@ -191,11 +191,13 @@ describe("acceptance", () => {
 
   test("A8 with no address and no key nothing is sent and the run exits 0", { skip }, async () => {
     seedSession();
-    stub = await startIngestStub();
     const result = await capture();
     assert.equal(result.code, 0);
-    assert.ok(dispositions(sandbox).includes("error:missing_env"));
-    assert.equal(stub.requests.length, 0);
+    // The child has no address, so it could never reach the stand-in. "Nothing is
+    // sent" is shown instead by the run stopping at the config check: a single log
+    // line, and no delivery attempt left in the retry queue.
+    assert.deepEqual(dispositions(sandbox), ["error:missing_env"]);
+    assert.deepEqual(queueEntries(sandbox), []);
   });
 });
 
@@ -364,10 +366,10 @@ test("U21 an address without a key sends nothing", { skip }, async () => {
 
 test("U22 a key without an address sends nothing", { skip }, async () => {
   seedSession();
-  stub = await startIngestStub();
   await capture(SESSION_ID, { MCP_ACCESS_KEY: DUMMY_KEY });
-  assert.ok(dispositions(sandbox).includes("error:missing_env"));
-  assert.equal(stub.requests.length, 0);
+  // No address reaches the child, so assert that no delivery was attempted (see A8).
+  assert.deepEqual(dispositions(sandbox), ["error:missing_env"]);
+  assert.deepEqual(queueEntries(sandbox), []);
 });
 
 test("U23 address and key from .env.local are used", { skip }, async () => {
@@ -413,11 +415,16 @@ test("U37 unparseable hook stdin exits 0 with the no-op reply", { skip }, async 
 test("U38 on_session_finalize captures once and records it in session state", { skip }, async () => {
   seedSession();
   stub = await startIngestStub();
+  const before = Date.now();
   const result = await runAdapter(sandbox, { stdin: hookPayload("on_session_finalize"), env: { ...brainEnv(), OB_CAPTURE_SYNC: "1" } });
+  const after = Date.now();
   assert.equal(result.stdout, "{}\n");
   assert.equal(stub.requests.length, 1);
   const state = readState(sandbox, SESSION_ID);
-  assert.ok(state.captured_at);
+  // captured_at is the ISO-8601 time of this capture, not just any truthy value.
+  assert.match(state.captured_at, /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/);
+  const capturedAt = Date.parse(state.captured_at);
+  assert.ok(capturedAt >= before && capturedAt <= after, `captured_at ${state.captured_at} is outside this run`);
   assert.equal(state.ingest_ref, "job-1");
 });
 
