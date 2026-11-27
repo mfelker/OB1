@@ -527,3 +527,23 @@ Deno.test("U247 note with an over-cap declaration saves no note", async () => {
   assertEquals(h.store.thoughts, []);
   assertNothingCreated(h);
 });
+
+Deno.test("U248 a phone-upload start without file details writes a row with no declaration, carrying expected_kind", async () => {
+  const h = await harness();
+  const parent = await seed(h, "garage shelf");
+  const out = await call(h, "attach_file", { thought_id: parent.id, expected_kind: "photo" });
+  assertEquals(out.isError, false);
+  const row = h.store.attachments[0];
+  assertEquals(
+    [row.file_name, row.declared_type, row.declared_size, row.storage_path, row.expected_kind, row.state],
+    [null, null, null, null, "photo", "pending_upload"],
+  );
+  assertEquals(row.upload_deadline, new Date(h.clock.now().getTime() + 60 * 60_000).toISOString());
+  const link = out.data.page_link as string;
+  assertEquals(row.page_token_hash, await sha256Hex(link.split("#t=")[1]));
+  assertEquals(out.data.upload, undefined);
+  assertEquals(out.data.curl, undefined);
+  assertEquals(out.data.limits, { image_bytes: 10 * 1024 * 1024, pdf_bytes: 25 * 1024 * 1024, pdf_pages: 50 });
+  assertEquals(h.store.signedUploads, []);
+  assertStringIncludes(out.text, link);
+});

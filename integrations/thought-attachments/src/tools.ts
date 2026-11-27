@@ -4,7 +4,7 @@ import { z } from "npm:zod@4.1.13";
 import { baseName, checkDeclared } from "./intake.ts";
 import { noteMetadata } from "./derived.ts";
 import { curlLine, pageLink, publicUrl } from "./links.ts";
-import type { AcceptedType, AttachmentRow, BusyOp, SensitivityTier, Deps, Services, Settings, UploadInstructions } from "./types.ts";
+import type { AcceptedType, AttachmentRow, BusyOp, ExpectedKind, SensitivityTier, Deps, Services, Settings, UploadInstructions } from "./types.ts";
 
 type Hints = { readOnlyHint: boolean; destructiveHint?: boolean; openWorldHint?: boolean };
 
@@ -24,6 +24,15 @@ function limitsFor(settings: Settings, type: string): { max_bytes: number; max_p
     return { max_bytes: Math.floor(settings.maxPdfMb * 1024 * 1024), max_pages: settings.maxPdfPages };
   }
   return { max_bytes: Math.floor(settings.maxImageMb * 1024 * 1024) };
+}
+
+/** Every cap, for a phone upload whose type is not known yet (as `/page/info` shows them). */
+function allLimits(settings: Settings) {
+  return {
+    image_bytes: Math.floor(settings.maxImageMb * 1024 * 1024),
+    pdf_bytes: Math.floor(settings.maxPdfMb * 1024 * 1024),
+    pdf_pages: settings.maxPdfPages,
+  };
 }
 
 const toHex = (bytes: Uint8Array) => [...bytes].map((x) => x.toString(16).padStart(2, "0")).join("");
@@ -56,17 +65,22 @@ interface AttachArgs {
   file_name?: string;
   declared_type?: string;
   declared_size?: number;
+  expected_kind?: ExpectedKind;
   sensitivity_tier?: SensitivityTier;
 }
 
 /** `attach_file`: validates, finds or makes the parent, then records the pending attachment and its links. */
 async function attachFile(deps: Deps, args: AttachArgs) {
-  const { thought_id, note, file_name, declared_type, declared_size, sensitivity_tier } = args;
+  const { thought_id, note, file_name, declared_type, declared_size, expected_kind, sensitivity_tier } = args;
   if ((thought_id === undefined) === (note === undefined)) return fail(ONE_PARENT);
   const given = [file_name, declared_type, declared_size].filter((v) => v !== undefined).length;
   if (given > 0 && given < 3) return fail(PARTIAL_DETAILS);
-  if (file_name !== undefined && declared_type !== undefined && declared_size !== undefined) {
-    const refusal = checkDeclared({ name: baseName(file_name), type: declared_type, size: declared_size }, deps.settings);
+  // A command upload gives all three details; a phone upload gives none (the page declares the file).
+  const file = given === 3
+    ? { name: baseName(file_name as string), type: declared_type as AcceptedType, size: declared_size as number }
+    : null;
+  if (file) {
+    const refusal = checkDeclared(file, deps.settings);
     if (refusal) return fail(refusal.message);
   }
   let parentId: string;
@@ -84,14 +98,8 @@ async function attachFile(deps: Deps, args: AttachArgs) {
     parentId = saved.data.id;
     parentCreated = saved.data.created;
   }
-  if (file_name !== undefined && declared_type !== undefined && declared_size !== undefined) {
-    const pending = await deps.store.findPending(
-      parentId,
-      baseName(file_name),
-      declared_type as AcceptedType,
-      declared_size,
-      deps.now(),
-    );
+  if (file) {
+    const pending = await deps.store.findPending(parentId, file.name, file.type, file.size, deps.now());
     if ("error" in pending) return fail(pending.error);
     if (pending.data) {
       const row = pending.data;
@@ -108,22 +116,26 @@ async function attachFile(deps: Deps, args: AttachArgs) {
   }
   const id = newId(deps);
   const pageToken = toHex(deps.randomBytes(32));
-  const name = baseName(file_name ?? "");
-  const storagePath = `attachments/${id}/${name}`;
-  const signed = await deps.store.signUpload(storagePath);
-  if ("error" in signed) return fail(signed.error);
-  const upload: UploadInstructions = {
-    url: publicUrl(deps.settings, signed.data.url),
-    method: "PUT",
-    headers: { "content-type": declared_type as string, "x-upsert": "false" },
-  };
+  let upload: UploadInstructions | undefined;
+  let storagePath: string | null = null;
+  if (file) {
+    storagePath = `attachments/${id}/${file.name}`;
+    const signed = await deps.store.signUpload(storagePath);
+    if ("error" in signed) return fail(signed.error);
+    upload = {
+      url: publicUrl(deps.settings, signed.data.url),
+      method: "PUT",
+      headers: { "content-type": file.type, "x-upsert": "false" },
+    };
+  }
   const created = await deps.store.createAttachment({
     id,
     parent_thought_id: parentId,
     parent_created_here: parentCreated,
-    file_name: name,
-    declared_type: declared_type as AcceptedType,
-    declared_size,
+    file_name: file?.name ?? null,
+    declared_type: file?.type ?? null,
+    declared_size: file?.size ?? null,
+    expected_kind,
     sensitivity_tier,
     storage_path: storagePath,
     upload_deadline: new Date(deps.now().getTime() + deps.settings.uploadLinkMinutes * 60_000).toISOString(),
@@ -137,19 +149,18 @@ async function attachFile(deps: Deps, args: AttachArgs) {
     parent_thought_id: row.parent_thought_id,
     parent_created_here: row.parent_created_here,
     upload_deadline: row.upload_deadline,
-    upload,
-    curl: curlLine(upload, name),
+    ...(upload && file ? { upload, curl: curlLine(upload, file.name) } : {}),
     page_link: pageLink(deps.settings, pageToken),
-    limits: limitsFor(deps.settings, declared_type as string),
+    limits: file ? limitsFor(deps.settings, file.type) : allLimits(deps.settings),
   };
   return reply(
     [
       `Attachment ${row.id} (short id ${data.short_id}) started on thought ${row.parent_thought_id}${
         note !== undefined && !parentCreated ? ", attached to your existing thought" : ""
       }.`,
-      `Upload before ${row.upload_deadline}, with a command:`,
-      data.curl,
-      `or on a phone: ${data.page_link}`,
+      `Upload before ${row.upload_deadline}.`,
+      ...(data.curl ? ["With a command:", data.curl] : []),
+      `On a phone: ${data.page_link}`,
     ].join("\n"),
     data,
   );
