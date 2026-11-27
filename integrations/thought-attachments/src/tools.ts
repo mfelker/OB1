@@ -180,6 +180,19 @@ function asReported(row: AttachmentRow, now: Date): AttachmentRow {
   return row;
 }
 
+/** One attachment as `list_attachments` shows it. */
+function summary(row: AttachmentRow) {
+  return {
+    attachment_id: row.id,
+    short_id: shortId(row.id),
+    file_name: row.file_name,
+    type: row.actual_type ?? row.declared_type,
+    size: row.actual_size ?? row.declared_size,
+    state: row.state,
+    derived_count: row.derived_count,
+  };
+}
+
 /** An attachment by full or short id, or the "not found" / "ambiguous" failure to return. */
 async function resolveAttachment(
   deps: Deps,
@@ -303,7 +316,15 @@ export function buildServer(deps: Deps, services: Services): McpServer {
     description: "List the attachments of a thought, or the attachment behind a derived thought.",
     inputSchema: { thought_id: z.string().optional(), derived_thought_id: z.string().optional() },
     annotations: READ_ONLY,
-  }, NOT_YET);
+  }, async ({ thought_id }) => {
+    const listed = await deps.store.listByParent(thought_id as string);
+    if ("error" in listed) return fail(listed.error);
+    const attachments = listed.data.map((row) => summary(asReported(row, deps.now())));
+    const lines = attachments.map((a) =>
+      `${a.attachment_id} (${a.short_id})  ${a.file_name}  ${a.type}  ${a.size} bytes  ${a.state}  ${a.derived_count} derived thoughts`
+    );
+    return reply(lines.join("\n"), { attachments });
+  });
 
   server.registerTool("remove_attachment", {
     description: "Remove an attachment with its file and derived thoughts. Without confirm, only shows what would go.",

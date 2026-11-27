@@ -691,3 +691,37 @@ Deno.test("U353 a cut-off finish reads failed, the run did not finish, and its s
   assertEquals(link, publicUrl(h.settings, h.store.signedDownloads[0].url));
   assertStringIncludes(out.text, link);
 });
+
+// ---------- list_attachments (T050) ----------
+
+Deno.test("U254 list_attachments with thought_id returns each attachment's id, short id, file name, type, size, state and derived_count", async () => {
+  const h = await harness();
+  const parent = await seed(h, "dishwasher");
+  const a = h.store.seedAttachment({
+    parent_thought_id: parent.id,
+    file_name: "manual.pdf",
+    declared_type: "application/pdf",
+    declared_size: 1000,
+    actual_type: "application/pdf",
+    actual_size: 1000,
+    state: "processed",
+    derived_count: 4,
+  });
+  const b = h.store.seedAttachment({
+    parent_thought_id: parent.id,
+    file_name: "shelf.jpg",
+    declared_type: "image/jpeg",
+    declared_size: 500,
+    state: "pending_upload",
+  });
+  const out = await call(h, "list_attachments", { thought_id: parent.id });
+  assertEquals(out.isError, false);
+  const short = (id: string) => id.replace(/-/g, "").slice(0, 8);
+  assertEquals(out.data.attachments, [
+    { attachment_id: a.id, short_id: short(a.id), file_name: "manual.pdf", type: "application/pdf", size: 1000, state: "processed", derived_count: 4 },
+    { attachment_id: b.id, short_id: short(b.id), file_name: "shelf.jpg", type: "image/jpeg", size: 500, state: "pending_upload", derived_count: 0 },
+  ]);
+  for (const shown of [a.id, short(a.id), "manual.pdf", "processed", b.id, "shelf.jpg", "pending_upload"]) {
+    assertStringIncludes(out.text, shown);
+  }
+});
