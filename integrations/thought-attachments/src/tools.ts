@@ -249,7 +249,31 @@ export function buildServer(deps: Deps, services: Services): McpServer {
     description: "Show an attachment's details and a short-lived download link.",
     inputSchema: { attachment_id: z.string() },
     annotations: READ_ONLY,
-  }, NOT_YET);
+  }, async ({ attachment_id }) => {
+    const found = await resolveAttachment(deps, attachment_id);
+    if ("failure" in found) return found.failure;
+    const row = found.row;
+    const data = {
+      attachment_id: row.id,
+      short_id: shortId(row.id),
+      file_name: row.file_name,
+      type: row.actual_type ?? row.declared_type,
+      size: row.actual_size ?? row.declared_size,
+      page_count: row.page_count,
+      state: row.state,
+      reason: row.state_reason,
+      derived_count: row.derived_count,
+      caption_model: row.caption_model,
+      parent_thought_id: row.parent_thought_id,
+    };
+    const lines = [
+      `${data.file_name} (${data.type}, ${data.size} bytes) - attachment ${row.id}, thought ${data.parent_thought_id}`,
+      `State: ${data.state}${data.reason ? ` (${data.reason})` : ""}. Derived thoughts: ${data.derived_count}.`,
+    ];
+    if (data.page_count !== null) lines.push(`Pages: ${data.page_count}.`);
+    if (data.caption_model) lines.push(`Caption model: ${data.caption_model}.`);
+    return reply(lines.join("\n"), data);
+  });
 
   server.registerTool("list_attachments", {
     description: "List the attachments of a thought, or the attachment behind a derived thought.",

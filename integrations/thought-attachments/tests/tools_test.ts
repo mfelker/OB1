@@ -564,3 +564,40 @@ Deno.test("U249 an expected_kind other than photo or pdf is refused", async () =
   assertEquals(ok.isError, false);
   assertEquals(h.store.attachments[0].expected_kind, "pdf");
 });
+
+// ---------- get_attachment (T049) ----------
+
+async function storedRow(h: H, fields: Record<string, unknown> = {}) {
+  const row = await pendingRow(h, {
+    state: "processed",
+    actual_type: "application/pdf",
+    actual_size: 1000,
+    page_count: 12,
+    derived_count: 5,
+    caption_model: "test/vision-model",
+    ...fields,
+  });
+  h.store.putObject(row.storage_path as string, new Uint8Array(1000));
+  return row;
+}
+
+Deno.test("U250 get_attachment returns file name, type, size, page count, state, reason, derived_count, caption_model and parent id", async () => {
+  const h = await harness();
+  const row = await storedRow(h, { state_reason: "all passages saved" });
+  const out = await call(h, "get_attachment", { attachment_id: row.id });
+  assertEquals(out.isError, false);
+  assertEquals(out.data.attachment_id, row.id);
+  assertEquals(out.data.short_id, row.id.replace(/-/g, "").slice(0, 8));
+  assertEquals(out.data.file_name, "manual.pdf");
+  assertEquals(out.data.type, "application/pdf");
+  assertEquals(out.data.size, 1000);
+  assertEquals(out.data.page_count, 12);
+  assertEquals(out.data.state, "processed");
+  assertEquals(out.data.reason, "all passages saved");
+  assertEquals(out.data.derived_count, 5);
+  assertEquals(out.data.caption_model, "test/vision-model");
+  assertEquals(out.data.parent_thought_id, row.parent_thought_id);
+  for (const shown of ["manual.pdf", "application/pdf", "1000", "12", "processed", "all passages saved", "5", "test/vision-model", row.parent_thought_id]) {
+    assertStringIncludes(out.text, shown);
+  }
+});
