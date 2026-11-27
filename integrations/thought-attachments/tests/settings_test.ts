@@ -171,3 +171,18 @@ Deno.test("U309 a non-numeric, zero or negative MB cap is a problem naming it an
     ],
   );
 });
+
+Deno.test("U310 each other numeric setting set to abc is a problem naming it", () => {
+  const names = [
+    "EMBEDDING_BATCH_SIZE",
+    "PASSAGE_MAX_CHARS",
+    "SCANNED_MIN_CHARS_PER_PAGE",
+    "UPLOAD_LINK_MINUTES",
+    "DOWNLOAD_LINK_SECONDS",
+    "BUSY_SECONDS",
+  ];
+  assertEquals(
+    names.map((name) => problemsWith({ [name]: "abc" })),
+    names.map((name) => [{ setting: name, reason: WHOLE }]),
+  );
+});
