@@ -264,7 +264,12 @@ declare
 begin
   insert into thoughts (content, content_fingerprint, embedding, metadata)
   values (p_content, fp, p_embedding::vector, coalesce(p_metadata, '{}'::jsonb))
+  on conflict (content_fingerprint) where content_fingerprint is not null do nothing
   returning id into new_id;
+  if new_id is null then
+    select id into new_id from thoughts where content_fingerprint = fp;
+    return jsonb_build_object('id', new_id, 'created', false);
+  end if;
   return jsonb_build_object('id', new_id, 'created', true);
 end;
 $$;

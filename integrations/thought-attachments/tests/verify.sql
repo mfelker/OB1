@@ -609,3 +609,16 @@ begin
     raise exception 'U84: stored row differs: %', t;
   end if;
 end $$;
+
+-- U85: a note whose fingerprint exists returns that thought as not created, and leaves it unchanged
+do $$
+declare txt text := 'U85 note ' || gen_random_uuid(); o uuid; r jsonb; t thoughts;
+begin
+  insert into thoughts (content, content_fingerprint, metadata)
+    values (txt, encode(sha256(convert_to(lower(trim(regexp_replace(txt, '\s+', ' ', 'g'))), 'UTF8')), 'hex'), '{"owner":true}') returning id into o;
+  r := attachment_insert_note('  ' || upper(txt), array_fill(0, array[1536])::vector::text, '{"type":"observation"}'::jsonb);
+  select * into t from thoughts where id = o;
+  delete from thoughts where id = o;
+  if (r->>'id')::uuid <> o or (r->>'created')::boolean is not false then raise exception 'U85: got %', r; end if;
+  if t.content <> txt or t.metadata <> '{"owner":true}'::jsonb or t.embedding is not null then raise exception 'U85: thought changed: %', t; end if;
+end $$;
