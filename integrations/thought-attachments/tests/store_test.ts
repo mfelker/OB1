@@ -334,3 +334,10 @@ Deno.test("U92 attachmentForDerived on a thought without attachment_id returns n
   assertEquals(await store.attachmentForDerived("gone"), { data: null });
   assertEquals(ff.requests.length, 3); // no attachment lookup was made
 });
+
+Deno.test("U110 removalPreview maps the preview reply to { derived, noteWouldGo }", async () => {
+  const { store, ff } = setup();
+  ff.on("POST", `${REST}/rpc/attachment_removal_preview`, { body: { derived: 4, noteWouldGo: true } });
+  assertEquals(await store.removalPreview(ATT_ID), { data: { derived: 4, noteWouldGo: true } });
+  assertEquals(ff.requests[0].body, { p_id: ATT_ID });
+});

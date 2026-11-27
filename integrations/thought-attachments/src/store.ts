@@ -120,7 +120,9 @@ export function createSupabaseStore(
     release: notYet,
     writeDerived: notYet,
     setState: notYet,
-    removalPreview: notYet,
+    removalPreview(id) {
+      return rpc<{ derived: number; noteWouldGo: boolean }>("attachment_removal_preview", { p_id: id });
+    },
     removeAttachment: notYet,
     async signUpload(path) {
       const { data, error } = await db.storage.from(settings.attachmentsBucket).createSignedUploadUrl(path);
