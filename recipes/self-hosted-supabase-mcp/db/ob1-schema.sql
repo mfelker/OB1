@@ -1,0 +1,127 @@
+-- ob1-schema.sql: the Open Brain schema from docs/01-getting-started.md at 1536 dimensions.
+-- Postgres runs this file once, when the database's data folder is empty (first start).
+-- The SQL blocks below are copied verbatim from docs/01; tests/schema-drift.test.mjs
+-- fails if they stop matching.
+
+-- docs/01 enables pgvector in the dashboard; here it is enabled in SQL.
+create extension if not exists vector;
+
+-- Create the objects as postgres, the role Supabase's SQL Editor uses, so later
+-- OB1 SQL run as postgres can change them. The init runner itself is supabase_admin.
+set role postgres;
+
+-- docs/01 block 1
+-- Create the thoughts table
+create table thoughts (
+  id uuid default gen_random_uuid() primary key,
+  content text not null,
+  embedding vector(1536),
+  metadata jsonb default '{}'::jsonb,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+-- Index for fast vector similarity search
+create index on thoughts
+  using hnsw (embedding vector_cosine_ops);
+
+-- Index for filtering by metadata fields
+create index on thoughts using gin (metadata);
+
+-- Index for date range queries
+create index on thoughts (created_at desc);
+
+-- Auto-update the updated_at timestamp
+create or replace function update_updated_at()
+returns trigger as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$ language plpgsql;
+
+create trigger thoughts_updated_at
+  before update on thoughts
+  for each row
+  execute function update_updated_at();
+
+-- docs/01 block 2
+create or replace function match_thoughts(
+  query_embedding vector(1536),
+  match_threshold float default 0.7,
+  match_count int default 10,
+  filter jsonb default '{}'::jsonb
+)
+returns table (
+  id uuid,
+  content text,
+  metadata jsonb,
+  similarity float,
+  created_at timestamptz
+)
+language plpgsql
+as $$
+begin
+  return query
+  select
+    t.id,
+    t.content,
+    t.metadata,
+    1 - (t.embedding <=> query_embedding) as similarity,
+    t.created_at
+  from thoughts t
+  where 1 - (t.embedding <=> query_embedding) > match_threshold
+    and (filter = '{}'::jsonb or t.metadata @> filter)
+  order by t.embedding <=> query_embedding
+  limit match_count;
+end;
+$$;
+
+-- docs/01 block 3
+alter table thoughts enable row level security;
+
+create policy "Service role full access"
+  on thoughts
+  for all
+  using (auth.role() = 'service_role');
+
+-- docs/01 block 4
+-- Allow the service_role to read and write thoughts
+grant select, insert, update, delete on table public.thoughts to service_role;
+
+-- docs/01 block 5
+-- Add fingerprint column for deduplication
+ALTER TABLE thoughts ADD COLUMN content_fingerprint TEXT;
+
+-- Unique index so duplicate content is detected
+CREATE UNIQUE INDEX idx_thoughts_fingerprint
+  ON thoughts (content_fingerprint)
+  WHERE content_fingerprint IS NOT NULL;
+
+-- Upsert function: inserts new thoughts, merges metadata on duplicates
+CREATE OR REPLACE FUNCTION upsert_thought(p_content TEXT, p_payload JSONB DEFAULT '{}')
+RETURNS JSONB AS $$
+DECLARE
+  v_fingerprint TEXT;
+  v_result JSONB;
+  v_id UUID;
+BEGIN
+  v_fingerprint := encode(sha256(convert_to(
+    lower(trim(regexp_replace(p_content, '\s+', ' ', 'g'))),
+    'UTF8'
+  )), 'hex');
+
+  INSERT INTO thoughts (content, content_fingerprint, metadata)
+  VALUES (p_content, v_fingerprint, COALESCE(p_payload->'metadata', '{}'::jsonb))
+  ON CONFLICT (content_fingerprint) WHERE content_fingerprint IS NOT NULL DO UPDATE
+  SET updated_at = now(),
+      metadata = thoughts.metadata || COALESCE(EXCLUDED.metadata, '{}'::jsonb)
+  RETURNING id INTO v_id;
+
+  v_result := jsonb_build_object('id', v_id, 'fingerprint', v_fingerprint);
+  RETURN v_result;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Back to the init runner's own role.
+reset role;
