@@ -59,3 +59,12 @@ Deno.test("U129 a passage that crosses a page boundary records both pages", () =
   assertEquals(passages[0].pages, [1, 2]);
   assertEquals(passages[0].text, "end of page one start of page two");
 });
+
+Deno.test("U127 passages keep reading order and together contain all of the page text, whitespace aside", () => {
+  const pages = [words(90, "a"), "", words(70, "b") + "\n\n" + words(40, "c"), "  tail  "];
+  const passages = toPassages(pages, lineFor, settingsWith({ PASSAGE_MAX_CHARS: "180" }));
+  assert(passages.length > 3);
+  const expected = pages.join(" ").split(/\s+/).filter(Boolean);
+  const actual = passages.flatMap((p) => p.text.split(/\s+/).filter(Boolean));
+  assertEquals(actual, expected);
+});
