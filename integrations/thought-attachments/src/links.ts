@@ -11,7 +11,7 @@ export function publicUrl(settings: Settings, url: string): string {
 
 /** `UPLOAD_PAGE_URL#t=<token>` (contracts/upload-page.md "The link"). */
 export function pageLink(settings: Settings, token: string): string {
-  throw new Error("not implemented");
+  return `${settings.uploadPageUrl}#t=${token}`;
 }
 
 /** A ready-to-run curl PUT for a command upload (FR-002a). */

@@ -1,6 +1,6 @@
 /** links (T009): research R6, contracts/upload-page.md "The link", FR-002, FR-002a. */
 import { assertEquals } from "jsr:@std/assert@1.0.19";
-import { publicUrl } from "../src/links.ts";
+import { pageLink, publicUrl } from "../src/links.ts";
 import { loadSettings } from "../src/settings.ts";
 import type { Settings } from "../src/types.ts";
 import { envGetter } from "./helpers/env.ts";
@@ -23,4 +23,11 @@ Deno.test("U21 publicUrl returns the link unchanged when PUBLIC_BASE_URL is alre
   const cloud = "https://abcdefghijklmnop.supabase.co";
   const settings = settingsWith({ SUPABASE_URL: cloud, PUBLIC_BASE_URL: undefined, SUPABASE_PUBLIC_URL: undefined });
   assertEquals(publicUrl(settings, `${cloud}${SIGNED_PATH}`), `${cloud}${SIGNED_PATH}`);
+});
+
+Deno.test("U22 pageLink is UPLOAD_PAGE_URL then #t= then the token, with the token nowhere before the #", () => {
+  const page = "https://pages.example.test/ob1/upload-page.html";
+  const token = "Zm9yLXRoZS1wYWdlLW9ubHk";
+  const link = pageLink(settingsWith({ UPLOAD_PAGE_URL: page }), token);
+  assertEquals([link, link.split("#")[0].includes(token)], [`${page}#t=${token}`, false]);
 });
