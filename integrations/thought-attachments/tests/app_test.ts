@@ -2,6 +2,7 @@
 import { assert, assertEquals, assertStringIncludes } from "jsr:@std/assert@1.0.19";
 import { createApp, productionDeps } from "../src/app.ts";
 import { loadSettings } from "../src/settings.ts";
+import { UPLOAD_PAGE_HTML } from "../src/upload_page.ts";
 import type { Deps, FetchApp, Settings } from "../src/types.ts";
 import { Clock } from "./helpers/clock.ts";
 import { baseEnv, BRAIN_KEY, envGetter, SERVICE_ROLE_KEY, SUPABASE_URL } from "./helpers/env.ts";
@@ -318,4 +319,13 @@ Deno.test("U349 createApp with settings not ok answers /page/info, /page/start a
   }
   // A 400 with { code, message } is what the page shows as "Refused: <message>" (upload-page.html).
   assertEquals(answers, [1, 2, 3].map(() => ({ status: 400, message: PAGES_INVALID })));
+});
+
+Deno.test("U401 GET /upload serves exactly the src/upload_page.ts HTML as text/html", async () => {
+  const { app } = rig();
+  const response = await app.fetch(new Request(`${FUNCTION_URL}/upload`));
+  assertEquals(
+    { status: response.status, type: response.headers.get("content-type")?.split(";")[0].trim(), body: await response.text() },
+    { status: 200, type: "text/html", body: UPLOAD_PAGE_HTML },
+  );
 });
