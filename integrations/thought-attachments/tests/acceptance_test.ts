@@ -825,7 +825,7 @@ Deno.test(
   },
 );
 
-todo(
+Deno.test(
   "A26 with a LAN PUBLIC_BASE_URL every returned link starts with it and none carries the internal origin; page_link defaults to the function's upload page",
   async () => {
     const w = world({ env: { PUBLIC_BASE_URL: LAN, UPLOAD_PAGE_URL: undefined } });
