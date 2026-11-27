@@ -86,3 +86,34 @@ Deno.test("U297 with an empty configured key, every MCP request is refused", asy
     calls: [],
   });
 });
+
+/** The core server's CORS headers (W/server/index.ts), for the MCP route. */
+const CORE_CORS = {
+  "access-control-allow-origin": "*",
+  "access-control-allow-headers":
+    "authorization, x-client-info, apikey, content-type, x-brain-key, accept, mcp-session-id, mcp-protocol-version, last-event-id",
+  "access-control-allow-methods": "GET, POST, OPTIONS, DELETE",
+};
+
+const corsOf = (r: Response) => Object.fromEntries(Object.keys(CORE_CORS).map((k) => [k, r.headers.get(k)]));
+
+Deno.test("U298 an OPTIONS preflight gets the CORS headers the core server sends, with no key", async () => {
+  const { app, store } = rig();
+  const preflight = await app.fetch(new Request(FUNCTION_URL, {
+    method: "OPTIONS",
+    headers: { origin: "https://claude.ai", "access-control-request-method": "POST" },
+  }));
+  const { response } = await mcpCall(app.fetch, "tools/list", {}, BRAIN_KEY);
+  const refused = await mcpCall(app.fetch, "tools/list", {}, "wrong");
+  assertEquals(
+    {
+      status: preflight.status,
+      body: await preflight.text(),
+      preflight: corsOf(preflight),
+      reply: corsOf(response),
+      refused: corsOf(refused.response),
+      calls: store.callNames(),
+    },
+    { status: 200, body: "ok", preflight: CORE_CORS, reply: CORE_CORS, refused: CORE_CORS, calls: [] },
+  );
+});

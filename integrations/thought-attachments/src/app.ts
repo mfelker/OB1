@@ -5,6 +5,14 @@ import { createFinisher } from "./finish.ts";
 import { buildServer } from "./tools.ts";
 import type { AppInput, FetchApp } from "./types.ts";
 
+// The core server's CORS headers (W/server/index.ts), so a client that reaches the core connector reaches this one.
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type, x-brain-key, accept, mcp-session-id, mcp-protocol-version, last-event-id",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS, DELETE",
+};
+
 // The core server's authorization error (W/server/index.ts): a JSON-RPC envelope at HTTP 200, so strict
 // MCP hosts keep the connection instead of treating it as a transport fault.
 const JSON_RPC_UNAUTHORIZED_CODE = -32001;
@@ -37,7 +45,10 @@ async function unauthorized(request: Request): Promise<Response> {
     error: { code: JSON_RPC_UNAUTHORIZED_CODE, message: UNAUTHORIZED_MESSAGE },
     id: await jsonRpcId(request),
   };
-  return new Response(JSON.stringify(body), { status: 200, headers: { "Content-Type": "application/json" } });
+  return new Response(JSON.stringify(body), {
+    status: 200,
+    headers: { "Content-Type": "application/json", ...corsHeaders },
+  });
 }
 
 /** Answers every MCP call and page route with the named settings error when `input.ok` is false (T005 Q3). */
@@ -47,6 +58,8 @@ export function createApp(input: AppInput): FetchApp {
   const services = createFinisher(deps);
   const app = new Hono();
 
+  app.options("*", (c) => c.text("ok", 200, corsHeaders));
+
   app.all("*", async (c) => {
     const given = c.req.header("x-brain-key") || new URL(c.req.url).searchParams.get("key");
     if (!given || !sameKey(given, deps.settings.mcpAccessKey)) return await unauthorized(c.req.raw);
@@ -54,7 +67,9 @@ export function createApp(input: AppInput): FetchApp {
     const transport = new StreamableHTTPTransport();
     await server.connect(transport);
     const response = await transport.handleRequest(c);
-    if (!response) return c.json({ error: "No response from MCP transport" }, 500);
+    if (!response) return c.json({ error: "No response from MCP transport" }, 500, corsHeaders);
+    response.headers.delete("mcp-session-id");
+    for (const [k, v] of Object.entries(corsHeaders)) response.headers.set(k, v);
     return response;
   });
 
