@@ -220,7 +220,7 @@ Stack configuration, in `F/tests/compose.test.mjs`. Each test runs `docker compo
 - [x] T043 [P] Secret, binary, profanity and SQL-safety scan of `F`, plus the OB1 gate's review checks run locally with the upstream title (all rules; SC-008).
 - [x] T044 TDD audit: `/speckit-tdd-verify` writes `M/specs/006-self-hosted-supabase/tdd/verification.md` with verdict PASS or PASS_WITH_GAPS (Quality Gate 1). Ticked 2026-11-27 on the second re-audit at `9744cd2` (report `e1125f0`): PASS_WITH_GAPS under the owner exceptions T066 and T073 (FAIL under the rubric as written). The owner ruled that the 11 criteria covered only by the recorded Mac and Linux live runs count as a gap, not HIGH. T081 and T082 are non-blocking.
 - [x] T045 Scope check: `git -C W diff --stat main...HEAD`, run against fork `main`, which has 004, lists only `recipes/self-hosted-supabase-mcp/`. T039–T043 and T045 were run locally on 2026-11-27 at `9744cd2`; evidence is in `evidence/gates/`.
-- [ ] T046 **Fork landing, asking the owner before each push or PR.**
+- [x] T046 **Fork landing, asking the owner before each push or PR.** Done 2026-11-27: [fork #21](https://github.com/mfelker/OB1/pull/21) merged with `--merge` at `73c80c7` on green `fork-ci-verdict` and `OB1 Review`, after the fork CI fix in #22 (`78231fc`); ledger row added.
   1. `git -C W push -u origin contrib/mfelker/self-hosted-supabase`.
   2. `gh pr create -R mfelker/OB1 --base main --head contrib/mfelker/self-hosted-supabase --title "[recipes] Lean self-hosted Supabase for Open Brain (fork landing)"`. The `[category]` title is required by the gate's PR-format rule; the body ends with the "Generated with Claude Code" line only.
   3. When `fork-ci-verdict` and `OB1 Review` are green, the **owner** merges with `--merge`.
