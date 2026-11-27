@@ -85,3 +85,18 @@ Deno.test("U217 tools/list returns exactly the seven tool names", async () => {
   const { tools } = await h.client.listTools();
   assertEquals(tools.map((t) => t.name).sort(), TOOL_NAMES);
 });
+
+Deno.test("U218 each tool's readOnlyHint, destructiveHint and openWorldHint match the contract", async () => {
+  const h = await harness();
+  const { tools } = await h.client.listTools();
+  const hints = (name: string) => tools.find((t) => t.name === name)?.annotations;
+  for (const readOnly of ["find_thought", "get_attachment", "list_attachments", "find_orphan_attachments"]) {
+    assertEquals(hints(readOnly)?.readOnlyHint, true, readOnly);
+  }
+  const attach = hints("attach_file");
+  assertEquals([attach?.readOnlyHint, attach?.destructiveHint, attach?.openWorldHint], [false, false, true]);
+  const finish = hints("finish_attachment");
+  assertEquals([finish?.readOnlyHint, finish?.destructiveHint, finish?.openWorldHint], [false, true, true]);
+  const remove = hints("remove_attachment");
+  assertEquals([remove?.readOnlyHint, remove?.destructiveHint, remove?.openWorldHint], [false, true, false]);
+});
