@@ -55,3 +55,16 @@ Deno.test("U133 fingerprint equals upsert_thought's normalisation: collapse whit
   assertEquals(await fingerprint("hello world again"), await fingerprint("HELLO\n\nWorld  AGAIN\n"));
   assertEquals(await fingerprint("abc"), "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad");
 });
+
+const EMBEDDING = [0.1, 0.2, 0.3];
+const passage = (text: string, pages: [number, number]) => ({ text, pages });
+
+Deno.test("U134 a passage row's content is the source line, a line break, then the passage text", async () => {
+  const row = await passageRow(rowFor(), passage("To clean the filter, twist the cylinder.", [12, 13]), EMBEDDING, NOW);
+  assertEquals(
+    row.content,
+    "From dishwasher-manual.pdf, pages 12–13 (attachment a1b2c3d4)\nTo clean the filter, twist the cylinder.",
+  );
+  assertEquals(row.embedding, EMBEDDING);
+  assertEquals(row.fingerprint, await fingerprint(row.content));
+});

@@ -19,7 +19,16 @@ export function passageRow(
   embedding: number[],
   now: Date,
 ): Promise<DerivedRow> {
-  throw new Error("not implemented");
+  const content = sourceLine(row.file_name ?? "", locatorFor(passage.pages), row.id.slice(0, 8)) + "\n" + passage.text;
+  return Promise.resolve({ content, fingerprint: "", metadata: {}, embedding }).then(async (derived) => ({
+    ...derived,
+    fingerprint: await fingerprint(content),
+  }));
+}
+
+/** `page 12` for one page, `pages 12–13` across pages (data-model.md). */
+function locatorFor([first, last]: [number, number]): string {
+  return first === last ? "page " + first : "pages " + first + "–" + last;
 }
 
 export function captionRow(
