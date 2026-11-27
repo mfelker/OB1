@@ -1005,7 +1005,7 @@ Deno.test("A29 get_attachment on a pending_upload and on a refused attachment re
 
 // ============================================================== User Story 4
 
-todo(
+Deno.test(
   "A30 attach_file for a PDF declared over MAX_PDF_MB is refused naming the limit and the declared size, with no row and no link",
   async () => {
     const w = world();
