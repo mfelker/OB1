@@ -30,6 +30,7 @@ import {
   BRAIN_KEY,
   EMBEDDING_API_BASE,
   envGetter,
+  PUBLIC_BASE_URL,
   SECRET_VALUES,
   SUPABASE_URL,
   VISION_API_BASE,
@@ -199,6 +200,22 @@ const uploadLinkIn = (value: unknown) => strings(value).find((s) => s.includes("
 
 /** The page token in a page link's fragment. */
 const tokenOf = (pageLink: string) => pageLink.split("#t=")[1];
+
+/** The owner's download link for an attachment: the fake store's last signing of that attachment's own path, on PUBLIC_BASE_URL. */
+function downloadLinkFor(w: World, id: string): string {
+  const path = row(w, id)?.storage_path;
+  const signed = w.store.signedDownloads.findLast((s) => s.path === path);
+  if (!signed) throw new Error(`no download link was signed for ${path}`);
+  return signed.url.replace(SUPABASE_URL, PUBLIC_BASE_URL);
+}
+
+/** The upload instructions' link and token for an attachment: the fake store's signing of that attachment's own path, on PUBLIC_BASE_URL. */
+function uploadLinkFor(w: World, id: string): { url: string; token: string } {
+  const path = row(w, id)?.storage_path;
+  const signed = w.store.signedUploads.findLast((s) => s.path === path);
+  if (!signed) throw new Error(`no upload link was signed for ${path}`);
+  return { url: signed.url.replace(SUPABASE_URL, PUBLIC_BASE_URL), token: signed.token };
+}
 
 /** Derived thoughts of an attachment, by their metadata (data-model.md "Derived thought"). */
 const derivedOf = (w: World, attachmentId: string): FakeThought[] =>
@@ -423,8 +440,8 @@ Deno.test(
     assert(short, "no short id in the source line");
     const got = await tool(w, "get_attachment", { attachment_id: short });
     assertEquals(
-      { isError: got.isError, same: holds(got.sc, id) || said(got).includes(id), link: typeof got.sc.download_link },
-      { isError: false, same: true, link: "string" },
+      { isError: got.isError, same: holds(got.sc, id) || said(got).includes(id), link: got.sc.download_link },
+      { isError: false, same: true, link: downloadLinkFor(w, id) },
     );
   },
 );
@@ -756,11 +773,11 @@ Deno.test(
       {
         state: done.sc.state,
         stored: w.store.objects.has(row(w, id)!.storage_path!),
-        link: typeof got.sc.download_link,
+        link: got.sc.download_link,
         captions: derivedOf(w, id).length,
         visionCalls: w.net.requestsTo(VISION_URL).length,
       },
-      { state: "not_captioned", stored: true, link: "string", captions: 0, visionCalls: 0 },
+      { state: "not_captioned", stored: true, link: downloadLinkFor(w, id), captions: 0, visionCalls: 0 },
     );
   },
 );
@@ -951,10 +968,10 @@ Deno.test(
         type: holds(got.sc, "application/pdf"),
         size: holds(got.sc, pdf.length),
         state: holds(got.sc, "processed"),
-        link: typeof got.sc.download_link,
+        link: got.sc.download_link,
         seconds: w.store.signedDownloads.at(-1)?.seconds,
       },
-      { name: true, type: true, size: true, state: true, link: "string", seconds: 600 },
+      { name: true, type: true, size: true, state: true, link: downloadLinkFor(w, id), seconds: 600 },
     );
   },
 );
@@ -1078,10 +1095,10 @@ Deno.test(
     const { id, done } = await uploadAndFinish(w, parent.id, "scan.pdf", "application/pdf", await scannedPdf(2));
     assertMatch(said(done), /text search won.t cover it yet/i);
     const got = await tool(w, "get_attachment", { attachment_id: id });
-    assertEquals({ state: done.sc.state, passages: derivedOf(w, id).length, link: typeof got.sc.download_link }, {
+    assertEquals({ state: done.sc.state, passages: derivedOf(w, id).length, link: got.sc.download_link }, {
       state: "scanned",
       passages: 0,
-      link: "string",
+      link: downloadLinkFor(w, id),
     });
   },
 );
@@ -1130,9 +1147,9 @@ Deno.test(
     const { id, done } = await uploadAndFinish(w, parent.id, "broken.pdf", "application/pdf", corruptPdf());
     const got = await tool(w, "get_attachment", { attachment_id: id });
     assert(typeof done.sc.reason === "string" && done.sc.reason.length > 0, said(done));
-    assertEquals({ state: done.sc.state, link: typeof got.sc.download_link, passages: derivedOf(w, id).length }, {
+    assertEquals({ state: done.sc.state, link: got.sc.download_link, passages: derivedOf(w, id).length }, {
       state: "failed",
-      link: "string",
+      link: downloadLinkFor(w, id),
       passages: 0,
     });
   },
@@ -1363,8 +1380,12 @@ Deno.test(
     });
     assertMatch(said(over), /10 ?MB|10,?485,?760/);
     assertMatch(said(over), /10,?485,?761/);
-    assertEquals({ at: [at.isError, typeof at.sc.upload?.url], over: over.isError }, {
-      at: [false, "string"],
+    const atUrl: string | undefined = at.sc.upload?.url;
+    assertEquals({
+      at: [at.isError, atUrl, atUrl && new URL(atUrl).searchParams.get("token")],
+      over: over.isError,
+    }, {
+      at: [false, uploadLinkFor(w, at.sc.attachment_id).url, uploadLinkFor(w, at.sc.attachment_id).token],
       over: true,
     });
   },
