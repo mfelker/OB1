@@ -879,3 +879,17 @@ Deno.test("U336 a confirmed removal whose stored file is already missing succeed
   assertEquals(h.store.attachments, []);
   assertEquals(h.store.derivedOf(row.id), []);
 });
+
+Deno.test("U354 a confirmed remove proceeds on an attachment whose earlier remove was cut off, which left it as it was", async () => {
+  const h = await harness();
+  const row = await claimedRow(h, "remove", 100, { derived_count: 2 });
+  addDerived(h, row.id, 2);
+  h.clock.advanceSeconds(101);
+  const read = await call(h, "get_attachment", { attachment_id: row.id });
+  assertEquals(read.data.state, "processed");
+  assertEquals(read.data.derived_count, 2);
+  const out = await call(h, "remove_attachment", { attachment_id: row.id, confirm: true });
+  assertEquals(out.isError, false);
+  assertEquals(h.store.attachments, []);
+  assertEquals(h.store.derivedOf(row.id), []);
+});
