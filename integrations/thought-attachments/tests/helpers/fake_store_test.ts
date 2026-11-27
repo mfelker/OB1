@@ -43,3 +43,11 @@ Deno.test("U25 a claim while another unexpired claim exists returns busy naming 
   clock.advanceSeconds(BUSY_SECONDS - 1);
   assertEquals(data(await store.claim(att.id, "remove", BUSY_SECONDS)), { busy: "finish" });
 });
+
+Deno.test("U26 a claim after the holder's expiry by the injected clock succeeds with a new token", async () => {
+  const { store, clock, att } = await setup();
+  const first = data(await store.claim(att.id, "finish", BUSY_SECONDS)) as { token: string };
+  clock.advanceSeconds(BUSY_SECONDS);
+  const second = data(await store.claim(att.id, "finish", BUSY_SECONDS));
+  assertEquals("token" in second && second.token !== first.token, true, `got ${JSON.stringify(second)}`);
+});
