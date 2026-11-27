@@ -66,6 +66,7 @@ The function reads these settings from its environment. Only `MCP_ACCESS_KEY` is
 | `EMBEDDING_API_KEY` | `OPENROUTER_API_KEY` | Key for it |
 | `EMBEDDING_MODEL` | `openai/text-embedding-3-small` | Must be your brain's model |
 | `EMBEDDING_BATCH_SIZE` | `64` | Passages per embedding request; `1` turns batching off |
+| `EMBEDDING_DIMENSIONS` | 1536 | Vector size requested from the embedding endpoint; must match the brain's `thoughts.embedding`. If the endpoint rejects the parameter, the request is retried once without it |
 | `VISION_API_BASE`, `VISION_API_KEY`, `VISION_MODEL` | unset | OpenAI-compatible vision endpoint. If unset, photos end as `not_captioned` |
 | `ATTACHMENTS_BUCKET` | `ob1-files` | The private bucket |
 | `MAX_IMAGE_MB` | `10` | Image size cap (decimals such as `7.5` are accepted; 1 MB is 1,048,576 bytes) |
@@ -255,7 +256,7 @@ Ask the AI to run `find_orphan_attachments`. It lists attachments whose parent t
 - A file fetched through `get_attachment` is byte-identical to the original, and the link stops working after 10 minutes.
 - A core `list_thoughts` filtered to type `observation` shows none of the passages, and `thought_stats` counts them under `reference`.
 
-Tested with: Supabase Cloud ____ (placeholder), self-hosted stack from spec 006 ____ (placeholder), Deno ____, `unpdf` 2.2.2, vision model ____, embedding model ____.
+Tested with (2026-11-27): Supabase Cloud, Free plan (OpenRouter `openai/text-embedding-3-small`, vision `openai/gpt-4o-mini`; phone upload from an iPhone with the camera on High Efficiency); the self-hosted stack from `recipes/self-hosted-supabase-mcp` on an Apple M4 Max (Ollama `qwen3-embedding:4b` at 1536 dimensions); Deno 2.9.8; `unpdf` 2.2.2. On self-hosted, captions with `qwen3-vl:8b` were too slow for a full-resolution phone photo (see Troubleshooting); `qwen2.5vl:7b` is suggested but was not tested.
 
 Related reading: the [ingestion metadata contract](../../docs/ingestion-metadata-contract.md), [Getting Started](../../docs/01-getting-started.md), and the self-hosted Supabase recipe (`recipes/self-hosted-supabase-mcp`).
 
@@ -268,6 +269,10 @@ They exist because the file is processed inside one request. On Supabase Cloud t
 Other limits: PDF, JPEG, PNG and WebP only; one file per attachment; one finish, rebuild or remove at a time per attachment.
 
 ## Troubleshooting
+
+**A phone photo finishes with no caption, or the upload page waits and then shows an error (self-hosted)**
+
+Solution: the vision model took longer than the stack's 150-second request limit. A full-resolution phone photo becomes about 12,000 vision tokens in models such as `qwen3-vl:8b`, about 70 seconds of processing on an Apple M4 Max before any caption text, and "thinking" models then write a long answer. Nothing is half-written: the attachment stays pending and the page link stays valid. Use a vision model that answers directly (for example `qwen2.5vl:7b`), or a faster endpoint. Downscaling photos before captioning is planned.
 
 **Issue: every call returns a settings error naming `MCP_ACCESS_KEY` or another setting**
 Solution: that setting is missing or invalid. A numeric setting must be a positive number, and a whole number for page, character, batch and time settings. The message never shows the value; check the one it names.
