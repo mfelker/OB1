@@ -51,3 +51,23 @@ Deno.test("U119 an image declared one byte over the image cap is refused, naming
 Deno.test("U118 an image declared at exactly the image cap is accepted", () => {
   assertEquals(checkDeclared({ name: "a.jpg", type: "image/jpeg", size: IMAGE_CAP }, settingsWith()), null);
 });
+
+Deno.test("U120 a PDF declared at exactly the PDF cap is accepted", () => {
+  assertEquals(checkDeclared({ name: "a.pdf", type: "application/pdf", size: PDF_CAP }, settingsWith()), null);
+});
+
+Deno.test("U121 a PDF declared one byte over the PDF cap is refused, naming the cap and the declared size", () => {
+  const refusal = checkDeclared({ name: "a.pdf", type: "application/pdf", size: PDF_CAP + 1 }, settingsWith());
+  assert(refusal !== null);
+  assertEquals(refusal.code, "too_large");
+  assertStringIncludes(refusal.message, "26214400");
+  assertStringIncludes(refusal.message, "26214401");
+});
+
+Deno.test("U320 with MAX_IMAGE_MB=2.5 an image at 2,621,440 bytes is accepted and one byte more is refused", () => {
+  const s = settingsWith({ MAX_IMAGE_MB: "2.5" });
+  assertEquals(checkDeclared({ name: "a.png", type: "image/png", size: 2_621_440 }, s), null);
+  const refusal = checkDeclared({ name: "a.png", type: "image/png", size: 2_621_441 }, s);
+  assert(refusal !== null);
+  assertStringIncludes(refusal.message, "2621440");
+});
