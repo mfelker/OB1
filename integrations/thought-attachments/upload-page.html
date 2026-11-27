@@ -82,6 +82,23 @@ function finish() {
   });
 }
 
+function megabytes(bytes) {
+  return String(Math.round((bytes / 1048576) * 100) / 100) + " MB";
+}
+
+function showInfo(info) {
+  var expectedEl = document.getElementById("expected");
+  if (info.expected_kind) {
+    expectedEl.textContent = "Expected: " + (info.expected_kind === "pdf" ? "a PDF" : "a photo");
+    expectedEl.hidden = false;
+  }
+  var caps = info.caps;
+  var limitEl = document.getElementById("limit");
+  limitEl.textContent = "Size limit: " + megabytes(caps.image_bytes) + " for photos, " +
+    megabytes(caps.pdf_bytes) + " and " + caps.pdf_pages + " pages for PDFs.";
+  limitEl.hidden = false;
+}
+
 function start(file) {
   return call("/page/start", { token: token, name: file.name, type: file.type, size: file.size }).then(function (r) {
     if (!r) return;
@@ -94,7 +111,9 @@ var token = readToken();
 if (!token) {
   statusEl.textContent = EXPIRED;
 } else {
-  call("/page/info", { token: token });
+  call("/page/info", { token: token }).then(function (r) {
+    if (r && r.status === 200) showInfo(r.body);
+  });
   fileEl.addEventListener("change", function () {
     var file = fileEl.files && fileEl.files[0];
     if (file) start(file);

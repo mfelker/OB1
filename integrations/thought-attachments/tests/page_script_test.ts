@@ -182,3 +182,18 @@ Deno.test("U292 the file loads no external script or style", () => {
   assertEquals(source.match(/@import|url\(/gi), null);
   assertEquals(source.match(/<(img|iframe|object|embed|audio|video|source)\b/gi), null);
 });
+
+Deno.test("U342 before any pick, the page sends { token } to /page/info and shows the expected kind and the size limit", async () => {
+  const asked = new FakeFetch().on("POST", `${BASE}/page/info`, {
+    body: { ...INFO, expected_kind: "photo", caps: { image_bytes: 10485760, pdf_bytes: 7864320, pdf_pages: 30 } },
+  });
+  const page = await loadPage({ href: `${PAGE_AT}#t=tok`, fetch: asked.fetch });
+  assertEquals(asked.requests.map((r) => [r.url.slice(BASE.length), r.body]), [["/page/info", { token: "tok" }]]);
+  assertStringIncludes(page.text("expected"), "photo");
+  assertEquals(page.el("expected").hidden, false);
+  const limit = page.text("limit");
+  for (const part of ["10 MB", "7.5 MB", "30 pages"]) assertStringIncludes(limit, part);
+
+  const none = await loadPage({ href: `${PAGE_AT}#t=tok`, fetch: net().fetch });
+  assertEquals([none.text("expected"), none.el("expected").hidden], ["", true]);
+});
