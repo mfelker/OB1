@@ -2,8 +2,9 @@
 import { McpServer } from "npm:@modelcontextprotocol/sdk@1.24.3/server/mcp.js";
 import { z } from "npm:zod@4.1.13";
 import { baseName, checkDeclared } from "./intake.ts";
+import { noteMetadata } from "./derived.ts";
 import { curlLine, pageLink, publicUrl } from "./links.ts";
-import type { AcceptedType, AttachmentRow, BusyOp, Deps, Services, Settings, UploadInstructions } from "./types.ts";
+import type { AcceptedType, AttachmentRow, BusyOp, SensitivityTier, Deps, Services, Settings, UploadInstructions } from "./types.ts";
 
 type Hints = { readOnlyHint: boolean; destructiveHint?: boolean; openWorldHint?: boolean };
 
@@ -47,6 +48,109 @@ const RUNNING: Record<BusyOp, string> = { finish: "finishing", rebuild: "rebuild
 /** A refusal because another finish, rebuild or remove holds the claim (FR-026). */
 function busyReply(op: BusyOp) {
   return reply(`busy (${RUNNING[op]}), try again shortly`, { busy: op }, true);
+}
+
+interface AttachArgs {
+  thought_id?: string;
+  note?: string;
+  file_name?: string;
+  declared_type?: string;
+  declared_size?: number;
+  sensitivity_tier?: SensitivityTier;
+}
+
+/** `attach_file`: validates, finds or makes the parent, then records the pending attachment and its links. */
+async function attachFile(deps: Deps, args: AttachArgs) {
+  const { thought_id, note, file_name, declared_type, declared_size, sensitivity_tier } = args;
+  if ((thought_id === undefined) === (note === undefined)) return fail(ONE_PARENT);
+  const given = [file_name, declared_type, declared_size].filter((v) => v !== undefined).length;
+  if (given > 0 && given < 3) return fail(PARTIAL_DETAILS);
+  if (file_name !== undefined && declared_type !== undefined && declared_size !== undefined) {
+    const refusal = checkDeclared({ name: baseName(file_name), type: declared_type, size: declared_size }, deps.settings);
+    if (refusal) return fail(refusal.message);
+  }
+  let parentId: string;
+  let parentCreated = false;
+  if (thought_id !== undefined) {
+    const exists = await deps.store.thoughtExists(thought_id);
+    if ("error" in exists) return fail(exists.error);
+    if (!exists.data) return fail("There is no thought with that thought_id.");
+    parentId = thought_id;
+  } else {
+    const embedded = await deps.embeddings.embed([note as string]);
+    if ("error" in embedded) return fail(embedded.error);
+    const saved = await deps.store.insertNote(note as string, embedded.data[0], noteMetadata(deps.now()));
+    if ("error" in saved) return fail(saved.error);
+    parentId = saved.data.id;
+    parentCreated = saved.data.created;
+  }
+  if (file_name !== undefined && declared_type !== undefined && declared_size !== undefined) {
+    const pending = await deps.store.findPending(
+      parentId,
+      baseName(file_name),
+      declared_type as AcceptedType,
+      declared_size,
+      deps.now(),
+    );
+    if ("error" in pending) return fail(pending.error);
+    if (pending.data) {
+      const row = pending.data;
+      return reply(
+        `This file is already pending as attachment ${row.id} (short id ${shortId(row.id)}); upload deadline ${row.upload_deadline}.`,
+        {
+          attachment_id: row.id,
+          short_id: shortId(row.id),
+          parent_thought_id: row.parent_thought_id,
+          upload_deadline: row.upload_deadline,
+        },
+      );
+    }
+  }
+  const id = newId(deps);
+  const pageToken = toHex(deps.randomBytes(32));
+  const name = baseName(file_name ?? "");
+  const storagePath = `attachments/${id}/${name}`;
+  const signed = await deps.store.signUpload(storagePath);
+  if ("error" in signed) return fail(signed.error);
+  const upload: UploadInstructions = {
+    url: publicUrl(deps.settings, signed.data.url),
+    method: "PUT",
+    headers: { "content-type": declared_type as string, "x-upsert": "false" },
+  };
+  const created = await deps.store.createAttachment({
+    id,
+    parent_thought_id: parentId,
+    parent_created_here: parentCreated,
+    file_name: name,
+    declared_type: declared_type as AcceptedType,
+    declared_size,
+    sensitivity_tier,
+    storage_path: storagePath,
+    upload_deadline: new Date(deps.now().getTime() + deps.settings.uploadLinkMinutes * 60_000).toISOString(),
+    page_token_hash: await sha256Hex(pageToken),
+  });
+  if ("error" in created) return fail(created.error);
+  const row = created.data;
+  const data = {
+    attachment_id: row.id,
+    short_id: shortId(row.id),
+    parent_thought_id: row.parent_thought_id,
+    parent_created_here: row.parent_created_here,
+    upload_deadline: row.upload_deadline,
+    upload,
+    curl: curlLine(upload, name),
+    page_link: pageLink(deps.settings, pageToken),
+    limits: limitsFor(deps.settings, declared_type as string),
+  };
+  return reply(
+    [
+      `Attachment ${row.id} (short id ${data.short_id}) started on thought ${row.parent_thought_id}.`,
+      `Upload before ${row.upload_deadline}, with a command:`,
+      data.curl,
+      `or on a phone: ${data.page_link}`,
+    ].join("\n"),
+    data,
+  );
 }
 
 /** An attachment by full or short id, or the "not found" / "ambiguous" failure to return. */
@@ -110,87 +214,7 @@ export function buildServer(deps: Deps, services: Services): McpServer {
       sensitivity_tier: z.enum(["standard", "personal", "restricted"]).optional(),
     },
     annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: true },
-  }, async ({ thought_id, note, file_name, declared_type, declared_size, sensitivity_tier }) => {
-    if ((thought_id === undefined) === (note === undefined)) return fail(ONE_PARENT);
-    const given = [file_name, declared_type, declared_size].filter((v) => v !== undefined).length;
-    if (given > 0 && given < 3) return fail(PARTIAL_DETAILS);
-    if (file_name !== undefined && declared_type !== undefined && declared_size !== undefined) {
-      const refusal = checkDeclared({ name: baseName(file_name), type: declared_type, size: declared_size }, deps.settings);
-      if (refusal) return fail(refusal.message);
-    }
-    if (thought_id !== undefined) {
-      const exists = await deps.store.thoughtExists(thought_id);
-      if ("error" in exists) return fail(exists.error);
-      if (!exists.data) return fail("There is no thought with that thought_id.");
-      if (file_name !== undefined && declared_type !== undefined && declared_size !== undefined) {
-        const pending = await deps.store.findPending(
-          thought_id,
-          baseName(file_name),
-          declared_type as AcceptedType,
-          declared_size,
-          deps.now(),
-        );
-        if ("error" in pending) return fail(pending.error);
-        if (pending.data) {
-          const row = pending.data;
-          return reply(
-            `This file is already pending as attachment ${row.id} (short id ${shortId(row.id)}); upload deadline ${row.upload_deadline}.`,
-            {
-              attachment_id: row.id,
-              short_id: shortId(row.id),
-              parent_thought_id: row.parent_thought_id,
-              upload_deadline: row.upload_deadline,
-            },
-          );
-        }
-      }
-    }
-    const id = newId(deps);
-    const pageToken = toHex(deps.randomBytes(32));
-    const name = baseName(file_name ?? "");
-    const storagePath = `attachments/${id}/${name}`;
-    const signed = await deps.store.signUpload(storagePath);
-    if ("error" in signed) return fail(signed.error);
-    const upload: UploadInstructions = {
-      url: publicUrl(deps.settings, signed.data.url),
-      method: "PUT",
-      headers: { "content-type": declared_type as string, "x-upsert": "false" },
-    };
-    const created = await deps.store.createAttachment({
-      id,
-      parent_thought_id: thought_id as string,
-      parent_created_here: false,
-      file_name: name,
-      declared_type: declared_type as AcceptedType,
-      declared_size,
-      sensitivity_tier,
-      storage_path: storagePath,
-      upload_deadline: new Date(deps.now().getTime() + deps.settings.uploadLinkMinutes * 60_000).toISOString(),
-      page_token_hash: await sha256Hex(pageToken),
-    });
-    if ("error" in created) return fail(created.error);
-    const row = created.data;
-    const data = {
-      attachment_id: row.id,
-      short_id: shortId(row.id),
-      parent_thought_id: row.parent_thought_id,
-      parent_created_here: row.parent_created_here,
-      upload_deadline: row.upload_deadline,
-      upload,
-      curl: curlLine(upload, name),
-      page_link: pageLink(deps.settings, pageToken),
-      limits: limitsFor(deps.settings, declared_type as string),
-    };
-    return reply(
-      [
-        `Attachment ${row.id} (short id ${data.short_id}) started on thought ${row.parent_thought_id}.`,
-        `Upload before ${row.upload_deadline}, with a command:`,
-        data.curl,
-        `or on a phone: ${data.page_link}`,
-      ].join("\n"),
-      data,
-    );
-  });
+  }, (args) => attachFile(deps, args));
 
   server.registerTool("finish_attachment", {
     description: "Finish an uploaded attachment: check it, extract its text or caption and make it searchable.",

@@ -1,6 +1,7 @@
 /** tools (T027-T030, T041, T049, T050, T063, T064): contracts/mcp-tools.md, driven through the MCP client over an in-memory transport. */
 import { assert, assertEquals, assertStringIncludes } from "jsr:@std/assert@1.0.19";
 import { buildServer } from "../src/tools.ts";
+import { noteMetadata } from "../src/derived.ts";
 import { curlLine, pageLink, publicUrl } from "../src/links.ts";
 import { loadSettings } from "../src/settings.ts";
 import type { EmbeddingClient, FinishOutcome, R, Services, Settings } from "../src/types.ts";
@@ -471,4 +472,23 @@ Deno.test("U242 a busy outcome says busy, naming the running operation as finish
     assertEquals(out.isError, true);
     assertEquals(out.data.busy, op);
   }
+});
+
+// ---------- attach_file: note and phone upload (T041) ----------
+
+Deno.test("U244 attach_file with note embeds the text and saves it through insertNote as the parent, created here", async () => {
+  const h = await harness();
+  const out = await call(h, "attach_file", { note: "Furnace filters live on the garage shelf", ...PDF });
+  assertEquals(out.isError, false);
+  assertEquals(h.embeddings.calls, [["Furnace filters live on the garage shelf"]]);
+  assertEquals(h.store.thoughts.length, 1);
+  const note = h.store.thoughts[0];
+  assertEquals(note.content, "Furnace filters live on the garage shelf");
+  assertEquals(note.embedding, VEC);
+  assertEquals(note.metadata, noteMetadata(h.clock.now()));
+  const row = h.store.attachments[0];
+  assertEquals(row.parent_thought_id, note.id);
+  assertEquals(row.parent_created_here, true);
+  assertEquals(out.data.parent_thought_id, note.id);
+  assertEquals(out.data.parent_created_here, true);
 });
