@@ -1324,7 +1324,7 @@ Deno.test(
   },
 );
 
-todo(
+Deno.test(
   "A62 a /page/finish refused as busy leaves the token valid; once the held finish completes, /page/finish returns processed, and a further one gets 410",
   async () => {
     const { w, token, release } = await heldPhotoFinish();
