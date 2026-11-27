@@ -3,7 +3,7 @@ import { McpServer } from "npm:@modelcontextprotocol/sdk@1.24.3/server/mcp.js";
 import { z } from "npm:zod@4.1.13";
 import { baseName, checkDeclared } from "./intake.ts";
 import { curlLine, pageLink, publicUrl } from "./links.ts";
-import type { AcceptedType, Deps, Services, Settings, UploadInstructions } from "./types.ts";
+import type { AcceptedType, AttachmentRow, Deps, Services, Settings, UploadInstructions } from "./types.ts";
 
 type Hints = { readOnlyHint: boolean; destructiveHint?: boolean; openWorldHint?: boolean };
 
@@ -42,6 +42,18 @@ function newId(deps: Deps): string {
 
 const PARTIAL_DETAILS = "Only some of file_name, declared_type and declared_size were given: give all three, or none for a phone upload.";
 
+/** An attachment by full or short id, or the "not found" / "ambiguous" failure to return. */
+async function resolveAttachment(
+  deps: Deps,
+  id: string,
+): Promise<{ row: AttachmentRow } | { failure: ReturnType<typeof fail> }> {
+  const found = await deps.store.getAttachment(id);
+  if ("error" in found) return { failure: fail(found.error) };
+  if (found.data === "not_found") return { failure: fail(`Attachment not found: ${id}.`) };
+  if (found.data === "ambiguous") return { failure: fail(`Ambiguous attachment id: ${id} matches more than one attachment; use the full id.`) };
+  return { row: found.data };
+}
+
 const NOT_YET = () => ({ content: [{ type: "text" as const, text: "" }] });
 
 /** A tool result: the text for the AI, plus the structured fields. */
@@ -51,7 +63,7 @@ function reply(text: string, data: Record<string, unknown> = {}, isError = false
 
 const fail = (message: string) => reply(message, { error: message }, true);
 
-export function buildServer(deps: Deps, _services: Services): McpServer {
+export function buildServer(deps: Deps, services: Services): McpServer {
   const server = new McpServer({ name: "thought-attachments", version: "0.1.0" });
 
   server.registerTool("find_thought", {
@@ -177,7 +189,18 @@ export function buildServer(deps: Deps, _services: Services): McpServer {
     description: "Finish an uploaded attachment: check it, extract its text or caption and make it searchable.",
     inputSchema: { attachment_id: z.string(), rebuild: z.boolean().optional() },
     annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: true },
-  }, NOT_YET);
+  }, async ({ attachment_id, rebuild }) => {
+    const found = await resolveAttachment(deps, attachment_id);
+    if ("failure" in found) return found.failure;
+    const outcome = await services.finish(found.row.id, { rebuild });
+    const { busy: _busy, last_rebuild_error, ...shown } = outcome;
+    const data = { ...shown, ...(last_rebuild_error === undefined ? {} : { last_rebuild_error }) };
+    const lines = [`State: ${outcome.state}.`, `Derived thoughts: ${outcome.derived_count}.`];
+    if (outcome.reason) lines.push(`Reason: ${outcome.reason}`);
+    if (outcome.page_count !== undefined) lines.push(`Pages: ${outcome.page_count}.`);
+    if (outcome.caption) lines.push(`Caption: ${outcome.caption}`);
+    return reply(lines.join("\n"), data);
+  });
 
   server.registerTool("get_attachment", {
     description: "Show an attachment's details and a short-lived download link.",

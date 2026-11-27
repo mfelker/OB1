@@ -433,3 +433,29 @@ Deno.test("U330 attach_file with only some of file_name, declared_type and decla
   }
   assertNothingCreated(h);
 });
+
+// ---------- finish_attachment (T030) ----------
+
+async function pendingRow(h: H, fields: Record<string, unknown> = {}) {
+  const parent = await seed(h, "dishwasher " + h.store.thoughts.length);
+  return h.store.seedAttachment({
+    parent_thought_id: parent.id,
+    file_name: "manual.pdf",
+    declared_type: "application/pdf",
+    declared_size: 1000,
+    storage_path: "attachments/x/manual.pdf",
+    ...fields,
+  });
+}
+
+Deno.test("U241 finish_attachment passes the id and rebuild to services.finish and returns the structured outcome", async () => {
+  const h = await harness();
+  const row = await pendingRow(h);
+  h.finish.outcome = { state: "processed", derived_count: 7, page_count: 12, caption: "a shelf", reason: "all good" };
+  const out = await call(h, "finish_attachment", { attachment_id: row.id, rebuild: true });
+  assertEquals(h.finish.calls, [{ id: row.id, opts: { rebuild: true } }]);
+  assertEquals(out.isError, false);
+  assertEquals(out.data, { state: "processed", derived_count: 7, page_count: 12, caption: "a shelf", reason: "all good" });
+  assertStringIncludes(out.text, "processed");
+  assertStringIncludes(out.text, "7");
+});
