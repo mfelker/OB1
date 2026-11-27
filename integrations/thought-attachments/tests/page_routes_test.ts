@@ -221,3 +221,30 @@ Deno.test("U274 the page routes need no brain key, and a brain key without a val
   assertEquals([keyOnly.status, keyAsToken.status, noKey.status], [410, 410, 200]);
   assertEquals(r.store.attachment(row.id)!.declared_size, 2048);
 });
+
+Deno.test("U275 CORS allows the origin of UPLOAD_PAGE_URL and gives no allow-origin to any other origin", async () => {
+  const r = await rig();
+  await r.seed();
+  const ok = await r.post("/page/start", { token: TOKEN, ...PICK }, { origin: "https://pages.example.test" });
+  const other = await r.post("/page/start", { token: TOKEN, ...PICK }, { origin: "https://evil.example.test" });
+  const none = await r.post("/page/start", { token: TOKEN, ...PICK });
+  const preflight = await r.app.request("https://fn.example.test/page/start", {
+    method: "OPTIONS",
+    headers: { origin: "https://pages.example.test", "access-control-request-method": "POST" },
+  });
+  const badPreflight = await r.app.request("https://fn.example.test/page/start", {
+    method: "OPTIONS",
+    headers: { origin: "https://evil.example.test", "access-control-request-method": "POST" },
+  });
+  assertEquals(
+    [
+      ok.headers.get("access-control-allow-origin"),
+      other.headers.get("access-control-allow-origin"),
+      none.headers.get("access-control-allow-origin"),
+      preflight.headers.get("access-control-allow-origin"),
+      badPreflight.headers.get("access-control-allow-origin"),
+    ],
+    ["https://pages.example.test", null, null, "https://pages.example.test", null],
+  );
+  assertStringIncludes(preflight.headers.get("access-control-allow-headers") ?? "", "content-type");
+});

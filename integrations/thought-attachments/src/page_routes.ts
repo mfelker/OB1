@@ -11,9 +11,31 @@ async function sha256Hex(text: string): Promise<string> {
 
 const EXPIRED = "This link has expired or was already used. Ask your assistant for a new one";
 
+function originOf(url: string): string | null {
+  try {
+    return new URL(url).origin;
+  } catch {
+    return null;
+  }
+}
+
 /** The page's routes (contracts/upload-page.md), as a Hono sub-app. */
 export function pageRoutes(deps: Deps, _services: Services): Hono {
   const app = new Hono();
+
+  // CORS only for the page's own origin (or the function's own origin, when it serves the page).
+  const pageOrigin = originOf(deps.settings.uploadPageUrl);
+  app.use("/page/*", async (c, next) => {
+    const origin = c.req.header("origin");
+    if (origin && (origin === pageOrigin || origin === new URL(c.req.url).origin)) {
+      c.header("Access-Control-Allow-Origin", origin);
+      c.header("Vary", "Origin");
+      c.header("Access-Control-Allow-Methods", "POST, OPTIONS");
+      c.header("Access-Control-Allow-Headers", "content-type");
+    }
+    if (c.req.method === "OPTIONS") return c.body(null, 204);
+    await next();
+  });
   // Attachments whose declaration came from this page: a new pick replaces those. A declaration
   // from the attach call is confirmed, never replaced. (No column tells them apart.)
   const declaredByPage = new Set<string>();
