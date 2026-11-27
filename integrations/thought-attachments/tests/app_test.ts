@@ -240,3 +240,17 @@ Deno.test("U305 GET /upload returns 200 with text/html, with no brain key", asyn
     { status: 200, type: "text/html", calls: [] },
   );
 });
+
+Deno.test("U306 the GET /upload body is upload-page.html byte for byte, its API-address line still blank, with or without /functions/v1", async () => {
+  const { app } = rig();
+  const file = await Deno.readFile(new URL("../upload-page.html", import.meta.url));
+  const bodies: Uint8Array[] = [];
+  for (const path of ["/thought-attachments/upload", "/functions/v1/thought-attachments/upload"]) {
+    bodies.push(new Uint8Array(await (await app.fetch(new Request(`http://localhost${path}`))).arrayBuffer()));
+  }
+  const text = new TextDecoder().decode(bodies[0]);
+  assertEquals({ same: bodies.map((b) => b.length === file.length && b.every((x, i) => x === file[i])), blank: text.includes('var API_ADDRESS = "";') }, {
+    same: [true, true],
+    blank: true,
+  });
+});
