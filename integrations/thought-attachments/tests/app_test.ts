@@ -58,3 +58,14 @@ Deno.test("U295 a wrong key gets an authorization error, and the store is never 
     calls: [],
   });
 });
+
+Deno.test("U296 a missing key gets an authorization error", async () => {
+  const { app, store } = rig();
+  const { message } = await mcpCall(app.fetch, "tools/list", {}, undefined, { id: "k" });
+  assertEquals({ error: message?.error, id: message?.id, result: message?.result, calls: store.callNames() }, {
+    error: UNAUTHORIZED,
+    id: "k",
+    result: undefined,
+    calls: [],
+  });
+});
