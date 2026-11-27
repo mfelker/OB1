@@ -221,6 +221,14 @@ The photo goes to the model as an embedded image, so the model server does not n
 
 **Done when:** a photo taken on your phone shows its caption on the page, and a core search for something in the photo returns the caption thought.
 
+### Get a file back
+
+A search result's source line names the attachment by its 8-character short id, for example `(attachment a1b2c3d4)`. Ask your AI to fetch the file with `get_attachment` and that short id (the full id works too). It returns the file name, type, size, page count, state, how many derived thoughts it has, and a download link that works for 10 minutes (`DOWNLOAD_LINK_SECONDS`). After that the link is refused; ask again for a new one. There is no link for an attachment that is still waiting for its upload or was refused.
+
+To see which attachments belong to a thought, or which one is behind a search result, use `list_attachments` with the thought's id or the derived thought's id. It lists each attachment's id, short id, file name, type, size, state and derived count.
+
+**Done when:** the downloaded file is byte-identical to your original.
+
 ## Expected Outcome
 
 - The schema check shows the attachments table with row-level security on and the private bucket.
