@@ -770,3 +770,10 @@ declare r jsonb := pg_temp.note_case('refused', true, interval '1 hour');
 begin
   if (r->'removed'->>'noteRemoved')::boolean is not true or (r->>'parent_still_there')::boolean then raise exception 'U98: %', r; end if;
 end $$;
+
+-- U99: remove deletes the parent note when the attachment is pending_upload past its deadline
+do $$
+declare r jsonb := pg_temp.note_case('pending_upload', true, interval '-1 second');
+begin
+  if (r->'removed'->>'noteRemoved')::boolean is not true or (r->>'parent_still_there')::boolean then raise exception 'U99: %', r; end if;
+end $$;

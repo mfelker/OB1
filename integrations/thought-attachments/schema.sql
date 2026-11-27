@@ -310,6 +310,19 @@ end;
 $$;
 grant execute on function attachment_set_state(uuid, text, jsonb) to service_role;
 
+-- FR-016's one exception: the parent note goes with an attachment that ended refused or expired without
+-- an upload, when this attachment created the note and no other attachment points to it.
+create or replace function attachment_note_would_go(a thought_attachments)
+returns boolean
+language sql
+stable
+as $$
+  select (a.state = 'refused' or (a.state = 'pending_upload' and a.upload_deadline <= now()))
+    and a.parent_created_here
+    and exists (select 1 from thoughts t where t.id = a.parent_thought_id)
+    and not exists (select 1 from thought_attachments o where o.parent_thought_id = a.parent_thought_id and o.id <> a.id)
+$$;
+
 -- Remove an attachment (FR-016, SC-020): its derived thoughts and its row, all scoped by its id and the
 -- caller's claim, in one transaction. Returns { "derived": n, "noteRemoved": bool }.
 create or replace function attachment_remove(p_id uuid, p_token text)
@@ -322,8 +335,7 @@ declare
   note_goes boolean;
 begin
   a := attachment_require_claim(p_id, p_token);
-  note_goes := a.state = 'refused' and a.parent_created_here
-    and not exists (select 1 from thought_attachments o where o.parent_thought_id = a.parent_thought_id and o.id <> p_id);
+  note_goes := attachment_note_would_go(a);
   delete from thoughts where metadata->>'attachment_id' = p_id::text;
   get diagnostics n = row_count;
   if note_goes then
