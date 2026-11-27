@@ -915,7 +915,7 @@ Deno.test(
   },
 );
 
-todo(
+Deno.test(
   "A61 /page/finish before any PUT says no file uploaded yet and keeps the token: after a PUT a second finish finishes it, and a third gets 410",
   async () => {
     const w = world();
