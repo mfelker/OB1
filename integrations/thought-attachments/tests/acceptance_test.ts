@@ -430,7 +430,7 @@ Deno.test(
   },
 );
 
-todo(
+Deno.test(
   "A8 the same PDF on two thoughts gives two disjoint passage sets, and a confirmed removal of one leaves the other's row and passages",
   async () => {
     const w = world();
