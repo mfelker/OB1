@@ -443,3 +443,21 @@ begin
   if old_n <> 2 or new_n <> 0 then raise exception 'U58: set changed (% old, % new)', old_n, new_n; end if;
   if st <> 'processed' or dc <> 2 then raise exception 'U58: state % derived_count %', st, dc; end if;
 end $$;
+
+-- U59: a write for one attachment leaves another attachment's derived thoughts untouched
+do $$
+declare p uuid := pg_temp.mk_parent(); a uuid := pg_temp.mk_att(p); p2 uuid := pg_temp.mk_parent(); b uuid := pg_temp.mk_att(p2); n bigint; dc int;
+begin
+  perform attachment_write_derived(b, 'tok', pg_temp.rows_json('u59 other ' || b), '{"state":"processed"}'::jsonb);
+  perform attachment_write_derived(a, 'tok', pg_temp.rows_json('u59 mine ' || a), '{"state":"processed"}'::jsonb);
+  perform attachment_write_derived(a, 'tok', pg_temp.rows_json('u59 mine again ' || a), '{"state":"processed"}'::jsonb);
+  select count(*) into n from thoughts where metadata->>'attachment_id' = b::text and content = 'u59 other ' || b;
+  select derived_count into dc from thought_attachments where id = b;
+  delete from thoughts where metadata->>'attachment_id' = a::text;
+  delete from thoughts where metadata->>'attachment_id' = b::text;
+  delete from thought_attachments where id = a;
+  delete from thought_attachments where id = b;
+  delete from thoughts where id = p;
+  delete from thoughts where id = p2;
+  if n <> 1 or dc <> 1 then raise exception 'U59: the other attachment changed (% rows, derived_count %)', n, dc; end if;
+end $$;
