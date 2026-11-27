@@ -10,6 +10,12 @@ export function createVisionClient(
   settings: Settings,
   fetch: typeof globalThis.fetch,
 ): VisionClient {
+  /** FR-009: no key value ever appears in a reason. */
+  function redact(text: string): string {
+    const key = settings.visionApiKey;
+    return key ? text.split(key).join("[redacted]") : text;
+  }
+
   return {
     configured: Boolean(settings.visionApiBase && settings.visionModel),
     async caption(
@@ -44,14 +50,18 @@ export function createVisionClient(
         });
       } catch (e) {
         return {
-          error: `vision endpoint ${settings.visionApiBase} is unreachable: ${
-            (e as Error).message
-          }`,
+          error: redact(
+            `vision endpoint ${settings.visionApiBase} is unreachable: ${
+              (e as Error).message
+            }`,
+          ),
         };
       }
       if (!response.ok) {
         return {
-          error: `vision endpoint answered HTTP ${response.status}: ${(await response.text()).slice(0, 300)}`,
+          error: `vision endpoint answered HTTP ${response.status}: ${
+            redact(await response.text()).slice(0, 300)
+          }`,
         };
       }
       let text = "";

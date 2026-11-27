@@ -1,7 +1,10 @@
 /** Batched OpenAI-compatible embeddings client (spec 007 research R3, FR-007, FR-009, FR-011). */
 import type { EmbeddingClient, R, Settings } from "./types.ts";
 
-export function createEmbeddingClient(settings: Settings, fetch: typeof globalThis.fetch): EmbeddingClient {
+export function createEmbeddingClient(
+  settings: Settings,
+  fetch: typeof globalThis.fetch,
+): EmbeddingClient {
   /** FR-009: no key value ever appears in a reason. */
   function redact(text: string): string {
     const key = settings.embeddingApiKey;
@@ -15,25 +18,45 @@ export function createEmbeddingClient(settings: Settings, fetch: typeof globalTh
         method: "POST",
         headers: {
           "content-type": "application/json",
-          ...(settings.embeddingApiKey ? { authorization: `Bearer ${settings.embeddingApiKey}` } : {}),
+          ...(settings.embeddingApiKey
+            ? { authorization: `Bearer ${settings.embeddingApiKey}` }
+            : {}),
         },
         body: JSON.stringify({ model: settings.embeddingModel, input: batch }),
       });
     } catch (e) {
-      return { error: redact(`embedding endpoint ${settings.embeddingApiBase} is unreachable: ${(e as Error).message}`) };
+      return {
+        error: redact(
+          `embedding endpoint ${settings.embeddingApiBase} is unreachable: ${
+            (e as Error).message
+          }`,
+        ),
+      };
     }
     if (!response.ok) {
-      return { error: `embedding endpoint answered HTTP ${response.status}: ${redact(await response.text()).slice(0, 300)}` };
+      return {
+        error: `embedding endpoint answered HTTP ${response.status}: ${
+          redact(await response.text()).slice(0, 300)
+        }`,
+      };
     }
     let vectors: number[][] | undefined;
     try {
       const body = await response.json();
-      if (Array.isArray(body?.data)) vectors = body.data.map((d: { embedding: number[] }) => d.embedding);
+      if (Array.isArray(body?.data)) {
+        vectors = body.data.map((d: { embedding: number[] }) => d.embedding);
+      }
     } catch {
       // falls through to the malformed reply below
     }
-    if (!vectors || vectors.length !== batch.length || !vectors.every(Array.isArray)) {
-      return { error: "embedding endpoint sent a malformed reply (expected one vector per input text)" };
+    if (
+      !vectors || vectors.length !== batch.length ||
+      !vectors.every(Array.isArray)
+    ) {
+      return {
+        error:
+          "embedding endpoint sent a malformed reply (expected one vector per input text)",
+      };
     }
     return { data: vectors };
   }
