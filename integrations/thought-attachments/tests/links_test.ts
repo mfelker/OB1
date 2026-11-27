@@ -1,6 +1,6 @@
 /** links (T009): research R6, contracts/upload-page.md "The link", FR-002, FR-002a. */
 import { assertEquals } from "jsr:@std/assert@1.0.19";
-import { pageLink, publicUrl } from "../src/links.ts";
+import { curlLine, pageLink, publicUrl } from "../src/links.ts";
 import { loadSettings } from "../src/settings.ts";
 import type { Settings } from "../src/types.ts";
 import { envGetter } from "./helpers/env.ts";
@@ -30,4 +30,20 @@ Deno.test("U22 pageLink is UPLOAD_PAGE_URL then #t= then the token, with the tok
   const token = "Zm9yLXRoZS1wYWdlLW9ubHk";
   const link = pageLink(settingsWith({ UPLOAD_PAGE_URL: page }), token);
   assertEquals([link, link.split("#")[0].includes(token)], [`${page}#t=${token}`, false]);
+});
+
+/** Upload instructions as attach_file returns them (contracts/mcp-tools.md). */
+const UPLOAD = {
+  url: `https://brain.example.test${SIGNED_PATH}`,
+  method: "PUT" as const,
+  headers: { "content-type": "application/pdf", "x-upsert": "false" },
+};
+
+Deno.test("U23 curlLine is a PUT to the upload URL carrying every returned header and the given file path", () => {
+  assertEquals(
+    curlLine(UPLOAD, "/home/owner/My Manuals/dishwasher's manual.pdf"),
+    "curl -X PUT -H 'content-type: application/pdf' -H 'x-upsert: false'" +
+      " -T '/home/owner/My Manuals/dishwasher'\\''s manual.pdf'" +
+      ` '${UPLOAD.url}'`,
+  );
 });
