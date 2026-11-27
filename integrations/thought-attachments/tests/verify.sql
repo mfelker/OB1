@@ -857,3 +857,10 @@ declare r jsonb := pg_temp.orphan_case('pending_upload', interval '1 second', tr
 begin
   if r is not null then raise exception 'U107: %', r; end if;
 end $$;
+
+-- U108: orphans lists a refused row
+do $$
+declare r jsonb := pg_temp.orphan_case('refused', interval '1 hour', true);
+begin
+  if r is null or r->>'why' <> 'refused' then raise exception 'U108: %', r; end if;
+end $$;
