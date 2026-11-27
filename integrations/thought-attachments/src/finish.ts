@@ -49,7 +49,7 @@ export function createFinisher(deps: Deps): Services {
     const embedded = await deps.embeddings.embed(passages.map((p) => p.text));
     if ("error" in embedded) throw new Error(embedded.error);
     const now = deps.now();
-    const rows = await Promise.all(passages.map((p, i) => passageRow(row, p, embedded.data[i], now)));
+    const rows = await Promise.all(passages.map((p, i) => passageRow({ ...row, content_hash: hash }, p, embedded.data[i], now)));
     const patch = {
       state: "processed" as const,
       actual_type: sniffType(bytes),

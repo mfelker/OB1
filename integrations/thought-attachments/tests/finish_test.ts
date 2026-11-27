@@ -98,3 +98,15 @@ Deno.test("U183 finishing sets actual_type, actual_size, page_count, content_has
   assertEquals(row.content_hash, await contentHash(bytes));
   assertEquals(row.processed_at, r.clock.iso());
 });
+
+Deno.test("U184 every derived row's input_hash equals the attachment's content_hash", async () => {
+  const r = await rig();
+  const bytes = await textPdf(["alpha beta gamma", "delta epsilon"]);
+  const att = pending(r, bytes);
+  await r.finish(att.id, {});
+  const derived = r.store.derivedOf(att.id);
+  assert(derived.length >= 1);
+  const stored = r.store.attachment(att.id)?.content_hash;
+  assertEquals(stored, await contentHash(bytes));
+  for (const d of derived) assertEquals(d.metadata.input_hash, stored);
+});
