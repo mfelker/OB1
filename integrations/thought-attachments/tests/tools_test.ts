@@ -601,3 +601,20 @@ Deno.test("U250 get_attachment returns file name, type, size, page count, state,
     assertStringIncludes(out.text, shown);
   }
 });
+
+Deno.test("U251 get_attachment gives a stored file a download link through publicUrl, signed for DOWNLOAD_LINK_SECONDS, with the lifetime stated", async () => {
+  const h = await harness({ DOWNLOAD_LINK_SECONDS: "300" });
+  for (const state of ["processed", "scanned", "not_captioned", "failed"]) {
+    const row = await storedRow(h, { state });
+    const out = await call(h, "get_attachment", { attachment_id: row.id });
+    const link = out.data.download_link as string;
+    const signed = h.store.signedDownloads.at(-1);
+    assertEquals(signed?.path, row.storage_path, state);
+    assertEquals(signed?.seconds, 300);
+    assertEquals(link, publicUrl(h.settings, signed?.url as string), state);
+    assert(link.startsWith("https://brain.example.test/storage/v1/object/sign/ob1-files/"), state);
+    assertEquals(out.data.download_link_seconds, 300);
+    assertStringIncludes(out.text, link);
+    assertStringIncludes(out.text, "300 seconds");
+  }
+});
