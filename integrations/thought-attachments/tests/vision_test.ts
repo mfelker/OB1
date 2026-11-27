@@ -55,3 +55,10 @@ Deno.test("U175 with VISION_API_KEY set the request carries it as a bearer token
   await createVisionClient(settingsWith(), ff.fetch).caption(BYTES, "image/jpeg");
   assertEquals(ff.requests[0].headers["authorization"], `Bearer ${VISION_API_KEY}`);
 });
+
+Deno.test("U176 with VISION_API_KEY unset the request has no Authorization header", async () => {
+  const ff = new FakeFetch().on("POST", URL_, visionResponder("a red door"));
+  await createVisionClient(settingsWith({ VISION_API_KEY: undefined }), ff.fetch).caption(BYTES, "image/jpeg");
+  assertEquals(ff.requests.length, 1);
+  assert(!("authorization" in ff.requests[0].headers));
+});
