@@ -461,3 +461,22 @@ begin
   delete from thoughts where id = p2;
   if n <> 1 or dc <> 1 then raise exception 'U59: the other attachment changed (% rows, derived_count %)', n, dc; end if;
 end $$;
+
+-- U60: setting content_hash to one another non-refused attachment of the parent holds raises and changes nothing
+do $$
+declare p uuid := pg_temp.mk_parent(); a uuid; b uuid := pg_temp.mk_att(p); raised boolean := false; n bigint; h text; st text;
+begin
+  insert into thought_attachments (parent_thought_id, content_hash, state, upload_deadline)
+    values (p, 'sha256:u60', 'processed', now()) returning id into a;
+  begin
+    perform attachment_write_derived(b, 'tok', pg_temp.rows_json('u60 ' || b), '{"state":"processed","content_hash":"sha256:u60"}'::jsonb);
+  exception when unique_violation then raised := true;
+  end;
+  select count(*) into n from thoughts where metadata->>'attachment_id' = b::text;
+  select content_hash, state into h, st from thought_attachments where id = b;
+  delete from thought_attachments where id = a;
+  delete from thought_attachments where id = b;
+  delete from thoughts where id = p;
+  if not raised then raise exception 'U60: the duplicate content_hash was accepted'; end if;
+  if n <> 0 or h is not null or st <> 'pending_upload' then raise exception 'U60: changed (% rows, hash %, state %)', n, h, st; end if;
+end $$;
