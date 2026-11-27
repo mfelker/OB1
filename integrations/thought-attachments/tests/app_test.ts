@@ -63,6 +63,34 @@ Deno.test("U295 a wrong key gets an authorization error, and the store is never 
   });
 });
 
+/** BRAIN_KEY with one byte changed: same length, so only a byte-by-byte compare can tell it apart. */
+function sameLengthWrongKeys(): Record<string, string> {
+  const swap = (i: number) => BRAIN_KEY.slice(0, i) + (BRAIN_KEY[i] === "X" ? "Y" : "X") + BRAIN_KEY.slice(i + 1);
+  return {
+    first: swap(0),
+    middle: swap(Math.floor(BRAIN_KEY.length / 2)),
+    last: swap(BRAIN_KEY.length - 1),
+  };
+}
+
+for (const [id, via] of [["U386", "header"], ["U387", "query"]] as const) {
+  Deno.test(`${id} a same-length key differing only in the first, a middle or the last byte (${via}) gets an authorization error, and the store is never called`, async () => {
+    const keys = sameLengthWrongKeys();
+    for (const key of Object.values(keys)) assertEquals(key.length, BRAIN_KEY.length);
+    const seen: Record<string, unknown> = {};
+    for (const [where, key] of Object.entries(keys)) {
+      const { app, store } = rig();
+      const { message } = await mcpCall(app.fetch, "tools/call", {
+        name: "list_attachments",
+        arguments: { thought_id: "00000001-0000-4000-9000-000000000000" },
+      }, key, { id: 42, ...(via === "query" ? { via: "query" as const } : {}) });
+      seen[where] = { error: message?.error, id: message?.id, calls: store.callNames() };
+    }
+    const want = { error: UNAUTHORIZED, id: 42, calls: [] };
+    assertEquals(seen, { first: want, middle: want, last: want });
+  });
+}
+
 Deno.test("U296 a missing key gets an authorization error", async () => {
   const { app, store } = rig();
   const { message } = await mcpCall(app.fetch, "tools/list", {}, undefined, { id: "k" });
