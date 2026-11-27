@@ -97,3 +97,13 @@ Deno.test("U169 a malformed body (no data, or a different vector count) fails th
     assertStringIncludes(out.error, "malformed");
   }
 });
+
+Deno.test("U170 a failure in a later batch fails the whole call with no partial vectors", async () => {
+  const ff = new FakeFetch().on("POST", URL_, embeddingResponder(8), { status: 500, body: "boom" });
+  const client = createEmbeddingClient(settingsWith({ EMBEDDING_BATCH_SIZE: "2" }), ff.fetch);
+  const out = await client.embed(texts(4));
+  assertEquals(ff.requests.length, 2);
+  assert("error" in out);
+  assert(!("data" in out));
+  assertStringIncludes(out.error, "500");
+});
