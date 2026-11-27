@@ -218,7 +218,7 @@ Stack configuration, in `F/tests/compose.test.mjs`. Each test runs `docker compo
 - [ ] T041 [P] `markdownlint-cli2 --config .github/.markdownlint.jsonc "recipes/self-hosted-supabase-mcp/**/*.md"` in `W`.
 - [ ] T042 [P] README check: Prerequisites, numbered steps, Expected Outcome, every relative link resolves (in `W`, where 004's folder exists), and the `docs/05-tool-audit.md` link.
 - [ ] T043 [P] Secret, binary, profanity and SQL-safety scan of `F`, plus the OB1 gate's review checks run locally with the upstream title (all rules; SC-008).
-- [ ] T044 TDD audit: `/speckit-tdd-verify` writes `M/specs/006-self-hosted-supabase/tdd/verification.md` with verdict PASS or PASS_WITH_GAPS (Quality Gate 1).
+- [x] T044 TDD audit: `/speckit-tdd-verify` writes `M/specs/006-self-hosted-supabase/tdd/verification.md` with verdict PASS or PASS_WITH_GAPS (Quality Gate 1). Ticked 2026-11-27 on the second re-audit at `9744cd2` (report `e1125f0`): PASS_WITH_GAPS under the owner exceptions T066 and T073 (FAIL under the rubric as written). The owner ruled that the 11 criteria covered only by the recorded Mac and Linux live runs count as a gap, not HIGH. T081 and T082 are non-blocking.
 - [ ] T045 Scope check: `git -C W diff --stat main...HEAD`, run against fork `main`, which has 004, lists only `recipes/self-hosted-supabase-mcp/`.
 - [ ] T046 **Fork landing, asking the owner before each push or PR.**
   1. `git -C W push -u origin contrib/mfelker/self-hosted-supabase`.
