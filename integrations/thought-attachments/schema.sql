@@ -196,14 +196,23 @@ returns jsonb
 language plpgsql
 as $$
 declare
+  tok text;
   running text;
 begin
-  select busy_op into running from thought_attachments
-    where id = p_id and busy_until is not null and busy_until > now();
+  update thought_attachments
+    set busy_op = p_op,
+        busy_until = now() + make_interval(secs => p_seconds),
+        busy_token = gen_random_uuid()::text
+    where id = p_id and (busy_until is null or busy_until <= now())
+    returning busy_token into tok;
   if found then
-    return jsonb_build_object('busy', running);
+    return jsonb_build_object('token', tok);
   end if;
-  return jsonb_build_object('token', 'unclaimed');
+  select busy_op into running from thought_attachments where id = p_id;
+  if not found then
+    raise exception 'attachment not found';
+  end if;
+  return jsonb_build_object('busy', running);
 end;
 $$;
 grant execute on function attachment_claim(uuid, text, int) to service_role;

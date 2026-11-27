@@ -492,3 +492,17 @@ begin
   if r is distinct from '{"busy": "finish"}'::jsonb then raise exception 'U61: claim returned %', r; end if;
   if tok <> 'tok' then raise exception 'U61: the holder''s token changed to %', tok; end if;
 end $$;
+
+-- U62: a claim after busy_until succeeds, with a busy_token different from the previous one
+do $$
+declare p uuid := pg_temp.mk_parent(); a uuid := pg_temp.mk_att(p, 'pending_upload', interval '-1 second'); r jsonb; row_ thought_attachments;
+begin
+  r := attachment_claim(a, 'rebuild', 60);
+  select * into row_ from thought_attachments where id = a;
+  delete from thought_attachments where id = a;
+  delete from thoughts where id = p;
+  if r->>'token' is null or r->>'token' = 'tok' then raise exception 'U62: claim returned %', r; end if;
+  if row_.busy_token is distinct from r->>'token' or row_.busy_op <> 'rebuild' or row_.busy_until <= now() then
+    raise exception 'U62: claim not recorded: %', row_;
+  end if;
+end $$;
