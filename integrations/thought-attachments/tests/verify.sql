@@ -709,3 +709,23 @@ begin
   if (r->>'derived')::int <> 2 or (r->>'noteRemoved')::boolean is not false then raise exception 'U95: returned %', r; end if;
   if n <> 0 or rows_ <> 0 then raise exception 'U95: % derived thoughts and % rows remain', n, rows_; end if;
 end $$;
+
+-- U96: remove leaves the parent, and another attachment of the same file on another thought with its derived thoughts
+do $$
+declare p uuid := pg_temp.mk_parent(); a uuid := pg_temp.mk_att(p, 'processed');
+        p2 uuid := pg_temp.mk_parent(); b uuid := pg_temp.mk_att(p2, 'processed'); r jsonb; par bigint; other_n bigint; other_row bigint;
+begin
+  update thought_attachments set content_hash = 'sha256:u96' where id in (a, b);
+  perform attachment_write_derived(a, 'tok', pg_temp.rows_json('u96 a ' || a), '{"state":"processed"}'::jsonb);
+  perform attachment_write_derived(b, 'tok', pg_temp.rows_json('u96 b1 ' || b, 'u96 b2 ' || b), '{"state":"processed"}'::jsonb);
+  r := attachment_remove(a, 'tok');
+  select count(*) into par from thoughts where id = p;
+  select count(*) into other_n from thoughts where metadata->>'attachment_id' = b::text;
+  select count(*) into other_row from thought_attachments where id = b;
+  delete from thoughts where metadata->>'attachment_id' = b::text;
+  delete from thought_attachments where id = b;
+  delete from thoughts where id = p;
+  delete from thoughts where id = p2;
+  if par <> 1 then raise exception 'U96: the parent was removed'; end if;
+  if other_n <> 2 or other_row <> 1 then raise exception 'U96: the other attachment lost data (% thoughts, % row)', other_n, other_row; end if;
+end $$;
