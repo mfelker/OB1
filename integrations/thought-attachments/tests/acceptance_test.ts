@@ -1148,7 +1148,7 @@ Deno.test("A37 finish_attachment before any upload says no file uploaded yet and
   assertEquals(row(w, a.id)?.state, "pending_upload");
 });
 
-todo(
+Deno.test(
   "A38 finish_attachment after the upload deadline with no upload says upload window expired and leaves the row unchanged",
   async () => {
     const w = world();
