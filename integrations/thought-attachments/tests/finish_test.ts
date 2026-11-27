@@ -358,3 +358,27 @@ Deno.test("U325 finishing a failed attachment again, or rebuilding a processed o
   assertEquals(rebuilt.last_rebuild_error, undefined);
   assertEquals(r.store.objects.has(att.storage_path as string), true);
 });
+
+Deno.test("U198 when checkActual refuses, the object is deleted, the row is refused with the actual values, and no derived thought is written", async () => {
+  const pdf = await textPdf(["alpha beta gamma", "delta epsilon"]);
+  const cases: { name: string; overrides: Record<string, string>; row: Partial<AttachmentRow>; bytes: Uint8Array; code: string }[] = [
+    { name: "wrong type", overrides: {}, row: { declared_type: "image/jpeg" }, bytes: pdf, code: "image/jpeg" },
+    { name: "wrong size", overrides: {}, row: { declared_size: 5 }, bytes: pdf, code: "not the declared 5" },
+    { name: "too many pages", overrides: { MAX_PDF_PAGES: "1" }, row: {}, bytes: pdf, code: "MAX_PDF_PAGES" },
+  ];
+  for (const c of cases) {
+    const r = await rig(c.overrides);
+    const att = pending(r, c.bytes, c.row);
+    const out = await r.finish(att.id, {});
+    assertEquals(out.state, "refused", c.name);
+    assertStringIncludes(out.reason ?? "", c.code, c.name);
+    assertEquals(out.derived_count, 0, c.name);
+    const row = r.store.attachment(att.id) as AttachmentRow;
+    assertEquals(row.state, "refused", c.name);
+    assertEquals(row.state_reason, out.reason, c.name);
+    assertEquals(row.actual_type, "application/pdf", c.name);
+    assertEquals(row.actual_size, c.bytes.length, c.name);
+    assertEquals(r.store.objects.has(att.storage_path as string), false, c.name);
+    assertEquals(r.store.derivedOf(att.id).length, 0, c.name);
+  }
+});

@@ -3,7 +3,7 @@ import { checkActual, sniffType } from "./intake.ts";
 import { captionRow, passageRow, sourceLine } from "./derived.ts";
 import { toPassages } from "./passages.ts";
 import { openPdf } from "./pdf.ts";
-import type { AcceptedType, AttachmentRow, Deps, FinishOutcome, Services, StatePatch } from "./types.ts";
+import type { AcceptedType, AttachmentRow, Deps, FinishOutcome, PdfDoc, R, Services, StatePatch } from "./types.ts";
 
 /** `sha256:<hex>` of the bytes, as `content_hash` stores it. */
 async function sha256(bytes: Uint8Array): Promise<string> {
@@ -54,6 +54,18 @@ export function createFinisher(deps: Deps): Services {
     const file = await store.download(path);
     if ("error" in file) throw new Error(file.error);
     const bytes = file.data;
+    const sniffed = sniffType(bytes);
+    // The page count must be known before `checkActual`, which skips the page cap when it is null.
+    const opened = sniffed === "application/pdf" ? await openPdf(bytes) : null;
+    const pageCount = opened && "data" in opened ? opened.data.pageCount : null;
+    const refusal = checkActual({ ...row, page_count: pageCount }, bytes, info.data, settings);
+    if (refusal) {
+      return await refuse(row, token, refusal.message, {
+        actual_type: sniffed,
+        actual_size: info.data.size,
+        page_count: pageCount,
+      });
+    }
     const hash = await sha256(bytes);
     const twin = await store.findByHash(row.parent_thought_id, hash);
     if ("error" in twin) throw new Error(twin.error);
@@ -62,22 +74,21 @@ export function createFinisher(deps: Deps): Services {
         row,
         token,
         "already attached to this thought as " + twin.data.id.replace(/-/g, "").slice(0, 8),
-        { actual_type: sniffType(bytes), actual_size: info.data.size },
+        { actual_type: sniffed, actual_size: info.data.size },
       );
     }
     const actual: StatePatch = {
-      actual_type: sniffType(bytes),
+      actual_type: sniffed,
       actual_size: info.data.size,
       content_hash: hash,
     };
     const stored = { ...row, content_hash: hash };
-    return actual.actual_type === "application/pdf"
-      ? await pdfPath(stored, token, bytes, actual)
+    return opened
+      ? await pdfPath(stored, token, opened, actual)
       : await photoPath(stored, token, bytes, actual, rebuild);
   }
 
-  async function pdfPath(row: AttachmentRow, token: string, bytes: Uint8Array, actual: StatePatch): Promise<FinishOutcome> {
-    const pdf = await openPdf(bytes);
+  async function pdfPath(row: AttachmentRow, token: string, pdf: R<PdfDoc>, actual: StatePatch): Promise<FinishOutcome> {
     if ("error" in pdf) throw new Error(pdf.error);
     const pageTexts = await pdf.data.pageTexts();
     const shortId = row.id.slice(0, 8);
