@@ -46,7 +46,9 @@ export function createSupabaseStore(
     findThoughtsExact(text, limit) {
       return rpc<ThoughtMatch[]>("attachment_find_thoughts_exact", { p_text: text, p_limit: limit });
     },
-    embeddingDimension: notYet,
+    embeddingDimension() {
+      return rpc<number>("attachment_embedding_dimension", {});
+    },
     createAttachment: notYet,
     getAttachment: notYet,
     findPending: notYet,

@@ -100,3 +100,9 @@ Deno.test("U71 findThoughtsExact sends the text as an RPC parameter, never insid
   assertEquals(ff.requests[0].body, { p_text: text, p_limit: 7 });
   assertEquals(ff.requests[0].url.includes("50%"), false);
 });
+
+Deno.test("U72 embeddingDimension returns the dimension function's number", async () => {
+  const { store, ff } = setup();
+  ff.on("POST", `${REST}/rpc/attachment_embedding_dimension`, { body: 1536 });
+  assertEquals(await store.embeddingDimension(), { data: 1536 });
+});
