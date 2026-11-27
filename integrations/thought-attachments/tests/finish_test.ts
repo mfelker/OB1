@@ -346,3 +346,15 @@ Deno.test("U326 a successful rebuild after a failed one clears last_rebuild_erro
   assertEquals(r.store.attachment(att.id)?.last_rebuild_error, null);
   assertEquals(out.caption, "a blue door");
 });
+
+Deno.test("U325 finishing a failed attachment again, or rebuilding a processed one, is not refused as a duplicate of itself", async () => {
+  const r = await rig();
+  const bytes = await textPdf(["alpha beta gamma"]);
+  const att = pending(r, bytes, { state: "failed", state_reason: "boom", content_hash: await contentHash(bytes) });
+  const again = await r.finish(att.id, {});
+  assertEquals(again.state, "processed");
+  const rebuilt = await r.finish(att.id, { rebuild: true });
+  assertEquals(rebuilt.state, "processed");
+  assertEquals(rebuilt.last_rebuild_error, undefined);
+  assertEquals(r.store.objects.has(att.storage_path as string), true);
+});
