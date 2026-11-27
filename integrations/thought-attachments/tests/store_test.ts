@@ -142,3 +142,10 @@ Deno.test("U76 getAttachment with a short id that matches two rows returns ambig
   });
   assertEquals(await store.getAttachment("11111111"), { data: "ambiguous" });
 });
+
+Deno.test("U77 getAttachment with an unknown id returns not_found", async () => {
+  const { store, ff } = setup();
+  ff.on("GET", `${REST}/thought_attachments*`, { body: [] });
+  assertEquals(await store.getAttachment(ATT_ID), { data: "not_found" });
+  assertEquals(await store.getAttachment("deadbeef"), { data: "not_found" });
+});

@@ -62,7 +62,7 @@ export function createSupabaseStore(
       if (error) return { error: error.message };
       const rows = (data ?? []) as AttachmentRow[];
       if (rows.length > 1) return { data: "ambiguous" };
-      return { data: rows[0] };
+      return { data: rows[0] ?? "not_found" };
     },
     findPending: notYet,
     findByHash: notYet,
