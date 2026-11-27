@@ -219,3 +219,11 @@ Deno.test("U227 each find_thought match has id, first_line and captured", async 
   assertStringIncludes(out.text, a.id);
   assertStringIncludes(out.text, "2026-03-01");
 });
+
+Deno.test("U228 find_thought with no match says no matching thought", async () => {
+  const h = await harness();
+  const out = await call(h, "find_thought", { query: "nothing like this", mode: "exact" });
+  assertStringIncludes(out.text, "no matching thought");
+  assertEquals(out.data.matches, []);
+  assertEquals(out.isError, false);
+});

@@ -42,7 +42,9 @@ export function buildServer(deps: Deps, _services: Services): McpServer {
     }
     if ("error" in found) return fail(found.error);
     const matches = found.data.map((m) => ({ ...m, first_line: m.first_line.split(/\r?\n/)[0].slice(0, FIRST_LINE_CHARS) }));
-    return reply(JSON.stringify(matches), { matches });
+    if (matches.length === 0) return reply("no matching thought", { matches });
+    const lines = matches.map((m) => `${m.id}  ${m.captured.slice(0, 10)}  ${m.first_line}`);
+    return reply(lines.join("\n"), { matches });
   });
 
   server.registerTool("attach_file", {
