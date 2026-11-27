@@ -511,7 +511,7 @@ Refactor: none unless noted. Red lines are the decisive line of the single-test 
 ## Cycle U167: unreachable endpoint
 
 - red: `error: TypeError: connection refused`.
-- green: try/catch around fetch returns `R` error `embedding endpoint <base> is unreachable: ...a semicolon and a spaceembedBatch` returns `R`. Suite 54 passed. Commit `02c710f`.
+- green: try/catch around fetch returns `R` error `embedding endpoint <base> is unreachable: ...`; `embedBatch` returns `R`. Suite 54 passed. Commit `02c710f`.
 
 ## Cycle U168: non-2xx status
 
@@ -540,7 +540,7 @@ Refactor: none unless noted. Red lines are the decisive line of the single-test 
 ## Cycle U172: configured
 
 - red: `error: Error: not implemented`.
-- green: `configured = Boolean(visionApiBase && visionModel)a semicolon and a spacecaption` still throws. Suite 59 passed. Commit `7c86fb4`.
+- green: `configured = Boolean(visionApiBase && visionModel)`; `caption` still throws. Suite 59 passed. Commit `7c86fb4`.
 
 ## Cycle U173: request shape and data URL of the real type
 
@@ -645,7 +645,7 @@ Cycle baseline: suite 48 passed at `34dd206`.
 ## Cycle U119: an image one byte over the cap is refused, naming cap and declared size
 
 - red: `error: AssertionError` (`assert(refusal !== null)`, 1 failed)
-- green: `cap = floor(MB * 1024 * 1024)a semicolon and a spacetoo_large` message names both. Suite 53 passed
+- green: `cap = floor(MB * 1024 * 1024)`; `too_large` message names both. Suite 53 passed
 - commit: `393c5f1`
 
 ## Cycle U118: an image declared at exactly the image cap is accepted
@@ -784,7 +784,7 @@ Cycle baseline: suite 48 passed at `34dd206`.
 
 ## Cycles U125, U126: exactly the maximum is one passage, one more is two (one commit: a process slip)
 
-- both passed on first run. Mutants: `<=` to `<` -> U125 `Values are not equal. -   2a semicolon and a space<=` to `<= max + 1` -> U126 `Values are not equal. -   1`. Each restored, cmp clean.
+- both passed on first run. Mutants: `<=` to `<` -> U125 `Values are not equal. -   2`; `<=` to `<= max + 1` -> U126 `Values are not equal. -   1`. Each restored, cmp clean.
 - commit: `e15ed15`. Suite 79 passed
 
 ## Cycle U128: a passage within one page records that page at both ends
@@ -835,7 +835,7 @@ Cycle baseline: suite 48 passed at `34dd206`.
 
 ## Cycles U132, U321: short id and one-page wording (one commit: a process slip)
 
-- both passed on first run. Mutants: `row.id.slice(1, 9)` -> `Expected actual: "From a.pdf, page 1 (attachment f1e2d3c-)" to contain: "(attachment 0f1e2d3c)".a semicolon and a spacelocatorFor` always `pages a–b` -> `-   From dishwasher-manual.pdf, pages 12–12 (attachment a1b2c3d4)` / `+   From dishwasher-manual.pdf, page 12 (attachment a1b2c3d4)`. Restored, cmp clean.
+- both passed on first run. Mutants: `row.id.slice(1, 9)` -> `Expected actual: "From a.pdf, page 1 (attachment f1e2d3c-)" to contain: "(attachment 0f1e2d3c)".`; `locatorFor` always `pages a–b` -> `-   From dishwasher-manual.pdf, pages 12–12 (attachment a1b2c3d4)` / `+   From dishwasher-manual.pdf, page 12 (attachment a1b2c3d4)`. Restored, cmp clean.
 - commit: `4074fd4`. Suite 88 passed
 
 ## Cycle U135: ingestion contract metadata fields
@@ -864,7 +864,7 @@ Cycle baseline: suite 48 passed at `34dd206`.
 
 ## Cycles U350, U139: provenance locator for one page, and the restricted tier (one commit: a process slip)
 
-- both passed on first run. Mutants: provenance locator always `pages a–b` -> `-   pages 12–12a semicolon and a spacesensitivity_tier: "personal"` constant -> `-   personal`. Restored, cmp clean.
+- both passed on first run. Mutants: provenance locator always `pages a–b` -> `-   pages 12–12`; `sensitivity_tier: "personal"` constant -> `-   personal`. Restored, cmp clean.
 - commit: `aac8732`. Suite 94 passed
 
 ## Cycle U140: metadata holds no URL, token or absolute path
@@ -946,7 +946,7 @@ Each row: id, red (decisive line, verbatim or trimmed), what turned it green, co
 | U59 | first run passed. Mutant: the delete changed to `where metadata ? 'attachment_id'` -> `ERROR:  U59: the other attachment changed (0 rows, derived_count 1)` | no production change | 825e2d6 |
 | U60 | first run passed (unique index). Mutant: `content_hash` ignored in the patch -> `ERROR:  U60: the duplicate content_hash was accepted` | no production change | cd702ee |
 | U61 | `No function matches` (`attachment_claim`) | claim function that returns `{busy: op}` while unexpired (token path stubbed) | 5233a13 |
-| U62 | `ERROR:  U62: claim not recorded: ...` | single conditional `update ... where busy_until is null or busy_until <= now() returning busy_tokena semicolon and a spacebusy` otherwise; `attachment not found` raised for an unknown id | 0596b99 |
+| U62 | `ERROR:  U62: claim not recorded: ...` | single conditional `update ... where busy_until is null or busy_until <= now() returning busy_token`; `busy` otherwise; `attachment not found` raised for an unknown id | 0596b99 |
 | U63 | first run passed. Mutant: `id = p_id` removed from the update -> `ERROR: more than one row returned by a subquery used as an expression`/`Make sure the query returns a single row` | no production change | 82e2f60 |
 | U64 | `No function matches` (`attachment_release`) | release (clears by id) | 9e28005 |
 | U65 | `ERROR:  U65: the claim was released by another token: {"token": ...}` | `and busy_token = p_token` | 28412c3 |
@@ -997,7 +997,7 @@ Single-test command (from `F`): `deno test --node-modules-dir=none --no-prompt -
 | U75 | `AssertionError: Values are not equal.` (the short id was sent as `id=eq.`) | an 8-hex short id becomes the range `id >= prefix-0000-... and id <= prefix-ffff-...` (a uuid column has no prefix match) | d6a06b9 |
 | U76 | `AssertionError: Values are not equal.` | two rows -> `"ambiguous"` | e45eb1d |
 | U77 | `AssertionError: Values are not equal.` | no row -> `"not_found"` | 6fa04aa |
-| U78 | `AssertionError: Values are not equal.` (the thoughtExists error was swallowed and the key leaked) | `scrub()` removes the key; every method is wrapped so a thrown error becomes `{ error }a semicolon and a spacethoughtExists` and `getAttachment` check the error | c6b27c5 |
+| U78 | `AssertionError: Values are not equal.` (the thoughtExists error was swallowed and the key leaked) | `scrub()` removes the key; every method is wrapped so a thrown error becomes `{ error }`; `thoughtExists` and `getAttachment` check the error | c6b27c5 |
 | U315 | `- error: "not implemented"` | `findByHash` filters by parent, hash and `state=neq.refused` | f61baf8 |
 | U316 | first run passed. Mutant: the `neq("state","refused")` removed -> `FAILED \| 0 passed \| 1 failed` (the first mutant attempt did not apply, so it was redone and confirmed) | no production change | 3a59798 |
 | U317 | first run passed with a test whose fake database returned nothing when the parent filter was missing, so the mutant did not fail. The test was corrected (the fake returns the row when no parent filter is sent), then mutant: the parent filter removed -> `AssertionError: Values are not equal.` | no production change | 7e4951a |
@@ -1021,7 +1021,7 @@ Single-test command (from `F`): `deno test --node-modules-dir=none --no-prompt -
 | UQ4 | `FAILED \| 0 passed \| 1 failed` | `writeDerived` sends rows as `{ content, metadata, embedding }` (the fingerprint is computed in SQL) and the patch | 95365eb |
 | UQ5 | `FAILED \| 0 passed \| 1 failed` | `setState` calls `attachment_set_state` | 22f0aa8 |
 | U83 | first run passed (store and schema already agreed). Mutants: (a) `attachment_release(p_id uuid, p_tok text)` in `schema.sql` -> `- "rpc attachment_release sends p_token, which the function does not take"`; (b) `p_hsh` in `store.ts` -> `rpc attachment_by_page_token sends p_hsh ...`. Both restored | no production change; the stub-removal refactor (`notYet`) went in the same commit | 3c8557a |
-| U52 | first run passed. Mutants: `drop index if exists ...;` appended to `schema.sql` -> `1 faileda semicolon and a spacedelete from thought_attachments;` appended to `tests/verify.sql` -> `1 failed`. Both restored | no production change | 129141b |
+| U52 | first run passed. Mutants: `drop index if exists ...;` appended to `schema.sql` -> `1 failed`; `delete from thought_attachments;` appended to `tests/verify.sql` -> `1 failed`. Both restored | no production change | 129141b |
 
 UQ1 to UQ5 are extra behaviors that the test list has no row for (see the final report): the Store methods `createAttachment`, `setDeclaration`, `release`, `writeDerived` and `setState` are used by the finishing, tools and page streams, so they could not stay stubs.
 
@@ -2106,7 +2106,7 @@ Cycle baseline: suite 296 passed, 63 ignored at `be151ad`.
 
 - test: `tests/app_test.ts::U347 createApp with settings not ok answers an MCP tools/call with the named settings error and nothing else` (new)
 - red: `error: Error: not implemented` at `createApp` (1 failed)
-- green: `createApp({ ok: false })` returns a handler that answers every request with a JSON-RPC error (code -32000, HTTP 200, CORS headers) whose message is `setting <NAME> is invalid: <reason>`, problems joined by a semicolon and a space. Suite 304 passed
+- green: `createApp({ ok: false })` returns a handler that answers every request with a JSON-RPC error (code -32000, HTTP 200, CORS headers) whose message is `setting <NAME> is invalid: <reason>`, problems joined by a semicolon followed by a space. Suite 304 passed
 - commit: `e111421`
 
 ## Cycle U348: the error never echoes the value
@@ -2129,7 +2129,7 @@ Cycle baseline: suite 296 passed, 63 ignored at `be151ad`.
 
 - test: `tests/app_test.ts::U301 productionDeps' store sends its requests to SUPABASE_URL with the service-role key` (new; `globalThis.fetch` stubbed and restored)
 - red: `error: Error: not implemented` (1 failed)
-- green: `createSupabaseStore(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, settings, fetch)`, the real embedding and vision clients, all over a late-bound `globalThis.fetcha semicolon and a spacenow` is the wall clock and `randomBytes` is `crypto.getRandomValues`. Suite 307 passed
+- green: `createSupabaseStore(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, settings, fetch)`, the real embedding and vision clients, all over a late-bound `globalThis.fetch`; `now` is the wall clock and `randomBytes` is `crypto.getRandomValues`. Suite 307 passed
 - commit: `3f3deea`
 
 ## Cycle U351: settings error versus the key check

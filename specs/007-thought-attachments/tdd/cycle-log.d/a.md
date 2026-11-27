@@ -61,7 +61,7 @@ Cycle baseline: suite 296 passed, 63 ignored at `be151ad`.
 
 - test: `tests/app_test.ts::U347 createApp with settings not ok answers an MCP tools/call with the named settings error and nothing else` (new)
 - red: `error: Error: not implemented` at `createApp` (1 failed)
-- green: `createApp({ ok: false })` returns a handler that answers every request with a JSON-RPC error (code -32000, HTTP 200, CORS headers) whose message is `setting <NAME> is invalid: <reason>`, problems joined by a semicolon and a space. Suite 304 passed
+- green: `createApp({ ok: false })` returns a handler that answers every request with a JSON-RPC error (code -32000, HTTP 200, CORS headers) whose message is `setting <NAME> is invalid: <reason>`, problems joined by a semicolon followed by a space. Suite 304 passed
 - commit: `e111421`
 
 ## Cycle U348: the error never echoes the value
@@ -84,7 +84,7 @@ Cycle baseline: suite 296 passed, 63 ignored at `be151ad`.
 
 - test: `tests/app_test.ts::U301 productionDeps' store sends its requests to SUPABASE_URL with the service-role key` (new; `globalThis.fetch` stubbed and restored)
 - red: `error: Error: not implemented` (1 failed)
-- green: `createSupabaseStore(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, settings, fetch)`, the real embedding and vision clients, all over a late-bound `globalThis.fetcha semicolon and a spacenow` is the wall clock and `randomBytes` is `crypto.getRandomValues`. Suite 307 passed
+- green: `createSupabaseStore(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, settings, fetch)`, the real embedding and vision clients, all over a late-bound `globalThis.fetch`; `now` is the wall clock and `randomBytes` is `crypto.getRandomValues`. Suite 307 passed
 - commit: `3f3deea`
 
 ## Cycle U351: settings error versus the key check
