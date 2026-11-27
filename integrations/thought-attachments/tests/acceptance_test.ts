@@ -717,7 +717,7 @@ Deno.test(
   },
 );
 
-todo(
+Deno.test(
   "A20 a page token for attachment X never signs an upload for Y nor finishes Y; Y's row and object are unchanged",
   async () => {
     const w = world();
