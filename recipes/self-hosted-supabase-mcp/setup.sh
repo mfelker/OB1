@@ -51,7 +51,7 @@ fi
 # place only when complete, so an interrupted run leaves no .env. An existing .env keeps every
 # Supabase key as it is; only the OB1 key is added if it is missing.
 if [ ! -s "$ENV_FILE" ]; then
-  build=$(mktemp -d)
+  build=$(mktemp -d "${TMPDIR:-/tmp}/ob1-setup.XXXXXX")
   trap 'rm -rf "$build"' EXIT
   cp "$CLONE/docker/.env.example" "$build/.env"
   (cd "$build" && sh "$CLONE/docker/utils/generate-keys.sh" --update-env >/dev/null)
