@@ -1,5 +1,5 @@
 /** The entry and the import rules (T032): spec 004 R10 (full specifiers), R15 (pdf-lib in tests only). */
-import { assertEquals } from "jsr:@std/assert@1.0.19";
+import { assertArrayIncludes, assertEquals } from "jsr:@std/assert@1.0.19";
 
 const ROOT = new URL("../", import.meta.url);
 
@@ -22,9 +22,8 @@ async function sourceFiles(dir = ROOT, prefix = ""): Promise<string[]> {
   return out.sort();
 }
 
-/** Every module specifier a file imports or re-exports (static and dynamic). */
-async function specifiers(file: string): Promise<string[]> {
-  const text = await Deno.readTextFile(new URL(file, ROOT));
+/** Every module specifier a text imports or re-exports (static and dynamic). */
+function specifiersIn(text: string): string[] {
   const found: string[] = [];
   for (const m of text.matchAll(/^\s*(?:import|export)\s[^;"'`]*?\bfrom\s*["']([^"']+)["']/gm)) found.push(m[1]);
   for (const m of text.matchAll(/^\s*import\s*["']([^"']+)["']/gm)) found.push(m[1]);
@@ -32,19 +31,40 @@ async function specifiers(file: string): Promise<string[]> {
   return found;
 }
 
+/** Every module specifier a file imports or re-exports. */
+async function specifiers(file: string): Promise<string[]> {
+  return specifiersIn(await Deno.readTextFile(new URL(file, ROOT)));
+}
+
+const isPdfLib = (s: string) => /(^|[:/])pdf-lib(@|\/|$)/.test(s);
+const isBare = (s: string) => !/^(npm:|jsr:|\.\.?\/|https:\/\/)/.test(s);
+
+/** A planted text with one pdf-lib import and three bare specifiers (static, re-export and dynamic). */
+const PLANTED = 'import { PDFDocument } from "npm:pdf-lib@1.17.1";\nimport { z } from "zod";\nexport * from "hono";\nconst m = await import("unpdf");';
+
 Deno.test("U304 no .ts file outside tests/ imports pdf-lib", async () => {
+  // Positive controls: the scan reaches the known source files, and a planted pdf-lib import is flagged.
+  const files = await sourceFiles();
+  assertArrayIncludes(files, ["index.ts", "src/app.ts", "src/pdf.ts", "src/store.ts"], "sourceFiles() missed a known file");
+  assertEquals(specifiersIn(PLANTED).filter(isPdfLib), ["npm:pdf-lib@1.17.1"], "a planted pdf-lib import was not flagged");
   const offenders: string[] = [];
-  for (const file of await sourceFiles()) {
-    for (const s of await specifiers(file)) if (/(^|[:/])pdf-lib(@|\/|$)/.test(s)) offenders.push(`${file}: ${s}`);
+  for (const file of files) {
+    for (const s of await specifiers(file)) if (isPdfLib(s)) offenders.push(`${file}: ${s}`);
   }
   assertEquals(offenders, []);
 });
 
 Deno.test("U303 no .ts file outside tests/ has a bare import specifier", async () => {
+  // Positive controls: the scan reaches the known files and their known specifiers, and planted bare ones are flagged.
+  const files = await sourceFiles();
+  assertArrayIncludes(files, ["index.ts", "src/store.ts"], "sourceFiles() missed a known file");
+  assertArrayIncludes(await specifiers("src/store.ts"), ["npm:@supabase/supabase-js@2.47.10"], "a known npm: specifier was not found");
+  assertArrayIncludes(await specifiers("index.ts"), ["./src/app.ts"], "a known relative specifier was not found");
+  assertEquals(specifiersIn(PLANTED).filter(isBare), ["zod", "hono", "unpdf"], "planted bare specifiers were not flagged");
   const bare: string[] = [];
-  for (const file of await sourceFiles()) {
+  for (const file of files) {
     for (const s of await specifiers(file)) {
-      if (!/^(npm:|jsr:|\.\.?\/|https:\/\/)/.test(s)) bare.push(`${file}: ${s}`);
+      if (isBare(s)) bare.push(`${file}: ${s}`);
     }
   }
   assertEquals(bare, []);
