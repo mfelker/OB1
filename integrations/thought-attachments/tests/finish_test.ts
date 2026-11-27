@@ -644,3 +644,19 @@ Deno.test("U213 one second before BUSY_SECONDS has passed, the finish is still b
   held.release();
   assertEquals((await held.running).state, "processed");
 });
+
+Deno.test("U215 after a killed rebuild has expired, the attachment is processed with its old derived set", async () => {
+  const r = await rig();
+  const att = pending(r, jpegBytes(2000));
+  assertEquals((await r.finish(att.id, {})).state, "processed");
+  const oldIds = r.store.derivedOf(att.id).map((t) => t.id);
+  const killed = await r.store.claim(att.id, "rebuild", 410);
+  assert("data" in killed && "token" in killed.data);
+  r.clock.advanceSeconds(411);
+  const out = await r.finish(att.id, {});
+  assertEquals(out.state, "processed");
+  assertEquals(out.derived_count, 1);
+  assertEquals(out.last_rebuild_error, "the run did not finish");
+  assertEquals(r.store.derivedOf(att.id).map((t) => t.id), oldIds);
+  assertEquals(r.store.attachment(att.id)?.state, "processed");
+});

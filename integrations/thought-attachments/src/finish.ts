@@ -47,8 +47,11 @@ export function createFinisher(deps: Deps): Services {
     }
   }
 
-  /** The outcome a stored row reports (what a plain repeat finish returns). */
+  /** The outcome a stored row reports (what a plain repeat finish returns). A cut-off rebuild reads as a failed one (FR-026). */
   function outcomeOf(row: AttachmentRow): FinishOutcome {
+    const cutOff = row.busy_op === "rebuild" && row.busy_until !== null &&
+      new Date(row.busy_until).getTime() <= deps.now().getTime();
+    if (cutOff) row = { ...row, last_rebuild_error: "the run did not finish" };
     const out: FinishOutcome = { state: row.state, derived_count: row.derived_count };
     if (row.state_reason) out.reason = row.state_reason;
     if (row.page_count !== null) out.page_count = row.page_count;
