@@ -343,3 +343,22 @@ Deno.test("U236 upload_deadline is the injected now plus UPLOAD_LINK_MINUTES", a
   await call(h, "attach_file", { thought_id: parent.id, ...PDF });
   assertEquals(h.store.attachments[0].upload_deadline, new Date(h.clock.now().getTime() + 20 * 60_000).toISOString());
 });
+
+async function sha256Hex(text: string): Promise<string> {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+  return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+Deno.test("U237 the stored page_token_hash is the SHA-256 of the token in page_link, and the raw token is in no row", async () => {
+  const h = await harness();
+  const parent = await seed(h, "dishwasher");
+  const out = await call(h, "attach_file", { thought_id: parent.id, ...PDF });
+  const link = out.data.page_link as string;
+  assertStringIncludes(link, "#t=");
+  const token = link.split("#t=")[1];
+  assert(token.length >= 32);
+  const row = h.store.attachments[0];
+  assertEquals(row.page_token_hash, await sha256Hex(token));
+  assert(!JSON.stringify(h.store.attachments).includes(token));
+  assert(!JSON.stringify(h.store.thoughts).includes(token));
+});

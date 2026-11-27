@@ -2,6 +2,7 @@
 import { McpServer } from "npm:@modelcontextprotocol/sdk@1.24.3/server/mcp.js";
 import { z } from "npm:zod@4.1.13";
 import { baseName, checkDeclared } from "./intake.ts";
+import { pageLink } from "./links.ts";
 import type { AcceptedType, Deps, Services } from "./types.ts";
 
 type Hints = { readOnlyHint: boolean; destructiveHint?: boolean; openWorldHint?: boolean };
@@ -16,12 +17,18 @@ const ONE_PARENT = "Give exactly one of thought_id or note.";
 /** The first 8 hex characters of an attachment id (FR-025). */
 const shortId = (id: string) => id.replace(/-/g, "").slice(0, 8).toLowerCase();
 
+const toHex = (bytes: Uint8Array) => [...bytes].map((x) => x.toString(16).padStart(2, "0")).join("");
+
+async function sha256Hex(text: string): Promise<string> {
+  return toHex(new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text))));
+}
+
 /** A random v4 uuid from the injected random source. */
 function newId(deps: Deps): string {
   const b = deps.randomBytes(16);
   b[6] = (b[6] & 0x0f) | 0x40;
   b[8] = (b[8] & 0x3f) | 0x80;
-  const hex = [...b].map((x) => x.toString(16).padStart(2, "0")).join("");
+  const hex = toHex(b);
   return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
 }
 
@@ -108,6 +115,7 @@ export function buildServer(deps: Deps, _services: Services): McpServer {
       }
     }
     const id = newId(deps);
+    const pageToken = toHex(deps.randomBytes(32));
     const name = baseName(file_name ?? "");
     const created = await deps.store.createAttachment({
       id,
@@ -118,9 +126,13 @@ export function buildServer(deps: Deps, _services: Services): McpServer {
       declared_size,
       storage_path: `attachments/${id}/${name}`,
       upload_deadline: new Date(deps.now().getTime() + deps.settings.uploadLinkMinutes * 60_000).toISOString(),
+      page_token_hash: await sha256Hex(pageToken),
     });
     if ("error" in created) return fail(created.error);
-    return reply(`Attachment ${created.data.id} started.`, { attachment_id: created.data.id });
+    return reply(`Attachment ${created.data.id} started.`, {
+      attachment_id: created.data.id,
+      page_link: pageLink(deps.settings, pageToken),
+    });
   });
 
   server.registerTool("finish_attachment", {
