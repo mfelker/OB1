@@ -777,3 +777,10 @@ declare r jsonb := pg_temp.note_case('pending_upload', true, interval '-1 second
 begin
   if (r->'removed'->>'noteRemoved')::boolean is not true or (r->>'parent_still_there')::boolean then raise exception 'U99: %', r; end if;
 end $$;
+
+-- U100: remove keeps the note when another attachment points to it
+do $$
+declare r jsonb := pg_temp.note_case('refused', true, interval '1 hour', true);
+begin
+  if (r->'removed'->>'noteRemoved')::boolean is not false or not (r->>'parent_still_there')::boolean then raise exception 'U100: %', r; end if;
+end $$;
