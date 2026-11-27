@@ -1162,7 +1162,7 @@ Deno.test(
   },
 );
 
-todo(
+Deno.test(
   "A39 768-number vectors for a 1536-dimension brain make finishing fail naming both lengths, with no derived thought",
   async () => {
     const w = world({ embeddings: [embeddingResponder(768)] });
