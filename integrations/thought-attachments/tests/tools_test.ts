@@ -679,3 +679,15 @@ Deno.test("U333 a rebuild claim that expired unreleased reads processed, keeping
   assertEquals(out.data.last_rebuild_error, "the run did not finish");
   assertStringIncludes(out.text, "the run did not finish");
 });
+
+Deno.test("U353 a cut-off finish reads failed, the run did not finish, and its stored file still gets a download link", async () => {
+  const h = await harness();
+  const row = await claimedRow(h, "finish", 100, { state: "pending_upload" });
+  h.clock.advanceSeconds(101);
+  const out = await call(h, "get_attachment", { attachment_id: row.id });
+  assertEquals(out.data.state, "failed");
+  assertEquals(out.data.reason, "the run did not finish");
+  const link = out.data.download_link as string;
+  assertEquals(link, publicUrl(h.settings, h.store.signedDownloads[0].url));
+  assertStringIncludes(out.text, link);
+});
