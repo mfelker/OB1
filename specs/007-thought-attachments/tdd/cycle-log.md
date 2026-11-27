@@ -2033,13 +2033,12 @@ Found in the wave-2 review: `src/page_routes.ts` kept a `declaredByPage` `Set` i
 - **U365** (`tests/page_routes_test.ts`)
   - red: `--filter "/^U365 /"` → `- 400` / `+ 200` for the second pick on a fresh `pageRoutes` instance (1 failed)
   - green: `AttachmentRow.declared_by_page?` (optional, so other streams' row literals still type-check); the route reads `row.declared_by_page` instead of the `Set`, which is removed; the fake store sets the flag on `setDeclaration`. Suite → 295 passed
-  - commit: ``
+  - commit: `5eb3476`
 - **U366** (`tests/page_routes_test.ts`)
   - red: `- undefined` / `+ true` for `declared_by_page` in the `setDeclaration` call (1 failed)
   - green: `Declaration.declared_by_page?`; the route sends `declared_by_page: true`; the fake store stores what it is given (as the real store's PATCH does), so U358's exact-body assertion stays valid. Suite → 296 passed
-  - commit: ``
+  - commit: `80480ce`
 - **U367** (`tests/verify.sql`)
   - red: U34's expected column list gains `declared_by_page|boolean|NO|false`, a deliberate extension of a DONE test because the data model grows → `ERROR: U34: columns differ` (fresh database `u367`)
   - green: the column is added in `create table`, plus `alter table … add column if not exists` for earlier installs. `verify.sql` passed twice; run 1 exercised the upgrade path on the red run's old table. Deno suite 296 passed
-  - commit: `be151ad 80480ce 5eb3476 `
-
+  - commit: `be151ad`

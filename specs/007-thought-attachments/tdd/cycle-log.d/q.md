@@ -92,27 +92,27 @@ Single-test command (from `F`): `deno test --node-modules-dir=none --no-prompt -
 | U77 | `AssertionError: Values are not equal.` | no row -> `"not_found"` | 6fa04aa |
 | U78 | `AssertionError: Values are not equal.` (the thoughtExists error was swallowed and the key leaked) | `scrub()` removes the key; every method is wrapped so a thrown error becomes `{ error }`; `thoughtExists` and `getAttachment` check the error | c6b27c5 |
 | U315 | `- error: "not implemented"` | `findByHash` filters by parent, hash and `state=neq.refused` | f61baf8 |
-| U316 | first run passed. Mutant: the `neq("state","refused")` removed -> `FAILED | 0 passed | 1 failed` (the first mutant attempt did not apply, so it was redone and confirmed) | no production change | 3a59798 |
+| U316 | first run passed. Mutant: the `neq("state","refused")` removed -> `FAILED \| 0 passed \| 1 failed` (the first mutant attempt did not apply, so it was redone and confirmed) | no production change | 3a59798 |
 | U317 | first run passed with a test whose fake database returned nothing when the parent filter was missing, so the mutant did not fail. The test was corrected (the fake returns the row when no parent filter is sent), then mutant: the parent filter removed -> `AssertionError: Values are not equal.` | no production change | 7e4951a |
-| U318 | `FAILED | 0 passed | 1 failed` (not implemented) | `findPending` filters by parent, name, type, size, `state=eq.pending_upload` and `upload_deadline=gt.<now>` | 6304fdf |
+| U318 | `FAILED \| 0 passed \| 1 failed` (not implemented) | `findPending` filters by parent, name, type, size, `state=eq.pending_upload` and `upload_deadline=gt.<now>` | 6304fdf |
 | U319 | first run passed. Mutant: the `gt("upload_deadline", now)` removed -> `AssertionError: Values are not equal.` | no production change | 67b80a3 |
 | U88 | `- error: "not implemented"` | `insertNote` (embedding sent as the `[..]` text), `attachmentForPageToken` (first row of the setof reply or null), `consumePageToken` | 41d87bd |
 | U79 | `- error: "not implemented"` | `signUpload` through `createSignedUploadUrl` in the configured bucket; the signed URL is returned as supabase-js builds it from Storage's reply | 3afdb80 |
 | U80 | `- error: "not implemented"` | `objectInfo` through Storage `info`; a 404 maps to `null` | 9a0076d |
-| U81 | `FAILED | 0 passed | 1 failed` (not implemented) | `download` returns the blob's bytes | 8d1975b |
+| U81 | `FAILED \| 0 passed \| 1 failed` (not implemented) | `download` returns the blob's bytes | 8d1975b |
 | U82 | `- error: "not implemented"` | `deleteObject` through `remove([path])` | b9db630 |
 | U89 | `- error: "not implemented"` | `signDownload` through `createSignedUrl(path, seconds)` | b740781 |
 | U90 | `- error: "not implemented"` | `listByParent` filters by parent, ordered by `created_at` | 3a41d9a |
 | U91 | `- error: "not implemented"` | `attachmentForDerived` reads the thought's `metadata.attachment_id`, then the attachment | 778f71e |
 | U92 | first run passed. Mutant: the "no attachment_id" early return removed -> `- error: "TypeError: FakeFetch: no route for GET .../thought_attachments?...id=eq.undefined..."` | no production change | d8c2dd9 |
-| U110 | `FAILED | 0 passed | 1 failed` | `removalPreview` calls `attachment_removal_preview` | f39b87b |
-| U111 | `FAILED | 0 passed | 1 failed` | `removeAttachment` calls `attachment_remove` with the token | 06f1ea1 |
-| U112 | `FAILED | 0 passed | 1 failed` | `orphans` calls `attachment_orphans` with `p_now`, maps `{ attachment, why }` to `{ row, why }` | 9b3621c |
-| UQ1 | `FAILED | 0 passed | 1 failed` (not implemented; a second red showed the test's reply must be one object for `.single()`, corrected in the test) | `createAttachment` inserts the fields with `state: "pending_upload"` and the default tier | 88b0f20 |
-| UQ2 | `FAILED | 0 passed | 1 failed` | `setDeclaration` updates by id | f6fd212 |
-| UQ3 | `FAILED | 0 passed | 1 failed` | `release` calls `attachment_release` | 6f88f24 |
-| UQ4 | `FAILED | 0 passed | 1 failed` | `writeDerived` sends rows as `{ content, metadata, embedding }` (the fingerprint is computed in SQL) and the patch | 95365eb |
-| UQ5 | `FAILED | 0 passed | 1 failed` | `setState` calls `attachment_set_state` | 22f0aa8 |
+| U110 | `FAILED \| 0 passed \| 1 failed` | `removalPreview` calls `attachment_removal_preview` | f39b87b |
+| U111 | `FAILED \| 0 passed \| 1 failed` | `removeAttachment` calls `attachment_remove` with the token | 06f1ea1 |
+| U112 | `FAILED \| 0 passed \| 1 failed` | `orphans` calls `attachment_orphans` with `p_now`, maps `{ attachment, why }` to `{ row, why }` | 9b3621c |
+| UQ1 | `FAILED \| 0 passed \| 1 failed` (not implemented; a second red showed the test's reply must be one object for `.single()`, corrected in the test) | `createAttachment` inserts the fields with `state: "pending_upload"` and the default tier | 88b0f20 |
+| UQ2 | `FAILED \| 0 passed \| 1 failed` | `setDeclaration` updates by id | f6fd212 |
+| UQ3 | `FAILED \| 0 passed \| 1 failed` | `release` calls `attachment_release` | 6f88f24 |
+| UQ4 | `FAILED \| 0 passed \| 1 failed` | `writeDerived` sends rows as `{ content, metadata, embedding }` (the fingerprint is computed in SQL) and the patch | 95365eb |
+| UQ5 | `FAILED \| 0 passed \| 1 failed` | `setState` calls `attachment_set_state` | 22f0aa8 |
 | U83 | first run passed (store and schema already agreed). Mutants: (a) `attachment_release(p_id uuid, p_tok text)` in `schema.sql` -> `- "rpc attachment_release sends p_token, which the function does not take"`; (b) `p_hsh` in `store.ts` -> `rpc attachment_by_page_token sends p_hsh ...`. Both restored | no production change; the stub-removal refactor (`notYet`) went in the same commit | 3c8557a |
 | U52 | first run passed. Mutants: `drop index if exists ...;` appended to `schema.sql` -> `1 failed`; `delete from thought_attachments;` appended to `tests/verify.sql` -> `1 failed`. Both restored | no production change | 129141b |
 
