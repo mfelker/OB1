@@ -1213,7 +1213,7 @@ Deno.test(
   },
 );
 
-todo(
+Deno.test(
   "A41 after that finish completes, a repeat finish returns the existing outcome with no new derived thought and no embedding or vision request",
   async () => {
     const { w, id, release } = await heldPhotoFinish();
