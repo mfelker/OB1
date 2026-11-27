@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Add a file to your brain</title>
+</head>
+<body>
+<h1>Add a file to your brain</h1>
+<p id="expected" hidden></p>
+<p id="types"></p>
+<p id="limit" hidden></p>
+<input id="file" type="file" accept="image/jpeg,image/png,image/webp,application/pdf">
+<progress id="progress" hidden></progress>
+<p id="status" role="status"></p>
+<script>
+var API_ADDRESS = "";
+
+var EXPIRED = "This link has expired or was already used. Ask your assistant for a new one";
+var statusEl = document.getElementById("status");
+
+function readToken() {
+  var match = /^#t=([^&]+)/.exec(location.hash);
+  return match ? decodeURIComponent(match[1]) : "";
+}
+
+// The API address is the line above when it is filled in; otherwise the address this page was
+// served from (without its trailing /upload). It is never taken from the link.
+function apiBase() {
+  if (API_ADDRESS) return API_ADDRESS.replace(/\/+$/, "");
+  return location.origin + location.pathname.replace(/\/upload\/?$/, "");
+}
+
+function post(path, body) {
+  return fetch(apiBase() + path, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(body)
+  });
+}
+
+var token = readToken();
+if (!token) {
+  statusEl.textContent = EXPIRED;
+} else {
+  post("/page/info", { token: token });
+}
+</script>
+</body>
+</html>
