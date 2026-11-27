@@ -2,7 +2,7 @@
 import { assertEquals } from "jsr:@std/assert@1.0.19";
 import { loadSettings } from "../src/settings.ts";
 import type { Settings } from "../src/types.ts";
-import { envGetter } from "./helpers/env.ts";
+import { EMBEDDING_API_KEY, envGetter } from "./helpers/env.ts";
 
 /** Loads settings over the baseline env with `overrides`, and fails the test unless the result is ok. */
 function settingsWith(overrides: Record<string, string | undefined> = {}): Settings {
@@ -56,4 +56,9 @@ const OPENROUTER_KEY = "test-openrouter-key-placeholder";
 Deno.test("U3 with EMBEDDING_API_KEY unset the embedding key is OPENROUTER_API_KEY", () => {
   const s = settingsWith({ EMBEDDING_API_KEY: undefined, OPENROUTER_API_KEY: OPENROUTER_KEY });
   assertEquals(s.embeddingApiKey, OPENROUTER_KEY);
+});
+
+Deno.test("U4 with both set EMBEDDING_API_KEY wins over OPENROUTER_API_KEY", () => {
+  const s = settingsWith({ EMBEDDING_API_KEY: EMBEDDING_API_KEY, OPENROUTER_API_KEY: OPENROUTER_KEY });
+  assertEquals(s.embeddingApiKey, EMBEDDING_API_KEY);
 });
