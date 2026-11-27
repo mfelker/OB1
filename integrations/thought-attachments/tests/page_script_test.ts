@@ -197,3 +197,29 @@ Deno.test("U342 before any pick, the page sends { token } to /page/info and show
   const none = await loadPage({ href: `${PAGE_AT}#t=tok`, fetch: net().fetch });
   assertEquals([none.text("expected"), none.el("expected").hidden], ["", true]);
 });
+
+const BUSY = { state: "pending_upload", derived_count: 0, busy: "finish" };
+const NO_FILE = { state: "pending_upload", derived_count: 0, reason: "no file uploaded yet" };
+
+function retrying(...answers: unknown[]) {
+  const finish = answers.map((body) => ({ body }));
+  const f = net()
+    .on("POST", `${BASE}/page/start`, { body: UPLOAD })
+    .on("PUT", SIGNED, { status: 200, body: {} })
+    .on("POST", `${BASE}/page/finish`, ...finish);
+  return f;
+}
+
+const finishCalls = (f: FakeFetch) => f.requests.filter((r) => r.url.endsWith("/page/finish")).length;
+
+Deno.test("U343 when /page/finish answers busy or no file yet, the page shows Waiting… and calls it again 10 seconds later", async () => {
+  for (const first of [BUSY, NO_FILE]) {
+    const f = retrying(first, PROCESSED);
+    const page = await loadPage({ href: `${PAGE_AT}#t=tok`, fetch: f.fetch });
+    await page.pick(PICK);
+    await settle();
+    assertEquals([page.text("status"), finishCalls(f)], ["Waiting…", 1]);
+    await page.advance(10_000);
+    assertEquals([finishCalls(f), page.text("status")], [2, "Captioned: A receipt on a desk"]);
+  }
+});

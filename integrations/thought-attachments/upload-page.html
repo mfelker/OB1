@@ -76,9 +76,18 @@ function outcomeText(o) {
   return "Failed: " + o.reason;
 }
 
+var retry = 0;
+
 function finish() {
   return call("/page/finish", { token: token }).then(function (r) {
-    if (r) show(outcomeText(r.body));
+    if (!r) return;
+    // Busy, or no file has arrived yet: the link is still valid, so ask again soon (T005 Q5).
+    if (r.body.busy || r.body.state === "pending_upload") {
+      show("Waiting…");
+      retry = setTimeout(finish, 10000);
+      return;
+    }
+    show(outcomeText(r.body));
   });
 }
 
