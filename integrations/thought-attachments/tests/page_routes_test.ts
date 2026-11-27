@@ -328,3 +328,12 @@ Deno.test("U277 /page/finish finishes only its own attachment, returns the outco
   assertEquals(r.finishCalls, [row.id]);
   assertEquals(r.store.attachment(row.id)!.page_token_hash, null);
 });
+
+Deno.test("U278 a second /page/finish with the same token, after processed, gets 410", async () => {
+  const r = await rig();
+  await r.seed();
+  const first = await r.post("/page/finish", { token: TOKEN });
+  const second = await r.post("/page/finish", { token: TOKEN });
+  assertEquals([first.status, second.status, (await second.json()).error], [200, 410, EXPIRED]);
+  assertEquals(r.finishCalls.length, 1);
+});
