@@ -379,7 +379,7 @@ Deno.test(
   },
 );
 
-todo(
+Deno.test(
   "A5 an owner thought whose text equals a passage's body is unchanged after finishing, and the passage is its own row with the attachment's metadata",
   async () => {
     const w = world();
