@@ -300,3 +300,19 @@ begin
     alter schema storage rename to storage_verify_stub;
   end if;
 end $$;
+
+-- U51: running the whole file twice more raises nothing and leaves one of each object
+\i schema.sql
+\i schema.sql
+do $$
+declare n bigint;
+begin
+  select count(*) into n from pg_trigger where tgrelid = 'public.thought_attachments'::regclass and not tgisinternal;
+  if n <> 1 then raise exception 'U51: % triggers on thought_attachments', n; end if;
+  select count(*) into n from pg_indexes where schemaname = 'public' and tablename = 'thought_attachments';
+  if n <> 4 then raise exception 'U51: % indexes on thought_attachments (want 4: pk, parent, hash, unique pair)', n; end if;
+  select count(*) into n from pg_constraint where conrelid = 'public.thought_attachments'::regclass and contype = 'c';
+  if n <> 5 then raise exception 'U51: % check constraints (want 5)', n; end if;
+  select count(*) into n from pg_proc where proname = 'thought_attachments_touch';
+  if n <> 1 then raise exception 'U51: % touch functions', n; end if;
+end $$;
