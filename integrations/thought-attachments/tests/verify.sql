@@ -34,7 +34,7 @@ do $$
 declare
   want text[] := array[
     'id|uuid|NO|gen_random_uuid()', 'parent_thought_id|uuid|NO|', 'parent_created_here|boolean|NO|false',
-    'file_name|text|YES|', 'declared_type|text|YES|', 'declared_size|bigint|YES|', 'expected_kind|text|YES|',
+    'file_name|text|YES|', 'declared_type|text|YES|', 'declared_size|bigint|YES|', 'declared_by_page|boolean|NO|false', 'expected_kind|text|YES|',
     'actual_type|text|YES|', 'actual_size|bigint|YES|', 'page_count|integer|YES|', 'content_hash|text|YES|',
     'storage_path|text|YES|', 'sensitivity_tier|text|NO|''personal''::text', 'state|text|NO|',
     'state_reason|text|YES|', 'last_rebuild_error|text|YES|', 'caption_model|text|YES|',

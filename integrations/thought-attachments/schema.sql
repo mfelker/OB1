@@ -8,6 +8,7 @@ create table if not exists thought_attachments (
   file_name text,
   declared_type text,
   declared_size bigint,
+  declared_by_page boolean not null default false,
   expected_kind text,
   actual_type text,
   actual_size bigint,
@@ -29,6 +30,9 @@ create table if not exists thought_attachments (
   updated_at timestamptz default now(),
   processed_at timestamptz
 );
+
+-- The upload page's declaration flag (U365–U367), for schemas installed before it existed.
+alter table thought_attachments add column if not exists declared_by_page boolean not null default false;
 
 -- Value rules (added by name so a rerun never fails).
 do $$
