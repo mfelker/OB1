@@ -51,9 +51,28 @@ async function unauthorized(request: Request): Promise<Response> {
   });
 }
 
+/** The named settings error (T005 Q3): which setting and what it must be, never its value (FR-009). */
+function settingsError(problems: { setting: string; reason: string }[]): string {
+  return problems.map((p) => `setting ${p.setting} is invalid: ${p.reason}`).join("; ");
+}
+
+/** With settings that are not ok, every request gets the named error and nothing else happens. */
+function settingsErrorApp(problems: { setting: string; reason: string }[]): FetchApp {
+  const message = settingsError(problems);
+  return {
+    fetch: async (request) => {
+      const body = { jsonrpc: "2.0", error: { code: -32000, message }, id: await jsonRpcId(request) };
+      return new Response(JSON.stringify(body), {
+        status: 200,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    },
+  };
+}
+
 /** Answers every MCP call and page route with the named settings error when `input.ok` is false (T005 Q3). */
 export function createApp(input: AppInput): FetchApp {
-  if (!input.ok) throw new Error("not implemented");
+  if (!input.ok) return settingsErrorApp(input.problems);
   const deps = input.deps;
   const services = createFinisher(deps);
   const app = new Hono();

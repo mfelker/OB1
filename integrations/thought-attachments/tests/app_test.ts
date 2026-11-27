@@ -129,3 +129,24 @@ Deno.test("U299 an MCP request with no event-stream Accept header is handled, as
   assertEquals({ status: response.status, error: message?.error, id: message?.id }, { status: 200, error: undefined, id: 9 });
   assert((message?.result as { serverInfo?: unknown })?.serverInfo !== undefined, "no serverInfo");
 });
+
+/** createApp over settings that are not ok (T005 Q3). */
+function brokenApp(env: Record<string, string | undefined>): FetchApp {
+  const loaded = loadSettings(envGetter(env));
+  if (loaded.ok) throw new Error("test setup: settings should not be ok");
+  return createApp({ ok: false, problems: loaded.problems });
+}
+
+const PAGES_INVALID = "setting MAX_PDF_PAGES is invalid: must be a positive whole number";
+
+Deno.test("U347 createApp with settings not ok answers an MCP tools/call with the named settings error and nothing else", async () => {
+  const app = brokenApp({ MAX_PDF_PAGES: "abc" });
+  const { message } = await mcpCall(app.fetch, "tools/call", {
+    name: "find_thought",
+    arguments: { query: "furnace filters" },
+  }, BRAIN_KEY, { id: 5 });
+  assertEquals(
+    { message: (message?.error as { message?: string })?.message, id: message?.id, result: message?.result },
+    { message: PAGES_INVALID, id: 5, result: undefined },
+  );
+});
