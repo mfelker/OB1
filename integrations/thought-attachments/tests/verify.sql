@@ -380,3 +380,21 @@ begin
   if n <> 1 then raise exception 'U55: % rows written, want 1', n; end if;
   if bad <> 0 then raise exception 'U55: % rows with a different fingerprint', bad; end if;
 end $$;
+
+-- U56: a row whose fingerprint equals an owner thought's raises, and that thought is unchanged
+do $$
+declare p uuid := pg_temp.mk_parent(); a uuid := pg_temp.mk_att(p); o uuid; txt text := 'U56 owner thought ' || gen_random_uuid(); raised boolean := false; c text; m jsonb;
+begin
+  insert into thoughts (content, content_fingerprint, metadata)
+    values (txt, encode(sha256(convert_to(lower(trim(regexp_replace(txt, '\s+', ' ', 'g'))), 'UTF8')), 'hex'), '{"owner":true}') returning id into o;
+  begin
+    perform attachment_write_derived(a, 'tok', pg_temp.rows_json(txt), '{"state":"processed"}'::jsonb);
+  exception when unique_violation then raised := true;
+  end;
+  select content, metadata into c, m from thoughts where id = o;
+  delete from thoughts where id = o;
+  delete from thought_attachments where id = a;
+  delete from thoughts where id = p;
+  if not raised then raise exception 'U56: a fingerprint conflict did not raise'; end if;
+  if c <> txt or m <> '{"owner":true}'::jsonb then raise exception 'U56: owner thought changed: % %', c, m; end if;
+end $$;
