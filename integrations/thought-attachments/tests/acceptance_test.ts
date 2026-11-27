@@ -1139,7 +1139,7 @@ Deno.test(
   },
 );
 
-todo("A37 finish_attachment before any upload says no file uploaded yet and the row stays pending_upload", async () => {
+Deno.test("A37 finish_attachment before any upload says no file uploaded yet and the row stays pending_upload", async () => {
   const w = world();
   const parent = await ownerThought(w, "Kitchen dishwasher DW-500");
   const a = await attachCommand(w, parent.id, "manual.pdf", "application/pdf", 4096);
