@@ -29,3 +29,12 @@ create table if not exists thought_attachments (
   updated_at timestamptz default now(),
   processed_at timestamptz
 );
+
+-- Value rules (added by name so a rerun never fails).
+do $$
+begin
+  if not exists (select 1 from pg_constraint where conname = 'thought_attachments_declared_type_check') then
+    alter table thought_attachments add constraint thought_attachments_declared_type_check
+      check (declared_type in ('application/pdf', 'image/jpeg', 'image/png', 'image/webp'));
+  end if;
+end $$;

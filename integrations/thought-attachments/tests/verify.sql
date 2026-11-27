@@ -43,3 +43,21 @@ begin
     raise exception 'U34: unexpected foreign key';
   end if;
 end $$;
+
+-- U35: declared_type accepts the four accepted types and rejects anything else
+do $$
+declare t text; v_id uuid;
+begin
+  foreach t in array array['application/pdf', 'image/jpeg', 'image/png', 'image/webp'] loop
+    insert into thought_attachments (parent_thought_id, declared_type, state, upload_deadline)
+      values (gen_random_uuid(), t, 'pending_upload', now()) returning id into v_id;
+    delete from thought_attachments where id = v_id;
+  end loop;
+  begin
+    insert into thought_attachments (parent_thought_id, declared_type, state, upload_deadline)
+      values (gen_random_uuid(), 'image/gif', 'pending_upload', now()) returning id into v_id;
+    delete from thought_attachments where id = v_id;
+    raise exception 'U35: image/gif was accepted';
+  exception when check_violation then null;
+  end;
+end $$;
