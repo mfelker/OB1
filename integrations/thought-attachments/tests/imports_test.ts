@@ -69,3 +69,24 @@ Deno.test("U303 no .ts file outside tests/ has a bare import specifier", async (
   }
   assertEquals(bare, []);
 });
+
+/** Filesystem reads a source text makes at run time (the self-hosted runtime compiles the function without its other files). */
+function filesystemReadsIn(text: string): string[] {
+  return [...text.matchAll(/\bDeno\.(readFile|readTextFile|readFileSync|readTextFileSync|open|openSync|readDir|readDirSync|stat|statSync|lstat|lstatSync|realPath|realPathSync)\b|\bimport\.meta\.(url|resolve|filename|dirname)\b/g)].map((m) => m[0]);
+}
+
+Deno.test("U400 no file in src/ reads the filesystem at run time", async () => {
+  // Positive controls: the scan reaches the known src files, and planted reads are flagged.
+  const files = (await sourceFiles()).filter((f) => f.startsWith("src/"));
+  assertArrayIncludes(files, ["src/app.ts", "src/embeddings.ts"], "sourceFiles() missed a known src file");
+  assertEquals(
+    filesystemReadsIn('const a = await Deno.readFile(new URL("../x.html", import.meta.url));\nconst b = Deno.readTextFileSync("y");'),
+    ["Deno.readFile", "import.meta.url", "Deno.readTextFileSync"],
+    "a planted filesystem read was not flagged",
+  );
+  const offenders: string[] = [];
+  for (const file of files) {
+    for (const read of filesystemReadsIn(await Deno.readTextFile(new URL(file, ROOT)))) offenders.push(`${file}: ${read}`);
+  }
+  assertEquals(offenders, []);
+});

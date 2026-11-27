@@ -7,6 +7,7 @@ import { loadSettings } from "./settings.ts";
 import { createSupabaseStore } from "./store.ts";
 import { pageRoutes } from "./page_routes.ts";
 import { buildServer } from "./tools.ts";
+import { UPLOAD_PAGE_HTML } from "./upload_page.ts";
 import { createVisionClient } from "./vision.ts";
 import type { AppInput, FetchApp } from "./types.ts";
 
@@ -88,9 +89,6 @@ function withLocalPath(request: Request): Request {
   return new Request(url, request);
 }
 
-/** The phone page, served unchanged (R5, T005 Q6). */
-const UPLOAD_PAGE = new URL("../upload-page.html", import.meta.url);
-
 /** Answers every MCP call and page route with the named settings error when `input.ok` is false (T005 Q3). */
 export function createApp(input: AppInput): FetchApp {
   if (!input.ok) return settingsErrorApp(input.problems);
@@ -98,7 +96,8 @@ export function createApp(input: AppInput): FetchApp {
   const services = createFinisher(deps);
   const app = new Hono();
 
-  app.get("/upload", async (c) => c.body(await Deno.readFile(UPLOAD_PAGE), 200, { "Content-Type": "text/html; charset=utf-8" }));
+  // The phone page, served unchanged from its module (R5, T005 Q6, T122).
+  app.get("/upload", (c) => c.body(UPLOAD_PAGE_HTML, 200, { "Content-Type": "text/html; charset=utf-8" }));
 
   // The page routes take only the page token and answer CORS for the page's origin, so they sit before the key check.
   app.route("/", pageRoutes(deps, services));
