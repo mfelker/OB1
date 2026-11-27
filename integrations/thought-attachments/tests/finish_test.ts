@@ -506,3 +506,15 @@ Deno.test("U206 a scanned PDF finished again after SCANNED_MIN_CHARS_PER_PAGE is
   assertEquals(row.state_reason, null);
   assertEquals(row.derived_count, out.derived_count);
 });
+
+Deno.test("U207 a scanned PDF finished again with unchanged settings stays scanned, with no passages", async () => {
+  const r = await rig();
+  const att = pending(r, await scannedPdf(2));
+  assertEquals((await r.finish(att.id, {})).state, "scanned");
+  const out = await r.finish(att.id, {});
+  assertEquals(out.state, "scanned");
+  assertStringIncludes(out.reason ?? "", "text search won't cover it yet");
+  assertEquals(out.derived_count, 0);
+  assertEquals(r.store.derivedOf(att.id).length, 0);
+  assertEquals(r.store.attachment(att.id)?.state, "scanned");
+});
