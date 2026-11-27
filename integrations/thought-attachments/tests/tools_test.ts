@@ -659,3 +659,12 @@ Deno.test("U331 get_attachment on a finish claim one second past busy_until, nev
   assertEquals(out.data.reason, "the run did not finish");
   assertStringIncludes(out.text, "the run did not finish");
 });
+
+Deno.test("U332 one second before busy_until get_attachment reports the stored state", async () => {
+  const h = await harness();
+  const row = await claimedRow(h, "finish", 100, { state: "pending_upload" });
+  h.clock.advanceSeconds(99);
+  const out = await call(h, "get_attachment", { attachment_id: row.id });
+  assertEquals(out.data.state, "pending_upload");
+  assertEquals(out.data.reason, null);
+});
