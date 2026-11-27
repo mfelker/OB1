@@ -190,3 +190,11 @@ Deno.test("U154 checkActual refuses HEIC bytes with the share it as JPEG message
     assertStringIncludes(refusal.message, "share it as JPEG");
   }
 });
+
+Deno.test("U155 checkActual refuses bytes sniffType does not recognise as a type that is not accepted", () => {
+  const bytes = new TextEncoder().encode("PK zip archive bytes");
+  const refusal = checkActual(rowFor("image/jpeg", bytes.length), bytes, info(bytes.length), settingsWith());
+  assert(refusal !== null);
+  assertEquals(refusal.code, "unsupported_type");
+  assertStringIncludes(refusal.message, "PDF, JPEG, PNG and WebP");
+});

@@ -58,7 +58,10 @@ export function checkActual(
 ): Refusal | null {
   const actual = sniffType(bytes);
   if (actual === "image/heic") return HEIC_REFUSAL;
-  if (actual === null || actual !== row.declared_type) {
+  if (actual === null) {
+    return { code: "unsupported_type", message: "The stored file is not an accepted type. Accepted types are PDF, JPEG, PNG and WebP." };
+  }
+  if (actual !== row.declared_type) {
     return { code: "wrong_type", message: "The file is " + actual + ", not the declared " + row.declared_type + "." };
   }
   if (info.size !== row.declared_size) {
