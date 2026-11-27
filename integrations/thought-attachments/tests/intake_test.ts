@@ -198,3 +198,14 @@ Deno.test("U155 checkActual refuses bytes sniffType does not recognise as a type
   assertEquals(refusal.code, "unsupported_type");
   assertStringIncludes(refusal.message, "PDF, JPEG, PNG and WebP");
 });
+
+Deno.test("U152 checkActual refuses a PDF of MAX_PDF_PAGES + 1 pages, naming MAX_PDF_PAGES, the page count and background processing", () => {
+  const s = settingsWith();
+  const refusal = checkActual(rowFor("application/pdf", 5000, 51), pdfLike(5000), info(5000), s);
+  assert(refusal !== null);
+  assertEquals(refusal.code, "too_many_pages");
+  assertStringIncludes(refusal.message, "MAX_PDF_PAGES");
+  assertStringIncludes(refusal.message, "50");
+  assertStringIncludes(refusal.message, "51");
+  assertStringIncludes(refusal.message.toLowerCase(), "background processing");
+});

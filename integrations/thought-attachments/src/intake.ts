@@ -67,5 +67,13 @@ export function checkActual(
   if (info.size !== row.declared_size) {
     return { code: "wrong_size", message: "The file is " + info.size + " bytes, not the declared " + row.declared_size + "." };
   }
-  return tooLarge(actual, info.size, settings);
+  const size = tooLarge(actual, info.size, settings);
+  if (size) return size;
+  if (row.page_count !== null && row.page_count > settings.maxPdfPages) {
+    return {
+      code: "too_many_pages",
+      message: "The PDF has " + row.page_count + " pages, over MAX_PDF_PAGES (" + settings.maxPdfPages + ")." + BACKGROUND_NOTE,
+    };
+  }
+  return null;
 }
