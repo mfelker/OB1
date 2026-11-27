@@ -18,6 +18,13 @@ export function createFinisher(deps: Deps): Services {
     const got = await store.getAttachment(id);
     if ("error" in got || typeof got.data === "string") throw new Error("attachment not found");
     const row = got.data;
+    if (row.state === "refused") {
+      return {
+        state: "refused",
+        reason: "this attachment was refused and can't be finished" + (row.state_reason ? " (" + row.state_reason + ")" : ""),
+        derived_count: 0,
+      };
+    }
     const rebuild = opts.rebuild === true && row.state === "processed";
     const claim = await store.claim(row.id, rebuild ? "rebuild" : "finish", settings.busySeconds);
     if ("error" in claim || !("token" in claim.data)) throw new Error("claim failed");

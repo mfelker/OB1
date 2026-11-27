@@ -406,3 +406,20 @@ Deno.test("U200 an object created exactly at upload_deadline is not refused for 
   const out = await r.finish(att.id, {});
   assertEquals(out.state, "processed");
 });
+
+Deno.test("U201 finishing a refused attachment is refused, and nothing changes", async () => {
+  const r = await rig();
+  const att = pending(r, await textPdf(["alpha beta gamma"]), { state: "refused", state_reason: "too big" });
+  const before = structuredClone(r.store.attachment(att.id));
+  const callsBefore = r.store.calls.length;
+  const out = await r.finish(att.id, {});
+  assertEquals(out.state, "refused");
+  assertStringIncludes(out.reason ?? "", "too big");
+  assertEquals(out.derived_count, 0);
+  assertEquals(r.store.attachment(att.id), before);
+  const writes = r.store.callNames().slice(callsBefore).filter((m) =>
+    ["writeDerived", "setState", "deleteObject", "download"].includes(m)
+  );
+  assertEquals(writes, []);
+  assertEquals(r.ff.requests.length, 0);
+});
