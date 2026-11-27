@@ -1458,7 +1458,7 @@ Deno.test("A50 the same, with a second processed attachment pointing to that not
   assertEquals({ row: row(w, id), note: w.store.thought(noteId)?.content }, { row: undefined, note });
 });
 
-todo("A51 attach_file with note and a HEIC declared type saves no thought and makes no embedding request", async () => {
+Deno.test("A51 attach_file with note and a HEIC declared type saves no thought and makes no embedding request", async () => {
   const w = world();
   const before = snapshot(w);
   const r = await tool(w, "attach_file", {
