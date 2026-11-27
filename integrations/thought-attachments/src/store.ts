@@ -5,7 +5,7 @@
  * parameter sent here against schema.sql.
  */
 import { createClient } from "@supabase/supabase-js";
-import type { BusyOp, R, Settings, Store, ThoughtMatch } from "./types.ts";
+import type { AttachmentRow, BusyOp, R, Settings, Store, ThoughtMatch } from "./types.ts";
 
 const notYet = (): Promise<never> => Promise.reject(new Error("not implemented"));
 
@@ -50,7 +50,12 @@ export function createSupabaseStore(
       return rpc<number>("attachment_embedding_dimension", {});
     },
     createAttachment: notYet,
-    getAttachment: notYet,
+    async getAttachment(idOrShortId) {
+      const { data, error } = await db.from("thought_attachments").select("*").eq("id", idOrShortId).limit(2);
+      if (error) return { error: error.message };
+      const rows = (data ?? []) as AttachmentRow[];
+      return { data: rows[0] };
+    },
     findPending: notYet,
     findByHash: notYet,
     setDeclaration: notYet,

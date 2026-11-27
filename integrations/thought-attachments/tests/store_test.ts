@@ -114,3 +114,13 @@ Deno.test("U73 claim maps a refused claim to busy and a success to a token", asy
   assertEquals(ff.requests[0].body, { p_id: "att-1", p_op: "finish", p_seconds: 410 });
   assertEquals(await store.claim("att-1", "remove", 410), { data: { busy: "rebuild" } });
 });
+
+const ATT_ID = "11111111-2222-3333-4444-555555555555";
+
+Deno.test("U74 getAttachment with a full id returns the row", async () => {
+  const { store, ff } = setup();
+  const row = attachmentRow();
+  ff.on("GET", `${REST}/thought_attachments*`, { body: [row] });
+  assertEquals(await store.getAttachment(ATT_ID), { data: row });
+  assertEquals(ff.requests[0].url.includes(`id=eq.${ATT_ID}`), true);
+});
