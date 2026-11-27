@@ -27,7 +27,7 @@ export function loadSettings(getEnv: GetEnv): SettingsResult {
       uploadLinkMinutes: num("UPLOAD_LINK_MINUTES", 60),
       downloadLinkSeconds: num("DOWNLOAD_LINK_SECONDS", 600),
       busySeconds: 410,
-      publicBaseUrl: getEnv("PUBLIC_BASE_URL") ?? getEnv("SUPABASE_PUBLIC_URL") ?? "",
+      publicBaseUrl: getEnv("PUBLIC_BASE_URL") ?? getEnv("SUPABASE_PUBLIC_URL") ?? getEnv("SUPABASE_URL") ?? "",
       uploadPageUrl: getEnv("UPLOAD_PAGE_URL") ?? "",
     },
   };

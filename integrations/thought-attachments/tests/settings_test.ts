@@ -2,7 +2,7 @@
 import { assertEquals } from "jsr:@std/assert@1.0.19";
 import { loadSettings } from "../src/settings.ts";
 import type { Settings } from "../src/types.ts";
-import { EMBEDDING_API_KEY, envGetter } from "./helpers/env.ts";
+import { EMBEDDING_API_KEY, envGetter, SUPABASE_URL } from "./helpers/env.ts";
 
 /** Loads settings over the baseline env with `overrides`, and fails the test unless the result is ok. */
 function settingsWith(overrides: Record<string, string | undefined> = {}): Settings {
@@ -68,4 +68,9 @@ const SUPABASE_PUBLIC = "http://192.168.1.20:8000";
 Deno.test("U5 with PUBLIC_BASE_URL unset the public base is SUPABASE_PUBLIC_URL", () => {
   const s = settingsWith({ PUBLIC_BASE_URL: undefined, SUPABASE_PUBLIC_URL: SUPABASE_PUBLIC });
   assertEquals(s.publicBaseUrl, SUPABASE_PUBLIC);
+});
+
+Deno.test("U6 with PUBLIC_BASE_URL and SUPABASE_PUBLIC_URL unset the public base is SUPABASE_URL", () => {
+  const s = settingsWith({ PUBLIC_BASE_URL: undefined, SUPABASE_PUBLIC_URL: undefined });
+  assertEquals(s.publicBaseUrl, SUPABASE_URL);
 });
