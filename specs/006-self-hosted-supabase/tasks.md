@@ -205,7 +205,7 @@ Stack configuration, in `F/tests/compose.test.mjs`. Each test runs `docker compo
   - OS-009's result, which then goes into T034's README text.
 
   Remove `S` afterwards. **Done 2026-11-26 (`evidence/mac/`)**: every step passed except V10 (SC-011, Docker Model Runner), after which the owner dropped DMR. V8 used a Docker Desktop restart instead of a full reboot (owner's choice). README updated: `85866d6`, `69b88a2`, `11285c0`.
-- [ ] T038 **Linux run** (SC-010) on a Linux machine the owner provides: V1–V9, V11, V12, plus V10 if DMR is installed there. Record the Compose version (R2) and whether `host-gateway` works (R12). Evidence goes in `M/specs/006-self-hosted-supabase/evidence/linux/`. Update the README's "Tested with" table for both runs.
+- [x] T038 **Linux run** (SC-010) on a Linux machine the owner provides: V1–V9, V11, V12, plus V10 if DMR is installed there. Record the Compose version (R2) and whether `host-gateway` works (R12). Evidence goes in `M/specs/006-self-hosted-supabase/evidence/linux/`. Update the README's "Tested with" table for both runs.
 
 ---
 
@@ -333,7 +333,7 @@ Task: "Compose test: default service set is exactly the always-on set (T020) in 
   - Extend the Complexity Tracking row to name them, with their mutant evidence: M16, F2 and F3 for U54; F20 for U55.
   - Or re-drive them red-first.
   Done when `plan.md` Complexity Tracking names U54 and U55, or the cycle log records a red against missing behavior for each.
-- [ ] T074 Finding 3: SC-010's Linux half has no run. Run T038 before the next T044 re-audit (T038 is Phase 7, ahead of T044 in Phase 8). Done when `M/specs/006-self-hosted-supabase/evidence/linux/` holds the recorded V1–V9, V11 and V12 run, and T038 is ticked.
+- [x] T074 Finding 3: SC-010's Linux half has no run. Run T038 before the next T044 re-audit (T038 is Phase 7, ahead of T044 in Phase 8). Done when `M/specs/006-self-hosted-supabase/evidence/linux/` holds the recorded V1–V9, V11 and V12 run, and T038 is ticked.
 - [x] T078 Finding 4 (HIGH, surviving mutant in U36): U36 (`F/tests/compose.test.mjs:139-151`) asserts `init.image` equals the pinned `curlimages/curl:8.11.1`. Done when mutant F13 (`lean.override.yml:44` → `alpine:3.20.3`) fails U36 single, and the suite is green.
 
 ### Non-blocking: MED and LOW findings
