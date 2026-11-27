@@ -1024,7 +1024,7 @@ Deno.test(
   },
 );
 
-todo(
+Deno.test(
   "A31 an uploaded PDF over MAX_PDF_PAGES is refused at finishing with the page count and the planned background processing, object deleted and no derived thought",
   async () => {
     const w = world({ env: { MAX_PDF_PAGES: "3" } });
