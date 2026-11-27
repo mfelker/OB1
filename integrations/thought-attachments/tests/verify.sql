@@ -594,3 +594,18 @@ begin
   delete from thoughts where id = no;
   if n <> 1 or hit <> yes then raise exception 'U314: % matches, first %', n, hit; end if;
 end $$;
+
+-- U84: inserting a note whose text is new adds a thought with the note's content and metadata, reported as created
+do $$
+declare txt text := 'U84 note ' || gen_random_uuid(); r jsonb; t thoughts;
+begin
+  r := attachment_insert_note(txt, array_fill(0, array[1536])::vector::text,
+    '{"type":"observation","source":"thought-attachments","source_type":"thought_attachments_note"}'::jsonb);
+  select * into t from thoughts where id = (r->>'id')::uuid;
+  delete from thoughts where id = (r->>'id')::uuid;
+  if (r->>'created')::boolean is not true then raise exception 'U84: not reported as created: %', r; end if;
+  if t.content <> txt or t.metadata->>'source_type' <> 'thought_attachments_note' or t.metadata->>'type' <> 'observation'
+     or t.embedding is null or t.content_fingerprint is null then
+    raise exception 'U84: stored row differs: %', t;
+  end if;
+end $$;

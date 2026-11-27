@@ -251,3 +251,21 @@ as $$
     limit least(p_limit, 20)
 $$;
 grant execute on function attachment_find_thoughts_exact(text, int) to service_role;
+
+-- Insert the parent note of an attachment (R17): a new thought, or the existing one with the same
+-- fingerprint, unchanged. Returns { "id": ..., "created": true | false }.
+create or replace function attachment_insert_note(p_content text, p_embedding text, p_metadata jsonb)
+returns jsonb
+language plpgsql
+as $$
+declare
+  fp text := encode(sha256(convert_to(lower(trim(regexp_replace(p_content, '\s+', ' ', 'g'))), 'UTF8')), 'hex');
+  new_id uuid;
+begin
+  insert into thoughts (content, content_fingerprint, embedding, metadata)
+  values (p_content, fp, p_embedding::vector, coalesce(p_metadata, '{}'::jsonb))
+  returning id into new_id;
+  return jsonb_build_object('id', new_id, 'created', true);
+end;
+$$;
+grant execute on function attachment_insert_note(text, text, jsonb) to service_role;
