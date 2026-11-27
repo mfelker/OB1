@@ -3,7 +3,7 @@ import { McpServer } from "npm:@modelcontextprotocol/sdk@1.24.3/server/mcp.js";
 import { z } from "npm:zod@4.1.13";
 import { baseName, checkDeclared } from "./intake.ts";
 import { curlLine, pageLink, publicUrl } from "./links.ts";
-import type { AcceptedType, AttachmentRow, Deps, Services, Settings, UploadInstructions } from "./types.ts";
+import type { AcceptedType, AttachmentRow, BusyOp, Deps, Services, Settings, UploadInstructions } from "./types.ts";
 
 type Hints = { readOnlyHint: boolean; destructiveHint?: boolean; openWorldHint?: boolean };
 
@@ -41,6 +41,13 @@ function newId(deps: Deps): string {
 }
 
 const PARTIAL_DETAILS = "Only some of file_name, declared_type and declared_size were given: give all three, or none for a phone upload.";
+
+const RUNNING: Record<BusyOp, string> = { finish: "finishing", rebuild: "rebuilding", remove: "removing" };
+
+/** A refusal because another finish, rebuild or remove holds the claim (FR-026). */
+function busyReply(op: BusyOp) {
+  return reply(`busy (${RUNNING[op]}), try again shortly`, { busy: op }, true);
+}
 
 /** An attachment by full or short id, or the "not found" / "ambiguous" failure to return. */
 async function resolveAttachment(
@@ -193,13 +200,12 @@ export function buildServer(deps: Deps, services: Services): McpServer {
     const found = await resolveAttachment(deps, attachment_id);
     if ("failure" in found) return found.failure;
     const outcome = await services.finish(found.row.id, { rebuild });
-    const { busy: _busy, last_rebuild_error, ...shown } = outcome;
-    const data = { ...shown, ...(last_rebuild_error === undefined ? {} : { last_rebuild_error }) };
+    if (outcome.busy) return busyReply(outcome.busy);
     const lines = [`State: ${outcome.state}.`, `Derived thoughts: ${outcome.derived_count}.`];
     if (outcome.reason) lines.push(`Reason: ${outcome.reason}`);
     if (outcome.page_count !== undefined) lines.push(`Pages: ${outcome.page_count}.`);
     if (outcome.caption) lines.push(`Caption: ${outcome.caption}`);
-    return reply(lines.join("\n"), data);
+    return reply(lines.join("\n"), { ...outcome });
   });
 
   server.registerTool("get_attachment", {

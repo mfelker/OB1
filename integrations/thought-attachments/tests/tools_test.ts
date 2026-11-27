@@ -459,3 +459,16 @@ Deno.test("U241 finish_attachment passes the id and rebuild to services.finish a
   assertStringIncludes(out.text, "processed");
   assertStringIncludes(out.text, "7");
 });
+
+Deno.test("U242 a busy outcome says busy, naming the running operation as finishing, rebuilding or removing", async () => {
+  const h = await harness();
+  const row = await pendingRow(h);
+  const expected = { finish: "finishing", rebuild: "rebuilding", remove: "removing" } as const;
+  for (const [op, word] of Object.entries(expected)) {
+    h.finish.outcome = { state: "pending_upload", derived_count: 0, busy: op as "finish" };
+    const out = await call(h, "finish_attachment", { attachment_id: row.id });
+    assertEquals(out.text, `busy (${word}), try again shortly`);
+    assertEquals(out.isError, true);
+    assertEquals(out.data.busy, op);
+  }
+});
