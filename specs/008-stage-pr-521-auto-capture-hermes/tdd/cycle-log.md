@@ -555,3 +555,10 @@ Commands run from the stage worktree folder `skills/auto-capture-hermes` with `e
 - green: suite 53 passed, 0 failed (2 runs)
 - refactor: none needed
 - commit: `a4fb349`
+
+## Pre-merge checks refreshed at stage `a4fb349` (after T052, T053)
+
+- **T024:** `env -i` suite 53/53 (evidence files refreshed).
+- **T026:** fork-ci strict `pass`.
+- **T025, T027:** scope is only the folder; 0 secret-pattern matches.
+- **T028:** OB1 Review 15/15, `failed=false`.
