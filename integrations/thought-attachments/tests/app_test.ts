@@ -35,3 +35,10 @@ Deno.test("U293 the correct key in x-brain-key lets an MCP initialize succeed", 
   assertEquals((message?.result as { serverInfo?: { name?: string } })?.serverInfo?.name !== undefined, true);
   assertEquals(message?.error, undefined);
 });
+
+Deno.test("U294 the correct key as ?key= lets an MCP initialize succeed", async () => {
+  const { app } = rig();
+  const { message } = await mcpCall(app.fetch, "initialize", INIT, BRAIN_KEY, { via: "query" });
+  assertEquals(message?.error, undefined);
+  assert((message?.result as { serverInfo?: unknown })?.serverInfo !== undefined, "no serverInfo");
+});
