@@ -573,7 +573,7 @@ Streams code against these. The signatures are the only shared contract. Behavio
 - [X] T080 Replace the README's `pending verification` cells in `F/README.md` with the recorded values (platform, runtime, models, measured SC-004 times), and set `F/metadata.json` `estimated_time` from the runs. Re-run T071–T074.
 - [X] T081 **Cold-context TDD audit**: launch a fresh agent with no conversation context to run `/speckit-tdd-verify` in `M`. It writes `M/specs/007-thought-attachments/tdd/verification.md` with a verdict of PASS or PASS_WITH_GAPS (Quality Gate 1). The live-only criteria (SC-004, SC-006, SC-008, and the live halves of SC-001, SC-002 and SC-003) are named for an owner ruling, as in spec 006's T044. Remediation tasks it writes are appended as a new phase and done before T083.
 - [X] T082 Scope check: `git -C W diff --stat upstream/main...HEAD` lists only `integrations/thought-attachments/`, with no `specs/`, `.specify/` or `.fork/` (Principle V).
-- [ ] T083 **Fork landing, asking the owner before each push or PR**:
+- [X] T083 **Fork landing, asking the owner before each push or PR**:
   1. `git -C W push -u origin contrib/mfelker/thought-attachments`.
   2. `gh pr create -R mfelker/OB1 --base main --head contrib/mfelker/thought-attachments --title "[integrations] Thought attachments (fork landing)"`. The body follows `W/.github/PULL_REQUEST_TEMPLATE.md` and ends with the "Generated with Claude Code" line only.
   3. When `fork-ci-verdict` and `OB1 Review` are green, the **owner** merges with `--merge`.
