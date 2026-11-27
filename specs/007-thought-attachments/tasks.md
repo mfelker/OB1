@@ -288,21 +288,21 @@ Streams code against these. The signatures are the only shared contract. Behavio
 
 ### Stream N: finishing (`ta-finish`, wave 2)
 
-- [ ] T025 [P] [US1] [U182] [U183] [U184] [U185] [U186] Tests first in `F/tests/finish_test.ts`, then the PDF path of `createFinisher` in `F/src/finish.ts`, using the merged X and E modules with `FakeStore` and `fake_fetch` (contracts/mcp-tools.md `finish_attachment`):
+- [X] T025 [P] [US1] [U182] [U183] [U184] [U185] [U186] Tests first in `F/tests/finish_test.ts`, then the PDF path of `createFinisher` in `F/src/finish.ts`, using the merged X and E modules with `FakeStore` and `fake_fetch` (contracts/mcp-tools.md `finish_attachment`):
   - claim → verify the stored file → extract → embed → write → `processed`, with `derived_count` and `page_count`
   - `thought_attachments.actual_type`, `thought_attachments.actual_size`, `thought_attachments.page_count`, `thought_attachments.content_hash` (`sha256:<hex>`, the `input_hash`) and `thought_attachments.processed_at` set
   - the claim is released on every exit
   - an existing owner thought with the same text as a passage is untouched (US1 #4, FR-022)
-- [ ] T026 [P] [US1] [U187] [U188] [U322] [U323] [U324] [U325] Tests first in `F/tests/finish_test.ts`, then repeat finishes in `F/src/finish.ts`: a plain finish on `processed` returns the existing outcome with no embedding call and no write (FR-012); the duplicate-content outcome per T005.4 (US1 #3).
+- [X] T026 [P] [US1] [U187] [U188] [U322] [U323] [U324] [U325] Tests first in `F/tests/finish_test.ts`, then repeat finishes in `F/src/finish.ts`: a plain finish on `processed` returns the existing outcome with no embedding call and no write (FR-012); the duplicate-content outcome per T005.4 (US1 #3).
 
 ### Stream T: tools (`ta-tools`, wave 2)
 
-- [ ] T027 [P] [US1] [U217] [U218] [U219] Tests first in `F/tests/tools_test.ts`, then tool registration in `F/src/tools.ts`: `tools/list` returns exactly `find_thought`, `attach_file`, `finish_attachment`, `get_attachment`, `list_attachments`, `remove_attachment` and `find_orphan_attachments`, each with the input schema, defaults and annotations of contracts/mcp-tools.md.
-- [ ] T028 [P] [US1] [U220] [U221] [U222] [U223] [U224] [U225] [U226] [U227] [U228] [U328] Tests first in `F/tests/tools_test.ts`, then `find_thought` in `F/src/tools.ts`: `meaning` (default) embeds the query and calls `matchThoughts`, `exact` calls `findThoughtsExact`; `limit` defaults to 5 and is at most 20; each match has `id`, `first_line` (at most 120 characters) and `captured`; an empty result says "no matching thought" (FR-023, SC-009, R11).
-- [ ] T029 [P] [US1] [U229] [U230] [U231] [U232] [U233] [U234] [U235] [U236] [U237] [U238] [U239] [U240] [U329] [U330] Tests first in `F/tests/tools_test.ts`, then, in `F/src/tools.ts`, `attach_file` with `thought_id` and the command-upload details. Refusals, each before any row, note or link (FR-003, contracts/mcp-tools.md): an unknown `thought_id`; both or neither of `thought_id` and `note`; `checkDeclared`'s refusals; the same name, type and size already pending, with its deadline not passed, on the parent (pointing to it); only some of the three file details (spec Edge Cases). On success:
+- [X] T027 [P] [US1] [U217] [U218] [U219] Tests first in `F/tests/tools_test.ts`, then tool registration in `F/src/tools.ts`: `tools/list` returns exactly `find_thought`, `attach_file`, `finish_attachment`, `get_attachment`, `list_attachments`, `remove_attachment` and `find_orphan_attachments`, each with the input schema, defaults and annotations of contracts/mcp-tools.md.
+- [X] T028 [P] [US1] [U220] [U221] [U222] [U223] [U224] [U225] [U226] [U227] [U228] [U328] Tests first in `F/tests/tools_test.ts`, then `find_thought` in `F/src/tools.ts`: `meaning` (default) embeds the query and calls `matchThoughts`, `exact` calls `findThoughtsExact`; `limit` defaults to 5 and is at most 20; each match has `id`, `first_line` (at most 120 characters) and `captured`; an empty result says "no matching thought" (FR-023, SC-009, R11).
+- [X] T029 [P] [US1] [U229] [U230] [U231] [U232] [U233] [U234] [U235] [U236] [U237] [U238] [U239] [U240] [U329] [U330] [U362] Tests first in `F/tests/tools_test.ts`, then, in `F/src/tools.ts`, `attach_file` with `thought_id` and the command-upload details. Refusals, each before any row, note or link (FR-003, contracts/mcp-tools.md): an unknown `thought_id`; both or neither of `thought_id` and `note`; `checkDeclared`'s refusals; the same name, type and size already pending, with its deadline not passed, on the parent (pointing to it); only some of the three file details (spec Edge Cases). On success:
   - a row with `thought_attachments.parent_thought_id`, `thought_attachments.file_name`, `thought_attachments.declared_type`, `thought_attachments.declared_size`, `thought_attachments.sensitivity_tier` (default `personal`), `thought_attachments.storage_path`, `thought_attachments.upload_deadline` (now + `UPLOAD_LINK_MINUTES`; R8), `thought_attachments.page_token_hash` (a hash only, never the token) and `thought_attachments.state` `pending_upload`
   - a result with `attachment_id` and its short id, `parent_thought_id`, `upload_deadline`, `upload { url, method: "PUT", headers }` through `publicUrl`, the `curl` line, `page_link` and `limits` (FR-001, FR-002, R6)
-- [ ] T030 [P] [US1] [U241] [U242] [U243] Tests first in `F/tests/tools_test.ts`, then, in `F/src/tools.ts`, `finish_attachment` over `services.finish` (scripted in this stream's tests): `attachment_id` and optional `rebuild`; the result text and the structured `state`, `reason`, `derived_count`, `caption`, `page_count`; the busy message "busy (finishing / rebuilding / removing), try again shortly" (FR-026).
+- [X] T030 [P] [US1] [U241] [U242] [U243] Tests first in `F/tests/tools_test.ts`, then, in `F/src/tools.ts`, `finish_attachment` over `services.finish` (scripted in this stream's tests): `attachment_id` and optional `rebuild`; the result text and the structured `state`, `reason`, `derived_count`, `caption`, `page_count`; the busy message "busy (finishing / rebuilding / removing), try again shortly" (FR-026).
 
 ### Stream A: app and entry (`ta-app`, wave 3)
 
@@ -374,33 +374,33 @@ Streams code against these. The signatures are the only shared contract. Behavio
 
 ### Stream N: finishing (`ta-finish`, wave 2)
 
-- [ ] T039 [P] [US2] [U189] [U190] [U191] [U192] [U193] [U194] Tests first in `F/tests/finish_test.ts`, then the photo path in `F/src/finish.ts`:
+- [X] T039 [P] [US2] [U189] [U190] [U191] [U192] [U193] [U194] Tests first in `F/tests/finish_test.ts`, then the photo path in `F/src/finish.ts`:
   - a caption becomes one derived thought, the state becomes `processed`, and `thought_attachments.caption_model` is set (FR-006, US2 #1)
   - with vision not configured or failing: `not_captioned` with the reason in `thought_attachments.state_reason`, the file kept, no caption (US2 #7)
   - `not_captioned` finished again writes the caption (SC-015)
-- [ ] T040 [P] [US2] [U187] [U195] [U196] [U197] [U326] Tests first in `F/tests/finish_test.ts`, then rebuilds in `F/src/finish.ts` (FR-027):
+- [X] T040 [P] [US2] [U187] [U195] [U196] [U197] [U326] Tests first in `F/tests/finish_test.ts`, then rebuilds in `F/src/finish.ts` (FR-027):
   - `rebuild: true` on a `processed` photo replaces the caption with exactly one caption by the newly configured model (SC-015)
   - a failed rebuild keeps the old set and `processed`, and sets `thought_attachments.last_rebuild_error` with the reason (SC-018)
   - a plain finish never rebuilds
 
 ### Stream T: tools (`ta-tools`, wave 2)
 
-- [ ] T041 [P] [US2] [U244] [U245] [U246] [U247] [U248] [U249] Tests first in `F/tests/tools_test.ts`, then `attach_file`'s `note` and phone-upload paths in `F/src/tools.ts`:
+- [X] T041 [P] [US2] [U244] [U245] [U246] [U247] [U248] [U249] Tests first in `F/tests/tools_test.ts`, then `attach_file`'s `note` and phone-upload paths in `F/src/tools.ts`:
   - `note` embeds the text and saves it through `insertNote` as the parent; `parent_created_here` follows `created`, and an existing note gets "attached to your existing thought" (FR-001, R17, SC-010)
   - a HEIC or over-cap declaration with `note` saves no thought (FR-003, SC-020)
   - with the file details omitted, the row has no declaration and carries `thought_attachments.expected_kind` when given (planning clarification)
 
 ### Stream P: phone page (`ta-page`, wave 2)
 
-- [ ] T042 [P] [US2] [U262] [U263] [U264] [U265] [U266] [U267] [U268] [U269] [U270] [U271] [U272] [U273] [U274] [U275] [U276] [U337] [U338] [U339] [U352] Tests first in `F/tests/page_routes_test.ts`, then `POST /page/info` (token only: expected kind, accepted types, caps; changes nothing) and `POST /page/start` in `F/src/page_routes.ts` (contracts/upload-page.md):
+- [X] T042 [P] [US2] [U262] [U263] [U264] [U265] [U266] [U267] [U268] [U269] [U270] [U271] [U272] [U273] [U274] [U275] [U276] [U337] [U338] [U339] [U352] Tests first in `F/tests/page_routes_test.ts`, then `POST /page/info` (token only: expected kind, accepted types, caps; changes nothing) and `POST /page/start` in `F/src/page_routes.ts` (contracts/upload-page.md):
   - a valid, unused token before `thought_attachments.upload_deadline` records the picked name, type and exact size as the declaration, or confirms they match the one the attach call gave
   - it refuses HEIC, other types, an `expected_kind` mismatch or an over-cap size, with `attach_file`'s messages, before any link is made
   - otherwise it returns a fresh signed upload link through `publicUrl`
   - a second `/page/start` replaces the declaration
   - an invalid, used or expired token gets `410` with "This link has expired or was already used. Ask your assistant for a new one"
   - a brain key is neither needed nor accepted, and CORS allows only the `UPLOAD_PAGE_URL` origin (or same-origin)
-- [ ] T043 [P] [US2] [U277] [U278] [U279] [U280] [U340] [U341] Tests first in `F/tests/page_routes_test.ts`, then `POST /page/finish` in `F/src/page_routes.ts`: it finishes **only** its own attachment and uses up the token only when finishing reaches an outcome (busy and no-file leave it valid, T005 Q5) through `services.finish`, returning the outcome as JSON; a second call gets `410`; a token for another attachment changes nothing (FR-024, SC-011); busy handling per T005.5.
-- [ ] T044 [P] [US2] [U281] [U282] [U283] [U284] [U285] [U286] [U287] [U288] [U289] [U290] [U291] [U292] [U342] [U343] [U344] [U345] [U346] Tests first in `F/tests/page_script_test.ts` (with `F/tests/helpers/page_dom.ts`, a minimal DOM, `location` and `fetch` stand-in that runs the file's inline script), then `F/upload-page.html`:
+- [X] T043 [P] [US2] [U277] [U278] [U279] [U280] [U340] [U341] Tests first in `F/tests/page_routes_test.ts`, then `POST /page/finish` in `F/src/page_routes.ts`: it finishes **only** its own attachment and uses up the token only when finishing reaches an outcome (busy and no-file leave it valid, T005 Q5) through `services.finish`, returning the outcome as JSON; a second call gets `410`; a token for another attachment changes nothing (FR-024, SC-011); busy handling per T005.5.
+- [X] T044 [P] [US2] [U281] [U282] [U283] [U284] [U285] [U286] [U287] [U288] [U289] [U290] [U291] [U292] [U342] [U343] [U344] [U345] [U346] [U363] Tests first in `F/tests/page_script_test.ts` (with `F/tests/helpers/page_dom.ts`, a minimal DOM, `location` and `fetch` stand-in that runs the file's inline script), then `F/upload-page.html`:
   - it reads the token only from the fragment and calls only the API address fixed in the file, per T005.6 (R5)
   - the file input accepts `image/jpeg,image/png,image/webp,application/pdf` (R7)
   - it shows the expected kind, accepted types and size limit
@@ -440,11 +440,11 @@ Streams code against these. The signatures are the only shared contract. Behavio
 
 ### Stream T: tools (`ta-tools`, wave 2)
 
-- [ ] T049 [P] [US3] [U243] [U250] [U251] [U252] [U253] [U331] [U332] [U333] [U353] Tests first in `F/tests/tools_test.ts`, then `get_attachment` in `F/src/tools.ts`:
+- [X] T049 [P] [US3] [U243] [U250] [U251] [U252] [U253] [U331] [U332] [U333] [U353] Tests first in `F/tests/tools_test.ts`, then `get_attachment` in `F/src/tools.ts`:
   - it accepts a full or short id, with "not found" and "ambiguous" errors
   - it returns file name, type, size, page count, state, reason, `derived_count`, `caption_model` and parent id
   - it gives a `download_link` valid for `DOWNLOAD_LINK_SECONDS`, through `publicUrl` and with the lifetime stated, only when the file is stored; never for `pending_upload` or `refused` (FR-014, SC-003, SC-012)
-- [ ] T050 [P] [US3] [U254] [U255] [U256] [U257] [U334] Tests first in `F/tests/tools_test.ts`, then `list_attachments` in `F/src/tools.ts`: exactly one of `thought_id` or `derived_thought_id`; each attachment's id, short id, file name, type, size, state and `derived_count` (FR-015, US3 #2).
+- [X] T050 [P] [US3] [U254] [U255] [U256] [U257] [U334] Tests first in `F/tests/tools_test.ts`, then `list_attachments` in `F/src/tools.ts`: exactly one of `thought_id` or `derived_thought_id`; each attachment's id, short id, file name, type, size, state and `derived_count` (FR-015, US3 #2).
 
 ### Stream A: app (`ta-app`, wave 3)
 
@@ -483,15 +483,15 @@ Streams code against these. The signatures are the only shared contract. Behavio
 
 ### Stream N: finishing (`ta-finish`, wave 2)
 
-- [ ] T056 [P] [US4] [U198] [U199] [U200] [U201] [U202] [U203] [U204] Tests first in `F/tests/finish_test.ts`, then refusals in `F/src/finish.ts` (FR-004, SC-013):
+- [X] T056 [P] [US4] [U198] [U199] [U200] [U201] [U202] [U203] [U204] Tests first in `F/tests/finish_test.ts`, then refusals in `F/src/finish.ts` (FR-004, SC-013):
   - on `checkActual`'s refusal, or an object created after `thought_attachments.upload_deadline` (R8), the file is deleted at once, the state becomes `refused` with the actual values, and no derived thoughts are written
   - finishing `refused` again is refused
   - no object gives "no file uploaded yet", or "upload window expired" after the deadline, with the state unchanged
-- [ ] T057 [P] [US4] [U205] [U206] [U207] [U208] [U209] [U210] [U211] [U327] Tests first in `F/tests/finish_test.ts`, then failures in `F/src/finish.ts`:
+- [X] T057 [P] [US4] [U205] [U206] [U207] [U208] [U209] [U210] [U211] [U327] Tests first in `F/tests/finish_test.ts`, then failures in `F/src/finish.ts`:
   - a text-less PDF ends `scanned` with "text search won't cover it yet" and no passages, and `scanned` finished again re-checks (FR-010, US4 #2)
   - a corrupt PDF ends `failed` with the reason
   - an embedding failure partway, or a vector length different from `embeddingDimension()`, ends `failed` with no derived thoughts from that attempt, and a later finish succeeds (`data-model.md` `Derived thought.embedding`; FR-007, FR-011, US4 #3, SC-005)
-- [ ] T058 [P] [US4] [U212] [U213] [U214] [U215] [U216] Tests first in `F/tests/finish_test.ts`, then the claim in `F/src/finish.ts` (FR-026, R10):
+- [X] T058 [P] [US4] [U212] [U213] [U214] [U215] [U216] Tests first in `F/tests/finish_test.ts`, then the claim in `F/src/finish.ts` (FR-026, R10):
   - a finish while another finish, rebuild or remove holds an unexpired claim returns `busy` with the running operation and changes nothing (SC-014)
   - once `BUSY_SECONDS` has passed by the clock, the next finish proceeds and completes (SC-019)
   - a cut-off rebuild keeps the old set
@@ -523,11 +523,11 @@ Streams code against these. The signatures are the only shared contract. Behavio
 
 ### Stream T: tools (`ta-tools`, wave 2)
 
-- [ ] T063 [P] [US5] [U243] [U258] [U259] [U260] [U335] [U336] [U354] Tests first in `F/tests/tools_test.ts`, then `remove_attachment` in `F/src/tools.ts`: Removal order and retry follow contracts/mcp-tools.md `remove_attachment` (file first, then records in one transaction; a repeat remove succeeds when the file is already gone).
+- [X] T063 [P] [US5] [U243] [U258] [U259] [U260] [U335] [U336] [U354] Tests first in `F/tests/tools_test.ts`, then `remove_attachment` in `F/src/tools.ts`: Removal order and retry follow contracts/mcp-tools.md `remove_attachment` (file first, then records in one transaction; a repeat remove succeeds when the file is already gone).
   - without `confirm`, nothing is deleted, and the result lists the file, N derived thoughts and the parent note when it would go (US5 #2)
   - with `confirm`, it claims, deletes the stored file, removes through the store and releases (US5 #1, #4)
   - while busy, it is refused as in `finish_attachment` (SC-014)
-- [ ] T064 [P] [US5] [U261] Tests first in `F/tests/tools_test.ts`, then `find_orphan_attachments` in `F/src/tools.ts`: each orphan's id, file name, why it is listed and `derived_count` (FR-021, US5 #3, SC-013, SC-017).
+- [X] T064 [P] [US5] [U261] Tests first in `F/tests/tools_test.ts`, then `find_orphan_attachments` in `F/src/tools.ts`: each orphan's id, file name, why it is listed and `derived_count` (FR-021, US5 #3, SC-013, SC-017).
 
 ### Stream A: app (`ta-app`, wave 3)
 

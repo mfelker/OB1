@@ -1039,3 +1039,989 @@ UQ1 to UQ5 are extra behaviors that the test list has no row for (see the final 
 - SQL mutant re-applied on a copy: removing `perform attachment_require_claim(p_id, p_token)` from `attachment_write_derived` makes `verify.sql` stop with `ERROR: U54: an expired claim was not refused`. Stream Q's tree was untouched.
 - Stream Q's extra behaviors UQ1–UQ5 (`createAttachment`, `setDeclaration`, `release`, `writeDerived`, `setState`) were renamed to **U357–U361** in a structural commit on W (`0b10510`) and added to the test list on T017. The UQ ids in the folded log above are these.
 - Reviewed and accepted (integrator): the derived-thought deletes match on `metadata->>'attachment_id'` only. Only this integration writes that key, on derived thoughts. Tightening it to also require `importer_name = 'thought-attachments'` is a one-line hardening, left for owner decision or the audit.
+
+## Stream N merged: finishing pipeline (merge `40458e0`), folded from cycle-log.d/n.md
+
+Append only. Newest last. Worktree `/Users/mfelker/Projects/ob1/.worktrees/ta-finish`, branch `contrib/mfelker/thought-attachments-finish`, folder `F` = `integrations/thought-attachments`. Files: `src/finish.ts`, `tests/finish_test.ts`.
+
+Single-test command (from `F`): `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^<id> /" tests/`. Suite: the same without `--filter`. Every red reported `1 failed`, every green `1 passed`. Baseline suite at `0b10510`: 153 passed, 63 ignored. Final suite: 194 passed, 0 failed, 63 ignored.
+
+A "mutant" entry means the test passed on its first run. The code was broken minimally, the test failed as quoted, and the file was restored byte for byte (`cmp` clean). Mutants whose edit would not type-check were run with `--no-check`.
+
+Notes that apply to several cycles:
+
+- Test PDFs need at least 20 non-space characters per page, or `SCANNED_MIN_CHARS_PER_PAGE` (20) makes them `scanned`. Cycle U205 made that visible, and the fixture text of the earlier tests was lengthened then (`alpha beta gamma delta epsilon zeta`). No assertion was weakened.
+- A newly configured model or threshold is tested with `reconfigured(r, overrides)`, a second finisher over the same store and fake fetch. The vision client reports `settings.visionModel`, not the reply's model field.
+- Commit `ef9112a` (U184) was first committed by mistake while red (my commit helper did not gate on the suite), and was amended to green before any further work. No other commit was ever red.
+- The finisher returns early, before claiming, for a `refused` attachment (U201). A plain finish on `processed` claims and releases, but writes nothing.
+
+## T025 and T026: PDF path and repeats
+
+## Cycle U182: a pending PDF finishes processed with its passage count and page_count
+
+- test: `tests/finish_test.ts::U182 a pending PDF with a matching upload ends processed, ...` (new)
+- red: `--filter "/^U182 /"` -> `error: Error: not implemented` (stub, first cycle only) (1 failed)
+- green: `createFinisher` claims, downloads, opens the PDF, builds passages, embeds, writes. Suite 154 passed
+- refactor: none
+- commit: `260967d`
+
+## Cycle U183: finishing records actual type, size, page count, content hash and processed_at
+
+- red: `AssertionError: Values are not equal.` (`actual_type` null vs `"application/pdf"`) (1 failed)
+- green: the patch sets `actual_type` (`sniffType`), `actual_size`, `content_hash` (`sha256:<hex>`) and `processed_at`. Suite 155 passed
+- commit: `c6af0ff`
+
+## Cycle U184: derived rows carry the stored bytes' hash as input_hash
+
+- red: `AssertionError: Values are not equal.` (`input_hash` null vs the hash) (1 failed)
+- green: `passageRow` receives the row with `content_hash` set. Suite 156 passed
+- commit: `ef9112a` (amended once, see the notes)
+
+## Cycle U185: the claim is released after a finish
+
+- first run PASSED
+- mutant: `await store.release(...)` replaced by a comment -> `AssertionError` at the new-claim assert (1 failed). Restored, `1 passed`
+- commit: `956ddfa`
+
+## Cycle U186: an owner thought equal to a passage is left untouched
+
+- first run PASSED
+- mutant: after building the rows, each row's content cut to its body (`split("\n")[1]`) -> `Error: duplicate key value violates unique constraint "idx_thoughts_fingerprint"` (1 failed). Restored, `1 passed`
+- commit: `e743221`
+
+## Cycle U187: a plain finish on processed returns the existing outcome
+
+- red: `AssertionError: Values are not equal.` (a second full run's outcome differed) (1 failed)
+- green: `run` returns `outcomeOf(row)` for a `processed` row unless rebuilding. Suite 159 passed
+- commit: `d23b44e`
+
+## Cycle U188: duplicate bytes on the same parent end refused
+
+- red: `Error: duplicate key value violates unique constraint "thought_attachments_parent_hash_key"` (the write hit the index) (1 failed)
+- green: `findByHash` after hashing; another attachment's hit gives `refuse(...)` with "already attached to this thought as <short id>", object deleted. Suite 160 passed
+- commit: `fd16ae8`
+
+## Cycle U322: a refused attachment with the same bytes doesn't refuse the finish
+
+- first run PASSED
+- mutant (`--no-check`): `twin.data && twin.data.id !== row.id` replaced by `twin.data !== undefined` -> `TypeError: Cannot read properties of null (reading 'id')` (1 failed). A first, type-checked mutant failed only on type checking and was discarded. Restored, `1 passed`
+- commit: `65535c2`
+
+## Cycle U323: the same bytes on another parent don't refuse the finish
+
+- first run PASSED
+- mutant (`--no-check`): same `twin.data !== undefined` mutant -> `TypeError ... (reading 'id')` (1 failed). The per-parent scoping lives in the store (`findByHash(parentId, ...)`), which the fake and stream Q's SQL both implement, so the finisher has no line of its own to break for it. Restored, `1 passed`
+- commit: `5c6e15e`
+
+## Cycle U324: a failed attachment with the same bytes still counts as a duplicate
+
+- first run PASSED
+- mutant: condition `twin.data && twin.data.state !== "failed" && twin.data.id !== row.id` -> `Error: duplicate key value violates unique constraint "thought_attachments_parent_hash_key"` (1 failed). Restored, `1 passed`
+- commit: `766448e`
+
+## T039: photo path
+
+## Cycle U189: a photo finishes with one caption thought and its model
+
+- red: `Error: The PDF could not be read: it is damaged or not a PDF.` (JPEG went down the PDF path) (1 failed)
+- green: `run` branches on the sniffed type into `pdfPath` and `photoPath` (vision caption, embed, `captionRow`, `caption_model`). Suite 164 passed
+- refactor: the PDF path moved into its own function
+- commit: `565ae8d`
+
+## Cycle U191: a long caption is cut to 300 characters in the outcome only
+
+- red: `AssertionError: Values are not equal.` (outcome caption 301 characters) (1 failed)
+- green: `caption.data.text.slice(0, 300)` in the outcome. Suite 165 passed
+- commit: `51c4e7a`
+
+## Cycle U190: a 300-character caption is returned whole
+
+- first run PASSED
+- mutant: `slice(0, 300)` -> `slice(0, 299)` -> `AssertionError: Values are not equal.` (1 failed). Restored, `1 passed`
+- commit: `ffe7ab4`
+
+## Cycle U192: a photo without vision ends not_captioned with the file kept
+
+- red: `Error: vision endpoint undefined is unreachable: Invalid URL: 'undefined/chat/completions'` (1 failed)
+- green: `if (!deps.vision.configured)` -> `notCaptioned(...)`, a `setState` with the reason. Suite 167 passed
+- commit: `5a22cbe`
+
+## Cycle U193: a failing vision call ends not_captioned with its reason
+
+- red: `Error: vision endpoint answered HTTP 503: vision is down` (thrown) (1 failed)
+- green: a caption error goes to `notCaptioned`. Suite 168 passed
+- commit: `bb19495`
+
+## Cycle U194: finishing a not_captioned photo again writes the caption and clears its reason
+
+- red: `AssertionError: Values are not equal.` (`state_reason` still set) (1 failed)
+- green: the success patch sets `state_reason: null`. Suite 169 passed
+- commit: `c78f5b3`
+
+## T040: rebuilds
+
+## Cycle U195: rebuild replaces a photo's caption with one by the new model
+
+- red: `AssertionError: Values are not equal.` (a plain return, `caption` missing) (1 failed). After the change, a second red was a fixture mistake: the vision client reports `settings.visionModel`, so the test now rebuilds through `reconfigured(r, { VISION_MODEL: "new/model" })`
+- green: `rebuild: true` on a `processed` row claims `rebuild` and skips the early return. Suite 170 passed
+- commit: `cc47512`
+
+## Cycle U196: rebuild replaces a PDF's passage set
+
+- first run PASSED
+- mutant: `writeDerived(row.id, token, rows.slice(0, 1), patch)` -> `AssertionError` at `derived.length > first.derived_count` (1 failed). Restored, `1 passed`
+- commit: `bf1222f`
+
+## Cycle U197: a failed photo rebuild keeps the old caption and reports last_rebuild_error
+
+- red: `AssertionError: Values are not equal.` (state not `processed` with an error) (1 failed)
+- green: a failure during a rebuild goes to `rebuildFailed`, a `setState` of `last_rebuild_error` only. Suite 172 passed
+- commit: `7fc92a0`
+
+## Cycle U326: a successful rebuild clears last_rebuild_error
+
+- red: `AssertionError: Values are not equal.` (row kept the old error) (1 failed)
+- green: both success patches set `last_rebuild_error: null`. Suite 173 passed
+- commit: `f40796d`
+
+## Cycle U325: a repeat finish or rebuild isn't refused as a duplicate of itself
+
+- first run PASSED
+- mutant: `twin.data && twin.data.id !== row.id` -> `twin.data` -> `AssertionError: Values are not equal.` (the failed attachment was refused as its own twin) (1 failed). Restored, `1 passed`
+- commit: `d6234bd`
+
+## T056: refusals
+
+## Cycle U198: a failed actual-file check deletes the object and ends refused
+
+- test loops over wrong type, wrong size and too many pages
+- red: `AssertionError: Values are not equal: wrong type` (1 failed)
+- green: `openPdf` runs first so `page_count` is set before `checkActual`; a refusal calls `refuse` with the actual type, size and page count. Suite 175 passed
+- refactor: the PDF is opened once in `run` and passed to `pdfPath`
+- extra mutant: `checkActual({ ...row, page_count: null }` -> `AssertionError: Values are not equal: too many pages`. Restored
+- commit: `8819881`
+
+## Cycle U199: an object uploaded after the deadline is refused and deleted
+
+- red: `AssertionError: Values are not equal.` (state `processed`) (1 failed)
+- green: `createdAt > upload_deadline` refuses, "The file was uploaded after the upload window closed." Suite 176 passed
+- commit: `9db1322`
+
+## Cycle U200: an object created exactly at the deadline is accepted
+
+- first run PASSED
+- mutant: `>` -> `>=` -> `AssertionError: Values are not equal.` (1 failed). Restored, `1 passed`
+- commit: `e04c3eb`
+
+## Cycle U201: finishing a refused attachment is refused and changes nothing
+
+- red: `AssertionError: Values are not equal.` (the run went on and failed on the missing object) (1 failed)
+- green: an early return before the claim: state `refused`, "this attachment was refused and can't be finished (<reason>)". Suite 178 passed
+- commit: `49b7ff1`
+
+## Cycle U202: a finish with no object yet says so and changes nothing
+
+- red: `Error: no object` (1 failed)
+- green: a missing object returns `{ state: row.state, reason: "no file uploaded yet" }`. Suite 179 passed
+- commit: `70b2302`
+
+## Cycle U203: a finish with no object after the deadline reports the window expired
+
+- red: `Expected actual: "no file uploaded yet" to contain: "upload window expired".` (1 failed)
+- green: `now >= upload_deadline` gives "upload window expired" (the store treats `deadline <= now` as expired). Suite 180 passed
+- commit: `76ba6e0`
+
+## Cycle U204: the claim is released after a refused or no-file finish
+
+- first run PASSED
+- mutant: `if (rebuild) await store.release(...)` -> `AssertionError` at the new-claim assert (1 failed). Restored, `1 passed`
+- commit: `2b4af28`
+
+## T057: failures
+
+## Cycle U205: a text-less PDF ends scanned with the file kept
+
+- red: `AssertionError: Values are not equal.` (state `processed` for `scannedPdf`) (1 failed). The first attempt also turned 11 earlier tests red, because their PDFs held under 20 characters a page (see the notes); their fixture text was lengthened
+- green: `isScanned(pageTexts, settings)` -> `ends(..., "scanned", "No text layer ... text search won't cover it yet.")`. `ends` generalises `notCaptioned`. Suite 182 passed
+- refactor: `notCaptioned` delegates to `ends`
+- commit: `2a9f445`
+
+## Cycle U206: a re-finished scanned PDF with text now over the threshold ends processed
+
+- red: `AssertionError: Values are not equal.` (`state_reason` still set) (1 failed)
+- green: the PDF success patch sets `state_reason: null`. Suite 183 passed
+- commit: `c797bb6`
+
+## Cycle U207: a scanned PDF finished again with unchanged settings stays scanned
+
+- first run PASSED
+- mutant: `if (isScanned(...) && !row.state_reason)` -> `AssertionError: Values are not equal.` (1 failed). Restored, `1 passed`
+- commit: `b6dca80`
+
+## Cycle U208: a corrupt PDF ends failed with the reason
+
+- red: `Error: The PDF could not be read: it is damaged or not a PDF.` (thrown) (1 failed)
+- green: an `openPdf` error goes to `ends(..., "failed", error)`. Suite 185 passed
+- commit: `17ce0c9`
+
+## Cycle U209: an embedding failure ends failed with no derived thought
+
+- test covers a PDF whose second batch fails (`EMBEDDING_BATCH_SIZE` 1) and a photo whose only request fails
+- red: `Error: embedding endpoint answered HTTP 500: embeddings down` (thrown) (1 failed)
+- green: an embedding error goes to `ends(..., "failed", ...)` in both paths. Suite 186 passed
+- commit: `33b0804`
+
+## Cycle U210: a vector of the wrong length ends failed naming both lengths
+
+- red: `Error: expected 1536 dimensions, not 8` (the store's refusal, thrown) (1 failed)
+- green: `wrongLength` compares each vector with `embeddingDimension()` before writing; the reason names both lengths. Suite 187 passed
+- commit: `9c20640`
+
+## Cycle U211: a failed attachment finishes processed once the services work
+
+- first run PASSED
+- mutant: the early return `row.state === "processed"` -> `row.state !== "pending_upload"` -> `AssertionError` (`failed` vs `processed`) (1 failed). Restored, `1 passed`
+- commit: `973cbd0`
+
+## Cycle U327: a fingerprint conflict ends failed and leaves the existing thought unchanged
+
+- red: `Error: duplicate key value violates unique constraint "idx_thoughts_fingerprint"` (thrown) (1 failed)
+- green: a `writeDerived` error goes to `ends(..., "failed", writeReason(error))`; a duplicate-key or fingerprint error reads "An existing thought has the same text as a derived thought, so nothing was written (...)". The real store raises a different text for a stale claim, so no code matches on that text. Suite 189 passed
+- commit: `7e14d9c`
+
+## T058: the claim
+
+## Cycle U212: a finish while another operation holds the claim returns busy
+
+- red: `Error: claim failed` (1 failed)
+- green: a `{ busy }` claim returns `{ state, reason: "busy (finishing / rebuilding / removing), try again shortly", derived_count, busy }`. Suite 190 passed
+- commit: `1dd34e2`
+
+## Cycle U213: a finish is still busy one second before BUSY_SECONDS has passed
+
+- first run PASSED
+- mutant: claim seconds `settings.busySeconds - 5` -> the second finish was not busy, `Promise resolution is still pending but the event loop has already resolved.` after the failed assertion (1 failed). Restored, `1 passed`
+- commit: `ba8ef14`
+
+## Cycle U215: a cut-off rebuild reads as processed with its old set and "the run did not finish"
+
+- red: `AssertionError: Values are not equal.` (`last_rebuild_error` undefined) (1 failed)
+- green: `outcomeOf` reads an expired `rebuild` claim on the row as `last_rebuild_error: "the run did not finish"`. The note is not stored: a later claim overwrites the claim fields (the same as the data-model's reading rule). Suite 192 passed
+- commit: `3df6f60`
+
+## Cycle U216: a finish whose claim was taken over has its write refused and the newer result stands
+
+- the first run stalls inside `objectInfo` (a one-call `override`) after taking its claim; the clock moves 411 s; a second finish completes; then the first resumes
+- red: `Error: claim token is stale or foreign` (thrown from the `setState` in `ends`) (1 failed)
+- green: `finish` catches a thrown error, re-reads the row, and when `busy_token` is no longer its token returns `currentOutcome(fresh)` (busy while another live claim exists, otherwise the row's outcome). No text of the store's error is matched, because the fake and the SQL word it differently. Suite 193 passed
+- commit: `d20b491`
+
+## Cycle U214: a finish proceeds once BUSY_SECONDS has passed
+
+- first run PASSED
+- mutant (`--no-check`): `if (!("token" in claim.data) || deps.now().getTime() > 0)` -> `AssertionError: Values are not equal.` (always busy) (1 failed). A type-checked version of the mutant failed only on type checking and was discarded. Restored, `1 passed`
+- commit: `fef2b18`
+
+## Done
+
+DONE: U182, U183, U184, U185, U186, U187, U188, U189, U190, U191, U192, U193, U194, U195, U196, U197, U198, U199, U200, U201, U202, U203, U204, U205, U206, U207, U208, U209, U210, U211, U212, U213, U214, U215, U216, U322, U323, U324, U325, U326, U327. That is 41 behaviors, which are T025, T026, T039, T040, T056, T057 and T058.
+
+Observations for the integrator:
+
+- Order inside `run`: object info and download, sniff, open the PDF (sets `page_count`), the deadline check, `checkActual`, the hash and duplicate check, then the PDF or photo path.
+- A thrown store error that is not a lost claim propagates out of `finish` (after the claim is released). Stream T's tool layer should turn it into a tool error. No behavior in the list covers a store outage.
+- `finish` on an unknown id throws "attachment not found"; the tool layer resolves ids first.
+
+## Stream T merged: MCP tools (merge `a65bb2d`), folded from cycle-log.d/t.md
+
+Append only. Worktree `/Users/mfelker/Projects/ob1/.worktrees/ta-tools`, branch `contrib/mfelker/thought-attachments-tools`, folder `F` = `integrations/thought-attachments`. Files owned: `src/tools.ts`, `tests/tools_test.ts`.
+
+Single-test command (from `F`): `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^<id> /" tests/`. Every red reported `1 failed` and every green `1 passed`. Suite baseline 153 passed; final 210 passed, 0 failed, 63 ignored (the integrator's todo acceptance tests). A "mutant" means the test passed on its first run; the source was then broken minimally, the test failed, and the file was restored byte for byte (`cmp` clean).
+
+Test method: `buildServer(deps, services)` driven through `inMemoryClient`, with `FakeStore` (dimension 4), a recording fake embedding client and a scripted `services.finish`.
+
+Decisions: `page_token_hash` is the lowercase hex SHA-256 of the token after `#t=` (integrator rule, asserted by U237). Refusals use `isError` with the structured `code` from `intake.ts` passed through (U232b). A busy result is `isError` with text `busy (finishing|rebuilding|removing), try again shortly`. The reading layer is `asReported`: a cut-off finish reads `failed` "the run did not finish", a cut-off rebuild stays `processed` with `last_rebuild_error` set, a cut-off remove reads as stored.
+
+## T027: registration
+
+## Cycle U217: tools/list returns exactly the seven tool names
+
+- red: `error: Error: not implemented` (stub, first cycle only; 1 failed)
+- green: seven tools registered with stub handlers
+- commit: `b69861b`
+
+## Cycle U218: annotations match the contract
+
+- red: `AssertionError: Values are not equal: find_thought` (readOnlyHint, 1 failed)
+- green: annotations table
+- commit: `7299855`
+
+## Cycle U219: input schemas and defaults
+
+- red: `AssertionError: Values are not equal.` (find_thought required list, 1 failed)
+- green: zod schemas, `mode` default `meaning`, `limit` default 5, `confirm` default false
+- commit: `bade4fc`
+
+## T028: find_thought
+
+## Cycle U220: meaning mode
+
+- red: `AssertionError: Values are not equal.` (matches, 1 failed)
+- green: embed the query, `matchThoughts`
+- commit: `2ee0681`
+
+## Cycle U221: exact mode
+
+- red: `AssertionError: Values are not equal.` (matches empty, 1 failed)
+- green: `findThoughtsExact`, no embedding call
+- commit: `5675da7`
+
+## Cycle U222: no limit asks for 5
+
+- first run passed. Mutant: `default(5)` to `default(6)` -> `AssertionError: Values are not equal.` (1 failed); restored
+- commit: `48adb61`
+
+## Cycle U223: limit 20 asks for 20
+
+- first run passed. Mutant: `findThoughtsExact(query, limit)` to `(query, 5)` -> `Values are not equal.`; restored
+- commit: `5a3d4b6`
+
+## Cycle U328: limit above 20 is reduced to 20
+
+- red: `AssertionError: Values are not equal.` (1 failed)
+- green: `Math.min(asked, 20)`
+- commit: `4e4c9c0`
+
+## Cycle U225: a 121-character first line is cut to 120
+
+- red: `AssertionError: Values are not equal.` (1 failed)
+- green: `slice(0, 120)` on the store's first line
+- commit: `ab71a2f`
+
+## Cycle U224: a 120-character first line is whole
+
+- first run passed. Mutant: cap 120 to 119 -> `Values are not equal.`; restored
+- commit: `0392e66`
+
+## Cycle U226: first line stops at the first line break
+
+- red: `AssertionError: Values are not equal.` (1 failed)
+- green: split on line break
+- commit: `a5e1fe5`
+
+## Cycle U227: each match has id, first_line, captured
+
+- first run passed. Mutant: dropped `captured` (`{ id, first_line }`) -> `Values are not equal.`; restored
+- commit: `baec9d6`
+
+## Cycle U228: no match says "no matching thought"
+
+- red: `Expected actual: "[]" to contain: "no matching thought".` (1 failed)
+- green: empty result message, readable lines otherwise
+- commit: `0e53c4d`
+
+## T029: attach_file (command upload)
+
+## Cycle U229: unknown thought_id refused
+
+- red: `AssertionError: Values are not equal.` (1 failed)
+- green: `thoughtExists` check
+- commit: `73f2f6e`
+
+## Cycle U230: both thought_id and note refused
+
+- red: `AssertionError: Values are not equal.` (1 failed)
+- green: exactly-one rule
+- commit: `e514da7`
+
+## Cycle U231: neither refused
+
+- red: `AssertionError: Values are not equal.` (1 failed)
+- green: `(thought_id === undefined) === (note === undefined)`
+- commit: `d2f9806`
+
+## Cycle U232: checkDeclared refusal returned, nothing created
+
+- red: `AssertionError: Values are not equal.` (1 failed)
+- green: `checkDeclared` with the base name
+- commit: `c633d48`
+
+## Cycle U233: same file pending on the parent points to it
+
+- red: `AssertionError: Values are not equal.` (1 failed)
+- green: `findPending`, returns the existing attachment
+- commit: `14fb8af`
+
+## Cycle U235: a successful start writes the pending_upload row
+
+- red: `AssertionError: Values are not equal.` (1 failed)
+- green: createAttachment with generated id, base name, storage path
+- commit: `176e3fe`
+
+## Cycle U234: a different size creates a new attachment
+
+- first run passed. Mutant: `findPending` size argument replaced by 1000 -> `Values are not equal.`; restored
+- commit: `4289e21`
+
+## Cycle U236: upload_deadline is now plus UPLOAD_LINK_MINUTES
+
+- first run passed. Mutant: `uploadLinkMinutes * 60_000` to `3_600_000` -> `Values are not equal.`; restored
+- commit: `0a7115c`
+
+## Cycle U237: page_token_hash is the SHA-256 (lowercase hex) of the token
+
+- red: `TypeError: Cannot read properties of undefined (reading 'includes')` (no page_link, 1 failed)
+- green: random token, hash stored, `pageLink`
+- commit: `a61d3fb`
+
+## Cycle U238: the result carries ids, deadline, upload, curl, page link, limits
+
+- red: `AssertionError: Values are not equal.` (1 failed)
+- green: `signUpload`, `curlLine`, `limitsFor`
+- commit: `608d7d0`
+
+## Cycle U239: upload.url goes through publicUrl
+
+- first run passed. Mutant: `url: signed.data.url` (no `publicUrl`) -> `Values are not equal.`; restored
+- commit: `4b82cfc`
+
+## Cycle U240: sensitivity_tier stored
+
+- red: `AssertionError: Values are not equal.` (1 failed)
+- green: `sensitivity_tier` passed to the row
+- commit: `f1624f3`
+
+## Cycle U329: an expired pending upload does not block
+
+- first run passed. Mutant: `findPending` now replaced by `new Date(0)` -> `Values are not equal.`; restored
+- commit: `9af1cd0`
+
+## Cycle U330: only some of the three details refused
+
+- red: `AssertionError: Values are not equal: {"file_name":"manual.pdf"}` (1 failed); a second red on the message wording (`Expected ... to contain "give all three, or none for a phone upload"`), then the message was reworded to contain it
+- green: given-count check
+- commit: `456a747`
+
+## T030: finish_attachment
+
+## Cycle U241: passes id and rebuild, returns the outcome
+
+- red: `AssertionError: Values are not equal.` (1 failed)
+- green: `resolveAttachment`, `services.finish`
+- commit: `4c8781a`
+
+## Cycle U242: busy names the running operation
+
+- red: `AssertionError: Values are not equal.` (1 failed)
+- green: `busyReply`
+- commit: `86f0eb8`
+
+## T041: attach_file note and phone upload
+
+## Cycle U244: note saved through insertNote as the parent
+
+- red: `AssertionError: Values are not equal.` (1 failed)
+- green: embed the note, `insertNote`, `noteMetadata`; handler moved into `attachFile`
+- commit: `c546ad1`
+
+## Cycle U245: a matching note attaches to the existing thought
+
+- red: `Expected actual: "Attachment ... started on thought ..." to contain: "attached to your existing thought"` (1 failed)
+- green: text line when `created` is false
+- commit: `3b9c746`
+
+## Cycle U246: HEIC with note saves no note
+
+- first run passed. Mutant: `if (refusal) void 0;` -> `Values are not equal.`; restored
+- commit: `1ab6640`
+
+## Cycle U247: over-cap with note saves no note
+
+- first run passed. Same mutant -> `Values are not equal.`; restored
+- commit: `6f533ef`
+
+## Cycle U248: phone upload without details
+
+- red: `AssertionError: Values are not equal.` (1 failed)
+- green: `file` is null; no `signUpload`, no declaration, `expected_kind`, all limits
+- commit: `b9e1421`
+
+## Cycle U249: expected_kind other than photo or pdf refused
+
+- first run passed. Mutant: `z.string()` cast in place of the enum -> `Values are not equal.`; restored (a first mutant failed type checking, so it was replaced)
+- commit: `512c31f`
+
+## T049: get_attachment
+
+## Cycle U250: details
+
+- red: `AssertionError: Values are not equal.` (1 failed)
+- green: details and text
+- commit: `f9c7eed`
+
+## Cycle U251: a stored file gets a download link
+
+- red: `AssertionError: Values are not equal: processed` (1 failed)
+- green: `signDownload` through `publicUrl`, lifetime stated
+- commit: `39d1d0b`
+
+## Cycle U252: no link for pending_upload
+
+- red: `AssertionError: Values are not equal.` (1 failed)
+- green: state check
+- commit: `27bd18c`
+
+## Cycle U253: no link for refused
+
+- first run passed. Mutant: removed `&& row.state !== "refused"` -> `Values are not equal.`; restored
+- commit: `594e899`
+
+## Cycle U331: a cut-off finish reads failed
+
+- red: `Values are not equal.` (`+ failed`, 1 failed)
+- green: `asReported`
+- commit: `9dc7f0e`
+
+## Cycle U332: one second before busy_until reads as stored
+
+- first run passed. Mutant: expiry compared with `now + 2000` -> `Values are not equal.`; restored
+- commit: `98a0956`
+
+## Cycle U333: a cut-off rebuild reads processed with the cut-off noted
+
+- red: `AssertionError: Values are not equal.` (1 failed)
+- green: `last_rebuild_error` in the output
+- commit: `0fb54ef`
+
+## Cycle U353: cut-off finish reads failed and keeps its download link
+
+- first run passed. Mutant: raw row state used for the link check -> `TypeError: Cannot read properties of undefined (reading 'url')` (no link); restored
+- commit: `0da9e98`
+
+## T050: list_attachments
+
+## Cycle U254: by thought
+
+- red: `AssertionError: Values are not equal.` (1 failed)
+- green: `listByParent`, `summary`
+- commit: `cf5b222`
+
+## Cycle U255: by derived thought
+
+- red: `AssertionError: Values are not equal.` (1 failed)
+- green: `attachmentForDerived`
+- commit: `bd5ecc0`
+
+## Cycle U256: both or neither refused
+
+- red: `AssertionError: Values are not equal: {"thought_id":...,"derived_thought_id":...}` (1 failed)
+- green: exactly-one rule
+- commit: `406ab4b`
+
+## Cycle U257: no owner says not found
+
+- red: `Expected actual: "" to contain: "not found".` (1 failed)
+- green: "not found" text for an empty list
+- commit: `2198cf5`
+
+## Cycle U334: cut-off finish reads failed in a list
+
+- first run passed. Mutant: `summary(row)` without `asReported` -> `Values are not equal.` (`+ "failed"`); restored
+- commit: `4a0062a`
+
+## T063: remove_attachment
+
+## Cycle U258: no confirm is a dry run
+
+- red: `AssertionError: Values are not equal.` (1 failed)
+- green: `removalPreview` text and fields
+- commit: `b8812c9`
+
+## Cycle U259: confirm removes the file then the records
+
+- red: `AssertionError: Values are not equal.` (1 failed)
+- green: claim, `deleteObject`, `removeAttachment`, release in `finally`
+- commit: `79131f3`
+
+## Cycle U260: busy refused
+
+- first run passed. Mutant: busy branch returns `ok` -> `Values are not equal.`; restored
+- commit: `2c05091`
+
+## Cycle U335: failed record removal reported, attachment stays listed
+
+- first run passed. Mutant: removal error branch returns `Removed` -> `Values are not equal.`; restored
+- commit: `2365c71`
+
+## Cycle U336: repeat remove succeeds after a failed removal
+
+- first run passed. Mutant: release replaced by `void token` -> `Values are not equal.` (repeat is busy); restored
+- commit: `c6134f9`
+
+## Cycle U354: remove proceeds after a cut-off remove
+
+- first run passed. Mutant: `removeAttachment(row.id, "stale")` -> `Values are not equal.`; restored
+- commit: `12cf458`
+
+## T064: find_orphan_attachments
+
+## Cycle U261: orphans with id, file name, why and derived_count
+
+- red: `AssertionError: Values are not equal.` (1 failed)
+- green: `orphans(now)` mapping
+- commit: `4378c67`
+
+## Cycle U243: id-taking tools accept short ids
+
+- red: `Expected actual: "Ambiguous attachment id: ..." to contain: "ambiguous".` (1 failed)
+- green: message reworded; then mutant `services.finish(attachment_id, ...)` (raw id) -> `Values are not equal.`; restored
+- commit: `d324119`
+
+## Cycle U232b: refusal code passed through (extra, with U232)
+
+- red: `AssertionError: Values are not equal.` (1 failed)
+- green: `fail(message, code)`
+- commit: `48f95b5`
+
+Refactor: removed the unused placeholder handler, commit `8ff95de`.
+
+## DONE behaviors
+
+U217-U261, U328-U330, U331-U336, U353, U354, U243 (T027, T028, T029, T030, T041, T049, T050, T063, T064 all complete).
+
+## Stream P merged: phone page and routes (merge `b7788be`), folded from cycle-log.d/p.md
+
+Append only. Newest last. Worktree `/Users/mfelker/Projects/ob1/.worktrees/ta-page`, branch `contrib/mfelker/thought-attachments-page`, folder `F` = `integrations/thought-attachments`.
+
+Single-test command (from `F`): `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^<id> /" tests/`. Suite: the same without `--filter`. Every red reported `1 failed`, every green `1 passed`. A "mutant" red means the test passed on its first run; the code was then broken minimally (applied, confirmed with grep or by the failure text), the test failed as quoted, and the file was restored byte for byte (`git diff --quiet` clean). The `63 ignored` are the integrator's todo acceptance tests.
+
+Seam notes: the page token is stored as the SHA-256 hex of the token string (`attachmentForPageToken(hash)`). `/page/start` refusals answer `400` with `{ code, message }`. A `410` answers `{ error: "This link has expired or was already used. Ask your assistant for a new one" }`. No column says whether a declaration came from the attach call or from the page, so `pageRoutes` keeps an in-process set of attachments the page declared and replaces only those (U269); a recycled instance would refuse a second differing pick (see the final report).
+
+Cycle baseline: suite 153 passed at `0b10510`.
+
+## T042, T043: `src/page_routes.ts`, `tests/page_routes_test.ts`
+
+## Cycle U262: /page/start records the picked file and returns a signed link
+
+- test: `tests/page_routes_test.ts::U262 /page/start with a valid token and no declaration records the base name, type and size and returns a signed link through publicUrl` (new)
+- red: `error: Error: not implemented` (1 failed; stub, first cycle)
+- green: `/page/start` looks up the token by hash, records the declaration, signs the upload and rewrites it through `publicUrl`. Suite 154 passed
+- refactor: none
+- commit: `7f453ac`
+
+## Cycle U263: a pick matching the attach call's declaration confirms it
+
+- test: `U263 /page/start whose pick matches the attach call's declaration confirms it and returns a link` (new)
+- first run: `1 passed` (the recording path already returned the same path)
+- mutant: storage path written as `attachments/<id>/x-<name>` -> `-  "attachments/a0000001-.../x-receipt.jpg"` / `+  ".../receipt.jpg"` (1 failed); restored, rerun `1 passed`. Suite 155 passed
+- commit: `cc831ce`
+
+## Cycle U264: a pick that differs from the attach call's declaration is refused
+
+- test: `U264 /page/start whose pick doesn't match the attach call's declaration is refused, with no link` (new)
+- red: `-  200, -  undefined, +  400, +  "wrong_size"` (1 failed)
+- green: compare type and size against a declaration that exists (codes `wrong_type`, `wrong_size`); the name is not compared, since the stored path is fixed by the attach call. Suite 156 passed
+- commit: `d9781f2`
+
+## Cycle U265: a picked HEIC file is refused
+
+- test: `U265 a picked HEIC file is refused with the share-as-JPEG message, with no link` (new)
+- red: `-  200, -  undefined, +  400, +  "heic"` (1 failed)
+- green: `checkDeclared` runs before any write or link. Suite 157 passed
+- commit: `b9f811e`
+
+## Cycle U266: a picked type outside the four is refused
+
+- test: `U266 a picked type outside the four is refused with attach_file's message, with no link` (new)
+- first run: `1 passed` (`checkDeclared` already covers it)
+- mutant: `if (refusal && refusal.code === "heic") return ...` -> `-  200, +  400, +  "unsupported_type"` (1 failed); restored. Suite 158 passed
+- commit: `2fe754a`
+
+## Cycle U268: a picked size over its cap is refused
+
+- test: `U268 a picked size over its cap is refused, naming the cap and the size` (new)
+- first run: `1 passed`
+- mutant: `checkDeclared({ ..., size: 1 })` -> `-  200, +  400, +  "too_large"` (1 failed); restored. Suite 159 passed
+- commit: `5a94276`
+
+## Cycle U267: a pick of the wrong kind for expected_kind is refused
+
+- test: `U267 a pick whose kind differs from expected_kind is refused, a PDF for a photo and the reverse` (new)
+- red: `-  200, -  undefined, ... +  "wrong_type", +  400` (1 failed)
+- green: compare "is a PDF" with `expected_kind === "pdf"`, code `wrong_type`. Suite 160 passed
+- commit: `33de7d6`
+
+## Cycle U269: a second /page/start replaces the declaration
+
+- test: `U269 a second /page/start replaces the declaration and returns a new link` (new)
+- red: `-  400, +  200` (the second pick was refused as a mismatch; 1 failed)
+- green: an in-process set of attachments the page declared; a mismatch is checked only against an attach-call declaration. Suite 161 passed
+- commit: `69b1330`
+
+## Cycle U270: an unknown token gets 410
+
+- test: `U270 an unknown token gets 410 with the expired message` (new; also a request with no token)
+- red: `-  "gone", +  "This link has expired or was already used. Ask your assistant for a new one"` (1 failed)
+- green: the message constant, and a missing or non-string token is treated as unknown. Suite 162 passed
+- commit: `0d08f8c`
+
+## Cycle U271: a used token gets 410
+
+- test: `U271 a used token gets 410 with the same message` (new)
+- first run: `1 passed` (the store returns null once the hash is cleared)
+- mutant (first attempt failed type-checking, so it was invalid and redone): `// @ts-nocheck` plus removing `|| found.data === null` -> `TypeError: Cannot read properties of null (reading 'id')` (1 failed); restored. Suite 163 passed
+- commit: `02dd621`
+
+## Cycle U272: a token past upload_deadline gets 410
+
+- test: `U272 a token one second after upload_deadline gets 410` (new)
+- red: `-  200, -  undefined, +  410, +  "This link has expired ..."` (1 failed)
+- green: `now >= upload_deadline` is expired. Suite 164 passed
+- commit: `5ed26f1`
+
+## Cycle U273: a token one second before the deadline is accepted
+
+- test: `U273 a token one second before upload_deadline is accepted` (new)
+- first run: `1 passed`
+- mutant: deadline check `>= deadline - 2000` -> `-  410, -  0, +  200, +  1` (1 failed); restored. Suite 165 passed
+- commit: `e0fb064`
+
+## Cycle U274: no brain key needed or accepted
+
+- test: `U274 the page routes need no brain key, and a brain key without a valid token gets 410` (new)
+- first run: `1 passed`
+- mutant: the handler answers `{ upload: {} }` when `x-brain-key` equals the brain key -> `+  410, +  410, -  200, -  200` (1 failed); restored. Suite 166 passed
+- commit: `eb8908c`
+
+## Cycle U275: CORS only for the UPLOAD_PAGE_URL origin
+
+- test: `U275 CORS allows the origin of UPLOAD_PAGE_URL and gives no allow-origin to any other origin` (new; POST and preflight)
+- red: `+  "https://pages.example.test", +  "https://pages.example.test", -  null, -  null` (1 failed)
+- green: a middleware on `/page/*` that allows the page origin or the request's own origin, and answers preflight `204`. Suite 167 passed
+- commit: `f3d11f9`
+
+## Cycle U276: CORS allows the same origin when the function serves the page
+
+- test: `U276 CORS allows the same origin when the page is served by the function` (new)
+- first run: `1 passed` (the default `UPLOAD_PAGE_URL` is under `PUBLIC_BASE_URL`, and the middleware allows the request's own origin)
+- mutant: removed `|| origin === new URL(c.req.url).origin` -> `+  "https://other-host.example.test", -  null` (1 failed); restored. Suite 168 passed
+- commit: `842bde6`
+
+## Cycle U337: /page/info
+
+- test: `U337 /page/info returns the expected kind, the four accepted types and the caps, and changes nothing` (new)
+- red: `SyntaxError: Unexpected non-whitespace character after JSON at position 4` (the route answered `404 Not Found`; 1 failed)
+- green: `/page/info`, with the token lookup refactored into `attachmentFor(body)` (null for unknown, used, expired or missing). Suite 169 passed
+- refactor: `attachmentFor` shared by all three routes
+- commit: `f9b4ff5`
+
+## Cycle U338: /page/info with no expected kind
+
+- test: `U338 /page/info for an attachment started with no expected kind returns no expected kind` (new)
+- first run: `1 passed`
+- mutant: `expected_kind: row.expected_kind ?? "photo"` -> `-  "photo"` / `+  null` (1 failed); restored. Suite 170 passed
+- commit: `b9a40b2`
+
+## Cycle U339: /page/info with a bad token
+
+- test: `U339 /page/info with an unknown, used or expired token gets 410 with the expired message` (new)
+- first run: `1 passed`
+- mutant: deleted the deadline line in `attachmentFor` -> `-  200, -  undefined, +  410, +  "This link has expired ..."` (1 failed); restored. Suite 171 passed
+- commit: `c1cf333`
+
+## Cycle U352: /page/info shape and caps
+
+- test: `U352 /page/info returns exactly expected_kind, accepted_types and caps, with image_bytes at MAX_IMAGE_MB times 1048576` (new)
+- first run: `1 passed`
+- mutant: `mb * 1000 * 1000` -> `-  image_bytes: 10000000, -  pdf_bytes: 7500000, +  image_bytes: 10485760, +  pdf_bytes: 7864320` (1 failed); restored. Suite 172 passed
+- commit: `1df5a8a`
+
+## Cycle U277: /page/finish finishes its own attachment
+
+- test: `U277 /page/finish finishes only its own attachment, returns the outcome as JSON and uses the token up` (new)
+- red: `-  404` / `+  200` (1 failed)
+- green: `services.finish(row.id, {})`, then `consumePageToken`. Suite 173 passed
+- commit: `63ae7b2`
+
+## Cycle U278: a second /page/finish gets 410
+
+- test: `U278 a second /page/finish with the same token, after processed, gets 410` (new)
+- first run: `1 passed`
+- mutant: removed the `consumePageToken` line -> `-  200, -  undefined, +  410, +  "This link has expired ..."` (1 failed); restored. Suite 174 passed
+- commit: `2135898`
+
+## Cycle U279: a token never finishes another attachment
+
+- test: `U279 a token for attachment X never finishes attachment Y` (new; the body also carries Y's ids)
+- first run: `1 passed`
+- mutant: `services.finish(body.id ?? row.id, {})` -> `-  "a0000002-..."` / `+  "a0000001-..."` (1 failed); restored. Suite 175 passed
+- commit: `6eb038e`
+
+## Cycle U280: busy leaves the token valid
+
+- test: `U280 a /page/finish refused as busy returns the busy outcome and leaves the token valid` (new)
+- red: `-  null` / `+  "8d3875317d1b79cc..."` (the token was used up; 1 failed)
+- green: consume only when `outcome.busy === undefined`. Suite 176 passed
+- commit: `9e67335`
+
+## Cycle U340: no file uploaded yet leaves the token valid
+
+- test: `U340 a /page/finish with no file uploaded yet returns it and leaves the token valid` (new)
+- red: `-  null` / `+  "8d3875317d1b79cc..."` (1 failed)
+- green: an outcome with `state: "pending_upload"` also leaves the token valid. Suite 177 passed
+- commit: `e016546`
+
+## Cycle U341: a refused outcome uses the token up
+
+- test: `U341 a /page/finish whose outcome is refused uses the token up` (new)
+- first run: `1 passed`
+- mutant: also keep the token valid when the state is `refused` -> `-  200, +  410` (1 failed); restored. Suite 178 passed
+- commit: `d032f55`
+
+## T044: `upload-page.html`, `tests/page_script_test.ts`, `tests/helpers/page_dom.ts`
+
+The stand-in (`page_dom.ts`) makes an element for every `id` in the HTML (attributes and static text included), runs the first inline `<script>` with `document`, `location`, `fetch`, `setTimeout` and `clearTimeout` supplied, and has a virtual clock (`advance(ms)`) for the retry timer. Progress is shown as "Uploading …" text plus a `<progress>` element, since `fetch` has no upload progress.
+
+## Cycle U281: the token comes only from the #t= fragment
+
+- test: `tests/page_script_test.ts::U281 the page reads its token only from the #t= fragment; a token in the query string is ignored` (new)
+- red: `+  [ { token: "fragment-token" } ]` / `-  []` (1 failed; the scaffold HTML had an empty script)
+- green: `readToken()` from `location.hash`, `/page/info` call, the expired text when there is no token, and `apiBase()`. Suite 179 passed
+- commit: `ef75438`
+
+## Cycle U282: a filled-in API address is the only address called
+
+- test: `U282 with its API-address line filled in, every request goes to that address, never to one taken from the link` (new; the link carries hostile `api=` and `base=` values)
+- first run: `1 passed`
+- mutant: `if (false && API_ADDRESS) return ...` -> `TypeError: FakeFetch: no route for POST https://brain.example.test/functions/v1/thought-attachments/page/info` (reported as 2 failed: the test and its unhandled rejection); restored. Suite 180 passed
+- commit: `d60d3c4`
+
+## Cycle U283: a blank line uses the served-from address
+
+- test: `U283 with its API-address line blank, every request goes to the address the page was served from` (new)
+- red: `+  "https://brain.example.test/functions/v1/thought-attachments/page/start"` missing (no request was made on a pick; 1 failed)
+- green: a `change` handler on the file input that posts `/page/start`. Suite 181 passed
+- commit: `d4bc933`
+
+## Cycle U284: the file input accepts the four types and one file
+
+- test: `U284 the file input accepts exactly the four types and one file` (new)
+- first run: `1 passed`
+- mutant: `accept="image/jpeg,image/png,application/pdf"` -> `-  "image/jpeg,image/png,application/pdf"` / `+  "image/jpeg,image/png,image/webp,application/pdf"` (1 failed); restored. Suite 182 passed
+- commit: `0801f87`
+
+## Cycle U285: the page shows the accepted types
+
+- test: `U285 the page shows the accepted types` (new)
+- red: first attempt `Expected actual: "" to contain: "JPEG"` came from a gap in the stand-in (it did not read static text), and I committed before checking the full suite, so the first commit was red. Amended to `d9a40d0` after the stand-in read static text. Red re-proved against the page with the text removed: `Expected actual: "" to contain: "JPEG".` (1 failed)
+- green: static text in `#types`. Suite 183 passed
+- commit: `d9a40d0` (amended)
+
+## Cycle U286: a refusal from /page/start is shown
+
+- test: `U286 a refusal from /page/start is shown, and no PUT happens` (new)
+- red: `Expected actual: "" to contain: "The file is 20000000 bytes, over the cap of 10485760 bytes."` (1 failed)
+- green: a `400` shows "Refused: <message>". Suite 184 passed
+- commit: `8643986`
+
+## Cycle U287: upload progress during the PUT
+
+- test: `U287 upload progress is shown during the PUT` (new; the PUT reply is held)
+- red: `-  0` / `+  1` held requests (no PUT was made; 1 failed)
+- green: `upload()` shows "Uploading <name>…" and un-hides `#progress`. Suite 185 passed
+- commit: `9eb2802`
+
+## Cycle U288: PUT the file, then call /page/finish
+
+- test: `U288 the page PUTs the one file to the returned link, then calls /page/finish` (new)
+- red: `+  "POST /page/finish"` missing (1 failed)
+- green: `finish()` after the PUT. Suite 186 passed
+- commit: `3c8e4af`
+
+## Cycle U289: each outcome shows its text
+
+- test: `U289 each outcome shows its text from the contract` (new; six outcomes, a 400-character caption)
+- red: `-  Uploading receipt.jpg…` / `+  Captioned: xxxx…` (1 failed)
+- green: `outcomeText()`. Suite 187 passed
+- commit: `29dd688`
+
+## Cycle U290: a 410 shows the expired message
+
+- test: `U290 a 410 shows the expired message, from info, start and finish` (new)
+- red: `TypeError: Cannot read properties of undefined (reading 'url')` (the `410` body was read as an upload target; reported as 2 failed with its unhandled rejection)
+- green: refactor into `call(path, body)`, which shows the expired message and resolves null on `410`. Suite 188 passed
+- refactor: `call`, `show` and the chain moved into one place
+- commit: `55f3412`
+
+## Cycle U291: no key, token or address beyond the API-address line
+
+- test: `U291 the file contains no key, no token and no project address other than its API-address setting` (new)
+- first run: `1 passed`
+- mutant: added `var HOST = "https://project.example.test";` -> `-  [ "https://" ]` / `+  null` (1 failed); restored. Suite 189 passed
+- commit: `597901f`
+
+## Cycle U292: no external script or style
+
+- test: `U292 the file loads no external script or style` (new)
+- first run: `1 passed`
+- mutant: added `<link rel="stylesheet" href="x.css">` -> `-  [ "<link" ]` / `+  null` (1 failed); restored. Suite 190 passed
+- commit: `fba7ddb`
+
+## Cycle U342: the page shows the expected kind and the size limit
+
+- test: `U342 before any pick, the page sends { token } to /page/info and shows the expected kind and the size limit` (new)
+- red: `Expected actual: "" to contain: "photo".` (1 failed)
+- green: `showInfo()`. Suite 191 passed
+- commit: `c560fe1`
+
+## Cycle U343: Waiting… and a retry every 10 seconds
+
+- test: `U343 when /page/finish answers busy or no file yet, the page shows Waiting… and calls it again 10 seconds later` (new; both answers, injected timer)
+- red: `-  "Failed: undefined"` / `+  "Waiting…"` (1 failed)
+- green: a busy or `pending_upload` answer shows "Waiting…" and `setTimeout(finish, 10000)`. Suite 192 passed
+- commit: `e403355`
+
+## Cycle U344: no retry before 10 seconds
+
+- test: `U344 9 seconds after a busy answer, the page has not called /page/finish again` (new)
+- first run: `1 passed`
+- mutant: `setTimeout(finish, 5000)` -> a second finish call at 9 s (1 failed); restored. Suite 193 passed
+- commit: `f0bca41`
+
+## Cycle U345: a 410 on a retry shows the expired message and stops
+
+- test: `U345 when a retried /page/finish gets 410, the page shows the expired message and stops retrying` (new)
+- first run: `1 passed`
+- mutant: `if (!r) { retry = setTimeout(finish, 10000); return; }` -> `-  1` / `+  0` pending timers (1 failed); restored. Suite 194 passed
+- commit: `9a35b33`
+
+## Cycle U346: the repository page has its API-address line blank
+
+- test: `U346 the repository's upload-page.html has its API-address line blank` (new)
+- first run: `1 passed`
+- mutant: `var API_ADDRESS = "x";` -> `-  false` / `+  true` (1 failed); restored. Suite 195 passed
+- commit: `e197f10`
+
+## Cycle P1 (extra, not in the test list): a failed upload or unreachable server shows Failed
+
+- test: `P1 a failed upload or an unreachable server shows Failed, and /page/finish is not called` (new)
+- red: `Expected actual: "Captioned: A receipt on a desk" to contain: "Failed: ".` (1 failed)
+- green: a non-ok PUT shows "Failed: the upload was not accepted (<status>)." and does not finish; a network error shows "Failed: could not reach the server." Suite 196 passed
+- commit: `9076b02`
+
+## Refactor: inline phone-width style
+
+- no behavior change; suite 196 passed. commit: `8998082`
+
+<!-- end -->
+
+### Integrator verification of wave 2 (streams N, T and P)
+
+- Suite green at every commit of each stream (N 41, T 58, P 44 commits; throwaway worktrees, fork-ci flags). Each stream changed only its owned files, and every commit has its trailers.
+- A cross-stream rule was pinned in each stream by a mutant re-applied on a copy of its final code, with each edit confirmed:
+  - **N:** `checkActual({ ...row, page_count: null }` (`src/finish.ts:114`, page count dropped before the checks): 1 test fails;
+  - **P:** `if (true) await deps.store.consumePageToken` (`src/page_routes.ts:107`, token used up even when busy): 2 tests fail;
+  - **T:** `.toUpperCase()` on the page-token SHA-256 hex (`src/tools.ts:41`): 2 tests fail.
+- Merged in order N `40458e0`, T `a65bb2d`, P `b7788be`. Suite after each: 194, 251, 294 passed; 63 todos.
+- Extra behaviors renamed in a structural commit on W (`4a18c39`): T's U232b → **U362**, P's P1 → **U363**.
+- **Open finding (integrator, to fix before wave 3):** `src/page_routes.ts` keeps "this declaration came from the page" in an in-memory `Set` (`declaredByPage`). Edge Function isolates don't keep memory between requests, so on a new isolate a second pick (which should replace the declaration, contracts/upload-page.md) is refused as a mismatch. The fix needs a stored flag: a schema column, the store, and the page route.
