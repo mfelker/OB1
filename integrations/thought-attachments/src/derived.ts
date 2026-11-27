@@ -1,6 +1,9 @@
 // Stub: throws until its stream replaces it (tasks.md "Seams").
 import type { AttachmentRow, DerivedRow, Passage } from "./types.ts";
 
+/** The integration's version, as in `metadata.json`. */
+const IMPORTER_VERSION = "0.1.0";
+
 /** `From <file>, <locator> (attachment <short id>)` (FR-025). */
 export function sourceLine(fileName: string, locator: string, shortId: string): string {
   return "From " + fileName + ", " + locator + " (attachment " + shortId + ")";
@@ -20,7 +23,19 @@ export async function passageRow(
   now: Date,
 ): Promise<DerivedRow> {
   const content = sourceLine(row.file_name ?? "", locatorFor(passage.pages), row.id.slice(0, 8)) + "\n" + passage.text;
-  return { content, fingerprint: await fingerprint(content), metadata: {}, embedding };
+  const hash = await fingerprint(content);
+  const metadata = {
+    source: "local_document",
+    source_type: "local_document",
+    source_label: row.file_name,
+    importer_name: "thought-attachments",
+    importer_version: IMPORTER_VERSION,
+    imported_at: now.toISOString(),
+    input_hash: row.content_hash,
+    content_fingerprint: "sha256:" + hash,
+    sensitivity_tier: row.sensitivity_tier,
+  };
+  return { content, fingerprint: hash, metadata, embedding };
 }
 
 /** `page 12` for one page, `pages 12–13` across pages (data-model.md). */

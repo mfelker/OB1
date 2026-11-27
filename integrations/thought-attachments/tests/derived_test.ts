@@ -79,3 +79,18 @@ Deno.test("U321 a passage on page 12 only is named page 12, never pages 12–12"
   const row = await passageRow(rowFor(), passage("text", [12, 12]), EMBEDDING, NOW);
   assertEquals(row.content.split("\n")[0], "From dishwasher-manual.pdf, page 12 (attachment a1b2c3d4)");
 });
+
+Deno.test("U135 a passage row's metadata carries the ingestion contract fields", async () => {
+  const row = await passageRow(rowFor(), passage("text", [12, 13]), EMBEDDING, NOW);
+  const m = row.metadata;
+  assertEquals(m.source, "local_document");
+  assertEquals(m.source_type, "local_document");
+  assertEquals(m.source_label, "dishwasher-manual.pdf");
+  assertEquals(m.importer_name, "thought-attachments");
+  assertEquals(typeof m.importer_version, "string");
+  assert((m.importer_version as string).length > 0);
+  assertEquals(m.imported_at, "2026-11-27T12:34:56.789Z");
+  assertEquals(m.input_hash, "sha256:" + "ab".repeat(32));
+  assertEquals(m.content_fingerprint, "sha256:" + row.fingerprint);
+  assertEquals(m.sensitivity_tier, "personal");
+});
