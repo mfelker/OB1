@@ -151,3 +151,10 @@ Deno.test("U18 a zero or negative value for a whole-number setting is a problem 
 Deno.test("U19 a decimal MB cap is accepted as given", () => {
   assertEquals(settingsWith({ MAX_IMAGE_MB: "2.5" }).maxImageMb, 2.5);
 });
+
+Deno.test("U308 a decimal value for a whole-number setting is a problem naming it", () => {
+  assertEquals(
+    [problemsWith({ MAX_PDF_PAGES: "2.5" }), problemsWith({ BUSY_SECONDS: "1.5" })],
+    [[{ setting: "MAX_PDF_PAGES", reason: WHOLE }], [{ setting: "BUSY_SECONDS", reason: WHOLE }]],
+  );
+});

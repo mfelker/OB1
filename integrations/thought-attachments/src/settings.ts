@@ -6,11 +6,13 @@ type Problem = { setting: string; reason: string };
 export function loadSettings(getEnv: GetEnv): SettingsResult {
   const problems: Problem[] = [];
   const text = (name: string, fallback: string) => getEnv(name) ?? fallback;
-  const num = (name: string, fallback: number) => {
+  const num = (name: string, fallback: number, decimals = false) => {
     const raw = getEnv(name);
     if (raw === undefined) return fallback;
     const n = Number(raw);
-    if (Number.isNaN(n) || n <= 0) problems.push({ setting: name, reason: "must be a positive whole number" });
+    if (Number.isNaN(n) || n <= 0 || (!decimals && !Number.isInteger(n))) {
+      problems.push({ setting: name, reason: "must be a positive whole number" });
+    }
     return n;
   };
   const mcpAccessKey = getEnv("MCP_ACCESS_KEY");
@@ -30,8 +32,8 @@ export function loadSettings(getEnv: GetEnv): SettingsResult {
     embeddingBatchSize: num("EMBEDDING_BATCH_SIZE", 64),
     ...vision,
     attachmentsBucket: text("ATTACHMENTS_BUCKET", "ob1-files"),
-    maxImageMb: num("MAX_IMAGE_MB", 10),
-    maxPdfMb: num("MAX_PDF_MB", 25),
+    maxImageMb: num("MAX_IMAGE_MB", 10, true),
+    maxPdfMb: num("MAX_PDF_MB", 25, true),
     maxPdfPages: num("MAX_PDF_PAGES", 50),
     passageMaxChars: num("PASSAGE_MAX_CHARS", 1500),
     scannedMinCharsPerPage: num("SCANNED_MIN_CHARS_PER_PAGE", 20),
