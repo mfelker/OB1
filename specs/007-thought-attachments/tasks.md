@@ -725,3 +725,8 @@ Source: `tdd/verification.md` (verdict **FAIL** at `ff4bfc1`). **The feature is 
   - Label H1–H4 as harness smoke tests.
 
   Done when `grep -c 'a semicolon and a space' tdd/cycle-log.md` returns 0 and the suite is green.
+
+## Phase 10: Live-run findings
+
+- [ ] T101 [US2] Live Cloud finding (T076, privacy, FR-009): a vision-endpoint error reason stores the provider's raw response body, which for OpenRouter includes the account's `user_id`, in `thought_attachments.state_reason` / `last_rebuild_error` and returns it in tool results. Tests first in `F/tests/vision_test.ts` (and `F/tests/embeddings_test.ts` for the same pattern), then `F/src/vision.ts` / `F/src/embeddings.ts`: an HTTP error reason keeps the status and the provider's `error.message` only (bounded length), never other body fields. Done when a fake 400 body with `"user_id":"user_x"` yields a reason with the status and message but without `user_x`, and the existing key-redaction tests still pass.
+
