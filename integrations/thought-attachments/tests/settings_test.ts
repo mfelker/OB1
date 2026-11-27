@@ -213,3 +213,11 @@ Deno.test("U355 an empty or blank MCP_ACCESS_KEY counts as unset: the result is 
   assertEquals(problemsWith({ MCP_ACCESS_KEY: "" }).map((p) => p.setting), ["MCP_ACCESS_KEY"]);
   assertEquals(problemsWith({ MCP_ACCESS_KEY: "   " }).map((p) => p.setting), ["MCP_ACCESS_KEY"]);
 });
+
+Deno.test("U356 a trailing slash on PUBLIC_BASE_URL is dropped, so the default page address has no double slash", () => {
+  const s = settingsWith({ PUBLIC_BASE_URL: "https://brain.example/", UPLOAD_PAGE_URL: undefined });
+  assertEquals(
+    { base: s.publicBaseUrl, page: s.uploadPageUrl },
+    { base: "https://brain.example", page: "https://brain.example/functions/v1/thought-attachments/upload" },
+  );
+});

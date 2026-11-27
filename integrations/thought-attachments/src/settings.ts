@@ -23,7 +23,7 @@ export function loadSettings(getEnv: GetEnv): SettingsResult {
   const vision = visionApiBase !== undefined && visionModel !== undefined
     ? { visionApiBase, visionApiKey: getEnv("VISION_API_KEY"), visionModel }
     : { visionApiBase: undefined, visionApiKey: undefined, visionModel: undefined };
-  const publicBaseUrl = getEnv("PUBLIC_BASE_URL") ?? getEnv("SUPABASE_PUBLIC_URL") ?? getEnv("SUPABASE_URL") ?? "";
+  const publicBaseUrl = (getEnv("PUBLIC_BASE_URL") ?? getEnv("SUPABASE_PUBLIC_URL") ?? getEnv("SUPABASE_URL") ?? "").replace(/\/+$/, "");
   if (mcpAccessKey === undefined) problems.push({ setting: "MCP_ACCESS_KEY", reason: "must be set" });
   const settings: Settings = {
     mcpAccessKey: mcpAccessKey ?? "",
