@@ -2,170 +2,165 @@
 feature: 008-stage-pr-521-auto-capture-hermes
 verdict: FAIL
 standard: .specify/templates/overrides/tdd-test-quality-rubric.md # fork override of spec-kit-tdd 2.0.1, staged-PR rules S1–S4
-verified_at: 1da0b44 # fork main (spec folder); tests audited on stage branch at dfb0d57
-behaviors: 52
+verified_at: 4e490c2 # fork main (spec folder); tests audited on stage branch at 2c22e41
+behaviors: 53
 proven: 0
 likely: 0
-test_after: 52 # rule S2, add-only PR; owner waiver 2026-11-27 (plan Complexity Tracking)
+test_after: 53 # rule S2, add-only PR; owner waiver 2026-11-27 (plan Complexity Tracking)
 no_test: 0
-high_smells: 1 # finding 1 (U13), also a surviving mutant
+high_smells: 0
 criteria_total: 11 # automatable acceptance scenarios US2.1–8, US3.1–3; 11 process criteria are checked by tasks T025–T036
 criteria_covered: 11
-mutation_score: null # no mutation tool; deliberate mutants: 20/23 caught (scope: capture-hermes-session.mjs)
-mutants_survived: 3 # N5 inside DONE U13 (HIGH); N6, N7 on behaviors not on the list
-suite: 52 passed, 0 failed, 0 skipped, 4.4–4.6s (env -i, Node 26.13.0)
+mutation_score: null # no mutation tool; deliberate mutants: 27/34 caught (scope: capture-hermes-session.mjs)
+mutants_survived: 7 # Q4 equivalent on APFS (unmeasured on Linux); Q5, R1, R2 untested contract fields; N6, Q3, R3 unspecified or out of scope
+suite: 53 passed, 0 failed, 0 skipped, 4.5–4.6s (env -i, Node 26.13.0)
 ---
 
-# TDD Verification: Stage upstream PR #521 (auto-capture Hermes adapter), second audit
+# TDD Verification: Stage upstream PR #521 (auto-capture Hermes adapter), third audit
 
-**Verdict: FAIL.** All 52 behaviors are `TEST_AFTER`. The PR adds the whole folder, so no base-red could exist; the owner waived this before the loop. Leaving the waiver aside, one HIGH finding still blocks a pass: U13 claims `--latest` picks the *newest* top-level session, but its fixture has only one top-level session, so "pick the oldest" passes too.
+**Verdict: FAIL.** The verdict rests on one reason only: all 53 behaviors are `TEST_AFTER`, because the PR adds the whole folder and no base-red can exist. The owner waived this before the loop (plan Complexity Tracking). By the rubric, `TEST_AFTER` is a `FAIL` condition, and this report does not convert the waiver into a pass.
 
-The three HIGH findings from the first audit (at `4ad3e3f`) are cleared, by stage commits `b13ca53` and `dfb0d57`:
+**No HIGH finding remains.** Every HIGH from the first and second audits is cleared, and the independent smell pass found none. What remains are MED gaps:
 
-| Finding | Shown by |
-| --- | --- |
-| A8 and U22 "nothing is sent" could not fail | Fall-through mutant N1 is now caught by A8, U21 and U22 |
-| U38 accepted any truthy `captured_at` | N2 is now caught |
-| The size-limit boundary was unpinned | M7 is now caught by the new U41 |
+- two payload fields the data model defines but no test pins (`source_type`, `auto_execute`);
+- the starting `attempt_count` of a new queue entry;
+- queue ordering that this machine's filesystem cannot exercise;
+- U40's accepted real-clock dependency.
 
-**Independence.** The session that wrote and remediated these tests also ran this audit, so it is not independent. To compensate:
+**Independence.** The session that wrote and remediated these tests also ran this audit, so it is not independent. A fresh-context subagent ran the smell pass without seeing the earlier reports, and every line it cited was opened and checked. It raised R1, R2 and R3 by reasoning; the auditor then ran them as mutants (all three survive).
 
-- A fresh-context subagent ran the smell pass without seeing the previous report. It independently raised the U13 gap, which matches mutant N5.
-- Every line it cited was opened and checked.
-- Every file was re-read cold.
+**Process note.** The auditor's mutant run overlapped the subagent's read-only suite runs. The subagent saw mutant Q4 in the file at 09:02. It discarded that probe and re-ran on the clean file. The subagent never modified the subject, so the mutant results stand. Future audits should run mutants only after the smell pass finishes.
 
 ## Test-first evidence
 
 The lane is `staged upstream PR #521`, so rules S1 to S4 apply:
 
 - **S4 does not apply.** The PR base `238df6c` has no `skills/auto-capture-hermes/` folder.
-- **S1 is unreachable.** A red run at the base could only say "file not found", which S3 rejects. No cycle claims an S1 red, so there is no S3 finding.
+- **S1 is unreachable.** No cycle claims an S1 red, so there is no S3 finding.
 
 | Behavior | Class | Evidence |
 | --- | --- | --- |
-| A1–A8, U1–U24, U35–U39 (37) | TEST_AFTER (S2) | Cycles 1–37, plus 52 (A8, U22) and 53 (U38); test commits `5e5853b` and `b13ca53` land after the author's `b9cbd68` |
-| A9–A11, U25–U34, U40 (14) | TEST_AFTER (S2) | Cycles 38–51; test commit `6bcefef` |
-| U41 (1) | TEST_AFTER (S2) | Cycle 54; test commit `dfb0d57`; detection mutant M7 recorded |
+| A1–A11, U1–U40 (51) | TEST_AFTER (S2) | Cycles 1–51 (`5e5853b`, `6bcefef`); later corrections in cycles 52–60 (`b13ca53`, `7cd5290`, `6cfc4ac`, `1e16541`, `2c22e41`). Every test commit lands after the author's `b9cbd68`. |
+| U41 | TEST_AFTER (S2) | Cycle 54, `dfb0d57`; detection mutant M7 recorded |
+| U42 | TEST_AFTER (S2) | Cycle 56, `1652c3a`; detection mutants N7 and N7b recorded |
 
 **History versus cycle log.** They agree:
 
-- The stage branch is `f1f4536` → `5cf07c0` → `b9cbd68` (author), then `6e3ad8d`, `5e5853b`, `6bcefef`, `b13ca53` and `dfb0d57`, all touching only `capture-hermes-session.test.mjs` and `test-support/*`.
-- The author's four files are unchanged since `b9cbd68` (`git diff --quiet`), and nothing outside the folder changed.
-- Cycles 52–54 name `b13ca53` and `dfb0d57`, which match the history.
+- The stage branch is the author's 3 commits, then 9 fork commits that touch only `capture-hermes-session.test.mjs` and `test-support/*`.
+- The author's 4 files are byte-identical to `b9cbd68`, and nothing outside the folder changed (also re-checked by T025 at `4e490c2`).
+- Cycles 52–61 name the same commits as the history.
 
-**Changes to tests that already existed** (`6bcefef..dfb0d57`), each with its before and after:
+**Changes to existing tests since the second audit** (`dfb0d57..2c22e41`, every removed line reviewed):
 
 | Test | Before | After | Judgment |
 | --- | --- | --- | --- |
-| A8 (`:192–201`) | started a stand-in; `assert.ok(dispositions.includes("error:missing_env"))`; `assert.equal(stub.requests.length, 0)` | no stand-in; `deepEqual(dispositions, ["error:missing_env"])`; `deepEqual(queueEntries, [])` | **Not a weakening.** The removed check could not fail, because the child never had the address. Mutant N1 passed the old test and fails the new one (cycle 52, and N1 below). |
-| U22 (`:382–388`) | same as A8 | same as A8 | Not a weakening (same evidence). |
-| U38 (`:430–445`) | `assert.ok(state.captured_at)` | ISO-8601 `assert.match`, plus `Date.parse` between before and after times | Strengthened: mutant N2 passed the old test and fails the new one. |
+| U13 (`:317–328`) | one top-level session; header `includes("Session: session-1")` | older and newer top-level sessions plus a newer subagent; exact `Session: session-3` | Strengthened: mutant N5 is now caught |
+| A11, U29 (`:536`, `:572`) | `some(d => d.endsWith(":permanent"))` | exactly one line matching `/^error:HTTP 401:.*:permanent$/` (400 for U29) | Strengthened: mutant P1 is now caught |
+| U17 (`:355–365`) | one combined `assert.ok` | four labelled assertions | Strengthened: mutant P2 is now caught |
+| U16 (`:347–353`) | marker absent, and 8 turns | exact contents of all 8 turns, and marker absent | Strengthened |
+| A9 (`:497–510`) | `includes("captured:job-1")` | the last log line equals `captured:${JOB_ID}` | Strengthened |
+| `TRUNCATION_MARKER` (`:112`) | the exact sentence `"[... transcript truncated to fit capture size limit ...]"` | `/truncated/i` | **A loosened predicate.** It is now insensitive to the marker's wording, which no contract specifies (data-model: "a marker"). No behavior-level detection was lost: Q1 (marker text removed) is caught by U17 and U41, and M7, M8, M12 and P2 are still caught. Recorded as a deliberate decoupling. The owner may overrule. |
+| A6, U17 limit | `"3000"` | `LIMIT_OVER_LONG` (= 4000, derived from the fixture) | Still well over the 8305-character capture; M8 and M12 still caught |
+| U40 (`:631–647`) | literal debounce, default `waitFor` | named `DEBOUNCE_MS`, timeout `DEBOUNCE_MS * 5` (the same 5000 ms) | Structural only |
 
 No test was skipped, renamed or filtered, and no config or threshold changed.
 
-**`tasks.md` versus the test list.** All 52 behavior ids are `DONE`. T043 carries `[U41]` and is ticked, and U41 is `DONE`. No open task carries a marker.
+**`tasks.md` versus the test list.** All 53 behavior ids are `DONE`. No ticked task carries a marker for a behavior that isn't `DONE`, and no open task carries a marker.
 
 ## Findings
 
-Ordered by severity. Paths are relative to `skills/auto-capture-hermes/` on the stage branch at `dfb0d57`. "Open task" means a task from the first audit that is still unticked.
+Ordered by severity. Paths are relative to `skills/auto-capture-hermes/` on the stage branch at `2c22e41`.
 
 | # | Severity | Finding | Evidence |
 | --- | --- | --- | --- |
-| 1 | HIGH | **U13 can't tell newest from oldest (vacuous for its claim, and a surviving mutant).** It seeds one top-level session (`session-1`) and one newer subagent. With a single top-level candidate, the `ORDER BY … DESC` in `findLatestSession` is never exercised: mutant N5 (`DESC` → `ASC`, pick the oldest) passes. Only the "exclude subagents" half is pinned (N4 is caught). **Should assert:** two top-level sessions with user turns (older and newer) plus a still-newer subagent, with the header naming the newer top-level session. | test `capture-hermes-session.test.mjs:299–305`; subject `capture-hermes-session.mjs:300`; test-list U13 row |
-| 2 | MED | **Untested robustness rule tied to FR-015.** An unreadable queue entry is moved to `dead/`. With mutant N7 (left in place) nothing fails. A corrupt entry would then sort first and take up a retry slot on every run, so the retry queue could stall. Not on the test list. **Should:** add a behavior (traces FR-015): a seeded non-JSON queue entry moves to `dead/` and the valid entries behind it are resent. | `capture-hermes-session.mjs:531–534` |
-| 3 | MED | **Permanent-failure checks don't pin the status** (unchanged from the first audit, open task T044). They check only `endsWith(":permanent")`; the contract form is `error:HTTP <status>…:permanent`. | `:503` (A11), `:537` (U29) |
-| 4 | MED | **U17's ordering check is half-vacuous** (open task T045). If FIRST-TURN is missing, `indexOf` gives `-1` and the first comparison passes. It sits in one unlabelled `assert.ok`. A6 covers the dropped first turn. | `:335` |
-| 5 | MED | **Mystery guest `"job-1"`** (open task T046). It comes from `startIngestStub`'s hidden default reply. | `:443` (U38), `:479` (A9), `:592` (U40); `test-support/run-adapter.mjs:141` |
-| 6 | MED | **Implementation coupled: exact marker wording** (open task T046). `TRUNCATION_MARKER` copies the script's sentence, but data-model specifies only "a marker". | `:103`; used in U16, U17, U41 |
-| 7 | MED | **U40 depends on the real clock and scheduling** (open task T047). It needs the second fire to land inside the 1000 ms debounce. It polls rather than sleeps and has passed every run so far, but the margin isn't stated, and it takes about 27% of suite time. | `:584–595` |
-| 8 | MED | **The test list doesn't match the tests.** The A8 row still says "a running stand-in receives 0 requests", the U22 row says "0 requests", and the U40 row says `DEBOUNCE_MS=300` (open task T047). The tests are sound; the rows are stale and overstate what A8 and U22 now observe. | `tdd/test-list.md:47`, `:95`, `:123` |
-| 9 | LOW | **Quoted `.env.local` values are untested.** Mutant N6 (quote stripping removed) passes. The README shows only unquoted values, so this is an undocumented convenience. Either test it or list it as out of scope, as was done for `--session` prefix matching. | `capture-hermes-session.mjs:603`; README `:67–71` |
-| 10 | LOW | **Thin failure output** from `assert.ok(dispositions(sandbox).includes(…))` (exact-element checks, not vacuous). And if SQLite is missing, the whole suite can skip and still look green (`:38`). | e.g. `:166`, `:174`, `:479` |
+| 1 | MED | **Two contract fields of the payload are untested.** `source_type: "hermes_ambient"` and `auto_execute: true` (data-model § Capture payload) are asserted nowhere. A9 compares the sent body with the dry-run body, so both would be wrong together. Mutants R1 (`source_type` changed) and R2 (`auto_execute: false`) both survive. Not inside a `DONE` claim: US2.1 and A1 name only the turns, label and key. **Should assert:** A1 pins both fields. | `capture-hermes-session.mjs:228–229`; A1 `:139–149` |
+| 2 | MED | **The starting `attempt_count` of a new queue entry is untested.** The contract moves an entry to `dead/` at 5 attempts. If a new entry starts at 0 (mutant Q5), a payload gets 6 attempts, and nothing fails: U31 and U32 seed their own counts, and A10, U27, U28 and U30 don't read the field. **Should assert:** after a 503 (U27 or A10), the queued entry has `attempt_count === 1`. | `capture-hermes-session.mjs:556`; contracts/ingest-request.md:18; data-model.md:32 |
+| 3 | MED | **Queue ordering is unmeasured where it matters.** Mutant Q4 (no `.sort()` before taking the batch of 3) survives U34. On this machine (APFS), `readdirSync` returned `1-a … 4-d` in name order whichever order the files were created in, so the mutant has no visible effect here; it is equivalent on this platform. Fork CI runs on Linux, where directory order is not name order. Judged MED rather than HIGH because no test can observe it on APFS, but it is **unmeasured, not passing**. **Should:** run U34 with mutant Q4 on Linux (CI or a throwaway Linux container), ideally with more entries so directory order and name order are certain to differ. | `capture-hermes-session.mjs:522`; U34 `:608–615` |
+| 4 | MED | **U40 depends on the real clock** (accepted by design, research R8). Its margin is now stated (`DEBOUNCE_MS = 1000`; two Node start-ups take about 150 ms). If it ever fails it fails closed (the `waitFor` timeout), but detached workers can outlive `afterEach`. No task: accepted and documented. | `:631–647` |
+| 5 | LOW | **A transcript that fits the limit exactly is trimmed.** The budget reserves 40 characters for a 39-character wrapper. data-model's "total ≤ `OB_CAPTURE_MAX_CHARS`" holds, so this is not a defect against any requirement. U41 deliberately tests ±1 and says nothing about equality, so mutant R3 (`- 40` → `- 39`) survives. Record it for the #521 comment (T036) as a remark. The subagent recommended a failing `todo` test for exact fit; the auditor disagrees, because the spec does not require exact fit to be sent whole. | `capture-hermes-session.mjs:468`; cycle-log remediation notes |
+| 6 | LOW | **Config precedence is undocumented and untested.** `.env.local` values override environment variables (`env.X || process.env.X`). Mutant Q3 (environment wins) survives. SKILL.md says only ".env.local … (or set them in the environment)". Either list it as out of scope or pin it with a test. | `capture-hermes-session.mjs:242–243` |
+| 7 | LOW | **U20 asserts only an absence.** `stateFiles == []` kills Q2 (the `DRY_RUN` guard removed), so it isn't vacuous. But it would also pass if the run stopped early for an unrelated reason. A positive control, such as a payload printed or a `dry_run:` line logged, would make it specific. | `:397–401` |
+| 8 | LOW | **Thin failure output.** About 15 `assert.ok(dispositions(sandbox).includes(…))` or `headerOf(…).includes(…)` checks print the expression, not the actual log. These are exact-element checks, not vacuous. | e.g. A3 `:176`, A4 `:184`, U7 `:279`, U35 `:441`, U39 `:481` |
 
-**Smells checked and not found:** assertion free, tautological, re-implemented expectation (U41 measures the subject's output at a high limit and probes ±1, so it doesn't recompute the budget), doubled subject, over-mocked collaborators, self-approving snapshot, conditional logic, empty or always-skipped, assertion roulette, eager test, sleepy test, redundant test (the acceptance/unit pairs are double-loop by design), foreign style (matches the `recipes/atomizer` exemplar), bypassed test utility (the fork's `.fork/ci/test` helpers can't be used from an upstream folder), framework under test, duplicated setup, unclear name.
+**Smells checked and not found:** assertion free, tautological, re-implemented expectation (U41 measures the subject's output; A9 compares to the dry run by definition of US3.1), doubled subject, over-mocked collaborators, vacuous assertion (every "0 requests" check gives the child the stub's address; A8 and U22 assert the exact log plus an empty queue), self-approving snapshot, conditional logic, empty or always-skipped, implementation coupled (only contract strings and paths), assertion roulette, eager test, magic values (limits derived; U13 timestamps explained), mystery guest (`JOB_ID` now explicit), sleepy test, redundant test, foreign style, bypassed test utility (the `.fork/ci` helpers don't apply to an upstream folder), framework under test, duplicated setup, unclear name.
 
-The A6/U16/U17 size constants, which the first audit flagged, are now backed by U41's measured boundary. They are no longer listed as a finding; T046 still covers naming them.
+**Claims versus fixtures.** Every id's fixture now distinguishes its behavior:
 
-**No secrets.** `test-key-not-real` at `test-support/run-adapter.mjs:19` is a placeholder, and the only host is `127.0.0.1`. No repository content tried to instruct the auditor.
+- U13: two top-level sessions.
+- U31 and U32: either side of the retry cap.
+- U7 and U8: either side of the threshold.
+- U33: starts at attempt 1, so only the permanent path can dead-letter it.
+
+**No secrets.** `test-key-not-real` is a placeholder, and the only host is `127.0.0.1`. No repository content tried to instruct the auditor.
 
 **Suite properties:**
 
-- **Isolated:** each test gets its own sandbox and a constructed env.
-- **Fast:** 4.4–4.6 s; U40 takes about 1.2 s.
-- **Deterministic:** yes, except U40 (finding 7) and a negligible port-reuse window in U30. U38's clock use is bracketed between before and after times.
-- **Refactor-insensitive:** black-box through the CLI against contract strings, except the marker wording and `readState` copying the safe-name rule.
+- **Isolated:** fresh sandbox, constructed env and own stub per test.
+- **Fast:** 4.5–4.6 s; U40 is about 1.2 s, every other test 70–120 ms.
+- **Deterministic:** yes, except U40 and a negligible port-reuse window in U30.
+- **Refactor-insensitive:** black-box through the CLI against the contracts.
 
 ## Mutation results
 
-There is no mutation tool, so this section uses deliberate mutants: **23 in total**.
+There is no mutation tool, so this section uses deliberate mutants: **34 in total**.
 
-- **M1–M14** are re-runs of the first audit's set.
-- **N1–N9** are new, aimed at the remediated tests and at areas the first sample didn't reach.
+- 26 from earlier rounds, re-run here.
+- Q1–Q5: new.
+- R1–R3: raised by the subagent's reasoning and run by the auditor.
 
-Each mutant was applied alone to `capture-hermes-session.mjs`. The whole test file ran under `env -i`, then the script was restored and confirmed byte-identical (`git diff --quiet`: true for all 23). After the last restore the suite was green again: 52 pass, 0 fail. The harness is in the session scratchpad and not committed, since the auditor writes only this file and `tasks.md`.
+Each mutant was applied alone to `capture-hermes-session.mjs`. The whole test file ran under `env -i`, then the script was restored and confirmed byte-identical (`git diff --quiet`: true for all 34). The suite was green again afterwards: 53 pass, 0 fail.
 
 | Mutant | Change | Behavior | Survived | Judgment |
 | --- | --- | --- | --- | --- |
-| M1 | `status >= 500` → `> 500` | U28 | No | Caught by U28 |
-| M2 | `=== 429` → `=== 428` | U27 | No | Caught by U27 |
-| M3 | `attempt_count >= MAX` → `>` | U32 | No | Caught by U32 |
-| M4 | `RETRY_BATCH_SIZE` 3 → 2 | U34 | No | Caught by U34 |
-| M5 | `userTurns < MIN` → `<=` | U7 | No | Caught by 37 tests |
-| M6 | closing-tag escape removed | U15 | No | Caught by U15 |
-| M7 | `text.length <= budget` → `<` | U16 / U41 | **No** (survived before) | Now caught by U41: first-audit finding 3 cleared |
-| M8 | head share 0.6 → 1 | A6, U17 | No | Caught |
-| M9 | `/^Subagent:/` unanchored | U12 | No | Caught |
-| M10 | `/^\[Cronjob\b/` unanchored | U6 | No | Caught |
-| M11 | key hash 8 → 7 hex | U18 | No | Caught |
-| M12 | wrapper allowance `- 40` → `- 0` | A6 | No | Caught by A6 and U41 |
-| M13 | typed-parts detection skips arrays | U5 | No | Caught |
-| M14 | `"unknown"` ref → `"none"` | U26 | No | Caught |
-| N1 | missing-config guard logs, then falls through | A8, U22 | No | Caught by A8, U21, U22: first-audit finding 1 cleared |
-| N2 | `captured_at: true` | U38 | No | Caught: first-audit finding 2 cleared |
-| N3 | `on_session_finalize` not accepted | U38, INV-3 | No | Caught by U38 and U39 |
-| N4 | `--latest` drops the parent filter | U13 | No | Caught by U13 |
-| **N5** | `--latest` orders `ASC` (oldest) | **U13** | **Yes** | **Not equivalent:** a real user with several sessions gets the oldest. Finding 1 (HIGH) |
-| N6 | `.env.local` quote stripping removed | none listed | Yes | Undocumented convenience. Finding 9 (LOW) |
-| N7 | unreadable queue entry left in place | none listed | Yes | Real FR-015 risk (retry slot held forever). Finding 2 (MED) |
-| N8 | permanent error no longer dead-letters a queued entry | U33 | No | Caught |
-| N9 | project name = full `cwd` | U14, A1 | No | Caught |
+| M1–M14 | boundaries and rules (retry status, dead-letter cap, batch size, threshold, escape, truncation, regex anchors, key length, wrapper, typed parts, ref fallback) | U5–U34, A6 | No | All caught; M7 by U41 |
+| N1–N5, N7–N9, N7b | config fall-through, `captured_at`, finalize event, `--latest` filter and order, corrupt queue entry (2 forms), permanent dead-letter, project basename | A8, U13, U14, U22, U33, U38, U42 | No | All caught |
+| P1, P2 | wrong logged status; head slice dropped | A11, U29, U17 | No | Caught |
+| Q1 | marker text removed | U17, U41 | No | Caught: the looser marker pattern lost no detection |
+| Q2 | dry run writes session state | U20 | No | Caught |
+| N6 | `.env.local` quote stripping removed | none (out of scope) | Yes | Out of scope by T051 decision |
+| **Q3** | environment overrides `.env.local` | none | Yes | Unspecified precedence. Finding 6 (LOW) |
+| **Q4** | queue not sorted before the batch | U34 | Yes | Equivalent on APFS (readdir is already name-ordered); unmeasured on Linux. Finding 3 (MED) |
+| **Q5** | new queue entry starts at `attempt_count: 0` | none (contract) | Yes | Untested contract field. Finding 2 (MED) |
+| **R1** | `source_type` changed | none (data-model) | Yes | Untested contract field. Finding 1 (MED) |
+| **R2** | `auto_execute: false` | none (data-model) | Yes | Untested contract field. Finding 1 (MED) |
+| **R3** | wrapper allowance `- 40` → `- 39` | none (exact fit unspecified) | Yes | Changes only the exact-fit case, which the spec doesn't specify. Finding 5 (LOW) |
 
-Sample: **20 of 23 caught**. One survivor lies inside a `DONE` behavior.
+Sample: **27 of 34 caught**. None of the 7 survivors lies inside a `DONE` behavior's stated claim, except Q4 in U34, which is equivalent on the audit platform (finding 3).
 
-**Not sampled:** `--session` prefix lookup (out of scope), lock and state-file write races, log line formatting, the `sqlite3` CLI fallback (out of scope), and `fetchWithTimeout` timeouts. The loop's own 51 detection mutants (one per test, all caught) remain in `evidence/detection/`; U41 adds M7 in cycle 54.
+**Not sampled:** lock and state-file write races, `fetchWithTimeout` timeouts, log line formatting, `--session` prefix lookup and the `sqlite3` fallback (both out of scope), and the deferred-worker spawn arguments.
 
 ## Traceability
 
 | Criterion | Tests | End to end |
 | --- | --- | --- |
-| US2.1 (FR-013) | A1, U14, U20 | Yes |
+| US2.1 (FR-013) | A1, U14, U20 | Yes; `source_type` and `auto_execute` (data-model only) unpinned (finding 1) |
 | US2.2 (FR-008) | A2, U1–U5 | Yes |
 | US2.3 (FR-009) | A3, U6, U8 | Yes |
 | US2.4 (FR-010) | A4, U7–U9 | Yes |
-| US2.5 (FR-010) | A5, U10–U13 | Yes for exclusion; U13's "newest" unpinned (finding 1) |
-| US2.6 (FR-011) | A6, U16, U17, U41 | Yes; boundary now pinned |
+| US2.5 (FR-010) | A5, U10–U13 | Yes |
+| US2.6 (FR-011) | A6, U16, U17, U41 | Yes |
 | US2.7 (FR-012) | A7, U18, U19 | Yes |
 | US2.8 (FR-014) | A8, U21–U24 | Yes |
 | US3.1 (FR-015) | A9, U25, U26 | Yes |
-| US3.2 (FR-015) | A10, U27, U28, U30–U32, U34 | Yes; unreadable-entry handling untested (finding 2) |
-| US3.3 (FR-015) | A11, U29, U33 | Yes; status not pinned (finding 3) |
+| US3.2 (FR-015) | A10, U27, U28, U30–U32, U34, U42 | Yes; starting attempt count (finding 2) and Linux ordering (finding 3) open |
+| US3.3 (FR-015) | A11, U29, U33 | Yes |
 | INV-1 / INV-2 / INV-3 | U15 / U24, U30, U35, U37 / U36, U38–U40 | Yes |
 
-All 52 `test` values resolve to tests that ran (52 `ok` lines, 0 skipped).
+All 53 `test` values resolve to tests that ran (53 `ok`, 0 skipped).
 
-**Untested criteria:** none among the automatable ones. The process criteria (US1, US4, SC-001/002/005/006) are checked by tasks T025–T036; T025–T028 are done and the rest are open.
+**Untested criteria:** none among the automatable ones. The process criteria (US1, US4, SC-001/002/005/006) are checked by tasks T025–T036; T025–T028 were re-run at `4e490c2` and pass, and the rest are open.
 
-**SC-003's clause "fails at the PR base"** can't be met, because there is no folder at the base; this is the waived case. **SC-004's "0 off-machine requests"** holds by construction, and no network guard asserts it.
+**SC-003's "fails at the PR base"** can't be met, because there is no folder at the base; this is the waived case. **SC-004's "0 off-machine requests"** holds by construction.
 
 **Tests tracing to nothing:** none.
 
 ## What was not audited
 
-- **Ordering of test and code.** It cannot exist for an add-only PR. All 52 behaviors are TEST_AFTER under the owner's waiver; this report records the waiver and does not convert it into a pass.
-- **Mutation coverage.** A sample of 23 mutants in one file, not a tool run. Unsampled areas are listed above.
+- **Ordering of test and code.** It cannot exist for an add-only PR. All 53 behaviors are TEST_AFTER under the owner's waiver; this report records the waiver and does not convert it into a pass.
+- **Behavior on Linux.** The suite and every mutant ran on macOS (APFS) only. Q4 needs a Linux run, and fork CI (T031) will be the first.
+- **Mutation coverage.** A sample of 34 mutants in one file, not a tool run. Unsampled areas are listed above.
 - **Line and branch coverage.** Not measured (profile `coverage: null`).
-- **Wall-clock defaults** (120 s debounce, 5 s finalize delay) and the `sqlite3` CLI fallback: out of scope per the test list.
-- **The pre-merge checks** (fork-ci strict, the OB1 gate: T024–T028) have not been re-run since `b13ca53` and `dfb0d57`. The recorded passes predate those commits.
-- **CI on GitHub** (T031): needs the owner's push (T030).
+- **Wall-clock defaults** (120 s debounce, 5 s finalize) and the `sqlite3` CLI fallback: out of scope per the test list.
 - **The author's docs**, and behavior against real Hermes or a real Open Brain endpoint (T038).
+- **CI on GitHub** (T031): needs the owner's push (T030).
 - **Feature resolution.** `.specify/feature.json` points at 007, which belongs to the other session in this checkout. This audit resolved `FEATURE_DIR` directly to `specs/008-stage-pr-521-auto-capture-hermes` and left `feature.json` untouched.
