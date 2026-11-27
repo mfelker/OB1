@@ -1412,7 +1412,7 @@ Deno.test("A47 a removal without confirm deletes nothing and lists the file and 
   assertEquals(snapshot(w), before);
 });
 
-todo(
+Deno.test(
   "A48 an attachment whose parent was deleted elsewhere is listed as an orphan with its file name and derived count, and a confirmed removal removes it",
   async () => {
     const w = world();
