@@ -203,3 +203,29 @@ Deno.test("U317 findByHash returns null when the hash belongs only to an attachm
   });
   assertEquals(await store.findByHash(PARENT, HASH), { data: null });
 });
+
+/** A database over one row that honours the equality and deadline filters findPending sends. */
+function pendingDb(row: AttachmentRow): (req: { url: string }) => { body: AttachmentRow[] } {
+  return (req) => {
+    const p = new URL(req.url).searchParams;
+    const eq = (col: string, value: unknown) => p.get(col) === null || p.get(col) === `eq.${value}`;
+    const after = p.get("upload_deadline");
+    const live = after === null || (after.startsWith("gt.") && new Date(row.upload_deadline) > new Date(after.slice(3)));
+    const hit = eq("parent_thought_id", row.parent_thought_id) && eq("file_name", row.file_name) &&
+      eq("declared_type", row.declared_type) && eq("declared_size", row.declared_size) && eq("state", row.state) && live;
+    return { body: hit ? [row] : [] };
+  };
+}
+
+Deno.test("U318 findPending returns the pending_upload row with that name, type and size while now is before its deadline", async () => {
+  const { store, ff } = setup();
+  const row = attachmentRow({ upload_deadline: "2026-01-01T01:00:00.000Z" });
+  ff.on("GET", `${REST}/thought_attachments*`, pendingDb(row));
+  const now = new Date("2026-01-01T00:59:59.000Z");
+  assertEquals(await store.findPending(PARENT, "manual.pdf", "application/pdf", 1234, now), { data: row });
+  const url = decodeURIComponent(ff.requests[0].url);
+  assertEquals(url.includes("state=eq.pending_upload"), true);
+  assertEquals(url.includes("file_name=eq.manual.pdf"), true);
+  assertEquals(url.includes("declared_type=eq.application/pdf"), true);
+  assertEquals(url.includes("declared_size=eq.1234"), true);
+});

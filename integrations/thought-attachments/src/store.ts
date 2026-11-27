@@ -71,7 +71,13 @@ export function createSupabaseStore(
       if (rows.length > 1) return { data: "ambiguous" };
       return { data: rows[0] ?? "not_found" };
     },
-    findPending: notYet,
+    async findPending(parentId, name, type, size, now) {
+      const { data, error } = await db.from("thought_attachments").select("*")
+        .eq("parent_thought_id", parentId).eq("file_name", name).eq("declared_type", type).eq("declared_size", size)
+        .eq("state", "pending_upload").gt("upload_deadline", now.toISOString()).limit(1);
+      if (error) return { error: scrub(error.message) };
+      return { data: ((data ?? []) as AttachmentRow[])[0] ?? null };
+    },
     async findByHash(parentId, contentHash) {
       const { data, error } = await db.from("thought_attachments").select("*")
         .eq("parent_thought_id", parentId).eq("content_hash", contentHash).neq("state", "refused").limit(1);
