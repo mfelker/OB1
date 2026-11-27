@@ -5,7 +5,7 @@
  * parameter sent here against schema.sql.
  */
 import { createClient } from "@supabase/supabase-js";
-import type { AttachmentRow, BusyOp, R, Settings, Store, ThoughtMatch } from "./types.ts";
+import type { AttachmentRow, BusyOp, OrphanReason, R, Settings, Store, ThoughtMatch } from "./types.ts";
 
 const notYet = (): Promise<never> => Promise.reject(new Error("not implemented"));
 
@@ -106,7 +106,11 @@ export function createSupabaseStore(
       if (rowError) return { error: scrub(rowError.message) };
       return { data: ((rows ?? []) as AttachmentRow[])[0] ?? null };
     },
-    orphans: notYet,
+    async orphans(now) {
+      const r = await rpc<{ attachment: AttachmentRow; why: OrphanReason }[]>("attachment_orphans", { p_now: now.toISOString() });
+      if ("error" in r) return r;
+      return { data: r.data.map((o) => ({ row: o.attachment, why: o.why })) };
+    },
     async attachmentForPageToken(hash) {
       const r = await rpc<AttachmentRow[]>("attachment_by_page_token", { p_hash: hash });
       return "error" in r ? r : { data: r.data[0] ?? null };

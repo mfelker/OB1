@@ -348,3 +348,13 @@ Deno.test("U111 removeAttachment passes the claim token and maps the reply to { 
   assertEquals(await store.removeAttachment(ATT_ID, "claim-tok"), { data: { derived: 3, noteRemoved: false } });
   assertEquals(ff.requests[0].body, { p_id: ATT_ID, p_token: "claim-tok" });
 });
+
+Deno.test("U112 orphans passes the current time and maps the reply to { row, why }[]", async () => {
+  const { store, ff } = setup();
+  const row = attachmentRow({ state: "refused" });
+  ff.on("POST", `${REST}/rpc/attachment_orphans`, { body: [{ attachment: row, why: "refused" }, { attachment: attachmentRow({ id: "x" }), why: "upload_expired" }] });
+  const now = new Date("2026-01-01T02:00:00.000Z");
+  const r = await store.orphans(now);
+  assertEquals(r, { data: [{ row, why: "refused" }, { row: attachmentRow({ id: "x" }), why: "upload_expired" }] });
+  assertEquals(ff.requests[0].body, { p_now: "2026-01-01T02:00:00.000Z" });
+});
