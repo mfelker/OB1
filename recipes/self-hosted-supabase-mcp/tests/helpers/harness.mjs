@@ -97,11 +97,12 @@ function which(cmd) {
 }
 
 /**
- * Stub `git`. Logs every call to $STUB_LOG. On `clone ... --branch <tag> <url> <dest>` it builds the
- * stand-in clone at <dest> and remembers <tag>. `-C <dir> describe --tags --exact-match` prints the
+ * Stub `git`, plain sh (no node, so a checkout's PATH can leave node out). Logs every call to
+ * $STUB_LOG. On `clone ... --branch <tag> <url> <dest>` it copies the prebuilt stand-in clone to
+ * <dest> and remembers <tag>. `-C <dir> describe --tags --exact-match` prints the
  * remembered tag (from <dir>/.git/stub-tag).
  */
-function stubGit(fixtureCloneModule) {
+function stubGit(cloneTemplate) {
   return `#!/bin/sh
 echo "git $*" >> "$STUB_LOG"
 if [ "$1" = "-C" ]; then dir="$2"; shift 2; else dir=.; fi
@@ -112,7 +113,8 @@ case "$1" in
       [ "$prev" = "--branch" ] && tag="$a"
       prev="$a"; dest="$a"
     done
-    STUB_TAG="$tag" STUB_DEST="$dest" node "${fixtureCloneModule}" || exit 1
+    cp -R "${cloneTemplate}" "$dest" || exit 1
+    printf '%s\n' "$tag" > "$dest/.git/stub-tag"
     ;;
   describe)
     [ -f "$dir/.git/stub-tag" ] || { echo "fatal: no tag" >&2; exit 128; }
@@ -161,7 +163,7 @@ export function makeCheckout({ withIntegration = true, hide = [] } = {}) {
   const git = which("git");
   const run = (...args) => spawnSync(git, args, { cwd: root, encoding: "utf8" });
   run("init", "-q");
-  writeFileSync(join(root, ".git", "info", "exclude"), ".bin/\n.fixture-clone.mjs\n.stub.log\n");
+  writeFileSync(join(root, ".git", "info", "exclude"), ".bin/\n.fixture-clone/\n.stub.log\n");
   run("-c", "user.email=t@example.invalid", "-c", "user.name=t", "add", "-A");
   run("-c", "user.email=t@example.invalid", "-c", "user.name=t", "commit", "-q", "-m", "fixture");
 
@@ -171,21 +173,14 @@ export function makeCheckout({ withIntegration = true, hide = [] } = {}) {
     const p = which(t);
     if (p) symlinkSync(p, join(bin, t));
   }
-  const nodeDir = dirname(process.execPath);
-  symlinkSync(process.execPath, join(bin, "node"));
   if (!hide.includes("openssl")) symlinkSync(which("openssl"), join(bin, "openssl"));
-  const cloneModule = join(root, ".fixture-clone.mjs");
-  writeFileSync(cloneModule, `import { writeFixtureClone } from ${JSON.stringify(fileURLToPath(import.meta.url))};
-import { writeFileSync } from "node:fs";
-import { join } from "node:path";
-writeFixtureClone(process.env.STUB_DEST);
-writeFileSync(join(process.env.STUB_DEST, ".git", "stub-tag"), process.env.STUB_TAG + "\\n");
-`);
-  if (!hide.includes("git")) { writeFileSync(join(bin, "git"), stubGit(cloneModule)); chmodSync(join(bin, "git"), 0o755); }
+  // The stand-in clone is built once here; the stub git only copies it (no node on the checkout's PATH).
+  const cloneTemplate = join(root, ".fixture-clone");
+  writeFixtureClone(cloneTemplate);
+  if (!hide.includes("git")) { writeFileSync(join(bin, "git"), stubGit(cloneTemplate)); chmodSync(join(bin, "git"), 0o755); }
   if (!hide.includes("docker")) { writeFileSync(join(bin, "docker"), stubDocker()); chmodSync(join(bin, "docker"), 0o755); }
   const log = join(root, ".stub.log");
   writeFileSync(log, "");
-  void nodeDir;
   return { root, recipe, bin, log, cleanup: () => rmSync(root, { recursive: true, force: true }) };
 }
 

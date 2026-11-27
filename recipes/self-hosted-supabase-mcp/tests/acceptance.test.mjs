@@ -15,7 +15,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
 import {
-  makeCheckout, runSetup, readEnv, envPath, stubCalls, makeBucketEnv, realDocker, compose,
+  makeCheckout, runSetup, readEnv, envPath, makeBucketEnv, realDocker, compose,
   SUPABASE_KEYS, MODEL_SETTINGS, examplePlaceholder,
 } from "./helpers/harness.mjs";
 
@@ -132,10 +132,10 @@ test("A8 functions mounts the checkout's 004 folder read-only and receives the k
 test("A9 setup completes with only docker, git, openssl and POSIX tools available", () => {
   const co = makeCheckout();
   try {
+    const onPath = (cmd) => spawnSync("/bin/sh", ["-c", `command -v ${cmd}`], { env: { PATH: co.bin } }).status === 0;
+    for (const absent of ["node", "python3", "kubectl", "helm"]) assert.equal(onPath(absent), false, `${absent} must not be on PATH`);
     const r = runSetup(co);
     assert.equal(r.code, 0, r.out);
     assert.match(r.out, /function-link: present/);
-    const programs = new Set(stubCalls(co).map((l) => l.split(" ")[0]));
-    for (const p of programs) assert.ok(["git", "docker"].includes(p), `unexpected program ${p}`);
   } finally { co.cleanup(); }
 });
