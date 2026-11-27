@@ -37,3 +37,11 @@ Deno.test("U162 64 texts at the default batch size go in one request", async () 
   assertEquals(ff.requests.length, 1);
   assertEquals((ff.requests[0].body as { input: string[] }).input.length, 64);
 });
+
+Deno.test("U163 65 texts at the default batch size go in two requests, 64 then 1", async () => {
+  const ff = new FakeFetch().on("POST", URL_, embeddingResponder(8));
+  const client = createEmbeddingClient(settingsWith(), ff.fetch);
+  const out = await client.embed(texts(65));
+  assert("data" in out);
+  assertEquals(ff.requests.map((r) => (r.body as { input: string[] }).input.length), [64, 1]);
+});
