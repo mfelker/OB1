@@ -62,7 +62,13 @@ export function createSupabaseStore(
     embeddingDimension() {
       return rpc<number>("attachment_embedding_dimension", {});
     },
-    createAttachment: notYet,
+    async createAttachment(fields) {
+      const { data, error } = await db.from("thought_attachments")
+        .insert({ ...fields, sensitivity_tier: fields.sensitivity_tier ?? "personal", state: "pending_upload" })
+        .select("*").single();
+      if (error) return { error: scrub(error.message) };
+      return { data: data as AttachmentRow };
+    },
     async getAttachment(idOrShortId) {
       let query = db.from("thought_attachments").select("*");
       if (/^[0-9a-f]{8}$/i.test(idOrShortId)) {

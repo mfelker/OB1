@@ -358,3 +358,37 @@ Deno.test("U112 orphans passes the current time and maps the reply to { row, why
   assertEquals(r, { data: [{ row, why: "refused" }, { row: attachmentRow({ id: "x" }), why: "upload_expired" }] });
   assertEquals(ff.requests[0].body, { p_now: "2026-01-01T02:00:00.000Z" });
 });
+
+// UQ1 to UQ5 cover Store methods that the test list gives no row (createAttachment, setDeclaration, release,
+// writeDerived, setState). Without them the finishing and tool streams would meet a stub.
+
+Deno.test("UQ1 createAttachment inserts a pending_upload row with the given fields and returns it", async () => {
+  const { store, ff } = setup();
+  const row = attachmentRow();
+  ff.on("POST", `${REST}/thought_attachments*`, { status: 201, body: row }); // .single(): one object
+  const r = await store.createAttachment({
+    id: ATT_ID,
+    parent_thought_id: PARENT,
+    parent_created_here: true,
+    file_name: "manual.pdf",
+    declared_type: "application/pdf",
+    declared_size: 1234,
+    storage_path: BUCKET_PATH,
+    upload_deadline: "2026-01-01T01:00:00.000Z",
+    page_token_hash: "sha256:h",
+  });
+  assertEquals(r, { data: row });
+  assertEquals(ff.requests[0].body, {
+    id: ATT_ID,
+    parent_thought_id: PARENT,
+    parent_created_here: true,
+    file_name: "manual.pdf",
+    declared_type: "application/pdf",
+    declared_size: 1234,
+    storage_path: BUCKET_PATH,
+    sensitivity_tier: "personal",
+    state: "pending_upload",
+    upload_deadline: "2026-01-01T01:00:00.000Z",
+    page_token_hash: "sha256:h",
+  });
+});
