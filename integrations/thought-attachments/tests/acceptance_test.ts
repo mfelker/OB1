@@ -674,7 +674,7 @@ Deno.test(
   },
 );
 
-todo(
+Deno.test(
   "A18 attach_file with note and no thought id creates one observation thought with an embedding of the brain's dimension, as the attachment's parent created here",
   async () => {
     const w = world();
