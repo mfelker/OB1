@@ -25,3 +25,24 @@ Deno.test("U124 every passage, source line included, is at most PASSAGE_MAX_CHAR
     assert(lineFor(p.pages).length + 1 + p.text.length <= max, `${p.pages} is ${p.text.length} chars`);
   }
 });
+
+/** Text of exactly `n` characters: 9-letter words with single spaces, never ending in a space. */
+function textOf(n: number): string {
+  const text = "abcdefghi ".repeat(Math.ceil(n / 10)).slice(0, n);
+  return text.endsWith(" ") ? text.slice(0, -1) + "z" : text;
+}
+
+Deno.test("U125 text that fits in exactly PASSAGE_MAX_CHARS with its source line is one passage", () => {
+  const max = 300;
+  const body = textOf(max - lineFor([1, 1]).length - 1);
+  const passages = toPassages([body], lineFor, settingsWith({ PASSAGE_MAX_CHARS: String(max) }));
+  assertEquals(passages.length, 1);
+  assertEquals(passages[0].text, body);
+});
+
+Deno.test("U126 text one character longer than that is two passages", () => {
+  const max = 300;
+  const body = textOf(max - lineFor([1, 1]).length - 1 + 1);
+  const passages = toPassages([body], lineFor, settingsWith({ PASSAGE_MAX_CHARS: String(max) }));
+  assertEquals(passages.length, 2);
+});
