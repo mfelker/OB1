@@ -1253,7 +1253,7 @@ Deno.test("A43 with default settings /page/start 20 minutes after attach_file re
   assertEquals({ status: start.status, link: typeof uploadLinkIn(start.json) }, { status: 200, link: "string" });
 });
 
-todo(
+Deno.test(
   "A44 /page/start 65 minutes after attach_file gets 410 with the expired message, and the orphan check lists that pending attachment",
   async () => {
     const w = world();
