@@ -1087,7 +1087,7 @@ Deno.test(
   },
 );
 
-todo(
+Deno.test(
   "A34 when embeddings fail on the second batch no derived thought remains and the row is failed; finishing again after recovery ends processed",
   async () => {
     const pages = MANUAL_PAGES.map((p) => `${p} ${"More detail on this step follows here. ".repeat(3)}`);
