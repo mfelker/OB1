@@ -1244,7 +1244,7 @@ Deno.test("A42 after that, a confirmed remove_attachment succeeds", async () => 
   });
 });
 
-todo("A43 with default settings /page/start 20 minutes after attach_file returns an upload link", async () => {
+Deno.test("A43 with default settings /page/start 20 minutes after attach_file returns an upload link", async () => {
   const w = world();
   const parent = await ownerThought(w, "The garage shelf by the side door");
   const { token } = await attachPhone(w, { thought_id: parent.id, expected_kind: "photo" });
