@@ -148,28 +148,28 @@ Test file: `tests/settings_test.ts`.
 
 | id  | behavior | traces | kind | state | test |
 | --- | -------- | ------ | ---- | ----- | ---- |
-| U1 | With its variable unset, each documented default applies: `EMBEDDING_API_BASE` `https://openrouter.ai/api/v1`, `EMBEDDING_MODEL` `openai/text-embedding-3-small`, `EMBEDDING_BATCH_SIZE` 64, `ATTACHMENTS_BUCKET` `ob1-files`, `MAX_IMAGE_MB` 10, `MAX_PDF_MB` 25, `MAX_PDF_PAGES` 50, `PASSAGE_MAX_CHARS` 1500, `SCANNED_MIN_CHARS_PER_PAGE` 20, `UPLOAD_LINK_MINUTES` 60, `DOWNLOAD_LINK_SECONDS` 600 | FR-017 | example | PENDING | |
-| U2 | A set variable overrides its default (for example `MAX_PDF_PAGES=30` gives 30, `ATTACHMENTS_BUCKET=files` gives `files`) | FR-017 | example | PENDING | |
-| U3 | With `EMBEDDING_API_KEY` unset, the embedding key is `OPENROUTER_API_KEY`'s value | FR-007 | example | PENDING | |
-| U4 | With both set, `EMBEDDING_API_KEY` wins over `OPENROUTER_API_KEY` | FR-007 | example | PENDING | |
-| U5 | With `PUBLIC_BASE_URL` unset, the public base is `SUPABASE_PUBLIC_URL` | FR-002, FR-019 | example | PENDING | |
-| U6 | With `PUBLIC_BASE_URL` and `SUPABASE_PUBLIC_URL` unset, the public base is `SUPABASE_URL` | FR-002, FR-019 | example | PENDING | |
-| U7 | A set `PUBLIC_BASE_URL` wins over both fallbacks | FR-002 | example | PENDING | |
-| U8 | With `MCP_ACCESS_KEY` unset, the result is `{ ok: false }` with a problem naming `MCP_ACCESS_KEY` | FR-018 | example | PENDING | |
-| U9 | With `VISION_API_BASE` unset, or `VISION_MODEL` unset (each alone), vision is not configured | FR-006 | example | PENDING | |
-| U10 | With `VISION_API_BASE` and `VISION_MODEL` set and `VISION_API_KEY` unset, vision is configured | FR-006 | example | PENDING | |
-| U11 | No setting's value appears in any problem's reason | FR-009 | example | PENDING | |
-| U12 | A set `BUSY_SECONDS` is used as given | FR-026, FR-017 | example | PENDING | |
-| U13 | With `BUSY_SECONDS` unset, the busy expiry is 410 seconds on every platform, whatever `SUPABASE_URL` or any other variable says (T005 Q1) | FR-026, FR-017 | example | PENDING | |
+| U1 | With its variable unset, each documented default applies: `EMBEDDING_API_BASE` `https://openrouter.ai/api/v1`, `EMBEDDING_MODEL` `openai/text-embedding-3-small`, `EMBEDDING_BATCH_SIZE` 64, `ATTACHMENTS_BUCKET` `ob1-files`, `MAX_IMAGE_MB` 10, `MAX_PDF_MB` 25, `MAX_PDF_PAGES` 50, `PASSAGE_MAX_CHARS` 1500, `SCANNED_MIN_CHARS_PER_PAGE` 20, `UPLOAD_LINK_MINUTES` 60, `DOWNLOAD_LINK_SECONDS` 600 | FR-017 | example | DONE | `tests/settings_test.ts::U1 each documented default applies when its variable is unset` |
+| U2 | A set variable overrides its default (for example `MAX_PDF_PAGES=30` gives 30, `ATTACHMENTS_BUCKET=files` gives `files`) | FR-017 | example | DONE | `tests/settings_test.ts::U2 a set variable overrides its default` |
+| U3 | With `EMBEDDING_API_KEY` unset, the embedding key is `OPENROUTER_API_KEY`'s value | FR-007 | example | DONE | `tests/settings_test.ts::U3 with EMBEDDING_API_KEY unset the embedding key is OPENROUTER_API_KEY` |
+| U4 | With both set, `EMBEDDING_API_KEY` wins over `OPENROUTER_API_KEY` | FR-007 | example | DONE | `tests/settings_test.ts::U4 with both set EMBEDDING_API_KEY wins over OPENROUTER_API_KEY` |
+| U5 | With `PUBLIC_BASE_URL` unset, the public base is `SUPABASE_PUBLIC_URL` | FR-002, FR-019 | example | DONE | `tests/settings_test.ts::U5 with PUBLIC_BASE_URL unset the public base is SUPABASE_PUBLIC_URL` |
+| U6 | With `PUBLIC_BASE_URL` and `SUPABASE_PUBLIC_URL` unset, the public base is `SUPABASE_URL` | FR-002, FR-019 | example | DONE | `tests/settings_test.ts::U6 with PUBLIC_BASE_URL and SUPABASE_PUBLIC_URL unset the public base is SUPABASE_URL` |
+| U7 | A set `PUBLIC_BASE_URL` wins over both fallbacks | FR-002 | example | DONE | `tests/settings_test.ts::U7 a set PUBLIC_BASE_URL wins over both fallbacks` |
+| U8 | With `MCP_ACCESS_KEY` unset, the result is `{ ok: false }` with a problem naming `MCP_ACCESS_KEY` | FR-018 | example | DONE | `tests/settings_test.ts::U8 with MCP_ACCESS_KEY unset the result is not ok, with a problem naming MCP_ACCESS_KEY` |
+| U9 | With `VISION_API_BASE` unset, or `VISION_MODEL` unset (each alone), vision is not configured | FR-006 | example | DONE | `tests/settings_test.ts::U9 with VISION_API_BASE or VISION_MODEL unset (each alone) vision is not configured` |
+| U10 | With `VISION_API_BASE` and `VISION_MODEL` set and `VISION_API_KEY` unset, vision is configured | FR-006 | example | DONE | `tests/settings_test.ts::U10 with VISION_API_BASE and VISION_MODEL set and VISION_API_KEY unset vision is configured` |
+| U11 | No setting's value appears in any problem's reason | FR-009 | example | DONE | `tests/settings_test.ts::U11 no setting's value appears in any problem's reason` |
+| U12 | A set `BUSY_SECONDS` is used as given | FR-026, FR-017 | example | DONE | `tests/settings_test.ts::U12 a set BUSY_SECONDS is used as given` |
+| U13 | With `BUSY_SECONDS` unset, the busy expiry is 410 seconds on every platform, whatever `SUPABASE_URL` or any other variable says (T005 Q1) | FR-026, FR-017 | example | DONE | `tests/settings_test.ts::U13 with BUSY_SECONDS unset the busy expiry is 410 seconds on every platform` |
 | U14 | With `BUSY_SECONDS` unset elsewhere, the busy expiry is 410 seconds | FR-026, FR-017 | example | DROPPED (T005 Q1 removed the per-platform default; U13 now covers the single 410-second default) | |
-| U15 | A set `UPLOAD_PAGE_URL` is used as given | FR-002 | example | PENDING | |
-| U16 | With `UPLOAD_PAGE_URL` unset, the page address is the public base plus `/functions/v1/thought-attachments/upload` (`PUBLIC_BASE_URL=https://brain.example` gives `https://brain.example/functions/v1/thought-attachments/upload`) (T005 Q2) | FR-002, FR-019 | example | PENDING | |
-| U17 | A non-numeric value for a numeric setting (`MAX_PDF_PAGES=abc`) gives `{ ok: false }` with a problem naming `MAX_PDF_PAGES` and what it must be ("must be a positive whole number") (T005 Q3) | FR-017 | example | PENDING | |
-| U18 | A zero or negative value for a whole-number setting (`MAX_PDF_PAGES=0`, `MAX_PDF_PAGES=-1`) gives a problem naming `MAX_PDF_PAGES` (T005 Q3) | FR-017 | example | PENDING | |
-| U19 | A decimal MB cap is accepted as given (`MAX_IMAGE_MB=2.5` gives 2.5, with no problem) (T005 Q3) | FR-017 | example | PENDING | |
-| U308 | A decimal value for a whole-number setting (`MAX_PDF_PAGES=2.5`, `BUSY_SECONDS=1.5`) gives a problem naming that setting ("must be a positive whole number") (T005 Q3) | FR-017 | example | PENDING | |
-| U309 | A non-numeric, zero or negative MB cap (`MAX_PDF_MB=abc`, `MAX_IMAGE_MB=0`, `MAX_IMAGE_MB=-1`) gives a problem naming that setting and what it must be (T005 Q3) | FR-017 | example | PENDING | |
-| U310 | Each other numeric setting (`EMBEDDING_BATCH_SIZE`, `PASSAGE_MAX_CHARS`, `SCANNED_MIN_CHARS_PER_PAGE`, `UPLOAD_LINK_MINUTES`, `DOWNLOAD_LINK_SECONDS`, `BUSY_SECONDS`) set to `abc` gives a problem naming that setting (T005 Q3) | FR-017 | example | PENDING | |
+| U15 | A set `UPLOAD_PAGE_URL` is used as given | FR-002 | example | DONE | `tests/settings_test.ts::U15 a set UPLOAD_PAGE_URL is used as given` |
+| U16 | With `UPLOAD_PAGE_URL` unset, the page address is the public base plus `/functions/v1/thought-attachments/upload` (`PUBLIC_BASE_URL=https://brain.example` gives `https://brain.example/functions/v1/thought-attachments/upload`) (T005 Q2) | FR-002, FR-019 | example | DONE | `tests/settings_test.ts::U16 with UPLOAD_PAGE_URL unset the page address is the public base plus the function's upload path` |
+| U17 | A non-numeric value for a numeric setting (`MAX_PDF_PAGES=abc`) gives `{ ok: false }` with a problem naming `MAX_PDF_PAGES` and what it must be ("must be a positive whole number") (T005 Q3) | FR-017 | example | DONE | `tests/settings_test.ts::U17 a non-numeric value for a numeric setting is a problem naming it and what it must be` |
+| U18 | A zero or negative value for a whole-number setting (`MAX_PDF_PAGES=0`, `MAX_PDF_PAGES=-1`) gives a problem naming `MAX_PDF_PAGES` (T005 Q3) | FR-017 | example | DONE | `tests/settings_test.ts::U18 a zero or negative value for a whole-number setting is a problem naming it` |
+| U19 | A decimal MB cap is accepted as given (`MAX_IMAGE_MB=2.5` gives 2.5, with no problem) (T005 Q3) | FR-017 | example | DONE | `tests/settings_test.ts::U19 a decimal MB cap is accepted as given` |
+| U308 | A decimal value for a whole-number setting (`MAX_PDF_PAGES=2.5`, `BUSY_SECONDS=1.5`) gives a problem naming that setting ("must be a positive whole number") (T005 Q3) | FR-017 | example | DONE | `tests/settings_test.ts::U308 a decimal value for a whole-number setting is a problem naming it` |
+| U309 | A non-numeric, zero or negative MB cap (`MAX_PDF_MB=abc`, `MAX_IMAGE_MB=0`, `MAX_IMAGE_MB=-1`) gives a problem naming that setting and what it must be (T005 Q3) | FR-017 | example | DONE | `tests/settings_test.ts::U309 a non-numeric, zero or negative MB cap is a problem naming it and what it must be` |
+| U310 | Each other numeric setting (`EMBEDDING_BATCH_SIZE`, `PASSAGE_MAX_CHARS`, `SCANNED_MIN_CHARS_PER_PAGE`, `UPLOAD_LINK_MINUTES`, `DOWNLOAD_LINK_SECONDS`, `BUSY_SECONDS`) set to `abc` gives a problem naming that setting (T005 Q3) | FR-017 | example | DONE | `tests/settings_test.ts::U310 each other numeric setting set to abc is a problem naming it` |
 
 #### `src/links.ts` (T009)
 
@@ -177,11 +177,11 @@ Test file: `tests/links_test.ts`.
 
 | id  | behavior | traces | kind | state | test |
 | --- | -------- | ------ | ---- | ----- | ---- |
-| U20 | `publicUrl` replaces a signed link's internal origin (`SUPABASE_URL`, for example `http://api-gw:8000`) with `PUBLIC_BASE_URL` and keeps its path and query exactly | FR-002, FR-019 | example | PENDING | |
-| U21 | `publicUrl` returns the link unchanged when `PUBLIC_BASE_URL` is already its origin (Cloud) | FR-019 | example | PENDING | |
-| U22 | `pageLink` is `UPLOAD_PAGE_URL` + `#t=` + the token, and the token appears nowhere before the `#` | FR-002 | example | PENDING | |
-| U23 | `curlLine` is a `PUT` to the upload URL that carries every returned header and the given file path | FR-002 | example | PENDING | |
-| U24 | `curlLine` contains neither the MCP access key nor the service-role key | FR-002, FR-018 | example | PENDING | |
+| U20 | `publicUrl` replaces a signed link's internal origin (`SUPABASE_URL`, for example `http://api-gw:8000`) with `PUBLIC_BASE_URL` and keeps its path and query exactly | FR-002, FR-019 | example | DONE | `tests/links_test.ts::U20 publicUrl replaces a signed link's internal origin with PUBLIC_BASE_URL and keeps its path and query` |
+| U21 | `publicUrl` returns the link unchanged when `PUBLIC_BASE_URL` is already its origin (Cloud) | FR-019 | example | DONE | `tests/links_test.ts::U21 publicUrl returns the link unchanged when PUBLIC_BASE_URL is already its origin` |
+| U22 | `pageLink` is `UPLOAD_PAGE_URL` + `#t=` + the token, and the token appears nowhere before the `#` | FR-002 | example | DONE | `tests/links_test.ts::U22 pageLink is UPLOAD_PAGE_URL then #t= then the token, with the token nowhere before the #` |
+| U23 | `curlLine` is a `PUT` to the upload URL that carries every returned header and the given file path | FR-002 | example | DONE | `tests/links_test.ts::U23 curlLine is a PUT to the upload URL carrying every returned header and the given file path` |
+| U24 | `curlLine` contains neither the MCP access key nor the service-role key | FR-002, FR-018 | example | DONE | `tests/links_test.ts::U24 curlLine contains neither the MCP access key nor the service-role key` |
 
 #### `tests/helpers/fake_store.ts` (T011, fake fidelity)
 
@@ -189,18 +189,20 @@ Test file: `tests/helpers/fake_store_test.ts`. The acceptance tests rely on thes
 
 | id  | behavior | traces | kind | state | test |
 | --- | -------- | ------ | ---- | ----- | ---- |
-| U25 | A claim while another unexpired claim exists returns `{ busy }` naming the holder's operation | FR-026 | example | PENDING | |
-| U26 | A claim after the holder's expiry, by the injected clock, succeeds with a new token | FR-026 | example | PENDING | |
-| U27 | `writeDerived` or `setState` with a stale or foreign claim token returns an error and changes nothing | FR-026 | example | PENDING | |
-| U28 | `writeDerived` failing partway leaves the previous derived set and state unchanged | FR-011, FR-027 | example | PENDING | |
-| U29 | A `writeDerived` row whose fingerprint equals an existing thought's returns an error and leaves that thought unchanged (never a merge) | FR-022 | example | PENDING | |
-| U30 | `removeAttachment` removes only that attachment's derived thoughts and its row | FR-016, FR-022 | example | PENDING | |
-| U31 | `removeAttachment` removes the parent note only under FR-016's exception | FR-016 | example | PENDING | |
-| U32 | `orphans` lists a row whose parent is gone, an expired `pending_upload` row and a `refused` row, each with why | FR-021 | example | PENDING | |
-| U33 | `insertNote` with a fingerprint that already exists returns that thought's id with `created: false` and leaves it unchanged | FR-001, FR-016 | example | PENDING | |
-| U311 | `findPending` returns a `pending_upload` row with the same parent, name, type and size whose `upload_deadline` is one second after the given `now` | FR-012 | example | PENDING | |
-| U312 | `findPending` returns `null` for such a row whose `upload_deadline` is one second before `now` | FR-012, FR-021, edge case "pending upload past its deadline no longer counts as pending" | example | PENDING | |
-| U313 | `findByHash` returns a non-refused attachment on that parent with that `content_hash`, and `null` when the only match is `refused` or is on another parent (T005 Q4) | FR-012 | example | PENDING | |
+| U25 | A claim while another unexpired claim exists returns `{ busy }` naming the holder's operation | FR-026 | example | DONE | `tests/helpers/fake_store_test.ts::U25 a claim while another unexpired claim exists returns busy naming the holder's operation` |
+| U26 | A claim after the holder's expiry, by the injected clock, succeeds with a new token | FR-026 | example | DONE | `tests/helpers/fake_store_test.ts::U26 a claim after the holder's expiry by the injected clock succeeds with a new token` |
+| U27 | `writeDerived` or `setState` with a stale or foreign claim token returns an error and changes nothing | FR-026 | example | DONE | `tests/helpers/fake_store_test.ts::U27 writeDerived or setState with a stale or foreign claim token returns an error and changes nothing` |
+| U28 | `writeDerived` failing partway leaves the previous derived set and state unchanged | FR-011, FR-027 | example | DONE | `tests/helpers/fake_store_test.ts::U28 writeDerived failing partway leaves the previous derived set and state unchanged` |
+| U29 | A `writeDerived` row whose fingerprint equals an existing thought's returns an error and leaves that thought unchanged (never a merge) | FR-022 | example | DONE | `tests/helpers/fake_store_test.ts::U29 a writeDerived row whose fingerprint equals an existing thought's returns an error and leaves that thought unchanged` |
+| U30 | `removeAttachment` removes only that attachment's derived thoughts and its row | FR-016, FR-022 | example | DONE | `tests/helpers/fake_store_test.ts::U30 removeAttachment removes only that attachment's derived thoughts and its row` |
+| U31 | `removeAttachment` removes the parent note only under FR-016's exception | FR-016 | example | DONE | `tests/helpers/fake_store_test.ts::U31 removeAttachment removes the parent note only under FR-016's exception` |
+| U32 | `orphans` lists a row whose parent is gone, an expired `pending_upload` row and a `refused` row, each with why | FR-021 | example | DONE | `tests/helpers/fake_store_test.ts::U32 orphans lists a row whose parent is gone, an expired pending_upload row and a refused row, each with why` |
+| U33 | `insertNote` with a fingerprint that already exists returns that thought's id with `created: false` and leaves it unchanged | FR-001, FR-016 | example | DONE | `tests/helpers/fake_store_test.ts::U33 insertNote with a fingerprint that already exists returns that thought's id with created false and leaves it unchanged` |
+| U311 | `findPending` returns a `pending_upload` row with the same parent, name, type and size whose `upload_deadline` is one second after the given `now` | FR-012 | example | DONE | `tests/helpers/fake_store_test.ts::U311 findPending returns a matching pending_upload whose deadline is one second after now` |
+| U312 | `findPending` returns `null` for such a row whose `upload_deadline` is one second before `now` | FR-012, FR-021, edge case "pending upload past its deadline no longer counts as pending" | example | DONE | `tests/helpers/fake_store_test.ts::U312 findPending returns null for such a row whose deadline is one second before now` |
+| U313 | `findByHash` returns a non-refused attachment on that parent with that `content_hash`, and `null` when the only match is `refused` or is on another parent (T005 Q4) | FR-012 | example | DONE | `tests/helpers/fake_store_test.ts::U313 findByHash returns a non-refused attachment on that parent with that hash, and null when the only match is refused or on another parent` |
+| U355 | An empty or blank `MCP_ACCESS_KEY` counts as unset: settings are not ok, naming `MCP_ACCESS_KEY` | FR-018, contracts/settings.md `MCP_ACCESS_KEY` | example | DONE | `tests/settings_test.ts::U355 an empty or blank MCP_ACCESS_KEY counts as unset: the result is not ok, naming MCP_ACCESS_KEY` |
+| U356 | A trailing slash on `PUBLIC_BASE_URL` is dropped, so the default page address has no double slash | R6, contracts/settings.md `UPLOAD_PAGE_URL` | example | DONE | `tests/settings_test.ts::U356 a trailing slash on PUBLIC_BASE_URL is dropped, so the default page address has no double slash` |
 
 ### Stream Q: data (wave 1, `ta-data`)
 

@@ -171,7 +171,7 @@ Streams code against these. The signatures are the only shared contract. Behavio
   6. Before T013 (it affects T044 and stream D's T047): how the copy of `upload-page.html` that the function serves on self-hosted gets its API address, given that the address is "written in the file" (R5).
 - [X] T006 Write the seams in `F/src/types.ts` and the throwing stubs in `F/src/{settings,links,intake,pdf,passages,derived,embeddings,vision,store,finish,tools,page_routes,app}.ts`, exactly as listed under **Seams**. Write `F/index.ts` as the one-line entry, `Deno.serve(createApp(productionDeps()).fetch)`. Use full specifiers only. Run `deno check` on every file, then commit.
 - [X] T007 Write `F/tests/helpers/{fake_fetch,fake_store,clock,fixtures,env,mcp,todo}.ts` per **Seams**. Commit.
-- [ ] T008 [U1] [U2] [U3] [U4] [U5] [U6] [U7] [U8] [U9] [U10] [U11] [U12] [U13] [U15] [U16] [U17] [U18] [U19] [U308] [U309] [U310] Tests first in `F/tests/settings_test.ts`, then `loadSettings(getEnv)` in `F/src/settings.ts`, covering every row of contracts/settings.md:
+- [X] T008 [U1] [U2] [U3] [U4] [U5] [U6] [U7] [U8] [U9] [U10] [U11] [U12] [U13] [U15] [U16] [U17] [U18] [U19] [U308] [U309] [U310] [U355] [U356] Tests first in `F/tests/settings_test.ts`, then `loadSettings(getEnv)` in `F/src/settings.ts`, covering every row of contracts/settings.md:
   - each default
   - `EMBEDDING_API_KEY` falls back to `OPENROUTER_API_KEY` (R3)
   - `PUBLIC_BASE_URL` falls back to `SUPABASE_PUBLIC_URL`, then `SUPABASE_URL` (R6)
@@ -181,7 +181,7 @@ Streams code against these. The signatures are the only shared contract. Behavio
   - no setting value appears in any problem's reason (FR-009)
 
   FR-017, R10, R13.
-- [ ] T009 [U20] [U21] [U22] [U23] [U24] Tests first in `F/tests/links_test.ts`, then `F/src/links.ts`:
+- [X] T009 [U20] [U21] [U22] [U23] [U24] Tests first in `F/tests/links_test.ts`, then `F/src/links.ts`:
   - `publicUrl` rewrites the internal Supabase origin of a signed link to `PUBLIC_BASE_URL` and keeps its path and query (R6)
   - `pageLink` is `UPLOAD_PAGE_URL#t=<token>`, with the token only in the fragment (contracts/upload-page.md "The link")
   - `curlLine` is a ready-to-run `PUT` with the returned headers (FR-002a) and contains no brain key
@@ -195,7 +195,7 @@ Streams code against these. The signatures are the only shared contract. Behavio
   - `--filter "/^<name> /"` on this file runs exactly one test
 
   Commit.
-- [ ] T011 [U25] [U26] [U27] [U28] [U29] [U30] [U31] [U32] [U33] [U311] [U312] [U313] Fake-store self-tests in `F/tests/helpers/fake_store_test.ts`. The fake re-implements database semantics that acceptance tests rely on, so each rule gets its own test:
+- [X] T011 [U25] [U26] [U27] [U28] [U29] [U30] [U31] [U32] [U33] [U311] [U312] [U313] Fake-store self-tests in `F/tests/helpers/fake_store_test.ts`. The fake re-implements database semantics that acceptance tests rely on, so each rule gets its own test:
   - a claim is refused while unexpired, naming the running operation
   - a claim succeeds after its expiry by the clock
   - a write with a stale or foreign claim token is refused
