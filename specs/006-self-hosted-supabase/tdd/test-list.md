@@ -4,7 +4,7 @@ loop: outside-in # outside-in | inside-out
 profile: .specify/memory/tdd-profile.md # stack profile the commands must read
 spec_criteria: 20 # Story 1 scenarios 1–6, Story 2 scenarios 1–3, Story 3 scenarios 1–3, SC-001 to SC-011 (overlapping); 9 automatable, the rest live (see "Live acceptance")
 planned_at: e86a3d4 # short SHA the list was derived from (fork main)
-updated_at: 8c7ab08 # short SHA of the last change to this file
+updated_at: 0d73f53 # short SHA of the last change to this file
 suite_baseline: green # empty: recipes/self-hosted-supabase-mcp and its worktree don't exist yet (T001), 0 tests
 ---
 
@@ -69,7 +69,7 @@ Test file: `tests/setup.test.mjs`.
 | U22 | After a fresh run, `git status --porcelain` in the checkout is empty (everything written is under the ignored `supabase/`) | FR-019 | example | DONE | `tests/setup.test.mjs::U22` (mutant-proven) |
 | U53 | An empty `supabase/docker/.env` (left when a run is interrupted during the Compose check's placeholder) is treated as absent: the next run generates the secrets, reports `secrets: completed` and exits 0 | US1.6, FR-003 (added mid-loop: advisor review found the U7 placeholder could be left behind) | example | DONE | `tests/setup.test.mjs::U53` |
 | U54 | After a failed key generation, no temporary `.env` (or temporary folder) remains under `$TMPDIR` | C1 (interrupted while generating secrets), C1 no-secret invariant (added by audit remediation T068) | example | DONE | `tests/setup.test.mjs::U54` (mutant-proven; needed `mktemp` under `$TMPDIR`) |
-| U55 | `STORAGE_URL` in the environment overrides the bucket script's storage address | R9, FR-009 (row added by audit remediation T072; already asserted inside U51's test) | example | DONE | `tests/create-bucket.test.mjs::U51` (second half) |
+| U55 | `STORAGE_URL` in the environment overrides the bucket script's storage address | R9, FR-009 (row added by audit remediation T072; own test since T079) | example | DONE | `tests/create-bucket.test.mjs::U55` |
 
 ### `recipes/self-hosted-supabase-mcp/docker-compose.yml` + `lean.override.yml` (contract C2; R2, R3, R7, R8, R12)
 

@@ -338,13 +338,13 @@ Task: "Compose test: default service set is exactly the always-on set (T020) in 
 
 ### Non-blocking: MED and LOW findings
 
-- [ ] T075 [P] Finding 5: make the SQL runtime read the repository's bytes.
+- [x] T075 [P] Finding 5: make the SQL runtime read the repository's bytes.
   - Replace the bind-mount `psql` wrapper route with one that never serves stale content, for example `docker cp` of the folder before each run, or piping files over stdin. Update the recipe in `tdd/cycle-log.md` (T069 entry) to match.
   - Done when this sequence leaves host and container sha256 of `F/db/ob1-schema.sql` equal, with no container restart: a size-changing edit, then `git checkout`, then `node .fork/ci/bin/tdd.mjs file tests/verify.sql`.
-- [ ] T076 [P] Finding 6: U54 (`F/tests/setup.test.mjs:313-322`) and U12 (`:152-161`) assert that the run stopped at key generation, for example that the output names the generator's failure. Done when mutant F21 (`exit 1` inserted before `setup.sh:54`) fails both single, and the suite is green.
-- [ ] T077 [P] Finding 7: run the setup tests under a POSIX shell that isn't bash. Either `runSetup` uses `/bin/dash` where present, or a test runs setup under dash. Done when mutant F9 (`setup.sh:53` `[ … ]` → `[[ … ]]`) fails a test on macOS, and the suite is green.
-- [ ] T079 [P] Finding 8: split U55 out of U51's test into its own `test("U55 …")` in `F/tests/create-bucket.test.mjs`, and update the trace in `tdd/test-list.md:72`. Done when `single tests/create-bucket.test.mjs "U55 …"` runs exactly one test, and mutant F20 fails it.
-- [ ] T080 [P] Findings 9–11 and 13:
+- [x] T076 [P] Finding 6: U54 (`F/tests/setup.test.mjs:313-322`) and U12 (`:152-161`) assert that the run stopped at key generation, for example that the output names the generator's failure. Done when mutant F21 (`exit 1` inserted before `setup.sh:54`) fails both single, and the suite is green.
+- [x] T077 [P] Finding 7: run the setup tests under a POSIX shell that isn't bash. Either `runSetup` uses `/bin/dash` where present, or a test runs setup under dash. Done when mutant F9 (`setup.sh:53` `[ … ]` → `[[ … ]]`) fails a test on macOS, and the suite is green.
+- [x] T079 [P] Finding 8: split U55 out of U51's test into its own `test("U55 …")` in `F/tests/create-bucket.test.mjs`, and update the trace in `tdd/test-list.md:72`. Done when `single tests/create-bucket.test.mjs "U55 …"` runs exactly one test, and mutant F20 fails it.
+- [x] T080 [P] Findings 9–11 and 13:
   - U54 asserts that the build folder is created under `TMPDIR`; mutant F1 plus M16 must fail it.
   - U54 asserts `r.code` is a number before `notEqual(r.code, 0)`.
   - H1 (`F/tests/harness.test.mjs:21-22`) asserts `st.status === 0`.

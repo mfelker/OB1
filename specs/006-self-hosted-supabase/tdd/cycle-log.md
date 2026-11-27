@@ -465,11 +465,15 @@ Run in a scratch checkout of the branch at `23a226c` (`/Users/mfelker/Projects/o
 
 ### T069 Finding 9: reproducing the local SQL runtime
 
-The fork-ci SQL runtime needs `psql` and a Postgres reachable through the `PG*` variables. Locally (macOS, no host `psql`) it was reproduced like this:
-1. `docker run -d --name ob1-006-pgtest -e POSTGRES_PASSWORD=<any> --mount type=bind,source=<repo root>,target=<repo root>,readonly pgvector/pgvector:pg17`. The repo is mounted at the same absolute path, so `psql -f <absolute path>` and `\ir ../db/ob1-schema.sql` resolve as on the host.
-2. A `psql` wrapper first on `PATH`, outside the repo: `exec docker exec -i -w "$PWD" -e PGUSER="${PGUSER:-postgres}" -e PGDATABASE="${PGDATABASE:-postgres}" ob1-006-pgtest psql "$@"`.
-3. Then `PATH=<wrapper dir>:$PATH node .fork/ci/bin/tdd.mjs suite` (or `file tests/verify.sql`).
-- Caveats seen in this feature: (a) the container has no restart policy, so a Docker Desktop restart stops it (`docker start ob1-006-pgtest`); (b) during the audit, the bind mount once served stale file contents until the container was restarted. If results look inconsistent with the files, restart the container before trusting a red.
+The fork-ci SQL runtime needs `psql` and a Postgres reachable through the `PG*` variables. Locally (macOS, no host `psql`) it is reproduced like this. This recipe was revised by T075; the original bind-mount route served stale content.
+1. `docker run -d --name ob1-006-pgtest -e POSTGRES_PASSWORD=<any> pgvector/pgvector:pg17`, with **no bind mount**.
+2. A `psql` wrapper first on `PATH`, outside the repo. On every call it does three things:
+   - replaces `$PWD` inside the container with a fresh `tar` copy of the caller's directory, at the same absolute path (excluding `./supabase`, with `COPYFILE_DISABLE=1 tar --no-xattrs --no-mac-metadata`);
+   - then runs `exec docker exec -i -w "$PWD" -e PGUSER=… -e PGDATABASE=… ob1-006-pgtest psql "$@"`;
+   - because the copy is replaced each time, `psql -f <relative path>` and `\ir ../db/ob1-schema.sql` resolve as on the host, and can never read stale bytes.
+3. Once per new container, apply fork-ci's bootstrap as CI does: `cd .fork/ci/sql && psql -v ON_ERROR_STOP=1 -X -q -f bootstrap.sql`. It creates `anon`, `authenticated` and `service_role`. The old recipe left this step out; the original container had it applied by hand.
+4. Then `PATH=<wrapper dir>:$PATH node .fork/ci/bin/tdd.mjs suite` (or `file tests/verify.sql`).
+- Caveat: the container has no restart policy, so a Docker Desktop restart stops it (`docker start ob1-006-pgtest`).
 
 ## Remediation: T073 (re-audit Finding 1), owner decision
 
@@ -483,3 +487,29 @@ The fork-ci SQL runtime needs `psql` and a Postgres reachable through the `PG*` 
 - mutant: F13 applied → `node .fork/ci/bin/tdd.mjs single tests/compose.test.mjs "U36 …"` → `actual: 'alpine:3.20.3', expected: 'curlimages/curl:8.11.1'` (tests=1 pass=0 fail=1). Restored byte for byte from a copy; `git status` showed only the test file.
 - green: U36 single passes (tests=1 pass=1). Suite → tests=59 pass=59 fail=0.
 - commit: `bfacd22`
+
+## Remediation: T079 U55 gets its own test (re-audit Finding 8)
+
+- test: `tests/create-bucket.test.mjs::U55` (new, split out of U51's second half; U51 keeps the default address).
+- mutant: F20 (`create-bucket.sh:3` `STORAGE_URL` hard-coded to `http://storage:5000`) → `U55` single: `actual: 'http://storage:5000/bucket', expected: 'http://example.test:1234/bucket'` (tests=1 fail=1). Restored from a copy.
+- green: U55 and U51 single pass. Suite → tests=60 pass=60 fail=0. commit: `83540b9`
+
+## Remediation: T076 + T080 U12/U54 prove setup reached key generation; exit codes; H1 (re-audit Findings 6, 9, 10, 11)
+
+- harness: the stand-in `generate-keys.sh` failure line now names its working folder (`stub: generate-keys failed in $(pwd)`).
+- U12 asserts the output contains `stub: generate-keys failed in `. U54 asserts it ran in `${TMPDIR}/ob1-setup.…`. Both assert `typeof r.code === "number"` before `notEqual(r.code, 0)`. H1 asserts the fixture's `git status` exited 0.
+- mutant F21 (`exit 1` inserted before `setup.sh:54`) → U54 single fails (`key generation ran in a build folder under TMPDIR`); U12 single fails (`setup reached key generation`).
+- mutant F1+M16 (`mktemp -d` with no template, and no `trap`) → U54 single fails (same message). That run leaked a `tmp.*` folder with fake stub keys in the system temp dir, and it was removed. This is the leak the test now catches.
+- green: suite → tests=60 pass=60 fail=0. commit: `8ef2bf6`
+
+## Remediation: T077 setup tests run under dash (re-audit Finding 7)
+
+- harness: `runSetup` spawns `SETUP_SHELL`, which is `/bin/dash` where present (macOS ships it), else `/bin/sh`.
+- mutant F9 (`setup.sh:53` `[ … ]` → `[[ … ]]`) → `file tests/setup.test.mjs`: tests=24 pass=7 fail=17 (before: 0 failures, because macOS `/bin/sh` is bash). Restored from a copy.
+- green: setup file 24/24 under dash; suite → tests=60 pass=60 fail=0. commit: `0c357be`
+
+## Remediation: T075 SQL runtime reads the repository's bytes (re-audit Finding 5)
+
+- The T069 recipe above was replaced: no bind mount, and a fresh per-call copy. The container was recreated, and `bootstrap.sql` was applied once.
+- Check (no container restart): clean → pass, sha256 `1ab23bb8…` 3694 B on both sides. After the `vector(1536)` → `vector(768)` edit → `ERROR:  U41 thoughts.embedding is not vector(1536)`, `a3d4812b…` 3692 B on both sides. After `git checkout` → pass, `1ab23bb8…` 3694 B on both sides.
+- No repository code changed; the wrapper lives outside the repo, in the job scratch folder.
