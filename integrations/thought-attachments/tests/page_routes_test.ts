@@ -308,3 +308,12 @@ Deno.test("U339 /page/info with an unknown, used or expired token gets 410 with 
   assertEquals(results, [[410, EXPIRED], [410, EXPIRED], [410, EXPIRED]]);
   assertEquals(late.page_token_hash !== null, true);
 });
+
+Deno.test("U352 /page/info returns exactly expected_kind, accepted_types and caps, with image_bytes at MAX_IMAGE_MB times 1048576", async () => {
+  const r = await rig({ MAX_IMAGE_MB: "10", MAX_PDF_MB: "7.5", MAX_PDF_PAGES: "30" });
+  await r.seed({ expected_kind: "pdf" });
+  const body = await (await r.post("/page/info", { token: TOKEN })).json();
+  assertEquals(Object.keys(body).sort(), ["accepted_types", "caps", "expected_kind"]);
+  assertEquals(Object.keys(body.caps).sort(), ["image_bytes", "pdf_bytes", "pdf_pages"]);
+  assertEquals(body.caps, { image_bytes: 10485760, pdf_bytes: 7864320, pdf_pages: 30 });
+});
