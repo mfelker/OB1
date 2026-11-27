@@ -68,3 +68,14 @@ Deno.test("U134 a passage row's content is the source line, a line break, then t
   assertEquals(row.embedding, EMBEDDING);
   assertEquals(row.fingerprint, await fingerprint(row.content));
 });
+
+Deno.test("U132 the short id in a source line is the first 8 hex characters of the attachment id", async () => {
+  const row = await passageRow(rowFor("a.pdf", { id: "0f1e2d3c-4b5a-4697-8a9b-c0d1e2f30415" }), passage("text", [1, 1]), EMBEDDING, NOW);
+  assertStringIncludes(row.content.split("\n")[0], "(attachment 0f1e2d3c)");
+  assert(!row.content.includes("4b5a"));
+});
+
+Deno.test("U321 a passage on page 12 only is named page 12, never pages 12–12", async () => {
+  const row = await passageRow(rowFor(), passage("text", [12, 12]), EMBEDDING, NOW);
+  assertEquals(row.content.split("\n")[0], "From dishwasher-manual.pdf, page 12 (attachment a1b2c3d4)");
+});
