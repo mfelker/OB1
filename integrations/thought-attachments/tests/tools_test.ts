@@ -336,3 +336,10 @@ Deno.test("U234 the same name and type with a different size on the parent creat
   assert(out.data.attachment_id !== pending.id);
   assertEquals(h.store.attachment(out.data.attachment_id as string)?.declared_size, 2000);
 });
+
+Deno.test("U236 upload_deadline is the injected now plus UPLOAD_LINK_MINUTES", async () => {
+  const h = await harness({ UPLOAD_LINK_MINUTES: "20" });
+  const parent = await seed(h, "dishwasher");
+  await call(h, "attach_file", { thought_id: parent.id, ...PDF });
+  assertEquals(h.store.attachments[0].upload_deadline, new Date(h.clock.now().getTime() + 20 * 60_000).toISOString());
+});
