@@ -86,3 +86,17 @@ Deno.test("U28 writeDerived failing partway leaves the previous derived set and 
     ...before,
   });
 });
+
+Deno.test("U29 a writeDerived row whose fingerprint equals an existing thought's returns an error and leaves that thought unchanged", async () => {
+  const { store, att } = await setup();
+  const body = `From manual.pdf, page 1 (attachment ${att.id.slice(0, 8)})\nTo clean the filter, twist it.`;
+  // The owner's thought differs only in case and spacing, so upsert_thought's normalisation makes it the same fingerprint.
+  const owner = await store.seedThought({ content: `  ${body.toUpperCase().replace(" ", "   ")}  `, metadata: { by: "owner" } });
+  const ownerBefore = structuredClone(owner);
+  const { token } = data(await store.claim(att.id, "finish", BUSY_SECONDS)) as { token: string };
+  const result = await store.writeDerived(att.id, token, [await derivedRow(body)], { state: "processed" });
+  assertEquals(
+    { failed: "error" in result, owner: store.thought(owner.id), derived: store.derivedOf(att.id).length },
+    { failed: true, owner: ownerBefore, derived: 0 },
+  );
+});
