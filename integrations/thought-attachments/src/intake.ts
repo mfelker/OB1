@@ -6,7 +6,7 @@ export function baseName(name: string): string {
 }
 
 export function checkDeclared(decl: DeclaredFile, settings: Settings): Refusal | null {
-  throw new Error("not implemented");
+  return null;
 }
 
 /** The type the bytes actually are, from their header; null when unrecognised. */
