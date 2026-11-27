@@ -49,6 +49,11 @@ export function createVisionClient(
           }`,
         };
       }
+      if (!response.ok) {
+        return {
+          error: `vision endpoint answered HTTP ${response.status}: ${(await response.text()).slice(0, 300)}`,
+        };
+      }
       const body = await response.json();
       return {
         data: {

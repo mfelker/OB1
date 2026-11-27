@@ -76,3 +76,10 @@ Deno.test("U178 an unreachable endpoint fails with a reason", async () => {
   assertStringIncludes(out.error, "unreachable");
   assertStringIncludes(out.error, VISION_API_BASE);
 });
+
+Deno.test("U179 a non-2xx status fails with the status in the reason", async () => {
+  const ff = new FakeFetch().on("POST", URL_, { status: 502, body: "bad gateway" });
+  const out = await createVisionClient(settingsWith(), ff.fetch).caption(BYTES, "image/jpeg");
+  assert("error" in out);
+  assertStringIncludes(out.error, "502");
+});
