@@ -265,3 +265,23 @@ Deno.test("U231 attach_file with neither thought_id nor note is refused, and not
   assertStringIncludes(out.text, "exactly one");
   assertNothingCreated(h);
 });
+
+Deno.test("U232 a checkDeclared refusal returns its message, with no row and no link", async () => {
+  const h = await harness();
+  const parent = await seed(h, "dishwasher");
+  const heic = await call(h, "attach_file", {
+    thought_id: parent.id,
+    file_name: "IMG_1.heic",
+    declared_type: "image/heic",
+    declared_size: 1000,
+  });
+  assertEquals(heic.isError, true);
+  assertStringIncludes(heic.text, "share it as JPEG");
+  const big = await call(h, "attach_file", { thought_id: parent.id, ...PDF, declared_size: 26 * 1024 * 1024 });
+  assertEquals(big.isError, true);
+  assertStringIncludes(big.text, String(26 * 1024 * 1024));
+  const odd = await call(h, "attach_file", { thought_id: parent.id, file_name: "a.txt", declared_type: "text/plain", declared_size: 5 });
+  assertEquals(odd.isError, true);
+  assertStringIncludes(odd.text, "PDF, JPEG, PNG and WebP");
+  assertNothingCreated(h);
+});

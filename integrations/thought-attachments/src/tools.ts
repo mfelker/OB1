@@ -1,6 +1,7 @@
 /** The seven MCP tools (contracts/mcp-tools.md). Finishing is reached only through the injected `services.finish`. */
 import { McpServer } from "npm:@modelcontextprotocol/sdk@1.24.3/server/mcp.js";
 import { z } from "npm:zod@4.1.13";
+import { baseName, checkDeclared } from "./intake.ts";
 import type { Deps, Services } from "./types.ts";
 
 type Hints = { readOnlyHint: boolean; destructiveHint?: boolean; openWorldHint?: boolean };
@@ -61,8 +62,12 @@ export function buildServer(deps: Deps, _services: Services): McpServer {
       sensitivity_tier: z.enum(["standard", "personal", "restricted"]).optional(),
     },
     annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: true },
-  }, async ({ thought_id, note }) => {
+  }, async ({ thought_id, note, file_name, declared_type, declared_size }) => {
     if ((thought_id === undefined) === (note === undefined)) return fail(ONE_PARENT);
+    if (file_name !== undefined && declared_type !== undefined && declared_size !== undefined) {
+      const refusal = checkDeclared({ name: baseName(file_name), type: declared_type, size: declared_size }, deps.settings);
+      if (refusal) return fail(refusal.message);
+    }
     if (thought_id !== undefined) {
       const exists = await deps.store.thoughtExists(thought_id);
       if ("error" in exists) return fail(exists.error);
