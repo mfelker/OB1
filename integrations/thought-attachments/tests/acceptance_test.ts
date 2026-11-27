@@ -522,7 +522,7 @@ Deno.test("A12 attach_file with an unknown thought_id is refused, and no row, li
   assertEquals({ isError: r.isError, after: snapshot(w) }, { isError: true, after: before });
 });
 
-todo(
+Deno.test(
   "A53 /page/start or /page/finish carrying the brain key but no valid page token gets 410 and changes nothing",
   async () => {
     const w = world();
