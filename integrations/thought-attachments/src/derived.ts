@@ -34,6 +34,8 @@ export async function passageRow(
     input_hash: row.content_hash,
     content_fingerprint: "sha256:" + hash,
     sensitivity_tier: row.sensitivity_tier,
+    type: "reference",
+    topics: ["attachment", row.file_name],
   };
   return { content, fingerprint: hash, metadata, embedding };
 }

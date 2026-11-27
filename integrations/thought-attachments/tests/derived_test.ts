@@ -94,3 +94,9 @@ Deno.test("U135 a passage row's metadata carries the ingestion contract fields",
   assertEquals(m.content_fingerprint, "sha256:" + row.fingerprint);
   assertEquals(m.sensitivity_tier, "personal");
 });
+
+Deno.test("U136 a passage row's metadata has type reference and topics [attachment, base name]", async () => {
+  const row = await passageRow(rowFor(), passage("text", [1, 1]), EMBEDDING, NOW);
+  assertEquals(row.metadata.type, "reference");
+  assertEquals(row.metadata.topics, ["attachment", "dishwasher-manual.pdf"]);
+});
