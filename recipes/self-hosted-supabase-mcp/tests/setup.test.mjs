@@ -153,7 +153,9 @@ test("U12 when key generation fails setup fails and leaves no .env or temporary 
   const co = makeCheckout();
   try {
     const r = runSetup(co, { STUB_GENKEYS_FAIL: "1" });
+    assert.equal(typeof r.code, "number", "setup exited, not killed");
     assert.notEqual(r.code, 0);
+    assert.match(r.out, /stub: generate-keys failed in /, "setup reached key generation");
     assert.equal(existsSync(envPath(co)), false, "no .env");
     const left = readdirSync(join(co.recipe, "supabase", "docker")).sort();
     assert.deepEqual(left, [".env.example", "docker-compose.yml", "utils"]);
@@ -316,7 +318,9 @@ test("U54 after a failed key generation no temporary .env remains under TMPDIR",
     const tmp = join(co.root, ".tmpdir");
     mkdirSync(tmp);
     const r = runSetup(co, { STUB_GENKEYS_FAIL: "1", TMPDIR: tmp });
+    assert.equal(typeof r.code, "number", "setup exited, not killed");
     assert.notEqual(r.code, 0);
+    assert.ok(r.out.includes(`stub: generate-keys failed in ${tmp}/ob1-setup.`), `key generation ran in a build folder under TMPDIR: ${r.out}`);
     assert.deepEqual(readdirSync(tmp), []);
   } finally { co.cleanup(); }
 });

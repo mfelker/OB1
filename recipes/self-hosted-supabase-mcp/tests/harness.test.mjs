@@ -19,6 +19,7 @@ test("H1 makeCheckout copies the recipe, adds the integration marker, and commit
     assert.ok(!existsSync(join(co.recipe, "tests")));
     assert.ok(existsSync(join(co.root, "integrations", "self-hosted-llm-mcp")));
     const st = spawnSync("git", ["status", "--porcelain"], { cwd: co.root, encoding: "utf8" });
+    assert.equal(st.status, 0, st.stderr);
     assert.equal(st.stdout, "");
   } finally { co.cleanup(); }
 });

@@ -51,7 +51,8 @@ export function fixtureEnvExample() {
  * Stand-in generate-keys.sh. With --update-env it replaces every Supabase key
  * in ./.env (its working directory) with fresh hex from openssl, printing each
  * KEY=value line as Supabase's script does. When
- * STUB_GENKEYS_FAIL=1 it writes one key and then fails, like an interrupted run.
+ * STUB_GENKEYS_FAIL=1 it writes one key and then fails, like an interrupted run, naming the
+ * folder it ran in (so a test can see where setup built the new .env).
  */
 function fixtureGenerateKeys() {
   const keys = SUPABASE_KEYS.join(" ");
@@ -64,7 +65,7 @@ for k in ${keys}; do
   v=$(openssl rand -hex 16)
   echo "$k=$v"
   sed "s|^$k=.*|$k=$v|" .env > .env.tmp && mv .env.tmp .env
-  if [ "\${STUB_GENKEYS_FAIL:-0}" = 1 ]; then echo "stub: generate-keys failed" >&2; exit 1; fi
+  if [ "\${STUB_GENKEYS_FAIL:-0}" = 1 ]; then echo "stub: generate-keys failed in $(pwd)" >&2; exit 1; fi
 done
 echo "Updating .env..."
 `;
