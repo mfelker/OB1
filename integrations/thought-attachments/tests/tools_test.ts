@@ -812,3 +812,26 @@ Deno.test("U258 remove_attachment without confirm deletes nothing and lists the 
   assertEquals(h.store.objects.size, objects);
   assertEquals(h.store.callNames().filter((m) => ["claim", "deleteObject", "removeAttachment"].includes(m)), []);
 });
+
+Deno.test("U259 remove_attachment with confirm claims, deletes the stored file, removes through the store, releases, and names what went", async () => {
+  const h = await harness();
+  const keep = await seed(h, "an unrelated thought");
+  const row = await storedRow(h, { derived_count: 3 });
+  addDerived(h, row.id, 3);
+  const path = row.storage_path as string;
+  const out = await call(h, "remove_attachment", { attachment_id: row.id, confirm: true });
+  assertEquals(out.isError, false);
+  assertEquals(out.data, { confirm: true, removed: true, file: "manual.pdf", derived_thoughts: 3, parent_note: false });
+  assertStringIncludes(out.text, "manual.pdf");
+  assertStringIncludes(out.text, "3 derived thoughts");
+  assertEquals(h.store.attachments, []);
+  assertEquals(h.store.derivedOf(row.id), []);
+  assertEquals(h.store.objects.has(path), false);
+  assert(h.store.thought(keep.id));
+  const calls = h.store.calls.filter((c) => ["claim", "deleteObject", "removeAttachment", "release"].includes(c.method));
+  assertEquals(calls.map((c) => c.method), ["claim", "deleteObject", "removeAttachment", "release"]);
+  assertEquals(calls[0].args, [row.id, "remove", h.settings.busySeconds]);
+  assertEquals(calls[1].args, [path]);
+  const token = calls[2].args[1];
+  assertEquals(calls[3].args, [row.id, token]);
+});

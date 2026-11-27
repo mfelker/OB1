@@ -346,14 +346,41 @@ export function buildServer(deps: Deps, services: Services): McpServer {
     const found = await resolveAttachment(deps, attachment_id);
     if ("failure" in found) return found.failure;
     const row = found.row;
-    const preview = await deps.store.removalPreview(row.id);
-    if ("error" in preview) return fail(preview.error);
-    const data = { confirm, file: row.file_name, derived_thoughts: preview.data.derived, parent_note: preview.data.noteWouldGo };
-    const lines = [
-      `Would remove the file ${row.file_name}, ${data.derived_thoughts} derived thoughts` + (data.parent_note ? " and the parent note" : "") + ".",
-      "Nothing was deleted. Call again with confirm true to remove it.",
-    ];
-    return reply(lines.join("\n"), data);
+    if (!confirm) {
+      const preview = await deps.store.removalPreview(row.id);
+      if ("error" in preview) return fail(preview.error);
+      const data = { confirm, file: row.file_name, derived_thoughts: preview.data.derived, parent_note: preview.data.noteWouldGo };
+      const lines = [
+        `Would remove the file ${row.file_name}, ${data.derived_thoughts} derived thoughts` + (data.parent_note ? " and the parent note" : "") + ".",
+        "Nothing was deleted. Call again with confirm true to remove it.",
+      ];
+      return reply(lines.join("\n"), data);
+    }
+    const claimed = await deps.store.claim(row.id, "remove", deps.settings.busySeconds);
+    if ("error" in claimed) return fail(claimed.error);
+    if ("busy" in claimed.data) return busyReply(claimed.data.busy);
+    const token = claimed.data.token;
+    try {
+      if (row.storage_path) {
+        const deleted = await deps.store.deleteObject(row.storage_path);
+        if ("error" in deleted) return fail(deleted.error);
+      }
+      const removed = await deps.store.removeAttachment(row.id, token);
+      if ("error" in removed) return fail(removed.error);
+      const data = {
+        confirm,
+        removed: true,
+        file: row.file_name,
+        derived_thoughts: removed.data.derived,
+        parent_note: removed.data.noteRemoved,
+      };
+      return reply(
+        `Removed the file ${row.file_name} and ${data.derived_thoughts} derived thoughts` + (data.parent_note ? " and the parent note" : "") + ".",
+        data,
+      );
+    } finally {
+      await deps.store.release(row.id, token);
+    }
   });
 
   server.registerTool("find_orphan_attachments", {
