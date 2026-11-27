@@ -729,3 +729,20 @@ begin
   if par <> 1 then raise exception 'U96: the parent was removed'; end if;
   if other_n <> 2 or other_row <> 1 then raise exception 'U96: the other attachment lost data (% thoughts, % row)', other_n, other_row; end if;
 end $$;
+
+-- U97: remove without a valid claim is refused and deletes nothing
+do $$
+declare p uuid := pg_temp.mk_parent(); a uuid := pg_temp.mk_att(p, 'processed'); refused_wrong boolean := false; refused_expired boolean := false; n bigint; rows_ bigint;
+begin
+  perform attachment_write_derived(a, 'tok', pg_temp.rows_json('u97 ' || a), '{"state":"processed"}'::jsonb);
+  begin perform attachment_remove(a, 'wrong'); exception when others then refused_wrong := sqlerrm like '%claim%'; end;
+  update thought_attachments set busy_until = now() - interval '1 second' where id = a;
+  begin perform attachment_remove(a, 'tok'); exception when others then refused_expired := sqlerrm like '%claim%'; end;
+  select count(*) into n from thoughts where metadata->>'attachment_id' = a::text;
+  select count(*) into rows_ from thought_attachments where id = a;
+  delete from thoughts where metadata->>'attachment_id' = a::text;
+  delete from thought_attachments where id = a;
+  delete from thoughts where id = p;
+  if not refused_wrong or not refused_expired then raise exception 'U97: not refused (wrong %, expired %)', refused_wrong, refused_expired; end if;
+  if n <> 1 or rows_ <> 1 then raise exception 'U97: something was deleted (% thoughts, % rows)', n, rows_; end if;
+end $$;
