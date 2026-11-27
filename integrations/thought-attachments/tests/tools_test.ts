@@ -39,6 +39,12 @@ function settingsWith(overrides: Record<string, string | undefined> = {}): Setti
   return result.settings;
 }
 
+/** Seeded `Deps.randomBytes`: call k returns n bytes of value k, so ids and page tokens are the same on every run. */
+function seededBytes(): (n: number) => Uint8Array {
+  let k = 0;
+  return (n) => new Uint8Array(n).fill(++k & 0xff);
+}
+
 async function harness(overrides: Record<string, string | undefined> = {}) {
   const clock = new Clock();
   const store = new FakeStore({ clock, dimension: DIM });
@@ -52,7 +58,7 @@ async function harness(overrides: Record<string, string | undefined> = {}) {
       embeddings,
       vision: { configured: false, caption: () => Promise.resolve({ error: "none" }) },
       now: clock.now,
-      randomBytes: (n) => crypto.getRandomValues(new Uint8Array(n)),
+      randomBytes: seededBytes(),
     },
     { finish: finish.finish },
   );
