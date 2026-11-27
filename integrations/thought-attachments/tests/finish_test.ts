@@ -50,6 +50,17 @@ async function rig(overrides: Record<string, string | undefined> = {}): Promise<
   return { clock, store, ff, settings, deps, finish: createFinisher(deps).finish, parent };
 }
 
+/** A finisher over the same store and fetch, with other settings (a newly configured model, a lowered threshold). */
+function reconfigured(r: Rig, overrides: Record<string, string | undefined>): Rig["finish"] {
+  const settings = settingsWith(overrides);
+  return createFinisher({
+    ...r.deps,
+    settings,
+    embeddings: createEmbeddingClient(settings, r.ff.fetch),
+    vision: createVisionClient(settings, r.ff.fetch),
+  }).finish;
+}
+
 /** A pending attachment with its uploaded bytes in the store. */
 function pending(
   r: Rig,
@@ -269,4 +280,20 @@ Deno.test("U194 a not_captioned photo finished again with vision working ends pr
   assertEquals(row.state, "processed");
   assertEquals(row.state_reason, null);
   assertEquals(row.caption_model, "test/vision-model");
+});
+
+Deno.test("U195 rebuild on a processed photo gives exactly one caption by the newly configured model and updates caption_model", async () => {
+  const r = await rig();
+  const att = pending(r, jpegBytes(2000));
+  assertEquals((await r.finish(att.id, {})).state, "processed");
+  r.ff.on("POST", VISION_URL, visionResponder("a blue door", "new/model"));
+  const finishNew = reconfigured(r, { VISION_MODEL: "new/model" });
+  const out = await finishNew(att.id, { rebuild: true });
+  assertEquals(out.state, "processed");
+  assertEquals(out.derived_count, 1);
+  assertEquals(out.caption, "a blue door");
+  const derived = r.store.derivedOf(att.id);
+  assertEquals(derived.length, 1);
+  assertStringIncludes(derived[0].content, "a blue door");
+  assertEquals(r.store.attachment(att.id)?.caption_model, "new/model");
 });

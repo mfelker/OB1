@@ -14,15 +14,16 @@ async function sha256(bytes: Uint8Array): Promise<string> {
 export function createFinisher(deps: Deps): Services {
   const { store, settings } = deps;
 
-  async function finish(id: string, _opts: { rebuild?: boolean }): Promise<FinishOutcome> {
+  async function finish(id: string, opts: { rebuild?: boolean }): Promise<FinishOutcome> {
     const got = await store.getAttachment(id);
     if ("error" in got || typeof got.data === "string") throw new Error("attachment not found");
     const row = got.data;
-    const claim = await store.claim(row.id, "finish", settings.busySeconds);
+    const rebuild = opts.rebuild === true && row.state === "processed";
+    const claim = await store.claim(row.id, rebuild ? "rebuild" : "finish", settings.busySeconds);
     if ("error" in claim || !("token" in claim.data)) throw new Error("claim failed");
     const token = claim.data.token;
     try {
-      return await run(row, token);
+      return await run(row, token, rebuild);
     } finally {
       await store.release(row.id, token);
     }
@@ -45,8 +46,8 @@ export function createFinisher(deps: Deps): Services {
     return { state: "refused", reason, derived_count: 0 };
   }
 
-  async function run(row: AttachmentRow, token: string): Promise<FinishOutcome> {
-    if (row.state === "processed") return outcomeOf(row);
+  async function run(row: AttachmentRow, token: string, rebuild: boolean): Promise<FinishOutcome> {
+    if (row.state === "processed" && !rebuild) return outcomeOf(row);
     const path = row.storage_path as string;
     const info = await store.objectInfo(path);
     if ("error" in info || info.data === null) throw new Error("no object");
