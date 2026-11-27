@@ -485,7 +485,7 @@ Deno.test("A10 an MCP request with no key or a wrong key gets an authorization e
   });
 });
 
-todo("A11 tools/list returns exactly the seven tools with the contract's annotations", async () => {
+Deno.test("A11 tools/list returns exactly the seven tools with the contract's annotations", async () => {
   const w = world();
   const { message } = await mcpCall(w.app.fetch, "tools/list", {}, BRAIN_KEY);
   const tools = ((message?.result as any)?.tools ?? []) as any[];
