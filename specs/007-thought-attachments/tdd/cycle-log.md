@@ -2723,3 +2723,111 @@ The final audit's survivors were re-applied from its own `fresh.json`, each on a
 - **N21:** now killed (`FAILED \| 402 passed \| 1 failed`).
 - **Still surviving, as the audit graded them:** N10 (no observable effect), N12, N15 and N24 (LOW; each gives `ok \| 403 passed`), and the SQL mutants S1 and S2 (MED, claim at exactly `busy_until`), S8 (MED, 120-character cut) and S5 (LOW).
 - No HIGH remains. Under the owner's rule (2026-11-27), these MED/LOW items are recorded follow-ups (T118–T120), not another audit loop.
+
+## Self-hosted fixes T121, T122 (live T077 findings; branch head `20a2d238`), folded from cycle-log.d/r4.md
+
+Append only. Newest last. Worktree `/Users/mfelker/Projects/ob1/.worktrees/contrib-thought-attachments`, branch `contrib/mfelker/thought-attachments`, base `4044fde`, folder `F` = `integrations/thought-attachments`.
+
+Single test (from `F`): `deno test --node-modules-dir=none --no-prompt --allow-env --allow-read --filter "/^<id> /" tests/`. Suite: the same without `--filter` (403 passed at the base). A first-run pass got deliberate mutants: each edit was applied in place, checked with grep, and restored from a saved copy (`git diff --stat -- src` empty afterwards).
+
+## T121: U395 (EMBEDDING_DIMENSIONS default and override)
+
+`tests/settings_test.ts`: `settingsWith().embeddingDimensions` is 1536, and with `EMBEDDING_DIMENSIONS=1024` it is 1024.
+
+| Step | Evidence |
+| --- | --- |
+| scaffold | the first run was a type error (`TS2339 Property 'embeddingDimensions' does not exist on type 'Settings'`), so the seam came first: `Settings.embeddingDimensions: number` in `src/types.ts` and a stub `embeddingDimensions: 0` in `src/settings.ts` |
+| red | `FAILED \| 0 passed \| 1 failed`: actual `[0, 0]`, expected `[1536, 1024]` |
+| green | `embeddingDimensions: num("EMBEDDING_DIMENSIONS", 1536)` |
+| suite | 404 passed, 0 failed |
+| commit | `037dfbb` |
+
+## T121: U396 (an invalid EMBEDDING_DIMENSIONS is a named problem)
+
+`abc`, `0`, `-1` and `1536.5` each give exactly `[{ setting: "EMBEDDING_DIMENSIONS", reason: "must be a positive whole number" }]`.
+
+| Step | Evidence |
+| --- | --- |
+| first run | passed (the shared whole-number parser already covers it) |
+| mutant | `src/settings.ts:34` to `Number(getEnv("EMBEDDING_DIMENSIONS") ?? 1536)`; red `1 failed`: `Error: expected settings problems, got ok settings` |
+| green | restored byte for byte |
+| suite | 405 passed, 0 failed |
+| commit | `78403c5` |
+
+## T121: U397 (every request carries dimensions)
+
+`tests/embeddings_test.ts`: at the default, one request with `dimensions` 1536. With `EMBEDDING_DIMENSIONS=1024` and batch size 1, two requests, each with `dimensions` 1024.
+
+| Step | Evidence |
+| --- | --- |
+| red | `1 failed`: actual `[[undefined], [undefined, undefined]]`, expected `[[1536], [1024, 1024]]` |
+| green | `src/embeddings.ts` sends `dimensions: settings.embeddingDimensions` in the body |
+| suite | U161 failed on its exact body, so its expected body now includes `dimensions: 1536` (the exact body is still pinned); then 406 passed, 0 failed |
+| commit | `a4d2105` |
+
+## T121: U398 (one retry without dimensions)
+
+A 400 with `error.message` "This model does not support specifying dimensions." and then a good reply: the call returns the retry's vector. The bodies are `{ model, input, dimensions: 1536 }`, then `{ model, input }`.
+
+| Step | Evidence |
+| --- | --- |
+| red | `1 failed`: actual `bodies` held only the first request, and no `data` |
+| green | `src/embeddings.ts`: a `post(body)` helper. A 4xx whose body matches `/dimension\|matryoshka/i` (spec 004 `model_client.ts`) is retried once without `dimensions`. The FR-007 length check in `src/finish.ts` is unchanged |
+| suite | 407 passed, 0 failed |
+| commit | `b384266` |
+
+## T121: U399 (exactly one retry, and only for a dimensions 4xx)
+
+Three cases. A dimensions 400 that is refused again ends with that HTTP 400 reason after 2 requests. A 400 "input is too long" makes 1 request. A 503 that mentions dimensions makes 1 request.
+
+| Step | Evidence |
+| --- | --- |
+| first run | passed |
+| mutant M1 | message test dropped (retry on any 4xx); red `1 failed`: `requests: 2`, expected `requests: 1` |
+| mutant M2 | status test dropped (retry a 5xx too); red `1 failed`: `requests: 2`, expected `requests: 1` |
+| mutant M3 | a second retry after a refused first retry; red `1 failed`: `requests: 3`, expected `requests: 2` |
+| green | each restored byte for byte |
+| suite | 408 passed, 0 failed |
+| commit | `9cf6b66` |
+
+## T122: U400 (no src/ file reads the filesystem at run time)
+
+`tests/imports_test.ts` scans every `src/` file for `Deno.readFile`, `Deno.readTextFile` (and their sync forms), `Deno.open`, `readDir`, `stat`, `lstat`, `realPath`, and `import.meta.url`, `resolve`, `filename` and `dirname`. Positive controls: the scan reaches `src/app.ts` and `src/embeddings.ts`, and a planted text flags `Deno.readFile`, `import.meta.url` and `Deno.readTextFileSync`.
+
+| Step | Evidence |
+| --- | --- |
+| red | `1 failed`: actual `["src/app.ts: import.meta.url", "src/app.ts: Deno.readFile"]`, expected `[]` |
+| green | new `src/upload_page.ts` exports `UPLOAD_PAGE_HTML` (generated from `upload-page.html` as a `String.raw` template; the file has no backtick, `${` or CR). `src/app.ts` imports it and serves it on `GET /upload`. `upload-page.html` is unchanged. U306 still passes |
+| suite | 409 passed, 0 failed |
+| commit | `a7b2773` |
+
+## T122: U401 (/upload serves exactly the module's HTML as text/html)
+
+`tests/app_test.ts`: status 200, content type `text/html`, body equal to `UPLOAD_PAGE_HTML`.
+
+| Step | Evidence |
+| --- | --- |
+| first run | passed |
+| mutant M4 | `src/app.ts:100` serves `UPLOAD_PAGE_HTML + "\n"`; red `1 failed`: the body ends with an extra newline |
+| mutant M5 | `src/app.ts:100` serves `text/plain`; red `1 failed`: actual `type: "text/plain"` |
+| green | each restored byte for byte |
+| suite | 410 passed, 0 failed |
+| commit | `c5d8ee0` |
+
+## T122: U402 (drift: the module equals upload-page.html byte for byte)
+
+`tests/imports_test.ts`: the UTF-8 bytes of `UPLOAD_PAGE_HTML` have the file's length (4713) and no differing byte.
+
+| Step | Evidence |
+| --- | --- |
+| first run | passed |
+| mutant M6 | `var API_ADDRESS = "x";` in `src/upload_page.ts`; red `1 failed`: actual `firstDifference: 810, length: 4714` |
+| mutant M7 | the module's last newline dropped; red `1 failed`: actual `length: 4712` |
+| green | each restored byte for byte |
+| refactor | dynamic import changed to a static import; 1 passed |
+| suite | 411 passed, 0 failed |
+| commit | `5116996` |
+
+## Close
+
+`deno lint` and `deno check --node-modules-dir=none index.ts src/ tests/` exit 0. `git status --short` is empty.
