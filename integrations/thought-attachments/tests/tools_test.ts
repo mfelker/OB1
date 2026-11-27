@@ -1,8 +1,6 @@
 /** tools (T027-T030, T041, T049, T050, T063, T064): contracts/mcp-tools.md, driven through the MCP client over an in-memory transport. */
 import { assert, assertEquals, assertStringIncludes } from "jsr:@std/assert@1.0.19";
 import { buildServer } from "../src/tools.ts";
-import { noteMetadata } from "../src/derived.ts";
-import { curlLine, pageLink, publicUrl } from "../src/links.ts";
 import { loadSettings } from "../src/settings.ts";
 import type { EmbeddingClient, FinishOutcome, R, Services, Settings } from "../src/types.ts";
 import { Clock } from "./helpers/clock.ts";
@@ -385,8 +383,13 @@ Deno.test("U238 the attach_file result has the ids, deadline, upload, curl line,
   const upload = d.upload as { url: string; method: string; headers: Record<string, string> };
   assertEquals(upload.method, "PUT");
   assertEquals(upload.headers, { "content-type": "application/pdf", "x-upsert": "false" });
-  assertEquals(d.curl, curlLine({ url: upload.url, method: "PUT", headers: upload.headers }, "manual.pdf"));
-  assertEquals(d.page_link, pageLink(h.settings, (d.page_link as string).split("#t=")[1]));
+  // Seeded bytes: the id is call 1's bytes (0x01, with the UUID version and variant bits), the page token call 2's (0x02).
+  const id = "01010101-0101-4101-8101-010101010101";
+  const signedUrl = `https://brain.example.test/storage/v1/object/upload/sign/ob1-files/attachments/${id}/manual.pdf?token=${h.store.signedUploads[0].token}`;
+  assertEquals(row.id, id);
+  assertEquals(upload.url, signedUrl);
+  assertEquals(d.curl, `curl -X PUT -H 'content-type: application/pdf' -H 'x-upsert: false' -T 'manual.pdf' '${signedUrl}'`);
+  assertEquals(d.page_link, "https://brain.example.test/functions/v1/thought-attachments/upload#t=" + "02".repeat(32));
   assertEquals(d.limits, { max_bytes: 25 * 1024 * 1024, max_pages: 50 });
   assertStringIncludes(out.text, String(d.short_id));
   assertStringIncludes(out.text, upload.url);
@@ -399,8 +402,7 @@ Deno.test("U239 upload.url is the signed link passed through publicUrl", async (
   const signed = h.store.signedUploads[0];
   const url = (out.data.upload as { url: string }).url;
   assert(signed.url.startsWith("http://supabase.internal:8000/"));
-  assertEquals(url, publicUrl(h.settings, signed.url));
-  assert(url.startsWith("https://brain.example.test/storage/v1/object/upload/sign/ob1-files/attachments/"));
+  assertEquals(url, `https://brain.example.test/storage/v1/object/upload/sign/ob1-files/${signed.path}?token=${signed.token}`);
 });
 
 Deno.test("U240 a given sensitivity_tier of restricted is stored on the row", async () => {
@@ -491,7 +493,12 @@ Deno.test("U244 attach_file with note embeds the text and saves it through inser
   const note = h.store.thoughts[0];
   assertEquals(note.content, "Furnace filters live on the garage shelf");
   assertEquals(note.embedding, VEC);
-  assertEquals(note.metadata, noteMetadata(h.clock.now()));
+  assertEquals(note.metadata, {
+    type: "observation",
+    source: "thought-attachments",
+    source_type: "thought_attachments_note",
+    imported_at: "2026-01-01T12:00:00.000Z",
+  });
   const row = h.store.attachments[0];
   assertEquals(row.parent_thought_id, note.id);
   assertEquals(row.parent_created_here, true);
@@ -615,8 +622,8 @@ Deno.test("U251 get_attachment gives a stored file a download link through publi
     const signed = h.store.signedDownloads.at(-1);
     assertEquals(signed?.path, row.storage_path, state);
     assertEquals(signed?.seconds, 300);
-    assertEquals(link, publicUrl(h.settings, signed?.url as string), state);
-    assert(link.startsWith("https://brain.example.test/storage/v1/object/sign/ob1-files/"), state);
+    const token = new URL(signed?.url as string).searchParams.get("token");
+    assertEquals(link, `https://brain.example.test/storage/v1/object/sign/ob1-files/${row.storage_path}?token=${token}`, state);
     assertEquals(out.data.download_link_seconds, 300);
     assertStringIncludes(out.text, link);
     assertStringIncludes(out.text, "300 seconds");
@@ -692,7 +699,8 @@ Deno.test("U353 a cut-off finish reads failed, the run did not finish, and its s
   assertEquals(out.data.state, "failed");
   assertEquals(out.data.reason, "the run did not finish");
   const link = out.data.download_link as string;
-  assertEquals(link, publicUrl(h.settings, h.store.signedDownloads[0].url));
+  const token = new URL(h.store.signedDownloads[0].url).searchParams.get("token");
+  assertEquals(link, `https://brain.example.test/storage/v1/object/sign/ob1-files/${row.storage_path}?token=${token}`);
   assertStringIncludes(out.text, link);
 });
 
