@@ -5,7 +5,7 @@
  * parameter sent here against schema.sql.
  */
 import { createClient } from "@supabase/supabase-js";
-import type { R, Settings, Store, ThoughtMatch } from "./types.ts";
+import type { BusyOp, R, Settings, Store, ThoughtMatch } from "./types.ts";
 
 const notYet = (): Promise<never> => Promise.reject(new Error("not implemented"));
 
@@ -59,7 +59,9 @@ export function createSupabaseStore(
     orphans: notYet,
     attachmentForPageToken: notYet,
     consumePageToken: notYet,
-    claim: notYet,
+    claim(id, op, seconds) {
+      return rpc<{ token: string } | { busy: BusyOp }>("attachment_claim", { p_id: id, p_op: op, p_seconds: seconds });
+    },
     release: notYet,
     writeDerived: notYet,
     setState: notYet,

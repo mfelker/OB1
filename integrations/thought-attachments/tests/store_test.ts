@@ -106,3 +106,11 @@ Deno.test("U72 embeddingDimension returns the dimension function's number", asyn
   ff.on("POST", `${REST}/rpc/attachment_embedding_dimension`, { body: 1536 });
   assertEquals(await store.embeddingDimension(), { data: 1536 });
 });
+
+Deno.test("U73 claim maps a refused claim to busy and a success to a token", async () => {
+  const { store, ff } = setup();
+  ff.on("POST", `${REST}/rpc/attachment_claim`, { body: { token: "tok-1" } }, { body: { busy: "rebuild" } });
+  assertEquals(await store.claim("att-1", "finish", 410), { data: { token: "tok-1" } });
+  assertEquals(ff.requests[0].body, { p_id: "att-1", p_op: "finish", p_seconds: 410 });
+  assertEquals(await store.claim("att-1", "remove", 410), { data: { busy: "rebuild" } });
+});
