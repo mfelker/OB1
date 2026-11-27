@@ -100,3 +100,13 @@ Deno.test("U136 a passage row's metadata has type reference and topics [attachme
   assertEquals(row.metadata.type, "reference");
   assertEquals(row.metadata.topics, ["attachment", "dishwasher-manual.pdf"]);
 });
+
+Deno.test("U137 a passage row's provenance is deterministic_conversion with locator, artifact and review status", async () => {
+  const row = await passageRow(rowFor(), passage("text", [12, 13]), EMBEDDING, NOW);
+  assertEquals(row.metadata.provenance, {
+    method: "deterministic_conversion",
+    source_locator: "pages 12–13",
+    artifact: "dishwasher-manual.pdf",
+    review_status: "unreviewed",
+  });
+});

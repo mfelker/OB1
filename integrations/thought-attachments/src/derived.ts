@@ -36,6 +36,12 @@ export async function passageRow(
     sensitivity_tier: row.sensitivity_tier,
     type: "reference",
     topics: ["attachment", row.file_name],
+    provenance: {
+      method: "deterministic_conversion",
+      source_locator: locatorFor(passage.pages),
+      artifact: row.file_name,
+      review_status: "unreviewed",
+    },
   };
   return { content, fingerprint: hash, metadata, embedding };
 }
