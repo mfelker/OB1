@@ -1,7 +1,7 @@
 /** tools (T027-T030, T041, T049, T050, T063, T064): contracts/mcp-tools.md, driven through the MCP client over an in-memory transport. */
 import { assert, assertEquals, assertStringIncludes } from "jsr:@std/assert@1.0.19";
 import { buildServer } from "../src/tools.ts";
-import { curlLine, pageLink } from "../src/links.ts";
+import { curlLine, pageLink, publicUrl } from "../src/links.ts";
 import { loadSettings } from "../src/settings.ts";
 import type { EmbeddingClient, FinishOutcome, R, Services, Settings } from "../src/types.ts";
 import { Clock } from "./helpers/clock.ts";
@@ -383,4 +383,15 @@ Deno.test("U238 the attach_file result has the ids, deadline, upload, curl line,
   assertEquals(d.limits, { max_bytes: 25 * 1024 * 1024, max_pages: 50 });
   assertStringIncludes(out.text, String(d.short_id));
   assertStringIncludes(out.text, upload.url);
+});
+
+Deno.test("U239 upload.url is the signed link passed through publicUrl", async () => {
+  const h = await harness();
+  const parent = await seed(h, "dishwasher");
+  const out = await call(h, "attach_file", { thought_id: parent.id, ...PDF });
+  const signed = h.store.signedUploads[0];
+  const url = (out.data.upload as { url: string }).url;
+  assert(signed.url.startsWith("http://supabase.internal:8000/"));
+  assertEquals(url, publicUrl(h.settings, signed.url));
+  assert(url.startsWith("https://brain.example.test/storage/v1/object/upload/sign/ob1-files/attachments/"));
 });
