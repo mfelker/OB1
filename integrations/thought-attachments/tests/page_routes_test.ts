@@ -184,3 +184,12 @@ Deno.test("U270 an unknown token gets 410 with the expired message", async () =>
   assertEquals([unknown.status, (await unknown.json()).error, missing.status, (await missing.json()).error], [410, EXPIRED, 410, EXPIRED]);
   assertEquals([r.store.signedUploads.length, r.store.attachment(row.id)!.declared_type], [0, null]);
 });
+
+Deno.test("U271 a used token gets 410 with the same message", async () => {
+  const r = await rig();
+  const row = await r.seed();
+  await r.store.consumePageToken(row.id, await sha256Hex(TOKEN));
+  const res = await r.post("/page/start", { token: TOKEN, ...PICK });
+  assertEquals([res.status, (await res.json()).error], [410, EXPIRED]);
+  assertEquals(r.store.signedUploads.length, 0);
+});
