@@ -85,7 +85,7 @@ A new remote MCP integration, `integrations/thought-attachments/`, links real fi
   - tokens are stored only as hashes; links carry no brain key;
   - dependencies are MIT or compatible (`unpdf`, `pdf-lib`);
   - no binaries and no profanity.
-- [x] **VII. Sync discipline**: fetch `upstream` and cut from the current `upstream/main` in T001. Fork `main` is 5 commits ahead of origin with spec work only; push when the owner asks.
+- [x] **VII. Sync discipline**: fetch `upstream` and cut from the current `upstream/main` in T001. Fork `main` is 6 commits ahead of origin with spec work only; push when the owner asks.
 
 **Post-design re-check (after Phase 1)**: all seven still pass. The design adds no fork-only change to upstream code, and the only change to `thoughts` is R16's guarded column.
 

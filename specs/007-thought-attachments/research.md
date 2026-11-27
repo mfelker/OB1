@@ -106,8 +106,9 @@ Each item records the decision, why, and what else was considered. "Probed" mean
 
 - **Decision**:
   - Finish and remove first claim the attachment with a single conditional update that sets an operation name and an expiry, and that succeeds only if no unexpired claim exists (FR-026).
-  - The expiry defaults to **160 s**: just over Cloud Free's 150 s wall clock and the self-hosted 150 s idle timeout. Paid-plan Cloud owners raise it to 410 s.
-- **Why**: a conditional update is atomic in Postgres without holding locks across a long call; an expired claim makes a killed run recoverable (Round 2, Q2).
+  - Each claim carries a random **claim token**. The write and remove functions succeed only for the caller that still holds an unexpired claim with that token, so a late run that outlived its claim can never commit over a newer one.
+  - The expiry default depends on the platform: **160 s on Supabase Cloud** (just over Free's 150 s wall clock) and **410 s elsewhere** (just over the self-hosted router's 400 s worker timeout, read: official `volumes/functions/main/index.ts`). Paid-plan Cloud owners set 410 s.
+- **Why**: a conditional update is atomic in Postgres without holding locks across a long call; an expired claim makes a killed run recoverable (Round 2, Q2); the claim token closes the gap between a claim expiring and a slow run finishing.
 
 ## R11: The thought lookup is safe from filter injection
 
@@ -121,7 +122,7 @@ Each item records the decision, why, and what else was considered. "Probed" mean
 
 - **Decision**:
   - Use the bucket named by `ATTACHMENTS_BUCKET`, default `ob1-files`: the private bucket spec 006 already creates for this feature (006 FR-009).
-  - Setup creates it if missing, as **private**, limited to the accepted MIME types and the largest size cap.
+  - Setup creates it if missing, as **private** and limited to the accepted MIME types. It sets **no size limit of its own**, so the platform's limit applies (50 MB on Cloud Free and self-hosted by default). Oversized files therefore reach finishing on both platforms and get the same `refused` outcome (FR-004, SC-013), rather than a Storage error on Cloud only.
   - Files are stored under `attachments/<attachment id>/<base name>`.
 - **How**: `schema.sql` inserts the bucket row into `storage.buckets` with `on conflict do nothing`, and only when the `storage` schema exists. Fork CI's test database has no `storage` schema, so `verify.sql` checks the bucket only when it exists.
 - **Why**: on 006 the bucket exists, and on Cloud setup creates it; one name everywhere keeps 008's backups simple.
@@ -153,6 +154,13 @@ Each item records the decision, why, and what else was considered. "Probed" mean
 ## R16: The duplicate rule needs the core's `content_fingerprint` step
 
 - **Decision**:
-  - `schema.sql` adds `thoughts.content_fingerprint` and its partial unique index with `if not exists`, exactly as core guide step 2.6 does (`docs/01-getting-started.md` ~lines 191–196). This is a no-op on a brain that already followed the guide.
+  - `schema.sql` adds `thoughts.content_fingerprint` and its partial unique index with `if not exists`, exactly as core guide step 2.6 does, **reusing the guide's index name `idx_thoughts_fingerprint`** (`docs/01-getting-started.md` ~lines 191–196). This is a no-op on a brain that already followed the guide, and never creates a second index.
+  - Upstream's gate (rule 5) refuses only `ALTER TABLE thoughts DROP|ALTER COLUMN` and allows `ADD COLUMN` (read: `.github/workflows/ob1-gate-v2.yml` ~line 252), so this passes.
   - The integration's write function (R9) relies on that index.
 - **Why**: fork CI's `bootstrap.sql` creates `thoughts` without that column (read: `.fork/ci/sql/bootstrap.sql`), and some brains may predate step 2.6. Adding a column is allowed by constitution Principle I and CLAUDE.md. Existing columns are never altered.
+
+## R17: A note that already exists becomes the parent as-is
+
+- **Decision**: when `attach_file` is given `note` text whose fingerprint matches an existing thought, the existing thought becomes the parent and the result says so. It is **not** marked as created by this attachment, so the FR-016 exception can never remove it. Only a note this integration actually inserts is marked as created here.
+- **Consequence**: retrying after an expired link with the same note attaches the new file to the note the first attempt created. When the expired attachment is later removed, the note stays, because another attachment points to it (FR-016).
+- **Derived from**: FR-016 (the parent untouched except for a note created by that attachment) and FR-022 (never take ownership of an existing thought). It adds no new state.

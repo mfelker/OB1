@@ -11,7 +11,7 @@ The live acceptance runs, one on Supabase Cloud and one on spec 006's self-hoste
   - a real service manual PDF of 50 pages or fewer, with a text layer;
   - one scanned PDF;
   - 5 storage photos;
-  - a 40 MB file to use as a fake JPEG.
+  - a 15 MB file to use as a fake JPEG (over the 10 MB image cap, under the platform's 50 MB Storage limit).
 - The sample question list for SC-001 and SC-002, written before the run.
 
 ## Setup
@@ -31,7 +31,7 @@ The live acceptance runs, one on Supabase Cloud and one on spec 006's self-hoste
 | 3 | Ask the AI to fetch the manual by the short id shown in a search result | The download is byte-identical to the original (compare hashes); the same link fails after 10 minutes | SC-003, SC-012 |
 | 4 | "The filters are on this shelf" with a new photo: the AI starts with `note`; open the page link on the phone and take a photo with the default camera | The page shows the caption; core search for the object finds the caption, and also the note | SC-002, SC-008, SC-010, SC-011 |
 | 5 | Attach the scanned PDF | `scanned`; no passages | FR-010 |
-| 6 | Upload the 40 MB file declared as a 4 MB JPEG | `refused` with the actual size; the file is gone; the orphan check lists it | SC-013 |
+| 6 | Upload the 15 MB file declared as a 4 MB JPEG | `refused` with the actual size; the file is gone; the orphan check lists it | SC-013 |
 | 7 | Stop the vision model, finish a photo, start it again, finish again | `not_captioned`, then `processed` with one caption | SC-015 |
 | 8 | Finish from the page and from the AI at once | One is refused as busy; one caption | SC-014 |
 | 9 | Open a page link 65 minutes after it was made | The "expired" message; the orphan check lists it | SC-017 |

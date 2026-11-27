@@ -13,13 +13,15 @@ An attachment id may be given in full or as the 8-character short id shown in so
 
 ## `attach_file`
 
-- **Input**: `file_name`; `declared_type`; `declared_size` (bytes); exactly one of `thought_id` or `note` (text); optional `sensitivity_tier`.
+- **Input**: exactly one of `thought_id` or `note` (text); for a command upload, `file_name`, `declared_type` and `declared_size` (exact bytes); for a phone upload these may be omitted, with an optional `expected_kind` (`photo` or `pdf`), and the page declares the picked file instead (contracts/upload-page.md); optional `sensitivity_tier`.
 - **Refusals**, before any note is saved or any link is made (FR-003), each changing nothing:
   - a type outside PDF, JPEG, PNG and WebP. HEIC names, or a HEIC declared type, get "share it as JPEG", with the steps to do that;
   - a size over the cap for its type, naming the cap and the declared size;
   - an unknown `thought_id`;
   - both or neither of `thought_id` and `note`;
   - the same file name, type and size already pending on that parent. The result points to it.
+  - The type and size checks apply to the details given here; when they are omitted, the page's declaration is checked the same way before any upload.
+- **Note text that already exists** as a thought makes that thought the parent; the result says "attached to your existing thought" (R17).
 - **Result**:
   - `attachment_id` and its short id;
   - `parent_thought_id`, and whether the parent was created now;
@@ -37,7 +39,7 @@ An attachment id may be given in full or as the 8-character short id shown in so
 - **Behaviour**, observable from the result:
   - **Busy**: if another finish, rebuild or remove holds an unexpired claim, it is refused at once with "busy (finishing / rebuilding / removing), try again shortly" and changes nothing (FR-026).
   - **No file**: if the upload is missing, it returns "no file uploaded yet" (or "upload window expired" after the deadline); the state is unchanged.
-  - **Checks**: the stored file's real type, size and page count, and that its upload time is before the deadline (FR-004, R8). On failure the file is deleted, the state becomes `refused` with the actual values, and nothing else is written (FR-004, SC-013).
+  - **Checks**: the stored file's real type and exact size equal the declaration (from the attach call or the page), its page count is within the cap, and its upload time is before the deadline (FR-004, R8). On failure the file is deleted, the state becomes `refused` with the actual values, and nothing else is written (FR-004, SC-013).
   - **PDF with text**: passages are written as derived thoughts with source lines, and the state becomes `processed`, with a passage count (FR-005, FR-025, FR-028).
   - **PDF without text**: the state becomes `scanned`, with no passages, and the result says text search won't cover it yet (FR-010).
   - **Photo**: the caption is written as a derived thought and the state becomes `processed`. If the vision model fails or isn't set, the state becomes `not_captioned` with the reason (FR-006, User Story 2 #7).

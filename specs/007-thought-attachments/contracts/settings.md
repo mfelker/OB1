@@ -18,7 +18,7 @@ Environment variables for the Edge Function (constitution Principle II: secrets 
 | `SCANNED_MIN_CHARS_PER_PAGE` | 20 | Below this average, a PDF is `scanned` | FR-010, R2 |
 | `UPLOAD_LINK_MINUTES` | 60 | Upload window for the direct link and the page | FR-001, R8 |
 | `DOWNLOAD_LINK_SECONDS` | 600 | Download link lifetime | FR-014 |
-| `BUSY_SECONDS` | 160 | Busy-mark expiry (paid Cloud plans: 410) | FR-026, R10 |
+| `BUSY_SECONDS` | 160 on Supabase Cloud, 410 elsewhere | Busy-mark expiry (paid Cloud plans: set 410) | FR-026, R10 |
 | `PUBLIC_BASE_URL` | `SUPABASE_PUBLIC_URL`, else `SUPABASE_URL` | Address put in every returned link; on 006, an address the phone can reach | R6 |
 | `UPLOAD_PAGE_URL` | `<function URL>/upload` | Where the phone page lives; on Cloud, the owner's published copy | R5 |
 

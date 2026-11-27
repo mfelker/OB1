@@ -10,13 +10,14 @@ One row per file.
 |-------|------|-------|
 | `id` | uuid, primary key | Generated. Its short form (the first 8 hex characters) appears in source lines and is accepted wherever an attachment id is (FR-025). |
 | `parent_thought_id` | uuid, not null | Must exist in `thoughts` when the attachment starts (FR-001, FR-016). It has **no foreign key**: a parent deleted elsewhere leaves an orphan for FR-021 rather than cascading. |
-| `parent_created_here` | boolean, not null, default false | True when the parent note was created by starting this attachment (Round 3, Q1). |
-| `file_name` | text, not null | Base name only. Path parts and control characters are stripped (spec edge case, FR-009). |
-| `declared_type` | text, not null | One of `application/pdf`, `image/jpeg`, `image/png`, `image/webp`. |
-| `declared_size` | bigint, not null | Bytes. At most the cap for its type (FR-003). |
+| `parent_created_here` | boolean, not null, default false | True only when starting this attachment inserted the parent note. A note matching an existing thought leaves it false (Round 3, Q1; R17). |
+| `file_name` | text | Base name only. Path parts and control characters are stripped (spec edge case, FR-009). Empty until declared. |
+| `declared_type` | text | One of `application/pdf`, `image/jpeg`, `image/png`, `image/webp`. Set by the attach call (command upload) or by the page's declaration (phone upload); empty until then. |
+| `declared_size` | bigint | Exact bytes. At most the cap for its type (FR-003). Set like `declared_type`. |
+| `expected_kind` | text | `photo` or `pdf` when the AI named one for a phone upload; the page's declaration must agree. |
 | `actual_type`, `actual_size`, `page_count` | text, bigint, int | Set at finishing from the stored file (FR-004). `page_count` is set for PDFs only. |
 | `content_hash` | text | `sha256:<hex>` of the stored bytes. It is the `input_hash` of every derived thought (FR-008). |
-| `storage_path` | text, not null | `attachments/<id>/<file_name>` in the configured bucket (R12). Never a signed link (FR-009). |
+| `storage_path` | text | `attachments/<id>/<file_name>` in the configured bucket (R12), set when the file is declared. Never a signed link (FR-009). |
 | `sensitivity_tier` | text, not null, default `personal` | `standard`, `personal` or `restricted` (spec Assumptions). |
 | `state` | text, not null | See the state machine below. |
 | `state_reason` | text | Readable cause for `scanned`, `not_captioned`, `failed` and `refused`. |
@@ -25,7 +26,7 @@ One row per file.
 | `derived_count` | int, not null, default 0 | The number of derived thoughts this attachment owns. |
 | `upload_deadline` | timestamptz, not null | When the attachment started, plus the upload link lifetime (default 60 minutes; R8). |
 | `page_token_hash` | text | SHA-256 of the one-time page token, cleared once that token is used (FR-002, FR-024). |
-| `busy_op`, `busy_until` | text, timestamptz | The claim for FR-026. `busy_op` is `finish`, `rebuild` or `remove`. |
+| `busy_op`, `busy_until`, `busy_token` | text, timestamptz, text | The claim for FR-026. `busy_op` is `finish`, `rebuild` or `remove`. The writes in the claim's name succeed only with the matching unexpired `busy_token` (R10). |
 | `created_at`, `updated_at`, `processed_at` | timestamptz | `updated_at` is maintained by a trigger. |
 
 **Indexes**: `parent_thought_id`; `content_hash`; a unique `(parent_thought_id, content_hash)` index where `content_hash` is set and `state` is not `refused`. That unique index refuses the same file on the same parent twice (FR-012); a refused record never blocks a new try.
@@ -88,8 +89,8 @@ Never stored: signed links, keys, tokens or absolute paths (FR-009, SC-007).
 
 | Function | Does | Requirements |
 |----------|------|--------------|
-| Claim and release an attachment | Claims only if no unexpired claim exists; returns the running operation when refused | FR-026 |
-| Write derived thoughts | Replaces the attachment's derived set and updates its state in one transaction; a fingerprint conflict raises an error, never merges | FR-011, FR-022, FR-027, R9 |
+| Claim and release an attachment | Claims only if no unexpired claim exists and returns a claim token; returns the running operation when refused | FR-026, R10 |
+| Write derived thoughts | Only with the caller's unexpired claim token: replaces the attachment's derived set and updates its state in one transaction; a fingerprint conflict raises an error, never merges | FR-011, FR-022, FR-027, R9, R10 |
 | Remove an attachment | Deletes its derived thoughts and its row (and the parent note under the FR-016 exception), all scoped by the attachment's id, in one transaction | FR-016, SC-020 |
 | Find a thought by exact text | Parameterised text match returning id, first line and date | FR-023, R11 |
 | The brain's embedding dimension | Reads the dimension of `thoughts.embedding` | FR-007, R3 |
