@@ -22,7 +22,7 @@ const ENV_VALUES = {
   EMBEDDING_API_BASE: "http://host.docker.internal:11434/v1",
   EMBEDDING_API_KEY: "test-embed-key",
   EMBEDDING_MODEL: "test-embed-model",
-  CHAT_API_BASE: "http://host.docker.internal:11434/v1",
+  CHAT_API_BASE: "http://host.docker.internal:12434/chat/v1",
   CHAT_API_KEY: "test-chat-key",
   CHAT_MODEL: "test-chat-model",
   FETCH_TIMEOUT_MS: "12345",
