@@ -119,3 +119,8 @@ Deno.test("U10 with VISION_API_BASE and VISION_MODEL set and VISION_API_KEY unse
 Deno.test("U12 a set BUSY_SECONDS is used as given", () => {
   assertEquals(settingsWith({ BUSY_SECONDS: "160" }).busySeconds, 160);
 });
+
+Deno.test("U13 with BUSY_SECONDS unset the busy expiry is 410 seconds on every platform", () => {
+  const cloud = { SUPABASE_URL: "https://abcdefghijklmnop.supabase.co", PUBLIC_BASE_URL: undefined };
+  assertEquals([settingsWith().busySeconds, settingsWith(cloud).busySeconds], [410, 410]);
+});
