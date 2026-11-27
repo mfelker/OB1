@@ -768,7 +768,8 @@ Deno.test(
     const parent = await ownerThought(w, "The garage shelf by the side door");
     const { id, done } = await uploadAndFinish(w, parent.id, "shelf.jpg", "image/jpeg", jpegBytes(4096));
     const got = await tool(w, "get_attachment", { attachment_id: id });
-    assert((row(w, id)?.state_reason ?? "").length > 0, "no reason recorded");
+    assertMatch(row(w, id)?.state_reason ?? "", /vision is not configured/);
+    assertMatch(done.sc.reason ?? "", /vision is not configured/);
     assertEquals(
       {
         state: done.sc.state,
@@ -833,10 +834,7 @@ Deno.test(
     const { id } = await processedPhoto(w);
     const old = structuredClone(derivedOf(w, id));
     const rebuilt = await finish(w, id, true);
-    assert(
-      typeof rebuilt.sc.last_rebuild_error === "string" && rebuilt.sc.last_rebuild_error.length > 0,
-      said(rebuilt),
-    );
+    assertMatch(rebuilt.sc.last_rebuild_error ?? "", /vision endpoint answered HTTP 503/);
     assertEquals({ state: row(w, id)?.state, captions: derivedOf(w, id) }, { state: "processed", captions: old });
   },
 );
@@ -1117,7 +1115,8 @@ Deno.test(
     });
     const parent = await ownerThought(w, "Kitchen dishwasher DW-500");
     const { id, done } = await uploadAndFinish(w, parent.id, "manual.pdf", "application/pdf", await textPdf(pages));
-    assert((row(w, id)?.state_reason ?? "").length > 0, "no failure reason");
+    assertMatch(row(w, id)?.state_reason ?? "", /embedding endpoint answered HTTP 500/);
+    assertMatch(done.sc.reason ?? "", /embedding endpoint answered HTTP 500/);
     const failed = { state: done.sc.state, derived: derivedOf(w, id).length };
     const again = await finish(w, id);
     assertEquals({ failed, again: again.sc.state, derived: derivedOf(w, id).length > 1 }, {
@@ -1146,7 +1145,7 @@ Deno.test(
     const parent = await ownerThought(w, "Kitchen dishwasher DW-500");
     const { id, done } = await uploadAndFinish(w, parent.id, "broken.pdf", "application/pdf", corruptPdf());
     const got = await tool(w, "get_attachment", { attachment_id: id });
-    assert(typeof done.sc.reason === "string" && done.sc.reason.length > 0, said(done));
+    assertMatch(done.sc.reason ?? "", /The PDF could not be read: it is damaged or not a PDF/);
     assertEquals({ state: done.sc.state, link: got.sc.download_link, passages: derivedOf(w, id).length }, {
       state: "failed",
       link: downloadLinkFor(w, id),
