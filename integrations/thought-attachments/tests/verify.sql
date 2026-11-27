@@ -480,3 +480,15 @@ begin
   if not raised then raise exception 'U60: the duplicate content_hash was accepted'; end if;
   if n <> 0 or h is not null or st <> 'pending_upload' then raise exception 'U60: changed (% rows, hash %, state %)', n, h, st; end if;
 end $$;
+
+-- U61: a claim while an unexpired claim exists is refused and returns the running busy_op
+do $$
+declare p uuid := pg_temp.mk_parent(); a uuid := pg_temp.mk_att(p); r jsonb; tok text;
+begin
+  r := attachment_claim(a, 'remove', 60);
+  select busy_token into tok from thought_attachments where id = a;
+  delete from thought_attachments where id = a;
+  delete from thoughts where id = p;
+  if r is distinct from '{"busy": "finish"}'::jsonb then raise exception 'U61: claim returned %', r; end if;
+  if tok <> 'tok' then raise exception 'U61: the holder''s token changed to %', tok; end if;
+end $$;

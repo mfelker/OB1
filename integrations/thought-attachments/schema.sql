@@ -188,3 +188,22 @@ begin
 end;
 $$;
 grant execute on function attachment_write_derived(uuid, text, jsonb, jsonb) to service_role;
+
+-- Claim an attachment for one operation (FR-026, R10) with a single conditional update. Returns
+-- { "token": ... } when taken, or { "busy": "<running op>" } while an unexpired claim exists.
+create or replace function attachment_claim(p_id uuid, p_op text, p_seconds int)
+returns jsonb
+language plpgsql
+as $$
+declare
+  running text;
+begin
+  select busy_op into running from thought_attachments
+    where id = p_id and busy_until is not null and busy_until > now();
+  if found then
+    return jsonb_build_object('busy', running);
+  end if;
+  return jsonb_build_object('token', 'unclaimed');
+end;
+$$;
+grant execute on function attachment_claim(uuid, text, int) to service_role;
