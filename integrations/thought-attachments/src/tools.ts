@@ -8,6 +8,7 @@ type Hints = { readOnlyHint: boolean; destructiveHint?: boolean; openWorldHint?:
 const READ_ONLY: Hints = { readOnlyHint: true };
 
 const MAX_MATCHES = 20;
+const FIRST_LINE_CHARS = 120;
 
 const NOT_YET = () => ({ content: [{ type: "text" as const, text: "" }] });
 
@@ -40,7 +41,8 @@ export function buildServer(deps: Deps, _services: Services): McpServer {
       found = await deps.store.matchThoughts(embedded.data[0], limit);
     }
     if ("error" in found) return fail(found.error);
-    return reply(JSON.stringify(found.data), { matches: found.data });
+    const matches = found.data.map((m) => ({ ...m, first_line: m.first_line.slice(0, FIRST_LINE_CHARS) }));
+    return reply(JSON.stringify(matches), { matches });
   });
 
   server.registerTool("attach_file", {

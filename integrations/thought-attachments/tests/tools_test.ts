@@ -183,3 +183,16 @@ Deno.test("U328 find_thought with limit 21 asks for 20 matches", async () => {
   assertEquals(h.store.calls.find((c) => c.method === "findThoughtsExact")?.args, ["filters", 20]);
   assertEquals(h.store.calls.find((c) => c.method === "matchThoughts")?.args[1], 20);
 });
+
+/** Makes the store report one match with this raw first line (as a store that did not trim it would). */
+function storeReturns(h: H, first_line: string) {
+  const match = { id: "t-1", first_line, captured: "2026-01-01T00:00:00.000Z" };
+  h.store.override.findThoughtsExact = () => Promise.resolve({ data: [match] });
+}
+
+Deno.test("U225 find_thought cuts a 121-character first line to 120 characters", async () => {
+  const h = await harness();
+  storeReturns(h, "x".repeat(121));
+  const out = await call(h, "find_thought", { query: "x", mode: "exact" });
+  assertEquals((out.data.matches as { first_line: string }[])[0].first_line, "x".repeat(120));
+});
