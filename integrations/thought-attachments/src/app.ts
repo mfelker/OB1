@@ -5,6 +5,7 @@ import { createEmbeddingClient } from "./embeddings.ts";
 import { createFinisher } from "./finish.ts";
 import { loadSettings } from "./settings.ts";
 import { createSupabaseStore } from "./store.ts";
+import { pageRoutes } from "./page_routes.ts";
 import { buildServer } from "./tools.ts";
 import { createVisionClient } from "./vision.ts";
 import type { AppInput, FetchApp } from "./types.ts";
@@ -94,6 +95,9 @@ export function createApp(input: AppInput): FetchApp {
   const app = new Hono();
 
   app.get("/upload", async (c) => c.body(await Deno.readFile(UPLOAD_PAGE), 200, { "Content-Type": "text/html; charset=utf-8" }));
+
+  // The page routes take only the page token and answer CORS for the page's origin, so they sit before the key check.
+  app.route("/", pageRoutes(deps, services));
 
   app.options("*", (c) => c.text("ok", 200, corsHeaders));
 

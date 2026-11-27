@@ -254,3 +254,28 @@ Deno.test("U306 the GET /upload body is upload-page.html byte for byte, its API-
     blank: true,
   });
 });
+
+async function sha256Hex(text: string): Promise<string> {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+  return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+Deno.test("U307 /page/start through createApp with no brain key is not refused by the key check", async () => {
+  const { app, store } = rig();
+  const parent = await store.seedThought({ content: "The garage shelf" });
+  const row = await store.seedAttachment({
+    parent_thought_id: parent.id,
+    page_token_hash: await sha256Hex("page-token-u307"),
+    expected_kind: "photo",
+  });
+  const response = await app.fetch(new Request(`${FUNCTION_URL}/page/start`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ token: "page-token-u307", name: "shelf.jpg", type: "image/jpeg", size: 4096 }),
+  }));
+  const json = await response.json();
+  assertEquals(
+    { status: response.status, method: json.upload?.method, declared: store.attachment(row.id)?.file_name },
+    { status: 200, method: "PUT", declared: "shelf.jpg" },
+  );
+});
