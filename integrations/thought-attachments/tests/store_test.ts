@@ -428,3 +428,11 @@ Deno.test("UQ4 writeDerived sends the rows (content, metadata, embedding) and th
     p_patch: { state: "processed", content_hash: HASH, page_count: 1 },
   });
 });
+
+Deno.test("UQ5 setState sends the patch under the claim token and returns the row", async () => {
+  const { store, ff } = setup();
+  const row = attachmentRow({ state: "failed", state_reason: "the file is not a valid PDF" });
+  ff.on("POST", `${REST}/rpc/attachment_set_state`, { body: row });
+  assertEquals(await store.setState(ATT_ID, "claim-tok", { state: "failed", state_reason: "the file is not a valid PDF" }), { data: row });
+  assertEquals(ff.requests[0].body, { p_id: ATT_ID, p_token: "claim-tok", p_patch: { state: "failed", state_reason: "the file is not a valid PDF" } });
+});

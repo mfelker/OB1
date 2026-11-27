@@ -143,7 +143,9 @@ export function createSupabaseStore(
         p_patch: patch,
       });
     },
-    setState: notYet,
+    setState(id, token, patch) {
+      return rpc<AttachmentRow>("attachment_set_state", { p_id: id, p_token: token, p_patch: patch });
+    },
     removalPreview(id) {
       return rpc<{ derived: number; noteWouldGo: boolean }>("attachment_removal_preview", { p_id: id });
     },
