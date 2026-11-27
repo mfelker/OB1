@@ -655,3 +655,17 @@ begin
   if wrong then raise exception 'U87: a wrong hash was consumed'; end if;
   if first_ is not true or second_ is not false or h is not null then raise exception 'U87: first %, second %, hash %', first_, second_, h; end if;
 end $$;
+
+-- U94: a set-state under a valid claim records state and state_reason and leaves the derived thoughts
+do $$
+declare p uuid := pg_temp.mk_parent(); a uuid := pg_temp.mk_att(p); r thought_attachments; n bigint;
+begin
+  perform attachment_write_derived(a, 'tok', pg_temp.rows_json('u94 one ' || a, 'u94 two ' || a), '{"state":"processed"}'::jsonb);
+  r := attachment_set_state(a, 'tok', '{"state":"failed","state_reason":"the run did not finish"}'::jsonb);
+  select count(*) into n from thoughts where metadata->>'attachment_id' = a::text;
+  delete from thoughts where metadata->>'attachment_id' = a::text;
+  delete from thought_attachments where id = a;
+  delete from thoughts where id = p;
+  if r.state <> 'failed' or r.state_reason <> 'the run did not finish' then raise exception 'U94: returned %', r; end if;
+  if n <> 2 or r.derived_count <> 2 then raise exception 'U94: derived thoughts changed (% rows, derived_count %)', n, r.derived_count; end if;
+end $$;

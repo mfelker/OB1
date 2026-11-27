@@ -297,3 +297,15 @@ begin
 end;
 $$;
 grant execute on function attachment_consume_page_token(uuid, text) to service_role;
+
+-- Set state fields under the caller's claim, leaving the derived thoughts alone.
+create or replace function attachment_set_state(p_id uuid, p_token text, p_patch jsonb)
+returns thought_attachments
+language plpgsql
+as $$
+begin
+  perform attachment_require_claim(p_id, p_token);
+  return attachment_apply_patch(p_id, p_patch - 'derived_count');
+end;
+$$;
+grant execute on function attachment_set_state(uuid, text, jsonb) to service_role;
