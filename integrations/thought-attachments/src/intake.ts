@@ -47,5 +47,9 @@ export function checkActual(
   info: { size: number; createdAt: string },
   settings: Settings,
 ): Refusal | null {
+  const actual = sniffType(bytes);
+  if (actual !== row.declared_type) {
+    return { code: "wrong_type", message: "The file is " + actual + ", not the declared " + row.declared_type + "." };
+  }
   return null;
 }

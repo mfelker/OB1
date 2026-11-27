@@ -144,3 +144,10 @@ Deno.test("U148 checkActual accepts a file whose sniffed type and exact size equ
   const bytes = jpegBytes(5000);
   assertEquals(checkActual(rowFor("image/jpeg", 5000), bytes, info(5000), settingsWith()), null);
 });
+
+Deno.test("U149 checkActual refuses a sniffed type that differs from the declared one, naming the actual type", () => {
+  const refusal = checkActual(rowFor("image/jpeg", 5000), webpBytes(5000), info(5000), settingsWith());
+  assert(refusal !== null);
+  assertEquals(refusal.code, "wrong_type");
+  assertStringIncludes(refusal.message, "image/webp");
+});
