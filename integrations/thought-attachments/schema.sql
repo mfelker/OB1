@@ -59,3 +59,10 @@ begin
       check (state in ('pending_upload', 'processed', 'scanned', 'not_captioned', 'failed', 'refused'));
   end if;
 end $$;
+do $$
+begin
+  if not exists (select 1 from pg_constraint where conname = 'thought_attachments_busy_op_check') then
+    alter table thought_attachments add constraint thought_attachments_busy_op_check
+      check (busy_op in ('finish', 'rebuild', 'remove'));
+  end if;
+end $$;

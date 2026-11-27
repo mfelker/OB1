@@ -119,3 +119,21 @@ begin
   exception when check_violation then null;
   end;
 end $$;
+
+-- U39: busy_op accepts finish, rebuild, remove and null, and rejects any other value
+do $$
+declare t text; v_id uuid;
+begin
+  foreach t in array array['finish', 'rebuild', 'remove'] loop
+    insert into thought_attachments (parent_thought_id, busy_op, state, upload_deadline)
+      values (gen_random_uuid(), t, 'pending_upload', now()) returning id into v_id;
+    delete from thought_attachments where id = v_id;
+  end loop;
+  begin
+    insert into thought_attachments (parent_thought_id, busy_op, state, upload_deadline)
+      values (gen_random_uuid(), 'purge', 'pending_upload', now()) returning id into v_id;
+    delete from thought_attachments where id = v_id;
+    raise exception 'U39: purge was accepted';
+  exception when check_violation then null;
+  end;
+end $$;
