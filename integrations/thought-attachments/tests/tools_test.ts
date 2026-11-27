@@ -848,3 +848,18 @@ Deno.test("U260 remove_attachment while busy is refused with the busy message an
   assertEquals(h.store.objects.has(row.storage_path as string), true);
   assertEquals(h.store.callNames().filter((m) => ["deleteObject", "removeAttachment", "release"].includes(m)), []);
 });
+
+Deno.test("U335 when the store's removal fails after the file was deleted, remove_attachment reports it and the attachment is still listed", async () => {
+  const h = await harness();
+  const row = await storedRow(h, { derived_count: 2 });
+  addDerived(h, row.id, 2);
+  h.store.failNext("removeAttachment", "database went away");
+  const out = await call(h, "remove_attachment", { attachment_id: row.id, confirm: true });
+  assertEquals(out.isError, true);
+  assertStringIncludes(out.text, "database went away");
+  assertEquals(h.store.objects.has(row.storage_path as string), false);
+  const listed = await call(h, "list_attachments", { thought_id: row.parent_thought_id });
+  assertEquals((listed.data.attachments as { attachment_id: string }[]).map((a) => a.attachment_id), [row.id]);
+  assertEquals(h.store.derivedOf(row.id).length, 2);
+  assertEquals(h.store.attachment(row.id)?.busy_op, null);
+});
