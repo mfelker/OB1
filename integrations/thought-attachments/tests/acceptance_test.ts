@@ -960,7 +960,7 @@ Deno.test(
   },
 );
 
-todo(
+Deno.test(
   "A28 list_attachments for a thought with two attachments in different states returns both with name, type, size, state and derived_count",
   async () => {
     const w = world();
