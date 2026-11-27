@@ -138,6 +138,13 @@ function rowFor(type: AcceptedType, size: number, pageCount: number | null = nul
   };
 }
 
+/** `size` bytes that start like a PDF. */
+function pdfLike(size: number): Uint8Array {
+  const out = new Uint8Array(size);
+  out.set(new TextEncoder().encode("%PDF-1.7\n"));
+  return out;
+}
+
 const info = (size: number) => ({ size, createdAt: "2026-11-27T12:10:00.000Z" });
 
 Deno.test("U148 checkActual accepts a file whose sniffed type and exact size equal the declaration, within the caps", () => {
@@ -159,4 +166,18 @@ Deno.test("U150 checkActual refuses an actual size one byte different from the d
     assertEquals(refusal.code, "wrong_size");
     assertStringIncludes(refusal.message, String(actual));
   }
+});
+
+Deno.test("U153 checkActual refuses an actual size over its type's cap, naming cap and size, and for a PDF the planned background processing", () => {
+  const img = checkActual(rowFor("image/jpeg", IMAGE_CAP + 1), jpegBytes(IMAGE_CAP + 1), info(IMAGE_CAP + 1), settingsWith());
+  assert(img !== null);
+  assertEquals(img.code, "too_large");
+  assertStringIncludes(img.message, "10485760");
+  assertStringIncludes(img.message, "10485761");
+  const pdf = checkActual(rowFor("application/pdf", PDF_CAP + 1), pdfLike(PDF_CAP + 1), info(PDF_CAP + 1), settingsWith());
+  assert(pdf !== null);
+  assertEquals(pdf.code, "too_large");
+  assertStringIncludes(pdf.message, "26214400");
+  assertStringIncludes(pdf.message, "26214401");
+  assertStringIncludes(pdf.message.toLowerCase(), "background processing");
 });

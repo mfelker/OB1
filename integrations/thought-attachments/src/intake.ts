@@ -21,11 +21,20 @@ export function checkDeclared(decl: DeclaredFile, settings: Settings): Refusal |
   if (!ACCEPTED.includes(decl.type as AcceptedType)) {
     return { code: "unsupported_type", message: "Accepted types are PDF, JPEG, PNG and WebP. Got " + decl.type + "." };
   }
-  const cap = Math.floor((decl.type === "application/pdf" ? settings.maxPdfMb : settings.maxImageMb) * 1024 * 1024);
-  if (decl.size > cap) {
-    return { code: "too_large", message: "The file is " + decl.size + " bytes, over the cap of " + cap + " bytes." };
-  }
-  return null;
+  return tooLarge(decl.type, decl.size, settings);
+}
+
+const BACKGROUND_NOTE = " Background processing for larger PDFs is planned but not available yet.";
+
+/** A refusal when `size` is over the cap for `type`, else null. */
+function tooLarge(type: string, size: number, settings: Settings): Refusal | null {
+  const isPdf = type === "application/pdf";
+  const cap = Math.floor((isPdf ? settings.maxPdfMb : settings.maxImageMb) * 1024 * 1024);
+  if (size <= cap) return null;
+  return {
+    code: "too_large",
+    message: "The file is " + size + " bytes, over the cap of " + cap + " bytes." + (isPdf ? BACKGROUND_NOTE : ""),
+  };
 }
 
 /** The type the bytes actually are, from their header; null when unrecognised. */
@@ -48,11 +57,11 @@ export function checkActual(
   settings: Settings,
 ): Refusal | null {
   const actual = sniffType(bytes);
-  if (actual !== row.declared_type) {
+  if (actual === null || actual !== row.declared_type) {
     return { code: "wrong_type", message: "The file is " + actual + ", not the declared " + row.declared_type + "." };
   }
   if (info.size !== row.declared_size) {
     return { code: "wrong_size", message: "The file is " + info.size + " bytes, not the declared " + row.declared_size + "." };
   }
-  return null;
+  return tooLarge(actual, info.size, settings);
 }
