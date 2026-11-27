@@ -158,3 +158,16 @@ Deno.test("U308 a decimal value for a whole-number setting is a problem naming i
     [[{ setting: "MAX_PDF_PAGES", reason: WHOLE }], [{ setting: "BUSY_SECONDS", reason: WHOLE }]],
   );
 });
+
+const POSITIVE = "must be a positive number";
+
+Deno.test("U309 a non-numeric, zero or negative MB cap is a problem naming it and what it must be", () => {
+  assertEquals(
+    [problemsWith({ MAX_PDF_MB: "abc" }), problemsWith({ MAX_IMAGE_MB: "0" }), problemsWith({ MAX_IMAGE_MB: "-1" })],
+    [
+      [{ setting: "MAX_PDF_MB", reason: POSITIVE }],
+      [{ setting: "MAX_IMAGE_MB", reason: POSITIVE }],
+      [{ setting: "MAX_IMAGE_MB", reason: POSITIVE }],
+    ],
+  );
+});

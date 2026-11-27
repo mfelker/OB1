@@ -11,7 +11,7 @@ export function loadSettings(getEnv: GetEnv): SettingsResult {
     if (raw === undefined) return fallback;
     const n = Number(raw);
     if (Number.isNaN(n) || n <= 0 || (!decimals && !Number.isInteger(n))) {
-      problems.push({ setting: name, reason: "must be a positive whole number" });
+      problems.push({ setting: name, reason: decimals ? "must be a positive number" : "must be a positive whole number" });
     }
     return n;
   };
