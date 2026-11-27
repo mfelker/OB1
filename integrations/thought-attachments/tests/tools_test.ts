@@ -518,3 +518,12 @@ Deno.test("U246 note with a HEIC declaration saves no note and makes no embeddin
   assertEquals(h.store.thoughts, []);
   assertNothingCreated(h);
 });
+
+Deno.test("U247 note with an over-cap declaration saves no note", async () => {
+  const h = await harness();
+  const out = await call(h, "attach_file", { note: "Photo of the shelf", ...PDF, declared_type: "image/jpeg", file_name: "a.jpg", declared_size: 11 * 1024 * 1024 });
+  assertEquals(out.isError, true);
+  assertStringIncludes(out.text, String(10 * 1024 * 1024));
+  assertEquals(h.store.thoughts, []);
+  assertNothingCreated(h);
+});
