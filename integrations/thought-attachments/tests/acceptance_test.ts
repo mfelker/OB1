@@ -937,7 +937,7 @@ Deno.test(
 
 // ============================================================== User Story 3
 
-todo(
+Deno.test(
   "A27 get_attachment on a processed attachment returns name, type, size and state, and a download link signed for 600 seconds with that lifetime stated",
   async () => {
     const w = world();
