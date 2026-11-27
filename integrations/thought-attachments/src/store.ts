@@ -21,17 +21,24 @@ export function createSupabaseStore(
   });
   void settings;
 
+  /** An error text with the service-role key removed (FR-009). */
+  function scrub(message: string): string {
+    const text = serviceRoleKey ? message.split(serviceRoleKey).join("[key]") : message;
+    return text || "database error";
+  }
+
   /** One RPC: the reply data on success, `{ error }` otherwise. */
   async function rpc<T>(name: string, args: Record<string, unknown>): Promise<R<T>> {
     const { data, error } = await db.rpc(name, args);
-    if (error) return { error: error.message };
+    if (error) return { error: scrub(error.message) };
     return { data: data as T };
   }
 
-  return {
+  const store: Store = {
     async thoughtExists(id) {
-      const { data } = await db.from("thoughts").select("id").eq("id", id).limit(1);
-      return { data: (data ?? []).length > 0 } as R<boolean>;
+      const { data, error } = await db.from("thoughts").select("id").eq("id", id).limit(1);
+      if (error) return { error: scrub(error.message) };
+      return { data: (data ?? []).length > 0 };
     },
     insertNote: notYet,
     async matchThoughts(embedding, limit) {
@@ -59,7 +66,7 @@ export function createSupabaseStore(
         query = query.eq("id", idOrShortId);
       }
       const { data, error } = await query.limit(2);
-      if (error) return { error: error.message };
+      if (error) return { error: scrub(error.message) };
       const rows = (data ?? []) as AttachmentRow[];
       if (rows.length > 1) return { data: "ambiguous" };
       return { data: rows[0] ?? "not_found" };
@@ -86,4 +93,17 @@ export function createSupabaseStore(
     deleteObject: notYet,
     signDownload: notYet,
   };
+
+  // A thrown error (a network failure, say) also becomes { error }, with the key removed.
+  const guarded: Record<string, unknown> = {};
+  for (const [name, method] of Object.entries(store)) {
+    guarded[name] = async (...args: unknown[]) => {
+      try {
+        return await (method as (...a: unknown[]) => Promise<unknown>)(...args);
+      } catch (e) {
+        return { error: scrub(e instanceof Error ? e.message : String(e)) };
+      }
+    };
+  }
+  return guarded as unknown as Store;
 }

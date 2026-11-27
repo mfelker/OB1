@@ -149,3 +149,21 @@ Deno.test("U77 getAttachment with an unknown id returns not_found", async () => 
   assertEquals(await store.getAttachment(ATT_ID), { data: "not_found" });
   assertEquals(await store.getAttachment("deadbeef"), { data: "not_found" });
 });
+
+Deno.test("U78 a database error maps to { error } whose text contains no service-role key", async () => {
+  const { store, ff } = setup();
+  const leaky = { status: 500, body: { message: `permission denied for key ${SERVICE_ROLE_KEY}`, code: "42501", details: SERVICE_ROLE_KEY, hint: null } };
+  ff.on("POST", `${REST}/rpc/attachment_claim`, leaky);
+  ff.on("GET", `${REST}/thoughts*`, leaky);
+  ff.on("GET", `${REST}/thought_attachments*`, leaky);
+  const results = [
+    await store.claim("att-1", "finish", 410),
+    await store.thoughtExists("t1"),
+    await store.getAttachment(ATT_ID),
+  ];
+  for (const r of results) {
+    if (!("error" in r)) throw new Error(`expected an error result, got ${JSON.stringify(r)}`);
+    assertEquals(r.error.includes(SERVICE_ROLE_KEY), false);
+    assertEquals(r.error.length > 0, true);
+  }
+});
