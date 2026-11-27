@@ -162,3 +162,12 @@ Deno.test("U188 bytes already on another attachment of the parent end refused, n
   assertEquals(r.store.derivedOf(second.id).length, 0);
   assertEquals(out.derived_count, 0);
 });
+
+Deno.test("U322 when the only attachment with those bytes is refused, the finish is not refused for them", async () => {
+  const r = await rig();
+  const bytes = await textPdf(["alpha beta gamma"]);
+  pending(r, bytes, { file_name: "old.pdf", state: "refused", content_hash: await contentHash(bytes) });
+  const second = pending(r, bytes, { file_name: "again.pdf" });
+  const out = await r.finish(second.id, {});
+  assertEquals(out.state, "processed");
+});
