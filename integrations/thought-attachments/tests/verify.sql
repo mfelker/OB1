@@ -101,3 +101,21 @@ begin
   exception when check_violation then null;
   end;
 end $$;
+
+-- U38: state accepts the six states and rejects any other value
+do $$
+declare t text; v_id uuid;
+begin
+  foreach t in array array['pending_upload', 'processed', 'scanned', 'not_captioned', 'failed', 'refused'] loop
+    insert into thought_attachments (parent_thought_id, state, upload_deadline)
+      values (gen_random_uuid(), t, now()) returning id into v_id;
+    delete from thought_attachments where id = v_id;
+  end loop;
+  begin
+    insert into thought_attachments (parent_thought_id, state, upload_deadline)
+      values (gen_random_uuid(), 'done', now()) returning id into v_id;
+    delete from thought_attachments where id = v_id;
+    raise exception 'U38: done was accepted';
+  exception when check_violation then null;
+  end;
+end $$;
