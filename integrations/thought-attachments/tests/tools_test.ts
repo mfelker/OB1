@@ -247,3 +247,13 @@ Deno.test("U229 attach_file with an unknown thought_id is refused, with no row, 
   assertNothingCreated(h);
   assertEquals(h.store.thoughts, []);
 });
+
+Deno.test("U230 attach_file with both thought_id and note is refused, and nothing is created", async () => {
+  const h = await harness();
+  const parent = await seed(h, "dishwasher");
+  const out = await call(h, "attach_file", { thought_id: parent.id, note: "a new note", ...PDF });
+  assertEquals(out.isError, true);
+  assertStringIncludes(out.text, "exactly one");
+  assertNothingCreated(h);
+  assertEquals(h.store.thoughts.length, 1);
+});

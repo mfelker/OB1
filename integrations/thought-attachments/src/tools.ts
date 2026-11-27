@@ -10,6 +10,8 @@ const READ_ONLY: Hints = { readOnlyHint: true };
 const MAX_MATCHES = 20;
 const FIRST_LINE_CHARS = 120;
 
+const ONE_PARENT = "Give exactly one of thought_id or note.";
+
 const NOT_YET = () => ({ content: [{ type: "text" as const, text: "" }] });
 
 /** A tool result: the text for the AI, plus the structured fields. */
@@ -59,7 +61,8 @@ export function buildServer(deps: Deps, _services: Services): McpServer {
       sensitivity_tier: z.enum(["standard", "personal", "restricted"]).optional(),
     },
     annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: true },
-  }, async ({ thought_id }) => {
+  }, async ({ thought_id, note }) => {
+    if (thought_id !== undefined && note !== undefined) return fail(ONE_PARENT);
     if (thought_id !== undefined) {
       const exists = await deps.store.thoughtExists(thought_id);
       if ("error" in exists) return fail(exists.error);
