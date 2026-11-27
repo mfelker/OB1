@@ -669,3 +669,30 @@ begin
   if r.state <> 'failed' or r.state_reason <> 'the run did not finish' then raise exception 'U94: returned %', r; end if;
   if n <> 2 or r.derived_count <> 2 then raise exception 'U94: derived thoughts changed (% rows, derived_count %)', n, r.derived_count; end if;
 end $$;
+
+-- U93: a write or set-state with an old token, after a newer claim took over, is refused and changes nothing
+do $$
+declare p uuid := pg_temp.mk_parent(); a uuid := pg_temp.mk_att(p, 'pending_upload', interval '-1 second');
+        old_tok text; new_tok text; w_refused boolean := false; s_refused boolean := false; n bigint; st text;
+begin
+  old_tok := attachment_claim(a, 'finish', 60)->>'token';
+  update thought_attachments set busy_until = now() - interval '1 second' where id = a;  -- the first claim lapsed
+  new_tok := attachment_claim(a, 'finish', 60)->>'token';
+  begin
+    perform attachment_write_derived(a, old_tok, pg_temp.rows_json('u93 ' || a), '{"state":"processed"}'::jsonb);
+  exception when others then w_refused := sqlerrm like '%claim%';
+  end;
+  begin
+    perform attachment_set_state(a, old_tok, '{"state":"failed"}'::jsonb);
+  exception when others then s_refused := sqlerrm like '%claim%';
+  end;
+  select count(*) into n from thoughts where metadata->>'attachment_id' = a::text;
+  select state into st from thought_attachments where id = a;
+  delete from thoughts where metadata->>'attachment_id' = a::text;
+  delete from thought_attachments where id = a;
+  delete from thoughts where id = p;
+  if old_tok = new_tok then raise exception 'U93: the new claim reused the token'; end if;
+  if not w_refused then raise exception 'U93: a write with the old token was not refused'; end if;
+  if not s_refused then raise exception 'U93: a set-state with the old token was not refused'; end if;
+  if n <> 0 or st <> 'pending_upload' then raise exception 'U93: changed (% rows, state %)', n, st; end if;
+end $$;

@@ -305,7 +305,7 @@ language plpgsql
 as $$
 begin
   perform attachment_require_claim(p_id, p_token);
-  return attachment_apply_patch(p_id, p_patch - 'derived_count');
+  return attachment_apply_patch(p_id, p_patch);
 end;
 $$;
 grant execute on function attachment_set_state(uuid, text, jsonb) to service_role;
