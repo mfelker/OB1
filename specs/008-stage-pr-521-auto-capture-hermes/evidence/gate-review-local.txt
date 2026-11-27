@@ -1,5 +1,5 @@
-# OB1 Review 'Run review checks' (ob1-gate-v2.yml, extracted unchanged), 2026-11-27T06:57:57Z
-# head 6bcefef, base 238df6c, title: [skills] Add auto-capture-hermes adapter (staged #521), contrib dirs: skills/auto-capture-hermes; check-jsonschema 0.39.0 via uvx, schema from base
+# OB1 Review 'Run review checks' (ob1-gate-v2.yml, extracted unchanged, re-verified identical), 2026-11-27T13:58:11Z
+# head 2c22e41, base 238df6c, title: [skills] Add auto-capture-hermes adapter (staged #521), contrib dirs: skills/auto-capture-hermes; check-jsonschema 0.39.0 via uvx, schema from base
 failed=false
 secret_blocked=false
 comment<<EOF

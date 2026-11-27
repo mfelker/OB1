@@ -532,3 +532,12 @@ Commands run from the stage worktree folder `skills/auto-capture-hermes` with `e
 - T050: the A8 and U22 rows now describe what the tests observe: exactly `error:missing_env` logged, an empty retry queue, and no stand-in.
 - T051: quoted `.env.local` values are recorded under "Out of scope". The README and SKILL.md show only unquoted values, so there is no requirement behind quoting. Mutant N6 surviving is therefore expected; revisit if upstream documents quoting.
 - No test or source change.
+
+## Pre-merge checks re-run after remediation (T024–T028, stage `2c22e41`)
+
+- **§0:** stage branch `stage/pr-521-auto-capture-hermes`; author's 3 commits, then 9 fork test commits. `git fetch upstream`: `upstream/main` is `238df6c`, fork main is 0 behind, and #521 is open at `b9cbd68` (unchanged). The author's 4 files are byte-identical to `b9cbd68`.
+- **T024:** `env -i` full suite, 53 pass, 0 fail, 0 skipped, 4.47 s real (`evidence/us2-node-test.txt` and `evidence/us3-node-test.txt` refreshed).
+- **T025:** only `skills/auto-capture-hermes/` paths; no `.specify/`, `specs/`, `.fork/` in the tree; every commit title starts `[skills]`.
+- **T026:** fork-ci `run-folder` strict → `pass` (all tests passed; node-plain, 4484 ms) (`evidence/run-folder-final.json`); worktree clean.
+- **T027:** diff `b9cbd68..HEAD` has no secret patterns, no binaries or `.db` files, and no profanity. The only URL is `http://127.0.0.1:${port}`; the one "token" match is wording in U40's comment.
+- **T028:** OB1 Review step re-extracted from `ob1-gate-v2.yml` at `238df6c` and confirmed identical to the saved harness. Run with the base schema and check-jsonschema 0.39.0: 15/15, `failed=false`, `secret_blocked=false` (`evidence/gate-review-local.txt`).
