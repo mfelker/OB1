@@ -423,3 +423,14 @@ Deno.test("U368 a /page/finish busy behind a live finish claim on a not_captione
     assertEquals([state, info.status], [state, 200], `token accepted afterwards for ${state}`);
   }
 });
+
+Deno.test("U394 /page/start with no expected kind accepts a picked PDF: it is recorded as the declaration and a link is returned", async () => {
+  const r = await rig();
+  const row = await r.seed();
+  const res = await r.post("/page/start", { token: TOKEN, name: "manual.pdf", type: "application/pdf", size: 4096 });
+  const stored = r.store.attachment(row.id)!;
+  assertEquals(
+    { status: res.status, declaredType: stored.declared_type, declaredSize: stored.declared_size, links: r.store.signedUploads.length },
+    { status: 200, declaredType: "application/pdf", declaredSize: 4096, links: 1 },
+  );
+});
