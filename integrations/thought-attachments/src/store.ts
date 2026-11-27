@@ -114,7 +114,15 @@ export function createSupabaseStore(
       if (error) return { error: scrub(error.message) };
       return { data: { url: data.signedUrl, token: data.token } };
     },
-    objectInfo: notYet,
+    async objectInfo(path) {
+      const { data, error } = await db.storage.from(settings.attachmentsBucket).info(path);
+      if (error) {
+        const status = Number((error as { status?: number; statusCode?: string }).status ?? (error as { statusCode?: string }).statusCode);
+        if (status === 404 || /not found/i.test(error.message)) return { data: null };
+        return { error: scrub(error.message) };
+      }
+      return { data: { size: data.size as number, createdAt: data.createdAt as string } };
+    },
     download: notYet,
     deleteObject: notYet,
     signDownload: notYet,

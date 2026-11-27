@@ -267,3 +267,13 @@ Deno.test("U79 signUpload targets ATTACHMENTS_BUCKET at attachments/<id>/<file_n
   assertEquals(ff.requests.length, 1);
   assertEquals(ff.requests[0].method, "POST");
 });
+
+Deno.test("U80 objectInfo returns the object's size and creation time, and null when there is no object", async () => {
+  const { store, ff } = setup();
+  ff.on("GET", `${STORAGE}/object/info/ob1-files/${BUCKET_PATH}`,
+    { body: { id: "o1", name: BUCKET_PATH, bucket_id: "ob1-files", size: 4321, content_type: "application/pdf", created_at: "2026-01-01T00:30:00.000Z" } });
+  ff.on("GET", `${STORAGE}/object/info/ob1-files/attachments/none/missing.pdf`,
+    { status: 404, body: { statusCode: "404", error: "not_found", message: "Object not found" } });
+  assertEquals(await store.objectInfo(BUCKET_PATH), { data: { size: 4321, createdAt: "2026-01-01T00:30:00.000Z" } });
+  assertEquals(await store.objectInfo("attachments/none/missing.pdf"), { data: null });
+});
