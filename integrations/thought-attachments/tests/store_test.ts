@@ -301,6 +301,15 @@ Deno.test("U82 deleteObject deletes that path and no other", async () => {
   assertEquals(ff.requests[0].body, { prefixes: [BUCKET_PATH] });
 });
 
+// Storage's remove answers 200 with the list of objects it deleted; a path with no object is simply absent from
+// that list, with no error. The fake store's deleteObject (and so U336's "file already missing" half) relies on this.
+Deno.test("U377 deleteObject on a missing object succeeds: Storage answers 200 with an empty list", async () => {
+  const { store, ff } = setup();
+  ff.on("DELETE", `${STORAGE}/object/ob1-files`, { body: [] });
+  assertEquals(await store.deleteObject(BUCKET_PATH), { data: null });
+  assertEquals(ff.requests.map((r) => r.body), [{ prefixes: [BUCKET_PATH] }]);
+});
+
 Deno.test("U89 signDownload passes the path and the seconds to Storage and returns the signed URL", async () => {
   const { store, ff } = setup();
   const signed = `/object/sign/ob1-files/${BUCKET_PATH}?token=dl-token`;
