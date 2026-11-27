@@ -166,3 +166,12 @@ Deno.test("U146 a caption row's provenance is llm_extraction with locator photo 
   assertEquals(row.metadata.attachment_id, SHELF.id);
   assertEquals(row.metadata.type, "reference");
 });
+
+Deno.test("U147 noteMetadata is type observation, source thought-attachments, the note source type and imported_at", () => {
+  assertEquals(noteMetadata(NOW), {
+    type: "observation",
+    source: "thought-attachments",
+    source_type: "thought_attachments_note",
+    imported_at: "2026-11-27T12:34:56.789Z",
+  });
+});

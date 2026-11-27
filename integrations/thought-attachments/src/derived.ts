@@ -80,5 +80,10 @@ export function captionRow(
 
 /** Metadata of a parent note created by attaching (data-model.md). */
 export function noteMetadata(now: Date): Record<string, unknown> {
-  throw new Error("not implemented");
+  return {
+    type: "observation",
+    source: "thought-attachments",
+    source_type: "thought_attachments_note",
+    imported_at: now.toISOString(),
+  };
 }
