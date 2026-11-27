@@ -104,3 +104,15 @@ Deno.test("U263 /page/start whose pick matches the attach call's declaration con
   assertEquals([res.status, r.store.attachment(row.id)!.storage_path, r.store.signedUploads.length], [200, DECLARED.storage_path, 1]);
   assertEquals(r.store.signedUploads[0].path, DECLARED.storage_path);
 });
+
+Deno.test("U264 /page/start whose pick doesn't match the attach call's declaration is refused, with no link", async () => {
+  const r = await rig();
+  const row = await r.seed(DECLARED);
+  const wrongSize = await r.post("/page/start", { token: TOKEN, ...PICK, size: 4096 });
+  const wrongType = await r.post("/page/start", { token: TOKEN, ...PICK, type: "image/png" });
+  assertEquals(
+    [wrongSize.status, (await wrongSize.json()).code, wrongType.status, (await wrongType.json()).code],
+    [400, "wrong_size", 400, "wrong_type"],
+  );
+  assertEquals([r.store.signedUploads.length, r.store.attachment(row.id)!.declared_size], [0, 2048]);
+});

@@ -18,6 +18,12 @@ export function pageRoutes(deps: Deps, _services: Services): Hono {
     const found = await deps.store.attachmentForPageToken(await sha256Hex(body.token));
     if (!("data" in found) || found.data === null) return c.json({ error: "gone" }, 410);
     const row = found.data;
+    if (row.declared_type !== null && row.declared_type !== body.type) {
+      return c.json({ code: "wrong_type", message: "The picked file is " + body.type + ", not the declared " + row.declared_type + "." }, 400);
+    }
+    if (row.declared_size !== null && row.declared_size !== body.size) {
+      return c.json({ code: "wrong_size", message: "The picked file is " + body.size + " bytes, not the declared " + row.declared_size + "." }, 400);
+    }
     const name = baseName(body.name);
     const path = `attachments/${row.id}/${name}`;
     await deps.store.setDeclaration(row.id, {
