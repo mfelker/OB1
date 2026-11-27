@@ -130,7 +130,7 @@ US2 goes before US1 because US1's check is only meaningful once the tests exist 
 - [X] T030 [US1] **Owner-only.** Push and open the fork PR from `W` (FR-005, FR-006):
   `git push -u origin stage/pr-521-auto-capture-hermes`, then
   `gh pr create -R mfelker/OB1 --base main --head stage/pr-521-auto-capture-hermes --title "[skills] Add auto-capture-hermes adapter (staged #521)"`. The body states: staged from upstream #521 at `b9cbd68`, the fork test commits, spec folder `specs/008-stage-pr-521-auto-capture-hermes/`, the TEST_AFTER exception; and ends with the "Generated with Claude Code" line only (no session link).
-- [ ] T031 [US1] Wait until `gh pr checks <fork PR> -R mfelker/OB1` shows `fork-ci-verdict` and `OB1 Review` green. If one fails, fix it on the stage branch (tests only) and re-run T025–T028.
+- [X] T031 [US1] Wait until `gh pr checks <fork PR> -R mfelker/OB1` shows `fork-ci-verdict` and `OB1 Review` green. If one fails, fix it on the stage branch (tests only) and re-run T025–T028.
 - [X] T032 [US1] Confirm `gh pr diff <fork PR> -R mfelker/OB1 --name-only` lists only `skills/auto-capture-hermes/` paths (spec US1 scenario 3).
 
 ## Merge (gate: T001–T032 all `[X]`, both checks green, owner has waived Gate 1 test-first)

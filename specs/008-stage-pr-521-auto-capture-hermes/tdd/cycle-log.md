@@ -567,3 +567,9 @@ Commands run from the stage worktree folder `skills/auto-capture-hermes` with `e
 
 - T030 (owner): `git push -u origin stage/pr-521-auto-capture-hermes` (`a4fb349`), then `gh pr create` → https://github.com/mfelker/OB1/pull/33, title `[skills] Add auto-capture-hermes adapter (staged #521)`, base `main`, 14 commits, mergeable. The body mentions the author at the owner's request.
 - T032: `gh pr diff 33 --name-only` lists 7 files, all under `skills/auto-capture-hermes/`.
+
+## Fork PR checks green (T031)
+
+- PR #33 at `a4fb349`. Passed: `fork-ci-verdict`, `test (skills/auto-capture-hermes)` (19 s), `OB1 Review` (11 s), `detect`, `lint`, `self-test`. Skipped by design: `test-sql` (no SQL) and `OB1 Gate Event Guard`. Run 46013672123.
+- **Linux:** the suite passed on `ubuntu-26.04` with Node v26.13.1 (`skills/auto-capture-hermes: pass (all tests passed)`). This is the first run off macOS.
+- **T054 is still open.** CI ran the suite but not mutant Q4. Whether U34 catches a missing `.sort()` on Linux is still unmeasured.
