@@ -68,3 +68,12 @@ Deno.test("U127 passages keep reading order and together contain all of the page
   const actual = passages.flatMap((p) => p.text.split(/\s+/).filter(Boolean));
   assertEquals(actual, expected);
 });
+
+Deno.test("U130 a run of non-space text longer than the maximum is split into passages that are each within it", () => {
+  const max = 150;
+  const run = "x".repeat(1000);
+  const passages = toPassages(["intro " + run + " outro", run], lineFor, settingsWith({ PASSAGE_MAX_CHARS: String(max) }));
+  for (const p of passages) assert(lineFor(p.pages).length + 1 + p.text.length <= max, `${p.pages} is ${p.text.length} chars`);
+  const joined = passages.map((p) => p.text).join(" ").replace(/\s+/g, "");
+  assertEquals(joined, ("intro" + run + "outro" + run));
+});

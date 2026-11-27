@@ -21,8 +21,15 @@ export function toPassages(
         last = page;
       } else {
         if (body) passages.push({ text: body, pages: [first, last] });
-        body = word;
+        let rest = word;
         first = last = page;
+        // A run longer than a passage is cut into passage-sized pieces; the last piece stays open.
+        const room = Math.max(1, settings.passageMaxChars - sourceLineFor([page, page]).length - 1);
+        while (rest.length > room) {
+          passages.push({ text: rest.slice(0, room), pages: [page, page] });
+          rest = rest.slice(room);
+        }
+        body = rest;
       }
     }
   });
