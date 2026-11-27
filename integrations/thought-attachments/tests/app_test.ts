@@ -1,10 +1,10 @@
 /** The composed app (T031, T045): key check, CORS and Accept as the core server, settings errors, routing. */
 import { assert, assertEquals, assertStringIncludes } from "jsr:@std/assert@1.0.19";
-import { createApp } from "../src/app.ts";
+import { createApp, productionDeps } from "../src/app.ts";
 import { loadSettings } from "../src/settings.ts";
 import type { Deps, FetchApp, Settings } from "../src/types.ts";
 import { Clock } from "./helpers/clock.ts";
-import { BRAIN_KEY, envGetter } from "./helpers/env.ts";
+import { baseEnv, BRAIN_KEY, envGetter } from "./helpers/env.ts";
 import { FakeStore } from "./helpers/fake_store.ts";
 import { FUNCTION_URL, mcpCall, parseMessage } from "./helpers/mcp.ts";
 
@@ -158,4 +158,31 @@ Deno.test("U348 the settings error names the setting and what it must be, never 
   assertStringIncludes(text, PAGES_INVALID);
   assertStringIncludes(text, "setting MAX_IMAGE_MB is invalid: must be a positive number");
   assertEquals([text.includes("abc"), text.includes("-3.5")], [false, false]);
+});
+
+// ---------------------------------------------------------------- productionDeps (T032)
+
+/** Run `fn` with the process environment set to `env` exactly (for the names given), then restore it. */
+async function withEnv<T>(env: Record<string, string | undefined>, fn: () => T | Promise<T>): Promise<T> {
+  const saved = Object.fromEntries(Object.keys(env).map((k) => [k, Deno.env.get(k)]));
+  const apply = (e: Record<string, string | undefined>) => {
+    for (const [k, v] of Object.entries(e)) v === undefined ? Deno.env.delete(k) : Deno.env.set(k, v);
+  };
+  apply(env);
+  try {
+    return await fn();
+  } finally {
+    apply(saved);
+  }
+}
+
+Deno.test("U300 productionDeps with settings that are not ok returns ok false, naming the settings and no values, without throwing", async () => {
+  const input = await withEnv({ ...baseEnv(), MAX_PDF_PAGES: "abc", MCP_ACCESS_KEY: undefined }, () => productionDeps());
+  assertEquals(input, {
+    ok: false,
+    problems: [
+      { setting: "MCP_ACCESS_KEY", reason: "must be set" },
+      { setting: "MAX_PDF_PAGES", reason: "must be a positive whole number" },
+    ],
+  });
 });

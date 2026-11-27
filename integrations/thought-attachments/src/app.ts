@@ -2,6 +2,7 @@
 import { Hono } from "npm:hono@4.9.2";
 import { StreamableHTTPTransport } from "npm:@hono/mcp@0.1.1";
 import { createFinisher } from "./finish.ts";
+import { loadSettings } from "./settings.ts";
 import { buildServer } from "./tools.ts";
 import type { AppInput, FetchApp } from "./types.ts";
 
@@ -110,6 +111,9 @@ export function createApp(input: AppInput): FetchApp {
   return { fetch: async (request) => await app.fetch(request) };
 }
 
+/** The real dependencies from the environment; settings that are not ok give `{ ok: false, problems }` (T005 Q3). */
 export function productionDeps(): AppInput {
+  const loaded = loadSettings((name) => Deno.env.get(name));
+  if (!loaded.ok) return { ok: false, problems: loaded.problems };
   throw new Error("not implemented");
 }
