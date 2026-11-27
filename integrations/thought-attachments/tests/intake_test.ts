@@ -181,3 +181,12 @@ Deno.test("U153 checkActual refuses an actual size over its type's cap, naming c
   assertStringIncludes(pdf.message, "26214401");
   assertStringIncludes(pdf.message.toLowerCase(), "background processing");
 });
+
+Deno.test("U154 checkActual refuses HEIC bytes with the share it as JPEG message, whatever was declared", () => {
+  for (const type of ["image/jpeg", "image/png", "image/webp", "application/pdf"] as const) {
+    const refusal = checkActual(rowFor(type, 5000), heicBytes(5000), info(5000), settingsWith());
+    assert(refusal !== null, type);
+    assertEquals(refusal.code, "heic");
+    assertStringIncludes(refusal.message, "share it as JPEG");
+  }
+});

@@ -57,6 +57,7 @@ export function checkActual(
   settings: Settings,
 ): Refusal | null {
   const actual = sniffType(bytes);
+  if (actual === "image/heic") return HEIC_REFUSAL;
   if (actual === null || actual !== row.declared_type) {
     return { code: "wrong_type", message: "The file is " + actual + ", not the declared " + row.declared_type + "." };
   }
