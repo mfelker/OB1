@@ -784,3 +784,10 @@ declare r jsonb := pg_temp.note_case('refused', true, interval '1 hour', true);
 begin
   if (r->'removed'->>'noteRemoved')::boolean is not false or not (r->>'parent_still_there')::boolean then raise exception 'U100: %', r; end if;
 end $$;
+
+-- U101: remove keeps the parent when parent_created_here is false
+do $$
+declare r jsonb := pg_temp.note_case('refused', false, interval '1 hour');
+begin
+  if (r->'removed'->>'noteRemoved')::boolean is not false or not (r->>'parent_still_there')::boolean then raise exception 'U101: %', r; end if;
+end $$;
