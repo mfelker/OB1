@@ -769,3 +769,46 @@ Deno.test("U334 list_attachments reports an attachment whose finish claim expire
   assertEquals((out.data.attachments as { state: string }[]).map((a) => a.state), ["failed"]);
   assertStringIncludes(out.text, "failed");
 });
+
+// ---------- remove_attachment (T063) ----------
+
+/** Derived thoughts owned by an attachment, with distinct text. */
+function addDerived(h: H, attachmentId: string, count: number) {
+  for (let i = 0; i < count; i++) {
+    h.store.thoughts.push({
+      id: `00000000-0000-4000-9000-0000000001${String(i).padStart(2, "0")}`,
+      content: `From manual.pdf, page ${i + 1}`,
+      content_fingerprint: `fp-${attachmentId}-${i}`,
+      embedding: null,
+      metadata: {},
+      created_at: h.clock.iso(),
+      updated_at: h.clock.iso(),
+      attachment_id: attachmentId,
+    });
+  }
+}
+
+Deno.test("U258 remove_attachment without confirm deletes nothing and lists the file, the derived count and the parent note that would go", async () => {
+  const h = await harness();
+  const note = await seed(h, "Photo of the garage shelf");
+  const row = await storedRow(h, { parent_thought_id: note.id, parent_created_here: true, state: "refused", derived_count: 0 });
+  const plain = await storedRow(h, { derived_count: 3 });
+  addDerived(h, plain.id, 3);
+  const before = structuredClone({ t: h.store.thoughts, a: h.store.attachments });
+  const objects = h.store.objects.size;
+
+  const withNote = await call(h, "remove_attachment", { attachment_id: row.id });
+  assertEquals(withNote.isError, false);
+  assertEquals(withNote.data, { confirm: false, file: "manual.pdf", derived_thoughts: 0, parent_note: true });
+  assertStringIncludes(withNote.text, "manual.pdf");
+  assertStringIncludes(withNote.text, "parent note");
+
+  const withoutNote = await call(h, "remove_attachment", { attachment_id: plain.id, confirm: false });
+  assertEquals(withoutNote.data, { confirm: false, file: "manual.pdf", derived_thoughts: 3, parent_note: false });
+  assertStringIncludes(withoutNote.text, "3 derived thoughts");
+  assert(!withoutNote.text.includes("parent note"));
+
+  assertEquals({ t: h.store.thoughts, a: h.store.attachments }, before);
+  assertEquals(h.store.objects.size, objects);
+  assertEquals(h.store.callNames().filter((m) => ["claim", "deleteObject", "removeAttachment"].includes(m)), []);
+});

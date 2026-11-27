@@ -342,7 +342,19 @@ export function buildServer(deps: Deps, services: Services): McpServer {
     description: "Remove an attachment with its file and derived thoughts. Without confirm, only shows what would go.",
     inputSchema: { attachment_id: z.string(), confirm: z.boolean().default(false) },
     annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: false },
-  }, NOT_YET);
+  }, async ({ attachment_id, confirm }) => {
+    const found = await resolveAttachment(deps, attachment_id);
+    if ("failure" in found) return found.failure;
+    const row = found.row;
+    const preview = await deps.store.removalPreview(row.id);
+    if ("error" in preview) return fail(preview.error);
+    const data = { confirm, file: row.file_name, derived_thoughts: preview.data.derived, parent_note: preview.data.noteWouldGo };
+    const lines = [
+      `Would remove the file ${row.file_name}, ${data.derived_thoughts} derived thoughts` + (data.parent_note ? " and the parent note" : "") + ".",
+      "Nothing was deleted. Call again with confirm true to remove it.",
+    ];
+    return reply(lines.join("\n"), data);
+  });
 
   server.registerTool("find_orphan_attachments", {
     description: "List attachments whose parent is gone, uploads that expired, and refused files.",
