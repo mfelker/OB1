@@ -6,29 +6,56 @@ const PROMPT =
   "Describe this image in plain language so it can be found by a later search: the visible objects, places, " +
   "labels and any text that appears in it. State only what is visible.";
 
-export function createVisionClient(settings: Settings, fetch: typeof globalThis.fetch): VisionClient {
+export function createVisionClient(
+  settings: Settings,
+  fetch: typeof globalThis.fetch,
+): VisionClient {
   return {
     configured: Boolean(settings.visionApiBase && settings.visionModel),
-    async caption(bytes: Uint8Array, type: AcceptedType): Promise<R<{ text: string; model: string }>> {
-      const response = await fetch(`${settings.visionApiBase}/chat/completions`, {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-          ...(settings.visionApiKey ? { authorization: `Bearer ${settings.visionApiKey}` } : {}),
-        },
-        body: JSON.stringify({
-          model: settings.visionModel,
-          messages: [{
-            role: "user",
-            content: [
-              { type: "text", text: PROMPT },
-              { type: "image_url", image_url: { url: `data:${type};base64,${encodeBase64(bytes)}` } },
-            ],
-          }],
-        }),
-      });
+    async caption(
+      bytes: Uint8Array,
+      type: AcceptedType,
+    ): Promise<R<{ text: string; model: string }>> {
+      let response: Response;
+      try {
+        response = await fetch(`${settings.visionApiBase}/chat/completions`, {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            ...(settings.visionApiKey
+              ? { authorization: `Bearer ${settings.visionApiKey}` }
+              : {}),
+          },
+          body: JSON.stringify({
+            model: settings.visionModel,
+            messages: [{
+              role: "user",
+              content: [
+                { type: "text", text: PROMPT },
+                {
+                  type: "image_url",
+                  image_url: {
+                    url: `data:${type};base64,${encodeBase64(bytes)}`,
+                  },
+                },
+              ],
+            }],
+          }),
+        });
+      } catch (e) {
+        return {
+          error: `vision endpoint ${settings.visionApiBase} is unreachable: ${
+            (e as Error).message
+          }`,
+        };
+      }
       const body = await response.json();
-      return { data: { text: String(body.choices[0].message.content).trim(), model: settings.visionModel! } };
+      return {
+        data: {
+          text: String(body.choices[0].message.content).trim(),
+          model: settings.visionModel!,
+        },
+      };
     },
   };
 }

@@ -68,3 +68,11 @@ Deno.test("U177 a successful reply gives the caption text and the configured mod
   const out = await createVisionClient(settingsWith(), ff.fetch).caption(BYTES, "image/jpeg");
   assertEquals(out, { data: { text: "a red door with a brass 14", model: VISION_MODEL } });
 });
+
+Deno.test("U178 an unreachable endpoint fails with a reason", async () => {
+  const ff = new FakeFetch().on("POST", URL_, { networkError: "connection refused" });
+  const out = await createVisionClient(settingsWith(), ff.fetch).caption(BYTES, "image/jpeg");
+  assert("error" in out);
+  assertStringIncludes(out.error, "unreachable");
+  assertStringIncludes(out.error, VISION_API_BASE);
+});
