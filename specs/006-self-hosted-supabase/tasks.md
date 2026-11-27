@@ -271,3 +271,52 @@ Task: "Compose test: default service set is exactly the always-on set (T020) in 
 - Test-first for every behavior; the reds are recorded in `M/specs/006-self-hosted-supabase/tdd/cycle-log.md`.
 - No test uses the network, live credentials, or real Supabase files: stubbed `git`, `docker` and `curl`, the fixture clone and the fixture compose file (Principle IV; R10).
 - Commit in `W` with `[recipes]` prefixes; spec and ledger updates go on `M` with `[fork]` prefixes.
+
+---
+
+## Phase 9: TDD remediation (from `tdd/verification.md`, verdict FAIL, audited at `11285c0`)
+
+**The feature is not done until T061–T066 are cleared and a re-audit (T044) reaches PASS or PASS_WITH_GAPS** (constitution Quality Gate 1).
+
+- Paths are rooted at `F` (`W/recipes/self-hosted-supabase-mcp`). "Single" means `node .fork/ci/bin/tdd.mjs single <file> "<exact test name>"`, run from `M`.
+- Each fix strengthens a test, with a stated reason, before any source change. A fix that needs a source change gets a new behavior id on the test list.
+- Strengthened tests still grade `TEST_AFTER` for history purposes (spec 004 and 005 precedent). The proof for these tasks is that the named mutant is now caught. Restore each mutant exactly (`git -C W diff --quiet`) and re-run the suite green.
+
+### Blocking: HIGH findings
+
+- [ ] T061 Finding 1 (A9 tautology, SC-002), `F/tests/acceptance.test.mjs:138-139`.
+  - Replace the stub-log program check with a real constraint. Either run `setup.sh` with a `PATH` holding only the declared tools (POSIX set, `git`, `docker`, `openssl`; no `node`, which needs the stub `git` reworked so it doesn't call `node`), or log every non-POSIX program through a shim and assert the exact set.
+  - Done when mutant M15 (a bare `node -e ""` line before `setup.sh:86`) fails A9, and the suite is green.
+- [ ] T062 Finding 2 (U33 cannot discriminate), `F/tests/compose.test.mjs:22,25`.
+  - Give every `ENV_VALUES` entry a distinct value: at least `EMBEDDING_API_BASE` ≠ `CHAT_API_BASE` and `EMBEDDING_API_KEY` ≠ `CHAT_API_KEY`.
+  - Done when mutant M6 (`lean.override.yml:37` `CHAT_API_BASE: ${EMBEDDING_API_BASE}`) fails U33, and the suite is green.
+- [ ] T063 Finding 3 (U36 entrypoint and mount target), `F/tests/compose.test.mjs:143-145`.
+  - Assert the script mount's `target` is `/init/create-bucket.sh` and `read_only` is true.
+  - Assert the `entrypoint` runs that same target path.
+  - Done when mutant M7 (`lean.override.yml:45` entrypoint path changed) and a mount-target mutant (`lean.override.yml:53` target changed) each fail U36, and the suite is green.
+- [ ] T064 Finding 4 (vacuous `notEqual`), `F/tests/setup.test.mjs:169` (U13) and `:299` (U53).
+  - Assert each `SUPABASE_KEYS` value is present (`assert.ok(env.get(k))`) before the not-the-placeholder check, as U8 does.
+  - Done when mutant M18 (`setup.sh:56` `cp "$CLONE/docker/.env.example" "$build/.env"` → `: > "$build/.env"`) fails U13 and U53 on their own (single), and the suite is green.
+- [ ] T065 Finding 5 (conditional logic), `F/tests/setup.test.mjs:252-254` (U19) and `F/tests/acceptance.test.mjs:81` (A4).
+  - Remove the `if (v.length >= 16)` filter.
+  - Assert straight-line that no value of `SUPABASE_KEYS` or `MCP_ACCESS_KEY` appears in the output.
+  - Done when neither test contains an `if` that decides what to assert, mutant M1 (`setup.sh:57` drop `>/dev/null`) still fails U19, and the suite is green.
+- [ ] T066 Finding 6: owner decision on the 17 `TEST_AFTER` behaviors (U10, U13, U19, U22, U25–U29, U41–U46, U51, A5; first-run passes, each mutant-checked; list in `tdd/verification.md`).
+  - Either record an accepted exception in `plan.md` Complexity Tracking, with the reason and the mutant evidence (spec 004 T057 and spec 005 precedent), or name which behaviors must be re-driven red-first.
+  - Gate 1 cannot pass without this decision.
+
+### Non-blocking: MED and LOW findings
+
+- [ ] T067 [P] Finding 7. In `F/tests/setup.test.mjs:285-286` (U22) and `F/tests/acceptance.test.mjs:82-83` (A4), assert `st.status === 0` before comparing `stdout`. Done when both tests fail if `git` is replaced by a command that exits non-zero with empty output (run a test-local check), and the suite is green.
+- [ ] T068 Finding 8 (secret hygiene on failure). Add a behavior to the test list, traced to contract C1's "interrupted while generating secrets" row and the no-secret invariant: "after a failed key generation, no temporary `.env` remains under `$TMPDIR`". Write it in `F/tests/setup.test.mjs`, running setup with `TMPDIR` set to a test-owned folder. Done when mutant M16 (`setup.sh:55` remove `trap 'rm -rf "$build"' EXIT`) fails it, and the suite is green.
+- [ ] T069 [P] Finding 9 (SQL test environment). In `M/.specify/memory/tdd-profile.md` or the cycle log, record how to reproduce the local SQL runtime: container image, the `psql` wrapper's contents, and the bind-mount caveat. Prefer a non-bind-mount route (for example `docker cp` or piping the file over stdin) so edits are never served stale. Done when `node .fork/ci/bin/tdd.mjs file tests/verify.sql` passes after a size-changing edit to `db/ob1-schema.sql` is made and restored, with no container restart in between.
+- [ ] T070 [P] Finding 10. Reconcile US1.6 (`spec.md:60`, "reports the link as completed") with contract C1 and `setup.sh:86` (`function-link: present` only): amend the spec's scenario text, or record the deviation in the spec's Clarifications. Done when spec, contract and A3 describe the same interrupted-run outcome.
+- [ ] T071 [P] Findings 11–12. In `tdd/cycle-log.md`, append a correction entry: U34's amend (`e9789ed` → `5729d95`, pre-amend test could not pass), U19's commit `4ac1479`, and U53 as post-loop. Also note that the U25–U29 and U41–U45 commits were made seconds apart (`9c70f74` and `a76fabe` in the same second), so their per-cycle mutant records are self-reported. In `tdd/test-list.md`, change U50's and U52's "(mutant-proven)" labels to reflect their recorded reds. Done when the log and list agree with `git log 062b573..HEAD`.
+- [ ] T072 [P] Findings 13–15.
+  - U20 (`F/tests/setup.test.mjs:265-266`): assert `r2.code === 0`.
+  - U29 (`F/tests/compose.test.mjs:89-93`): assert `rest`'s condition.
+  - U51: add a test-list row for the `STORAGE_URL` override.
+  - Remove the stale DMR route from contract C4 (`contracts/setup-and-stack.md:55`), and the stale DMR key entity and FR-017 test line from `spec.md:141,161`.
+  - Note the scratch databases and `ob1_init_runner` role that `tests/verify.sql` leaves behind in its header comment.
+
+  Done when the suite is green and the docs no longer name a bundled model server.
