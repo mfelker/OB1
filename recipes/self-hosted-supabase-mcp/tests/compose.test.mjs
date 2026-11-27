@@ -139,6 +139,7 @@ test("U35 db mounts db/ob1-schema.sql read-only as 99-ob1-schema.sql and keeps i
 test("U36 ob1-init waits for a healthy storage, runs once, mounts create-bucket.sh and gets SERVICE_ROLE_KEY", { skip }, () => {
   const { services, root } = configIn();
   const init = services["ob1-init"];
+  assert.equal(init.image, "curlimages/curl:8.11.1", "ob1-init uses the pinned curl image create-bucket.sh needs");
   assert.equal(init.depends_on.storage.condition, "service_healthy");
   assert.equal(init.restart, "no");
   const script = init.volumes.find((v) => v.source === join(root, "recipes", "self-hosted-supabase-mcp", "init", "create-bucket.sh"));
