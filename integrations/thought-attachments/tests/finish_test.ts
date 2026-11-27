@@ -623,3 +623,24 @@ Deno.test("U212 a finish while another finish, rebuild or remove holds an unexpi
     assertEquals(r.ff.requests.length, 0);
   }
 });
+
+/** Start a finish and wait until it is held inside the store (its claim is taken). */
+async function startHeld(r: Rig, id: string, method: "objectInfo" | "download" | "writeDerived" | "setState" = "objectInfo") {
+  const release = r.store.hold(method);
+  const running = r.finish(id, {});
+  for (let i = 0; i < 200 && r.store.heldCount(method) === 0; i++) await new Promise((go) => setTimeout(go, 5));
+  assertEquals(r.store.heldCount(method), 1);
+  return { release, running };
+}
+
+Deno.test("U213 one second before BUSY_SECONDS has passed, the finish is still busy", async () => {
+  const r = await rig();
+  const att = pending(r, await textPdf(["alpha beta gamma delta epsilon zeta"]));
+  const held = await startHeld(r, att.id);
+  assertEquals(r.settings.busySeconds, 410);
+  r.clock.advanceSeconds(409);
+  const out = await r.finish(att.id, {});
+  assertEquals(out.busy, "finish");
+  held.release();
+  assertEquals((await held.running).state, "processed");
+});
