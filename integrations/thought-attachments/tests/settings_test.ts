@@ -208,3 +208,8 @@ Deno.test("U11 no setting's value appears in any problem's reason", () => {
   const leaks = problems.flatMap((p) => values.filter((v) => p.reason.includes(v)).map((v) => `${p.setting}: ${v}`));
   assertEquals(leaks, []);
 });
+
+Deno.test("U355 an empty or blank MCP_ACCESS_KEY counts as unset: the result is not ok, naming MCP_ACCESS_KEY", () => {
+  assertEquals(problemsWith({ MCP_ACCESS_KEY: "" }).map((p) => p.setting), ["MCP_ACCESS_KEY"]);
+  assertEquals(problemsWith({ MCP_ACCESS_KEY: "   " }).map((p) => p.setting), ["MCP_ACCESS_KEY"]);
+});

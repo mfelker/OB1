@@ -15,7 +15,8 @@ export function loadSettings(getEnv: GetEnv): SettingsResult {
     }
     return n;
   };
-  const mcpAccessKey = getEnv("MCP_ACCESS_KEY");
+  const rawAccessKey = getEnv("MCP_ACCESS_KEY");
+  const mcpAccessKey = rawAccessKey === undefined || rawAccessKey.trim() === "" ? undefined : rawAccessKey;
   // Vision is configured only with both an endpoint and a model (FR-006); otherwise none of it is kept.
   const visionApiBase = getEnv("VISION_API_BASE");
   const visionModel = getEnv("VISION_MODEL");
