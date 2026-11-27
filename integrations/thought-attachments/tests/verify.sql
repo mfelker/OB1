@@ -367,20 +367,20 @@ begin
   if n <> 0 then raise exception 'U54: % rows written', n; end if;
 end $$;
 
--- U55: inserted rows' content_fingerprint equals the guide's step 2.6 expression applied to their content
+-- U55: an inserted row's content_fingerprint is the guide's step 2.6 digest of its content: a literal hex digest
+-- for a fixed content (whitespace runs collapsed, trimmed, lower-cased, UTF-8, SHA-256). It is the digest that
+-- src/derived.ts fingerprint() gives for the same text; the non-ASCII "é" pins the UTF-8 encoding.
 do $$
-declare p uuid := pg_temp.mk_parent(); a uuid := pg_temp.mk_att(p); bad bigint; n bigint;
+declare p uuid := pg_temp.mk_parent(); a uuid := pg_temp.mk_att(p); fps text[];
 begin
-  perform attachment_write_derived(a, 'tok', pg_temp.rows_json(E'  U55   Mixed CASE\ntext ' || a), '{}'::jsonb);
-  select count(*) into n from thoughts where metadata->>'attachment_id' = a::text;
-  select count(*) into bad from thoughts
-    where metadata->>'attachment_id' = a::text
-      and content_fingerprint is distinct from encode(sha256(convert_to(lower(trim(regexp_replace(content, '\s+', ' ', 'g'))), 'UTF8')), 'hex');
+  perform attachment_write_derived(a, 'tok', pg_temp.rows_json(E'  U55   Mixed CASE\ntext\tfor the caf\u00e9 fingerprint  '), '{}'::jsonb);
+  select array_agg(content_fingerprint) into fps from thoughts where metadata->>'attachment_id' = a::text;
   delete from thoughts where metadata->>'attachment_id' = a::text;
   delete from thought_attachments where id = a;
   delete from thoughts where id = p;
-  if n <> 1 then raise exception 'U55: % rows written, want 1', n; end if;
-  if bad <> 0 then raise exception 'U55: % rows with a different fingerprint', bad; end if;
+  if fps is distinct from array['b05af88c83ebf399bbc3012d5224c51fe75dfcc25e5770b76e9087faab0b470d'] then
+    raise exception 'U55: fingerprints are %, want the one literal digest', fps;
+  end if;
 end $$;
 
 -- U56: a row whose fingerprint equals an owner thought's raises, and that thought is unchanged
