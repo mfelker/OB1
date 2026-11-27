@@ -227,3 +227,18 @@ Deno.test("U190 a 300-character caption is returned whole in the outcome", async
   assertEquals(caption.length, 300);
   assertEquals(out.caption, caption);
 });
+
+Deno.test("U192 with vision not configured, the photo ends not_captioned with the reason, the object is kept, and there is no derived thought", async () => {
+  const r = await rig({ VISION_API_BASE: undefined });
+  const att = pending(r, jpegBytes(2000));
+  const out = await r.finish(att.id, {});
+  assertEquals(out.state, "not_captioned");
+  assertStringIncludes(out.reason ?? "", "not configured");
+  assertEquals(out.derived_count, 0);
+  const row = r.store.attachment(att.id) as AttachmentRow;
+  assertEquals(row.state, "not_captioned");
+  assertEquals(row.state_reason, out.reason);
+  assertEquals(r.store.objects.has(att.storage_path as string), true);
+  assertEquals(r.store.derivedOf(att.id).length, 0);
+  assertEquals(r.ff.requests.filter((q) => q.url === VISION_URL).length, 0);
+});

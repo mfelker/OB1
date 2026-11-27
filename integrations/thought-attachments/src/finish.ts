@@ -101,7 +101,17 @@ export function createFinisher(deps: Deps): Services {
     return { state: "processed", derived_count: rows.length, page_count: pdf.data.pageCount };
   }
 
+  /** The file is kept, with no caption, so a later finish can caption it (FR-006). */
+  async function notCaptioned(row: AttachmentRow, token: string, actual: StatePatch, reason: string): Promise<FinishOutcome> {
+    const set = await store.setState(row.id, token, { ...actual, state: "not_captioned", state_reason: reason });
+    if ("error" in set) throw new Error(set.error);
+    return { state: "not_captioned", reason, derived_count: 0 };
+  }
+
   async function photoPath(row: AttachmentRow, token: string, bytes: Uint8Array, actual: StatePatch): Promise<FinishOutcome> {
+    if (!deps.vision.configured) {
+      return await notCaptioned(row, token, actual, "vision is not configured (set VISION_API_BASE and VISION_MODEL)");
+    }
     const caption = await deps.vision.caption(bytes, row.declared_type as AcceptedType);
     if ("error" in caption) throw new Error(caption.error);
     const embedded = await deps.embeddings.embed([caption.data.text]);
