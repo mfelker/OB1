@@ -39,7 +39,6 @@ import { chatReply, embeddingResponder, FakeFetch, type Handler, vectorFor } fro
 import { FakeStore, type FakeThought, shortId } from "./helpers/fake_store.ts";
 import { corruptPdf, heicBytes, jpegBytes, scannedPdf, textPdf } from "./helpers/fixtures.ts";
 import { FUNCTION_URL, mcpCall } from "./helpers/mcp.ts";
-import { todo } from "./helpers/todo.ts";
 
 // ---------------------------------------------------------------- constants
 
@@ -1517,7 +1516,7 @@ Deno.test(
   },
 );
 
-todo(
+Deno.test(
   "A56 a confirmed removal whose record deletion fails after the file was deleted leaves it listed; a repeat confirmed removal succeeds and treats the missing file as removed",
   async () => {
     const w = world();
