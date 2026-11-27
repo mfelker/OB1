@@ -738,3 +738,14 @@ Deno.test("U255 list_attachments with derived_thought_id returns the attachment 
   assertStringIncludes(out.text, "manual.pdf");
   assertEquals(h.store.callNames().includes("listByParent"), false);
 });
+
+Deno.test("U256 list_attachments with both or neither input is refused", async () => {
+  const h = await harness();
+  const parent = await seed(h, "dishwasher");
+  for (const args of [{ thought_id: parent.id, derived_thought_id: parent.id }, {}]) {
+    const out = await call(h, "list_attachments", args);
+    assertEquals(out.isError, true, JSON.stringify(args));
+    assertStringIncludes(out.text, "exactly one of thought_id or derived_thought_id");
+  }
+  assertEquals(h.store.callNames().filter((m) => m === "listByParent" || m === "attachmentForDerived"), []);
+});

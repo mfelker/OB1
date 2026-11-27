@@ -317,6 +317,9 @@ export function buildServer(deps: Deps, services: Services): McpServer {
     inputSchema: { thought_id: z.string().optional(), derived_thought_id: z.string().optional() },
     annotations: READ_ONLY,
   }, async ({ thought_id, derived_thought_id }) => {
+    if ((thought_id === undefined) === (derived_thought_id === undefined)) {
+      return fail("Give exactly one of thought_id or derived_thought_id.");
+    }
     let rows: AttachmentRow[];
     if (derived_thought_id !== undefined) {
       const owner = await deps.store.attachmentForDerived(derived_thought_id);
