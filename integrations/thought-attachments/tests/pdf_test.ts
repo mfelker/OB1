@@ -31,3 +31,9 @@ Deno.test("U156 isScanned is true when the average non-space characters per page
   assertEquals(isScanned(["a".repeat(19), "b".repeat(19)], s), true);
   assertEquals(isScanned(["a".repeat(10), "b".repeat(29)], s), true); // 39 over 2 pages = 19.5
 });
+
+Deno.test("U157 isScanned is false at exactly SCANNED_MIN_CHARS_PER_PAGE", () => {
+  assertEquals(isScanned(["a".repeat(20), "b".repeat(20)], settingsWith()), false);
+  assertEquals(isScanned(["a".repeat(10), "b".repeat(30)], settingsWith()), false);
+  assertEquals(isScanned(["a".repeat(5)], settingsWith({ SCANNED_MIN_CHARS_PER_PAGE: "5" })), false);
+});
