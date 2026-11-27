@@ -140,3 +140,10 @@ const WHOLE = "must be a positive whole number";
 Deno.test("U17 a non-numeric value for a numeric setting is a problem naming it and what it must be", () => {
   assertEquals(problemsWith({ MAX_PDF_PAGES: "abc" }), [{ setting: "MAX_PDF_PAGES", reason: WHOLE }]);
 });
+
+Deno.test("U18 a zero or negative value for a whole-number setting is a problem naming it", () => {
+  assertEquals(
+    [problemsWith({ MAX_PDF_PAGES: "0" }), problemsWith({ MAX_PDF_PAGES: "-1" })],
+    [[{ setting: "MAX_PDF_PAGES", reason: WHOLE }], [{ setting: "MAX_PDF_PAGES", reason: WHOLE }]],
+  );
+});

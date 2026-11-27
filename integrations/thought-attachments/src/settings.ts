@@ -10,7 +10,7 @@ export function loadSettings(getEnv: GetEnv): SettingsResult {
     const raw = getEnv(name);
     if (raw === undefined) return fallback;
     const n = Number(raw);
-    if (Number.isNaN(n)) problems.push({ setting: name, reason: "must be a positive whole number" });
+    if (Number.isNaN(n) || n <= 0) problems.push({ setting: name, reason: "must be a positive whole number" });
     return n;
   };
   const mcpAccessKey = getEnv("MCP_ACCESS_KEY");
