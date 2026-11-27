@@ -77,7 +77,7 @@ The function reads these settings from its environment. Only `MCP_ACCESS_KEY` is
 | `DOWNLOAD_LINK_SECONDS` | `600` | How long a download link stays valid |
 | `BUSY_SECONDS` | `410` | How long a running finish, rebuild or remove blocks others on the same attachment. On Cloud you may lower it to `160` for faster recovery after a killed run |
 | `PUBLIC_BASE_URL` | `SUPABASE_PUBLIC_URL`, else `SUPABASE_URL` | The address put in every link the function returns. On self-hosted, set it to an address your phone can reach |
-| `UPLOAD_PAGE_URL` | `PUBLIC_BASE_URL` + `/functions/v1/thought-attachments/upload` | Where the phone upload page lives. On Cloud, set it to your published copy |
+| `UPLOAD_PAGE_URL` | `PUBLIC_BASE_URL` + `/functions/v1/thought-attachments/upload` | Where the phone upload page lives. On Cloud, set it to your published copy (see [Upload from your phone](#upload-from-your-phone)) |
 
 `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` come from the platform. No setting value is ever written into a thought, an attachment record or a log line.
 
@@ -189,6 +189,37 @@ Cloud-hosted clients such as claude.ai connectors cannot reach a self-hosted sta
 5. Search with the core connector, in words from inside the manual. A passage comes back with its source line, for example `From dishwasher-manual.pdf, pages 12–13 (attachment a1b2c3d4)`.
 
 **Done when:** the attachment is `processed` and a core search returns a passage from your PDF with its source line.
+
+### Upload from your phone
+
+Instead of the command, you can have the AI create an upload link for your phone: ask it to attach a photo and open the result's `page_link` on the phone. The page needs no app, shell or access key. It shows the accepted types and size limit, uploads one file, finishes the attachment itself and shows the outcome, for example the photo's caption. The link works once, expires after `UPLOAD_LINK_MINUTES`, and can only affect its own attachment. If the page says it is waiting, another finish is running; it retries by itself.
+
+To start with a note, ask the AI to attach a photo "with the note: the filters are on this shelf". It saves the note as a thought, uses it as the parent, and returns the page link. If the file is then refused or the link expires unused, that note is removed with the attachment unless another attachment uses it.
+
+**On self-hosted**, the function serves the page itself. Set `PUBLIC_BASE_URL` to an address your phone can reach, such as the machine's LAN address or its tailnet address, and recreate the functions service. The phone must be on the same network (or the tailnet) as the stack. `localhost` would send the phone to itself. Reaching the stack from anywhere else is not covered yet (fork issue 29).
+
+**On Supabase Cloud, publish the page once.** Cloud rewrites HTML served by an Edge Function to plain text, so the function cannot serve the page itself. Instead you publish one static file:
+
+1. Open `integrations/thought-attachments/upload-page.html` and fill in its single API-address line with your function address, `https://YOUR-PROJECT-REF.supabase.co/functions/v1/thought-attachments`. The address is fixed in the file and never read from a link, so a crafted link cannot send a photo anywhere else. A copy with the line left blank will fail visibly against the host it was published on.
+2. Publish the file to any free static host. It holds no secrets, and the one-time token travels in the link's `#fragment`, which the host never receives.
+3. Set `UPLOAD_PAGE_URL` to the published address and redeploy or update the secret:
+
+   ```bash
+   supabase secrets set UPLOAD_PAGE_URL=https://YOUR-STATIC-HOST/upload-page.html
+   ```
+
+   The function then answers the page's requests only for that origin.
+
+**Photos and HEIC.** The file picker accepts JPEG, PNG, WebP and PDF. On an iPhone, Safari hands over a JPEG even when the camera is set to High Efficiency. If a HEIC file does get through, it is refused before upload with a message to share it as JPEG: in the Photos app choose Share, then Options, then Most Compatible (or send it to yourself as a JPEG), or on Android pick a JPEG version.
+
+**Vision model.** Photo captions need `VISION_API_BASE`, `VISION_API_KEY` and `VISION_MODEL`.
+
+- Ollama on the host (self-hosted): `VISION_API_BASE=http://host.docker.internal:11434/v1`, `VISION_MODEL=qwen2.5vl:7b`, no key needed. Pull the model first with `ollama pull qwen2.5vl:7b`.
+- OpenRouter (Cloud): `VISION_API_BASE=https://openrouter.ai/api/v1`, your key, and any vision model you choose.
+
+The photo goes to the model as an embedded image, so the model server does not need to reach your storage.
+
+**Done when:** a photo taken on your phone shows its caption on the page, and a core search for something in the photo returns the caption thought.
 
 ## Expected Outcome
 
