@@ -174,3 +174,19 @@ Task: "Lane hygiene (T025)"  Task: "fork-ci preview (T026)"  Task: "Diff scan (T
 - Fork test commits go on `W`; `specs/` and `.fork/` changes go on `M`. Never cross them (Principle V).
 - `.specify/feature.json` is shared with the other session working in `M`. Point it at 008 only while running 008's spec-kit commands, then back to 007.
 - A defect found by a test → `todo` + `S/evidence/defects.md` + the #521 comment. Never patch the author's file without a new Complexity Tracking row and owner approval.
+
+---
+
+## Phase 8: TDD remediation (from `S/tdd/verification.md`, audit at `07375aa` / stage `6bcefef`)
+
+**The verdict is FAIL. Pre-merge work is not done until T041–T043 are cleared.** Do them on `W` (tests only; never the author's four files), re-run T024–T028, and re-run `/speckit-tdd-verify` before T030. Every behavior stays `TEST_AFTER` under the owner's waiver, and no task here can change that (add-only PR, no base exists).
+
+Proof command for each task, run from `W/skills/auto-capture-hermes`: `env -i PATH="$PATH" HOME="$TMPDIR" node --test --test-name-pattern="<test name>" capture-hermes-session.test.mjs`. Each strengthened assertion must also be shown to fail against a temporary mutant of the author's script, which is then restored and checked with `git diff --quiet`, as the loop did.
+
+- [ ] T041 [US2] Finding 1 (HIGH): in `F/capture-hermes-session.test.mjs:195–198` (A8) and `:368–370` (U22), replace the stub-request check (which can't fail, because the child never gets the stub's address) with `assert.deepEqual(queueEntries(sandbox), [])` and `assert.deepEqual(dispositions(sandbox), ["error:missing_env"])`. Done when both tests pass, and both fail against a mutant that disables the missing-config guard (the loop's A8 detection mutant).
+- [ ] T042 [US2] Finding 2 (HIGH): in `F/capture-hermes-session.test.mjs:420` (U38), replace `assert.ok(state.captured_at)` with checks that it is an ISO-8601 string and that `Date.parse` lies between a time taken before the run and a time taken after it. Done when U38 passes, and fails against a mutant setting `captured_at: true` at `capture-hermes-session.mjs:259`.
+- [ ] T043 [US2] Finding 3 (HIGH): add behavior **U41** to `S/tdd/test-list.md` (traces FR-011): a body exactly at the budget is sent whole with no marker, and one character over carries the marker. Add its test to `F/capture-hermes-session.test.mjs`, deriving `OB_CAPTURE_MAX_CHARS` from the fixture so that body length equals budget exactly. Done when U41 passes, and fails against audit mutant M7 (`text.length <= budget` → `<` at `capture-hermes-session.mjs:475`). Add a cycle-log entry.
+- [ ] T044 [US3] Finding 4 (MED): A11 (`:481`) and U29 (`:515`) must also assert that the disposition starts with `error:HTTP 401` or `error:HTTP 400` respectively. Done when both pass and fail against a mutant logging another status.
+- [ ] T045 [US2] Finding 5 (MED): split U17's ordering check (`:333`) into labelled assertions that `FIRST-TURN` and `LAST-TURN` are both present (`>= 0`) and the marker lies between them. Done when U17 passes and fails against a mutant that drops the head slice.
+- [ ] T046 [P] Findings 6–8 (MED): name the stub reply (`JOB_ID`, passed explicitly at `:421`, `:457`, `:570`). Derive the A6/U16/U17 limits from the `longConversation` size (`:178`, `:323`, `:330`). Make U17's marker check structural rather than exact-wording (`:103`). Done when the suite is 51+ pass, 0 fail.
+- [ ] T047 [P] Findings 9–10 (MED): in U40 (`:565`), state the debounce versus `waitFor` timeout margin in a comment. Update the U40 row of `S/tdd/test-list.md` and research R8 from 300 ms to 1000 ms, with the cycle-log note as the reason. Done when the list and the test agree.
