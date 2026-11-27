@@ -2,7 +2,14 @@
 import { assertEquals } from "jsr:@std/assert@1.0.19";
 import { loadSettings } from "../src/settings.ts";
 import type { Settings } from "../src/types.ts";
-import { EMBEDDING_API_KEY, envGetter, PUBLIC_BASE_URL, SUPABASE_URL } from "./helpers/env.ts";
+import {
+  EMBEDDING_API_KEY,
+  envGetter,
+  PUBLIC_BASE_URL,
+  SUPABASE_URL,
+  VISION_API_BASE,
+  VISION_MODEL,
+} from "./helpers/env.ts";
 
 /** Loads settings over the baseline env with `overrides`, and fails the test unless the result is ok. */
 function settingsWith(overrides: Record<string, string | undefined> = {}): Settings {
@@ -99,4 +106,12 @@ const NOT_CONFIGURED = { base: undefined, key: undefined, model: undefined };
 Deno.test("U9 with VISION_API_BASE or VISION_MODEL unset (each alone) vision is not configured", () => {
   assertEquals(visionOf(settingsWith({ VISION_API_BASE: undefined })), NOT_CONFIGURED);
   assertEquals(visionOf(settingsWith({ VISION_MODEL: undefined })), NOT_CONFIGURED);
+});
+
+Deno.test("U10 with VISION_API_BASE and VISION_MODEL set and VISION_API_KEY unset vision is configured", () => {
+  assertEquals(visionOf(settingsWith({ VISION_API_KEY: undefined })), {
+    base: VISION_API_BASE,
+    key: undefined,
+    model: VISION_MODEL,
+  });
 });
