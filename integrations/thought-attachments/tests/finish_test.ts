@@ -119,3 +119,15 @@ Deno.test("U185 after a processed finish, a new claim on the attachment succeeds
   const claim = await r.store.claim(att.id, "remove", 60);
   assert("data" in claim && "token" in claim.data);
 });
+
+Deno.test("U186 an owner thought equal to a passage's body is unchanged after the finish", async () => {
+  const r = await rig();
+  const owner = await r.store.seedThought({ content: "alpha beta gamma", metadata: { mine: true } });
+  const before = structuredClone(r.store.thought(owner.id));
+  const att = pending(r, await textPdf(["alpha beta gamma"]));
+  const out = await r.finish(att.id, {});
+  assertEquals(out.state, "processed");
+  assertEquals(r.store.thought(owner.id), before);
+  assertEquals(r.store.derivedOf(att.id).length, 1);
+  assertStringIncludes(r.store.derivedOf(att.id)[0].content, "alpha beta gamma");
+});
