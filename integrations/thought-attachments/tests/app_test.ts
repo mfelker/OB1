@@ -2,7 +2,7 @@
 import { assert, assertEquals, assertStringIncludes } from "jsr:@std/assert@1.0.19";
 import { createApp } from "../src/app.ts";
 import { loadSettings } from "../src/settings.ts";
-import type { Deps, FetchApp } from "../src/types.ts";
+import type { Deps, FetchApp, Settings } from "../src/types.ts";
 import { Clock } from "./helpers/clock.ts";
 import { BRAIN_KEY, envGetter } from "./helpers/env.ts";
 import { FakeStore } from "./helpers/fake_store.ts";
@@ -14,12 +14,15 @@ const INIT = {
   clientInfo: { name: "app-test", version: "1.0.0" },
 };
 
-function rig(env: Record<string, string | undefined> = {}): { app: FetchApp; store: FakeStore; deps: Deps } {
+function rig(
+  env: Record<string, string | undefined> = {},
+  tweak: Partial<Settings> = {},
+): { app: FetchApp; store: FakeStore; deps: Deps } {
   const loaded = loadSettings(envGetter(env));
   if (!loaded.ok) throw new Error("test setup: settings");
   const store = new FakeStore({ clock: new Clock() });
   const deps: Deps = {
-    settings: loaded.settings,
+    settings: { ...loaded.settings, ...tweak },
     store,
     embeddings: { embed: () => Promise.resolve({ error: "unused" }) },
     vision: { configured: false, caption: () => Promise.resolve({ error: "unused" }) },
@@ -66,6 +69,20 @@ Deno.test("U296 a missing key gets an authorization error", async () => {
     error: UNAUTHORIZED,
     id: "k",
     result: undefined,
+    calls: [],
+  });
+});
+
+Deno.test("U297 with an empty configured key, every MCP request is refused", async () => {
+  const { app, store } = rig({}, { mcpAccessKey: "" });
+  const replies = [
+    await mcpCall(app.fetch, "initialize", INIT, undefined),
+    await mcpCall(app.fetch, "initialize", INIT, ""),
+    await mcpCall(app.fetch, "initialize", INIT, "", { via: "query" }),
+    await mcpCall(app.fetch, "tools/list", {}, BRAIN_KEY),
+  ];
+  assertEquals({ codes: replies.map((r) => (r.message?.error as { code?: number })?.code), calls: store.callNames() }, {
+    codes: [-32001, -32001, -32001, -32001],
     calls: [],
   });
 });
