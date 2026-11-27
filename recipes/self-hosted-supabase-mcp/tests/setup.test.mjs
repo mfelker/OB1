@@ -8,7 +8,7 @@
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { existsSync, writeFileSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { existsSync, writeFileSync, readdirSync, readFileSync, statSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
 import { makeCheckout, runSetup, stubCalls, PIN, readEnv, envPath, SUPABASE_KEYS, MODEL_SETTINGS, examplePlaceholder } from "./helpers/harness.mjs";
@@ -305,5 +305,16 @@ test("U53 an empty .env left by an interrupted Compose check is completed by the
       assert.ok(env.get(k), `${k} present`);
       assert.notEqual(env.get(k), examplePlaceholder(k), `${k} generated`);
     }
+  } finally { co.cleanup(); }
+});
+
+test("U54 after a failed key generation no temporary .env remains under TMPDIR", () => {
+  const co = makeCheckout();
+  try {
+    const tmp = join(co.root, ".tmpdir");
+    mkdirSync(tmp);
+    const r = runSetup(co, { STUB_GENKEYS_FAIL: "1", TMPDIR: tmp });
+    assert.notEqual(r.code, 0);
+    assert.deepEqual(readdirSync(tmp), []);
   } finally { co.cleanup(); }
 });
