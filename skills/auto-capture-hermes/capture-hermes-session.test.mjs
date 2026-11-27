@@ -144,6 +144,9 @@ describe("acceptance", () => {
     const payload = parsePayload(result);
     assert.deepEqual(turnsOf(payload).map((t) => t.content), ["u1", "a1", "u2", "a2", "u3", "a3"]);
     assert.equal(payload.source_label, `hermes:${PROJECT}`);
+    // Fixed fields of the capture payload (data-model § Capture payload).
+    assert.equal(payload.source_type, "hermes_ambient");
+    assert.equal(payload.auto_execute, true);
     assert.match(payload.import_key, /^hermes:session-1:/);
     assert.equal(stub.requests.length, 0);
   });
@@ -558,7 +561,10 @@ for (const [id, status] of [["U27", 429], ["U28", 500]]) {
     seedSession();
     stub = await startIngestStub([{ status, body: {} }]);
     await capture(SESSION_ID, brainEnv());
-    assert.equal(queueEntries(sandbox).length, 1);
+    const queued = queueEntries(sandbox);
+    assert.equal(queued.length, 1);
+    // The failed send counts as attempt 1, so dead/ is reached after 5 attempts in all.
+    assert.equal(queued[0].attempt_count, 1);
   });
 }
 
