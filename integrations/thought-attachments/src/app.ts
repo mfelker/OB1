@@ -1,9 +1,12 @@
 /** The composed function (tasks T031, T032, T045): the MCP route behind the brain key, and the page routes. */
 import { Hono } from "npm:hono@4.9.2";
 import { StreamableHTTPTransport } from "npm:@hono/mcp@0.1.1";
+import { createEmbeddingClient } from "./embeddings.ts";
 import { createFinisher } from "./finish.ts";
 import { loadSettings } from "./settings.ts";
+import { createSupabaseStore } from "./store.ts";
 import { buildServer } from "./tools.ts";
+import { createVisionClient } from "./vision.ts";
 import type { AppInput, FetchApp } from "./types.ts";
 
 // The core server's CORS headers (W/server/index.ts), so a client that reaches the core connector reaches this one.
@@ -115,5 +118,23 @@ export function createApp(input: AppInput): FetchApp {
 export function productionDeps(): AppInput {
   const loaded = loadSettings((name) => Deno.env.get(name));
   if (!loaded.ok) return { ok: false, problems: loaded.problems };
-  throw new Error("not implemented");
+  const settings = loaded.settings;
+  // Late-bound, so the global fetch in force at call time is the one used.
+  const fetch: typeof globalThis.fetch = (input, init) => globalThis.fetch(input, init);
+  return {
+    ok: true,
+    deps: {
+      settings,
+      store: createSupabaseStore(
+        Deno.env.get("SUPABASE_URL") ?? "",
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+        settings,
+        fetch,
+      ),
+      embeddings: createEmbeddingClient(settings, fetch),
+      vision: createVisionClient(settings, fetch),
+      now: () => new Date(),
+      randomBytes: (n) => crypto.getRandomValues(new Uint8Array(n)),
+    },
+  };
 }
