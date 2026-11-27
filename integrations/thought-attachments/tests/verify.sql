@@ -220,3 +220,15 @@ begin
     end if;
   end loop;
 end $$;
+
+-- U47: the fingerprint column and idx_thoughts_fingerprint are added on a thoughts table without them.
+-- fork-ci's bootstrap creates thoughts without the column, so the first run on a database exercises the add;
+-- later runs find them present (U48 covers that case). verify.sql has no DROP to undo it.
+do $$
+declare has_col boolean; has_idx boolean;
+begin
+  select exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'thoughts' and column_name = 'content_fingerprint') into has_col;
+  select exists (select 1 from pg_indexes where tablename = 'thoughts' and indexname = 'idx_thoughts_fingerprint') into has_idx;
+  if not has_col then raise exception 'U47: thoughts.content_fingerprint missing'; end if;
+  if not has_idx then raise exception 'U47: idx_thoughts_fingerprint missing'; end if;
+end $$;

@@ -98,3 +98,9 @@ create unique index if not exists thought_attachments_parent_hash_uniq
 -- Access: RLS on, no policy for anon or authenticated.
 alter table thought_attachments enable row level security;
 grant select, insert, update, delete on thought_attachments to service_role;
+
+-- The core's content fingerprint step (guide step 2.6), only where it is missing (R16).
+alter table thoughts add column if not exists content_fingerprint text;
+create unique index if not exists idx_thoughts_fingerprint
+  on thoughts (content_fingerprint)
+  where content_fingerprint is not null;
