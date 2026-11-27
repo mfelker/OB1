@@ -581,6 +581,7 @@ Streams code against these. The signatures are the only shared contract. Behavio
 - [ ] T084 **Upstream PR, after T083. Ask the owner first.** `gh pr create -R NateBJones-Projects/OB1 --head mfelker:contrib/mfelker/thought-attachments --title "[integrations] Thought attachments: files linked to thoughts"`, with the body from `W/.github/PULL_REQUEST_TEMPLATE.md`, ending with the "Generated with Claude Code" line only. Update the ledger row in `M/.fork/staged-prs.md`.
 - [ ] T085 Cleanup:
   - after T083 merges: remove the eight `ta-*` worktrees and their local branches (`git worktree remove`, after checking `git status --short` is clean), the scratch checkouts, and the `ob1-007-pgtest` container
+    - **Done 2026-11-27:** all eight `ta-*` worktrees and branches removed (each checked clean and merged first). The scratch checkouts were removed, and the scratch self-hosted stack was stopped with its volumes, so the owner's future real 006 stack starts fresh. `ob1-007-pgtest` was removed. **Kept, by owner decision:** the Cloud project `ob1-selfhosted-llm-test` with 007's test data, function, bucket and secrets.
   - after the upstream PR merges or closes: remove `W` and its local branch, and reconcile the ledger
 
 ---
