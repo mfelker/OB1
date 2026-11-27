@@ -61,3 +61,21 @@ begin
   exception when check_violation then null;
   end;
 end $$;
+
+-- U36: expected_kind accepts photo, pdf and empty and rejects any other value
+do $$
+declare t text; v_id uuid;
+begin
+  foreach t in array array['photo', 'pdf', ''] loop
+    insert into thought_attachments (parent_thought_id, expected_kind, state, upload_deadline)
+      values (gen_random_uuid(), t, 'pending_upload', now()) returning id into v_id;
+    delete from thought_attachments where id = v_id;
+  end loop;
+  begin
+    insert into thought_attachments (parent_thought_id, expected_kind, state, upload_deadline)
+      values (gen_random_uuid(), 'bogus', 'pending_upload', now()) returning id into v_id;
+    delete from thought_attachments where id = v_id;
+    raise exception 'U36: bogus was accepted';
+  exception when check_violation then null;
+  end;
+end $$;

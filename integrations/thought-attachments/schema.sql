@@ -38,3 +38,10 @@ begin
       check (declared_type in ('application/pdf', 'image/jpeg', 'image/png', 'image/webp'));
   end if;
 end $$;
+do $$
+begin
+  if not exists (select 1 from pg_constraint where conname = 'thought_attachments_expected_kind_check') then
+    alter table thought_attachments add constraint thought_attachments_expected_kind_check
+      check (expected_kind in ('photo', 'pdf', ''));
+  end if;
+end $$;
