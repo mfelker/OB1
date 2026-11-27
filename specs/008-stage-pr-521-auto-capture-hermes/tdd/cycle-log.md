@@ -541,3 +541,17 @@ Commands run from the stage worktree folder `skills/auto-capture-hermes` with `e
 - **T026:** fork-ci `run-folder` strict → `pass` (all tests passed; node-plain, 4484 ms) (`evidence/run-folder-final.json`); worktree clean.
 - **T027:** diff `b9cbd68..HEAD` has no secret patterns, no binaries or `.db` files, and no profanity. The only URL is `http://127.0.0.1:${port}`; the one "token" match is wording in U40's comment.
 - **T028:** OB1 Review step re-extracted from `ob1-gate-v2.yml` at `238df6c` and confirmed identical to the saved harness. Run with the base schema and check-jsonschema 0.39.0: 15/15, `failed=false`, `secret_blocked=false` (`evidence/gate-review-local.txt`).
+
+## Cycle 62: A1, U27, U28 test strengthening (third audit findings 1–2, T052, T053)
+
+- tests: `A1 dry-run prints one payload with the turns, label and key, and sends nothing`, `U27 a 429 answer queues the payload`, `U28 a 500 answer queues the payload` (changed)
+- reason: `source_type` and `auto_execute` (data-model § Capture payload) and a new queue entry's `attempt_count` (contracts/ingest-request.md:18) were asserted nowhere. A1 now pins `source_type === "hermes_ambient"` and `auto_execute === true`; U27 and U28 pin `attempt_count === 1` on the queued entry.
+- red, old tests: mutants R1, R2 and Q5 survived the whole suite (third audit, `d51cc69`).
+- red, new tests:
+  - R1 (`source_type: "hermes"`) → A1 `not ok`, `expected: 'hermes_ambient'`, `actual: 'hermes'`.
+  - R2 (`auto_execute: false`) → A1 `not ok`, `expected: true`, `actual: false`.
+  - Q5 (new entry at `attempt_count: 0`) → U27 and U28 `not ok`, `expected: 1`, `actual: 0`.
+  - All exit 1; script restored, `git diff --quiet` clean, green again on the restored script.
+- green: suite 53 passed, 0 failed (2 runs)
+- refactor: none needed
+- commit: `a4fb349`
