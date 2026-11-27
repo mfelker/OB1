@@ -7,7 +7,15 @@ export function baseName(name: string): string {
   return (name.split(/[\\/]/).pop() ?? "").replace(/[\u0000-\u001f\u007f]/g, "");
 }
 
+export const HEIC_REFUSAL: Refusal = {
+  code: "heic",
+  message: "HEIC photos are not accepted: share it as JPEG. " +
+    "On iPhone, open Settings > Camera > Formats and choose Most Compatible, or pick the photo in Photos, tap Share and choose Options > Most Compatible. " +
+    "On Android, choose JPEG in the camera settings, or share the photo from the gallery as JPEG.",
+};
+
 export function checkDeclared(decl: DeclaredFile, settings: Settings): Refusal | null {
+  if (decl.type === "image/heic" || decl.type === "image/heif") return HEIC_REFUSAL;
   if (!ACCEPTED.includes(decl.type as AcceptedType)) {
     return { code: "unsupported_type", message: "Accepted types are PDF, JPEG, PNG and WebP. Got " + decl.type + "." };
   }

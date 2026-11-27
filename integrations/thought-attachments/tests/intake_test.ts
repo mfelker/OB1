@@ -71,3 +71,14 @@ Deno.test("U320 with MAX_IMAGE_MB=2.5 an image at 2,621,440 bytes is accepted an
   assert(refusal !== null);
   assertStringIncludes(refusal.message, "2621440");
 });
+
+Deno.test("U141 a HEIC declared type is refused with share it as JPEG and the steps on iPhone and Android", () => {
+  for (const type of ["image/heic", "image/heif"]) {
+    const refusal = checkDeclared({ name: "photo", type, size: 1000 }, settingsWith());
+    assert(refusal !== null, type);
+    assertEquals(refusal.code, "heic");
+    assertStringIncludes(refusal.message, "share it as JPEG");
+    assertStringIncludes(refusal.message, "iPhone");
+    assertStringIncludes(refusal.message, "Android");
+  }
+});
