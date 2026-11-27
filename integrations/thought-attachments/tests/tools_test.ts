@@ -227,3 +227,23 @@ Deno.test("U228 find_thought with no match says no matching thought", async () =
   assertEquals(out.data.matches, []);
   assertEquals(out.isError, false);
 });
+
+// ---------- attach_file (T029, T041) ----------
+
+const PDF = { file_name: "manual.pdf", declared_type: "application/pdf", declared_size: 1000 };
+const NOTHING_CREATED: string[] = ["createAttachment", "insertNote", "signUpload", "embeddingDimension"];
+
+function assertNothingCreated(h: H) {
+  assertEquals(h.store.attachments, []);
+  assertEquals(h.store.callNames().filter((m) => NOTHING_CREATED.includes(m)), []);
+  assertEquals(h.embeddings.calls, []);
+}
+
+Deno.test("U229 attach_file with an unknown thought_id is refused, with no row, link or note", async () => {
+  const h = await harness();
+  const out = await call(h, "attach_file", { thought_id: "00000000-0000-4000-9000-00000000dead", ...PDF });
+  assertEquals(out.isError, true);
+  assertStringIncludes(out.text, "no thought");
+  assertNothingCreated(h);
+  assertEquals(h.store.thoughts, []);
+});

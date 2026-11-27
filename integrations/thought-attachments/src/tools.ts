@@ -59,7 +59,14 @@ export function buildServer(deps: Deps, _services: Services): McpServer {
       sensitivity_tier: z.enum(["standard", "personal", "restricted"]).optional(),
     },
     annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: true },
-  }, NOT_YET);
+  }, async ({ thought_id }) => {
+    if (thought_id !== undefined) {
+      const exists = await deps.store.thoughtExists(thought_id);
+      if ("error" in exists) return fail(exists.error);
+      if (!exists.data) return fail("There is no thought with that thought_id.");
+    }
+    return NOT_YET();
+  });
 
   server.registerTool("finish_attachment", {
     description: "Finish an uploaded attachment: check it, extract its text or caption and make it searchable.",
