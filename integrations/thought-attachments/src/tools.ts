@@ -27,10 +27,15 @@ export function buildServer(deps: Deps, _services: Services): McpServer {
       limit: z.number().int().positive().default(5),
     },
     annotations: READ_ONLY,
-  }, async ({ query, limit }) => {
-    const embedded = await deps.embeddings.embed([query]);
-    if ("error" in embedded) return fail(embedded.error);
-    const found = await deps.store.matchThoughts(embedded.data[0], limit);
+  }, async ({ query, mode, limit }) => {
+    let found;
+    if (mode === "exact") {
+      found = await deps.store.findThoughtsExact(query, limit);
+    } else {
+      const embedded = await deps.embeddings.embed([query]);
+      if ("error" in embedded) return fail(embedded.error);
+      found = await deps.store.matchThoughts(embedded.data[0], limit);
+    }
     if ("error" in found) return fail(found.error);
     return reply(JSON.stringify(found.data), { matches: found.data });
   });

@@ -154,3 +154,12 @@ Deno.test("U220 find_thought in meaning mode embeds the query and returns matchT
   assertEquals(h.embeddings.calls, [["where are the filters"]]);
   assertEquals(out.data.matches, [{ id: near.id, first_line: "furnace filters", captured: near.created_at }]);
 });
+
+Deno.test("U221 find_thought in exact mode returns findThoughtsExact's matches, with no embedding request", async () => {
+  const h = await harness();
+  const hit = await seed(h, "Furnace FILTERS are on the shelf");
+  await seed(h, "tax records");
+  const out = await call(h, "find_thought", { query: "furnace filters", mode: "exact" });
+  assertEquals(h.embeddings.calls, []);
+  assertEquals(out.data.matches, [{ id: hit.id, first_line: "Furnace FILTERS are on the shelf", captured: hit.created_at }]);
+});
