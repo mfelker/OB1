@@ -409,3 +409,22 @@ Deno.test("UQ3 release passes the claim token", async () => {
   assertEquals(await store.release(ATT_ID, "claim-tok"), { data: null });
   assertEquals(ff.requests[0].body, { p_id: ATT_ID, p_token: "claim-tok" });
 });
+
+Deno.test("UQ4 writeDerived sends the rows (content, metadata, embedding) and the state patch under the claim token", async () => {
+  const { store, ff } = setup();
+  const row = attachmentRow({ state: "processed", derived_count: 1 });
+  ff.on("POST", `${REST}/rpc/attachment_write_derived`, { body: row });
+  const r = await store.writeDerived(
+    ATT_ID,
+    "claim-tok",
+    [{ content: "From manual.pdf, page 1 (attachment 11111111)\nHello", fingerprint: "fp", metadata: { type: "reference" }, embedding: [0.5, 0.25] }],
+    { state: "processed", content_hash: HASH, page_count: 1 },
+  );
+  assertEquals(r, { data: row });
+  assertEquals(ff.requests[0].body, {
+    p_id: ATT_ID,
+    p_token: "claim-tok",
+    p_rows: [{ content: "From manual.pdf, page 1 (attachment 11111111)\nHello", metadata: { type: "reference" }, embedding: [0.5, 0.25] }],
+    p_patch: { state: "processed", content_hash: HASH, page_count: 1 },
+  });
+});

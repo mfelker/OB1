@@ -135,7 +135,14 @@ export function createSupabaseStore(
       const r = await rpc<unknown>("attachment_release", { p_id: id, p_token: token });
       return "error" in r ? r : { data: null };
     },
-    writeDerived: notYet,
+    writeDerived(id, token, rows, patch) {
+      return rpc<AttachmentRow>("attachment_write_derived", {
+        p_id: id,
+        p_token: token,
+        p_rows: rows.map((r) => ({ content: r.content, metadata: r.metadata, embedding: r.embedding })),
+        p_patch: patch,
+      });
+    },
     setState: notYet,
     removalPreview(id) {
       return rpc<{ derived: number; noteWouldGo: boolean }>("attachment_removal_preview", { p_id: id });
