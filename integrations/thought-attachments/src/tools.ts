@@ -7,6 +7,8 @@ type Hints = { readOnlyHint: boolean; destructiveHint?: boolean; openWorldHint?:
 
 const READ_ONLY: Hints = { readOnlyHint: true };
 
+const MAX_MATCHES = 20;
+
 const NOT_YET = () => ({ content: [{ type: "text" as const, text: "" }] });
 
 /** A tool result: the text for the AI, plus the structured fields. */
@@ -27,7 +29,8 @@ export function buildServer(deps: Deps, _services: Services): McpServer {
       limit: z.number().int().positive().default(5),
     },
     annotations: READ_ONLY,
-  }, async ({ query, mode, limit }) => {
+  }, async ({ query, mode, limit: asked }) => {
+    const limit = Math.min(asked, MAX_MATCHES);
     let found;
     if (mode === "exact") {
       found = await deps.store.findThoughtsExact(query, limit);
