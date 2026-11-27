@@ -87,3 +87,26 @@ Deno.test("U83 every RPC name and named parameter that src/store.ts sends exists
   );
   assertEquals(driftProblems(`rpc("attachment_gone", {})`, ""), ["rpc attachment_gone is not defined in schema.sql"]);
 });
+
+/** What breaks CLAUDE.md's SQL guard rails in a SQL source: DROP, TRUNCATE, or a DELETE with no WHERE. Comments are ignored. */
+export function guardRailProblems(sql: string, file: string): string[] {
+  const code = sql.replace(/--[^\n]*/g, "");
+  const problems: string[] = [];
+  if (/\bdrop\b/i.test(code)) problems.push(`${file} contains DROP`);
+  if (/\btruncate\b/i.test(code)) problems.push(`${file} contains TRUNCATE`);
+  for (const m of code.matchAll(/\bdelete\s+from\b[^;]*/gi)) {
+    if (!/\bwhere\b/i.test(m[0])) problems.push(`${file} has an unqualified DELETE: ${m[0].slice(0, 60)}`);
+  }
+  return problems;
+}
+
+Deno.test("U52 neither schema.sql nor tests/verify.sql contains DROP, TRUNCATE or an unqualified DELETE", () => {
+  assertEquals(guardRailProblems(read("../schema.sql"), "schema.sql"), []);
+  assertEquals(guardRailProblems(read("verify.sql"), "tests/verify.sql"), []);
+  // the scan sees each kind of violation, and ignores comments
+  assertEquals(guardRailProblems("drop index x;", "f"), ["f contains DROP"]);
+  assertEquals(guardRailProblems("TRUNCATE t;", "f"), ["f contains TRUNCATE"]);
+  assertEquals(guardRailProblems("delete from t;", "f").length, 1);
+  assertEquals(guardRailProblems("delete from t where id = 1;", "f"), []);
+  assertEquals(guardRailProblems("-- no DROP here\nselect 1;", "f"), []);
+});
