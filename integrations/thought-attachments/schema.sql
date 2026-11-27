@@ -366,3 +366,16 @@ begin
 end;
 $$;
 grant execute on function attachment_removal_preview(uuid) to service_role;
+
+-- Attachments that need attention (FR-021): a parent that is gone, a pending upload past its
+-- deadline, and refused records. Each comes with why.
+create or replace function attachment_orphans(p_now timestamptz)
+returns table (attachment jsonb, why text)
+language sql
+stable
+as $$
+  select to_jsonb(a), 'parent_gone'
+    from thought_attachments a
+    where not exists (select 1 from thoughts t where t.id = a.parent_thought_id)
+$$;
+grant execute on function attachment_orphans(timestamptz) to service_role;

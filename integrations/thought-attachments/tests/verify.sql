@@ -823,3 +823,23 @@ begin
   if n_before <> n_after or rows_ <> 1 or par <> 1 then raise exception 'U104: the preview deleted something'; end if;
   if (r->>'derived')::int <> (pre->>'derived')::int or r->'noteRemoved' <> pre->'noteWouldGo' then raise exception 'U104: remove % differs from preview %', r, pre; end if;
 end $$;
+
+-- Helper for the orphan checks: one attachment in a given shape, then what attachment_orphans(now()) says about it.
+create or replace function pg_temp.orphan_case(p_state text, p_deadline interval, p_parent_exists boolean) returns jsonb
+language plpgsql as $$
+declare p uuid := pg_temp.mk_parent(); a uuid := pg_temp.mk_att(p, p_state); r jsonb;
+begin
+  update thought_attachments set upload_deadline = now() + p_deadline, derived_count = 3 where id = a;
+  if not p_parent_exists then delete from thoughts where id = p; end if;
+  select to_jsonb(o) into r from attachment_orphans(now()) o where (o.attachment->>'id')::uuid = a;
+  delete from thought_attachments where id = a;
+  delete from thoughts where id = p;
+  return r;
+end $$;
+
+-- U105: orphans lists a row whose parent thought is gone, with why and derived_count
+do $$
+declare r jsonb := pg_temp.orphan_case('processed', interval '1 hour', false);
+begin
+  if r is null or r->>'why' <> 'parent_gone' or (r->'attachment'->>'derived_count')::int <> 3 then raise exception 'U105: %', r; end if;
+end $$;
