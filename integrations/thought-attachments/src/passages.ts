@@ -6,5 +6,18 @@ export function toPassages(
   sourceLineFor: (pages: [number, number]) => string,
   settings: Settings,
 ): Passage[] {
-  throw new Error("not implemented");
+  const passages: Passage[] = [];
+  let body = "";
+  const fits = (text: string) => sourceLineFor([1, 1]).length + 1 + text.length <= settings.passageMaxChars;
+  for (const word of pageTexts.join(" ").split(/\s+/).filter(Boolean)) {
+    const next = body ? body + " " + word : word;
+    if (fits(next)) {
+      body = next;
+    } else {
+      passages.push({ text: body, pages: [1, 1] });
+      body = word;
+    }
+  }
+  if (body) passages.push({ text: body, pages: [1, 1] });
+  return passages;
 }
