@@ -12,16 +12,19 @@ async function sha256Hex(text: string): Promise<string> {
 /** The page's routes (contracts/upload-page.md), as a Hono sub-app. */
 export function pageRoutes(deps: Deps, _services: Services): Hono {
   const app = new Hono();
+  // Attachments whose declaration came from this page: a new pick replaces those. A declaration
+  // from the attach call is confirmed, never replaced. (No column tells them apart.)
+  const declaredByPage = new Set<string>();
 
   app.post("/page/start", async (c) => {
     const body = await c.req.json();
     const found = await deps.store.attachmentForPageToken(await sha256Hex(body.token));
     if (!("data" in found) || found.data === null) return c.json({ error: "gone" }, 410);
     const row = found.data;
-    if (row.declared_type !== null && row.declared_type !== body.type) {
+    if (!declaredByPage.has(row.id) && row.declared_type !== null && row.declared_type !== body.type) {
       return c.json({ code: "wrong_type", message: "The picked file is " + body.type + ", not the declared " + row.declared_type + "." }, 400);
     }
-    if (row.declared_size !== null && row.declared_size !== body.size) {
+    if (!declaredByPage.has(row.id) && row.declared_size !== null && row.declared_size !== body.size) {
       return c.json({ code: "wrong_size", message: "The picked file is " + body.size + " bytes, not the declared " + row.declared_size + "." }, 400);
     }
     const name = baseName(body.name);
@@ -32,6 +35,7 @@ export function pageRoutes(deps: Deps, _services: Services): Hono {
       return c.json({ code: "wrong_type", message: "The assistant expected " + wanted + ", but the picked file is " + body.type + "." }, 400);
     }
     const path = `attachments/${row.id}/${name}`;
+    declaredByPage.add(row.id);
     await deps.store.setDeclaration(row.id, {
       file_name: name,
       declared_type: body.type as AcceptedType,

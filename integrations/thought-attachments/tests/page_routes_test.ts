@@ -161,3 +161,15 @@ Deno.test("U267 a pick whose kind differs from expected_kind is refused, a PDF f
   );
   assertEquals([r.store.attachment(pdf.id)!.declared_type, r.store.signedUploads.length, photo.expected_kind], [null, 1, "photo"]);
 });
+
+Deno.test("U269 a second /page/start replaces the declaration and returns a new link", async () => {
+  const r = await rig();
+  const row = await r.seed();
+  const first = await r.post("/page/start", { token: TOKEN, name: "a.jpg", type: "image/jpeg", size: 100 });
+  const second = await r.post("/page/start", { token: TOKEN, name: "b.png", type: "image/png", size: 200 });
+  const stored = r.store.attachment(row.id)!;
+  assertEquals([first.status, second.status], [200, 200]);
+  assertEquals([stored.file_name, stored.declared_type, stored.declared_size], ["b.png", "image/png", 200]);
+  assertEquals(r.store.signedUploads.map((s) => s.path), [`attachments/${row.id}/a.jpg`, `attachments/${row.id}/b.png`]);
+  assertEquals(stored.storage_path, `attachments/${row.id}/b.png`);
+});
