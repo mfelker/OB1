@@ -52,3 +52,10 @@ Deno.test("U128 a passage within one page records that page as both ends of its 
   const passages = toPassages([full, full, full], lineFor, settingsWith({ PASSAGE_MAX_CHARS: "200" }));
   assertEquals(passages.map((p) => p.pages), [[1, 1], [2, 2], [3, 3]]);
 });
+
+Deno.test("U129 a passage that crosses a page boundary records both pages", () => {
+  const passages = toPassages(["end of page one", "start of page two"], lineFor, settingsWith({ PASSAGE_MAX_CHARS: "300" }));
+  assertEquals(passages.length, 1);
+  assertEquals(passages[0].pages, [1, 2]);
+  assertEquals(passages[0].text, "end of page one start of page two");
+});
