@@ -299,6 +299,28 @@ Deno.test("U195 rebuild on a processed photo gives exactly one caption by the ne
   assertEquals(r.store.attachment(att.id)?.caption_model, "new/model");
 });
 
+Deno.test("U393 rebuild: true on a not_captioned photo is a plain finish: it claims as finish, and a failure records state_reason, not last_rebuild_error", async () => {
+  const r = await rig();
+  r.ff.on("POST", VISION_URL, () => ({ status: 503, body: "vision is down" }));
+  const att = pending(r, jpegBytes(2000));
+  const first = await r.finish(att.id, {});
+  assertEquals(first.state, "not_captioned");
+  r.ff.on("POST", VISION_URL, () => ({ status: 502, body: "vision gateway" }));
+  const out = await r.finish(att.id, { rebuild: true });
+  const claims = r.store.calls.filter((c) => c.method === "claim").map((c) => c.args[1]);
+  assertEquals(claims, ["finish", "finish"]);
+  assertEquals(out.state, "not_captioned");
+  assertStringIncludes(out.reason ?? "", "502");
+  assertEquals(out.last_rebuild_error, undefined);
+  const row = r.store.attachment(att.id) as AttachmentRow;
+  assertEquals({ state: row.state, state_reason: row.state_reason, last_rebuild_error: row.last_rebuild_error }, {
+    state: "not_captioned",
+    state_reason: out.reason ?? null,
+    last_rebuild_error: null,
+  });
+  assertEquals(r.store.derivedOf(att.id).length, 0);
+});
+
 Deno.test("U196 rebuild on a processed PDF replaces the passage set, and derived_count equals the new count", async () => {
   const r = await rig();
   const words = Array.from({ length: 120 }, (_, i) => "word" + i).join(" ");
