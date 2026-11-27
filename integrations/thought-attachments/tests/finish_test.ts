@@ -532,3 +532,30 @@ Deno.test("U208 a corrupt PDF ends failed with the reason, the object kept, and 
   assertEquals(r.store.objects.has(att.storage_path as string), true);
   assertEquals(r.store.derivedOf(att.id).length, 0);
 });
+
+Deno.test("U209 an embedding failure partway ends failed with the reason, and no derived thought from the attempt remains", async () => {
+  const words = Array.from({ length: 120 }, (_, i) => "word" + i).join(" ");
+  const down = () => ({ status: 500, body: "embeddings down" });
+  // The PDF's second batch fails after the first succeeded; the photo's only request fails.
+  const pdfCase = async (r: Rig) => {
+    r.ff.on("POST", EMBED_URL, embeddingResponder(), down);
+    return pending(r, await textPdf([words.slice(0, 400), words.slice(400, 800)]));
+  };
+  const photoCase = (r: Rig) => {
+    r.ff.on("POST", EMBED_URL, down);
+    return Promise.resolve(pending(r, jpegBytes(2000)));
+  };
+  for (const make of [pdfCase, photoCase]) {
+    const r = await rig({ EMBEDDING_BATCH_SIZE: "1", PASSAGE_MAX_CHARS: "200" });
+    const att = await make(r);
+    const out = await r.finish(att.id, {});
+    assertEquals(out.state, "failed");
+    assertStringIncludes(out.reason ?? "", "500");
+    assertEquals(out.derived_count, 0);
+    const row = r.store.attachment(att.id) as AttachmentRow;
+    assertEquals(row.state, "failed");
+    assertEquals(row.state_reason, out.reason);
+    assertEquals(r.store.derivedOf(att.id).length, 0);
+    assertEquals(r.store.objects.has(att.storage_path as string), true);
+  }
+});

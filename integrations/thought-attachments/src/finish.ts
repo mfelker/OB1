@@ -130,7 +130,7 @@ export function createFinisher(deps: Deps): Services {
       settings,
     );
     const embedded = await deps.embeddings.embed(passages.map((p) => p.text));
-    if ("error" in embedded) throw new Error(embedded.error);
+    if ("error" in embedded) return await ends(row, token, actual, rebuild, "failed", embedded.error);
     const now = deps.now();
     const rows = await Promise.all(passages.map((p, i) => passageRow(row, p, embedded.data[i], now)));
     const patch: StatePatch = {
@@ -188,7 +188,7 @@ export function createFinisher(deps: Deps): Services {
     const caption = await deps.vision.caption(bytes, row.declared_type as AcceptedType);
     if ("error" in caption) return await notCaptioned(row, token, actual, rebuild, caption.error);
     const embedded = await deps.embeddings.embed([caption.data.text]);
-    if ("error" in embedded) throw new Error(embedded.error);
+    if ("error" in embedded) return await ends(row, token, actual, rebuild, "failed", embedded.error);
     const now = deps.now();
     const derived = await captionRow(row, caption.data, embedded.data[0], now);
     const patch: StatePatch = {
