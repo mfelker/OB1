@@ -97,3 +97,4 @@ create unique index if not exists thought_attachments_parent_hash_uniq
 
 -- Access: RLS on, no policy for anon or authenticated.
 alter table thought_attachments enable row level security;
+grant select, insert, update, delete on thought_attachments to service_role;

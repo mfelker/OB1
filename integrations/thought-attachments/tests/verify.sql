@@ -209,3 +209,14 @@ begin
     raise exception 'U45: a policy exists for anon, authenticated or public';
   end if;
 end $$;
+
+-- U46: service_role has select, insert, update and delete on thought_attachments
+do $$
+declare p text;
+begin
+  foreach p in array array['select', 'insert', 'update', 'delete'] loop
+    if not has_table_privilege('service_role', 'public.thought_attachments', p) then
+      raise exception 'U46: service_role lacks %', p;
+    end if;
+  end loop;
+end $$;
