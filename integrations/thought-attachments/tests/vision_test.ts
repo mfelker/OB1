@@ -15,6 +15,7 @@ import {
   VISION_MODEL,
 } from "./helpers/env.ts";
 import { chatReply, FakeFetch, visionResponder } from "./helpers/fake_fetch.ts";
+import { jpegBytes, pngBytes } from "./helpers/fixtures.ts";
 
 function settingsWith(
   overrides: Record<string, string | undefined> = {},
@@ -29,7 +30,8 @@ function settingsWith(
 }
 
 const URL_ = `${VISION_API_BASE}/chat/completions`;
-const BYTES = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0, 16, 74, 70, 73, 70]);
+const JPEG = jpegBytes();
+const PNG = await pngBytes();
 
 Deno.test("U172 configured is false when VISION_API_BASE or VISION_MODEL is unset", () => {
   const fetch = new FakeFetch().fetch;
@@ -57,7 +59,7 @@ interface ChatBody {
 Deno.test("U173 caption posts to <VISION_API_BASE>/chat/completions with the model and the image as a data URL of its real type", async () => {
   const ff = new FakeFetch().on("POST", URL_, visionResponder("a red door"));
   const client = createVisionClient(settingsWith(), ff.fetch);
-  const out = await client.caption(BYTES, "image/png");
+  const out = await client.caption(PNG, "image/png");
   assert("data" in out);
   assertEquals(ff.requests.length, 1);
   assertEquals(ff.requests[0].method, "POST");
@@ -69,14 +71,14 @@ Deno.test("U173 caption posts to <VISION_API_BASE>/chat/completions with the mod
   );
   assertEquals(
     image?.image_url?.url,
-    `data:image/png;base64,${encodeBase64(BYTES)}`,
+    `data:image/png;base64,${encodeBase64(PNG)}`,
   );
 });
 
 Deno.test("U174 the prompt asks for the visible objects, places, labels and text", async () => {
   const ff = new FakeFetch().on("POST", URL_, visionResponder("a red door"));
   await createVisionClient(settingsWith(), ff.fetch).caption(
-    BYTES,
+    JPEG,
     "image/jpeg",
   );
   const body = ff.requests[0].body as ChatBody;
@@ -91,7 +93,7 @@ Deno.test("U174 the prompt asks for the visible objects, places, labels and text
 Deno.test("U175 with VISION_API_KEY set the request carries it as a bearer token", async () => {
   const ff = new FakeFetch().on("POST", URL_, visionResponder("a red door"));
   await createVisionClient(settingsWith(), ff.fetch).caption(
-    BYTES,
+    JPEG,
     "image/jpeg",
   );
   assertEquals(
@@ -105,7 +107,7 @@ Deno.test("U176 with VISION_API_KEY unset the request has no Authorization heade
   await createVisionClient(
     settingsWith({ VISION_API_KEY: undefined }),
     ff.fetch,
-  ).caption(BYTES, "image/jpeg");
+  ).caption(JPEG, "image/jpeg");
   assertEquals(ff.requests.length, 1);
   assert(!("authorization" in ff.requests[0].headers));
 });
@@ -117,7 +119,7 @@ Deno.test("U177 a successful reply gives the caption text and the configured mod
     visionResponder("  a red door with a brass 14  "),
   );
   const out = await createVisionClient(settingsWith(), ff.fetch).caption(
-    BYTES,
+    JPEG,
     "image/jpeg",
   );
   assertEquals(out, {
@@ -130,7 +132,7 @@ Deno.test("U178 an unreachable endpoint fails with a reason", async () => {
     networkError: "connection refused",
   });
   const out = await createVisionClient(settingsWith(), ff.fetch).caption(
-    BYTES,
+    JPEG,
     "image/jpeg",
   );
   assert("error" in out);
@@ -144,7 +146,7 @@ Deno.test("U179 a non-2xx status fails with the status in the reason", async () 
     body: "bad gateway",
   });
   const out = await createVisionClient(settingsWith(), ff.fetch).caption(
-    BYTES,
+    JPEG,
     "image/jpeg",
   );
   assert("error" in out);
@@ -160,7 +162,7 @@ Deno.test("U180 an empty or whitespace-only caption fails with a reason", async 
   ) {
     const ff = new FakeFetch().on("POST", URL_, reply);
     const out = await createVisionClient(settingsWith(), ff.fetch).caption(
-      BYTES,
+      JPEG,
       "image/jpeg",
     );
     assert(
@@ -179,7 +181,7 @@ Deno.test("U181 a key value in an error is redacted", async () => {
   for (const reply of replies) {
     const ff = new FakeFetch().on("POST", URL_, reply);
     const out = await createVisionClient(settingsWith(), ff.fetch).caption(
-      BYTES,
+      JPEG,
       "image/jpeg",
     );
     assert("error" in out);

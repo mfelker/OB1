@@ -5,6 +5,7 @@ import { loadSettings } from "../src/settings.ts";
 import type { Deps, FetchApp, Settings } from "../src/types.ts";
 import { Clock } from "./helpers/clock.ts";
 import { baseEnv, BRAIN_KEY, envGetter, SERVICE_ROLE_KEY, SUPABASE_URL } from "./helpers/env.ts";
+import { FakeFetch } from "./helpers/fake_fetch.ts";
 import { FakeStore } from "./helpers/fake_store.ts";
 import { FUNCTION_URL, mcpCall, parseMessage } from "./helpers/mcp.ts";
 
@@ -186,24 +187,24 @@ Deno.test("U300 productionDeps with settings that are not ok returns ok false, n
 });
 
 Deno.test("U301 productionDeps' store sends its requests to SUPABASE_URL with the service-role key", async () => {
-  const seen: { url: string; apikey: string | null; auth: string | null }[] = [];
+  const net = new FakeFetch().on("POST", `${SUPABASE_URL}/rest/v1/rpc/attachment_embedding_dimension`, { body: 1536 });
   const realFetch = globalThis.fetch;
-  globalThis.fetch = (input: RequestInfo | URL, init?: RequestInit) => {
-    const req = new Request(input, init);
-    seen.push({ url: req.url, apikey: req.headers.get("apikey"), auth: req.headers.get("authorization") });
-    return Promise.resolve(new Response(JSON.stringify(1536), { headers: { "content-type": "application/json" } }));
-  };
+  globalThis.fetch = net.fetch;
   try {
     const input = await withEnv(baseEnv(), () => productionDeps());
     assert(input.ok, "productionDeps should be ok over the baseline environment");
-    await input.deps.store.embeddingDimension();
+    assertEquals(await input.deps.store.embeddingDimension(), { data: 1536 });
   } finally {
     globalThis.fetch = realFetch;
   }
-  assert(seen.length > 0, "the store sent no request");
+  assertEquals(net.unmatched, []);
   assertEquals(
-    seen.map((s) => ({ origin: new URL(s.url).origin, apikey: s.apikey, auth: s.auth })),
-    seen.map(() => ({ origin: SUPABASE_URL, apikey: SERVICE_ROLE_KEY, auth: `Bearer ${SERVICE_ROLE_KEY}` })),
+    net.requests.map((r) => ({ url: r.url, apikey: r.headers["apikey"], auth: r.headers["authorization"] })),
+    [{
+      url: `${SUPABASE_URL}/rest/v1/rpc/attachment_embedding_dimension`,
+      apikey: SERVICE_ROLE_KEY,
+      auth: `Bearer ${SERVICE_ROLE_KEY}`,
+    }],
   );
 });
 

@@ -5,7 +5,7 @@ import { loadSettings } from "../src/settings.ts";
 import type { EmbeddingClient, FinishOutcome, R, Services, Settings } from "../src/types.ts";
 import { Clock } from "./helpers/clock.ts";
 import { envGetter } from "./helpers/env.ts";
-import { FakeStore } from "./helpers/fake_store.ts";
+import { FakeStore, shortId } from "./helpers/fake_store.ts";
 import { inMemoryClient } from "./helpers/mcp.ts";
 
 const DIM = 4;
@@ -303,7 +303,7 @@ Deno.test("U233 the same name, type and size pending on the parent returns that 
   const out = await call(h, "attach_file", { thought_id: parent.id, ...PDF });
   assertEquals(out.isError, false);
   assertEquals(out.data.attachment_id, pending.id);
-  assertEquals(out.data.short_id, pending.id.replace(/-/g, "").slice(0, 8));
+  assertEquals(out.data.short_id, shortId(pending.id));
   assertStringIncludes(out.text, "already pending");
   assertStringIncludes(out.text, pending.id);
   assertEquals(h.store.attachments.length, 1);
@@ -376,7 +376,7 @@ Deno.test("U238 the attach_file result has the ids, deadline, upload, curl line,
   const row = h.store.attachments[0];
   const d = out.data;
   assertEquals(d.attachment_id, row.id);
-  assertEquals(d.short_id, row.id.replace(/-/g, "").slice(0, 8));
+  assertEquals(d.short_id, "01010101");
   assertEquals(d.parent_thought_id, parent.id);
   assertEquals(d.parent_created_here, false);
   assertEquals(d.upload_deadline, row.upload_deadline);
@@ -598,7 +598,7 @@ Deno.test("U250 get_attachment returns file name, type, size, page count, state,
   const out = await call(h, "get_attachment", { attachment_id: row.id });
   assertEquals(out.isError, false);
   assertEquals(out.data.attachment_id, row.id);
-  assertEquals(out.data.short_id, row.id.replace(/-/g, "").slice(0, 8));
+  assertEquals(out.data.short_id, shortId(row.id));
   assertEquals(out.data.file_name, "manual.pdf");
   assertEquals(out.data.type, "application/pdf");
   assertEquals(out.data.size, 1000);
@@ -728,12 +728,11 @@ Deno.test("U254 list_attachments with thought_id returns each attachment's id, s
   });
   const out = await call(h, "list_attachments", { thought_id: parent.id });
   assertEquals(out.isError, false);
-  const short = (id: string) => id.replace(/-/g, "").slice(0, 8);
   assertEquals(out.data.attachments, [
-    { attachment_id: a.id, short_id: short(a.id), file_name: "manual.pdf", type: "application/pdf", size: 1000, state: "processed", derived_count: 4 },
-    { attachment_id: b.id, short_id: short(b.id), file_name: "shelf.jpg", type: "image/jpeg", size: 500, state: "pending_upload", derived_count: 0 },
+    { attachment_id: a.id, short_id: shortId(a.id), file_name: "manual.pdf", type: "application/pdf", size: 1000, state: "processed", derived_count: 4 },
+    { attachment_id: b.id, short_id: shortId(b.id), file_name: "shelf.jpg", type: "image/jpeg", size: 500, state: "pending_upload", derived_count: 0 },
   ]);
-  for (const shown of [a.id, short(a.id), "manual.pdf", "processed", b.id, "shelf.jpg", "pending_upload"]) {
+  for (const shown of [a.id, shortId(a.id), "manual.pdf", "processed", b.id, "shelf.jpg", "pending_upload"]) {
     assertStringIncludes(out.text, shown);
   }
 });
@@ -918,11 +917,10 @@ Deno.test("U261 find_orphan_attachments lists each orphan's id, file name, why i
   h.store.seedAttachment({ parent_thought_id: live.id, file_name: "fine.pdf", declared_type: "application/pdf", declared_size: 1, state: "processed" });
   const out = await call(h, "find_orphan_attachments");
   assertEquals(out.isError, false);
-  const short = (id: string) => id.replace(/-/g, "").slice(0, 8);
   assertEquals(out.data.orphans, [
-    { attachment_id: gone.id, short_id: short(gone.id), file_name: "gone.pdf", why: "parent_gone", derived_count: 4 },
-    { attachment_id: expired.id, short_id: short(expired.id), file_name: "late.jpg", why: "upload_expired", derived_count: 0 },
-    { attachment_id: refused.id, short_id: short(refused.id), file_name: "bad.png", why: "refused", derived_count: 0 },
+    { attachment_id: gone.id, short_id: shortId(gone.id), file_name: "gone.pdf", why: "parent_gone", derived_count: 4 },
+    { attachment_id: expired.id, short_id: shortId(expired.id), file_name: "late.jpg", why: "upload_expired", derived_count: 0 },
+    { attachment_id: refused.id, short_id: shortId(refused.id), file_name: "bad.png", why: "refused", derived_count: 0 },
   ]);
   assertStringIncludes(out.text, "gone.pdf");
   assertStringIncludes(out.text, "parent_gone");
@@ -934,7 +932,7 @@ Deno.test("U261 find_orphan_attachments lists each orphan's id, file name, why i
 Deno.test("U243 every tool taking attachment_id accepts the short id and reports not found and ambiguous", async () => {
   const h = await harness();
   const row = await storedRow(h, { file_name: "short-target.pdf", storage_path: "attachments/x/short-target.pdf" });
-  const short = row.id.replace(/-/g, "").slice(0, 8);
+  const short = shortId(row.id);
   const one = await pendingRow(h, { id: "a1b2c3d4-0000-4000-8000-000000000001" });
   await pendingRow(h, { id: "a1b2c3d4-0000-4000-8000-000000000002" });
   /** Which row each tool acted on, read from what it returned or what it asked of its dependencies. */
