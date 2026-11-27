@@ -509,7 +509,7 @@ Deno.test("A11 tools/list returns exactly the seven tools with the contract's an
   });
 });
 
-todo("A12 attach_file with an unknown thought_id is refused, and no row, link or note is created", async () => {
+Deno.test("A12 attach_file with an unknown thought_id is refused, and no row, link or note is created", async () => {
   const w = world();
   await ownerThought(w, "Kitchen dishwasher DW-500");
   const before = snapshot(w);
