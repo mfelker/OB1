@@ -341,3 +341,10 @@ Deno.test("U110 removalPreview maps the preview reply to { derived, noteWouldGo 
   assertEquals(await store.removalPreview(ATT_ID), { data: { derived: 4, noteWouldGo: true } });
   assertEquals(ff.requests[0].body, { p_id: ATT_ID });
 });
+
+Deno.test("U111 removeAttachment passes the claim token and maps the reply to { derived, noteRemoved }", async () => {
+  const { store, ff } = setup();
+  ff.on("POST", `${REST}/rpc/attachment_remove`, { body: { derived: 3, noteRemoved: false } });
+  assertEquals(await store.removeAttachment(ATT_ID, "claim-tok"), { data: { derived: 3, noteRemoved: false } });
+  assertEquals(ff.requests[0].body, { p_id: ATT_ID, p_token: "claim-tok" });
+});
