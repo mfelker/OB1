@@ -582,3 +582,8 @@ Commands run from the stage worktree folder `skills/auto-capture-hermes` with `e
 - **T036 (owner-approved):** tests offered upstream: https://github.com/NateBJones-Projects/OB1/pull/521#issuecomment-7231431151 (includes the exact-fit remark from T056).
 - **T037:** `git worktree remove .worktrees/stage-pr-521-auto-capture-hermes`. Local and remote branch `stage/pr-521-auto-capture-hermes` kept until upstream resolves #521.
 - Still open: T038 (optional live check), T054 (Q4 on Linux), T055, T056 (U20 positive control; its comment half is done).
+
+## Spec closed
+
+- The optional open tasks T038, T054, T055 and T056 are deferred to fork issue https://github.com/mfelker/OB1/issues/37 (labels `deferred`, `spec:008`). They stay unticked here; #37 tracks them.
+- `spec.md` status: Complete.

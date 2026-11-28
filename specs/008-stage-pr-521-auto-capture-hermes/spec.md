@@ -4,7 +4,7 @@
 
 **Created**: 2026-11-27
 
-**Status**: Draft
+**Status**: Complete (landed on the fork via #33, `4f74232`, 2026-11-27; optional follow-ups in fork issue #37)
 
 **Input**: User description: "merge upstream pr #521 into our fork... please ensure we handle this correctly as it relates to appropriate branches"
 
