@@ -135,14 +135,14 @@ US2 goes before US1 because US1's check is only meaningful once the tests exist 
 
 ## Merge (gate: T001–T032 all `[X]`, both checks green, owner has waived Gate 1 test-first)
 
-- [ ] T033 [US1] **Owner-only.** `gh pr merge <fork PR> -R mfelker/OB1 --merge` (merge commit; never squash or rebase; FR-002, FR-005).
-- [ ] T034 [US1] Post-merge checks on `M` (quickstart §5, SC-001, SC-002): `git -C M pull --ff-only`; `git merge-base --is-ancestor b9cbd68 main`; `git diff --stat HEAD^1 HEAD` lists only `skills/auto-capture-hermes/`; the author's four files on `main` are identical to `b9cbd68`.
+- [X] T033 [US1] **Owner-only.** `gh pr merge <fork PR> -R mfelker/OB1 --merge` (merge commit; never squash or rebase; FR-002, FR-005).
+- [X] T034 [US1] Post-merge checks on `M` (quickstart §5, SC-001, SC-002): `git -C M pull --ff-only`; `git merge-base --is-ancestor b9cbd68 main`; `git diff --stat HEAD^1 HEAD` lists only `skills/auto-capture-hermes/`; the author's four files on `main` are identical to `b9cbd68`.
 
 ## Phase 7: Post-merge recording (US4)
 
-- [ ] T035 [US4] Add the `#521` row to `M/.fork/staged-prs.md`, filling every column from data-model.md § Ledger row (head SHA, test commit SHAs, merge date, fork PR link and merge SHA, status `staged`; Notes: TEST_AFTER by owner decision, any defects from `S/evidence/defects.md`). Commit on `M` with `S` updates as `[fork] Spec 008: ledger row for staged #521` (SC-006).
-- [ ] T036 [US4] **Ask the owner first (outward-facing).** Comment on upstream #521 (`gh pr comment 521 -R NateBJones-Projects/OB1`): thanks, the fork's credential-free tests (link the test commit(s) on `mfelker/OB1`), how to run them, and any defects from `S/evidence/defects.md`. End with the "Generated with Claude Code" line only. Record the comment link in the ledger Notes (FR-018).
-- [ ] T037 Clean up from `M`: `git worktree remove .worktrees/stage-pr-521-auto-capture-hermes` (keep the local branch until upstream resolves #521). Tick T033–T037 and commit on `M`.
+- [X] T035 [US4] Add the `#521` row to `M/.fork/staged-prs.md`, filling every column from data-model.md § Ledger row (head SHA, test commit SHAs, merge date, fork PR link and merge SHA, status `staged`; Notes: TEST_AFTER by owner decision, any defects from `S/evidence/defects.md`). Commit on `M` with `S` updates as `[fork] Spec 008: ledger row for staged #521` (SC-006).
+- [X] T036 [US4] **Ask the owner first (outward-facing).** Comment on upstream #521 (`gh pr comment 521 -R NateBJones-Projects/OB1`): thanks, the fork's credential-free tests (link the test commit(s) on `mfelker/OB1`), how to run them, and any defects from `S/evidence/defects.md`. End with the "Generated with Claude Code" line only. Record the comment link in the ledger Notes (FR-018).
+- [X] T037 Clean up from `M`: `git worktree remove .worktrees/stage-pr-521-auto-capture-hermes` (keep the local branch until upstream resolves #521). Tick T033–T037 and commit on `M`.
 - [ ] T038 [P] Optional live check (quickstart §6), only if the owner runs Hermes Agent: save the output under `S/evidence/live/`.
 
 ---

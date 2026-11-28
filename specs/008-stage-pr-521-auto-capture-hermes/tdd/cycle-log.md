@@ -573,3 +573,12 @@ Commands run from the stage worktree folder `skills/auto-capture-hermes` with `e
 - PR #33 at `a4fb349`. Passed: `fork-ci-verdict`, `test (skills/auto-capture-hermes)` (19 s), `OB1 Review` (11 s), `detect`, `lint`, `self-test`. Skipped by design: `test-sql` (no SQL) and `OB1 Gate Event Guard`. Run 46013672123.
 - **Linux:** the suite passed on `ubuntu-26.04` with Node v26.13.1 (`skills/auto-capture-hermes: pass (all tests passed)`). This is the first run off macOS.
 - **T054 is still open.** CI ran the suite but not mutant Q4. Whether U34 catches a missing `.sort()` on Linux is still unmeasured.
+
+## Landed and closed out (T033–T037)
+
+- **T033 (owner):** `gh pr merge 33 -R mfelker/OB1 --merge`, merged 2026-11-27T14:13:01Z as `4f74232` (parents `434cecb`, `a4fb349`).
+- **T034:** the planned `git pull --ff-only` was impossible. Local main was 62 commits ahead of `origin/main` (spec 006 ledger commit `fc2d0ba` held local, plus unpushed spec 007 and 008 commits), so the two diverged when #33 merged. They were joined by merge `5860df41` (parents `0f684a0e`, `4f742321`; made in the spec 007 session, no rebase) and pushed. Checks re-run on main at `c68ae409`: `b9cbd68` is an ancestor; `skills/auto-capture-hermes/` is identical to `a4fb349`; the author's 4 files are identical to `b9cbd68`; #33's merge diff lists only `skills/auto-capture-hermes/`. Lesson recorded: check `git rev-list --count origin/main..main` before any fork PR merge.
+- **T035:** #521 row added to `.fork/staged-prs.md`.
+- **T036 (owner-approved):** tests offered upstream: https://github.com/NateBJones-Projects/OB1/pull/521#issuecomment-7231431151 (includes the exact-fit remark from T056).
+- **T037:** `git worktree remove .worktrees/stage-pr-521-auto-capture-hermes`. Local and remote branch `stage/pr-521-auto-capture-hermes` kept until upstream resolves #521.
+- Still open: T038 (optional live check), T054 (Q4 on Linux), T055, T056 (U20 positive control; its comment half is done).
